@@ -15,8 +15,8 @@
 #define TCPDUMP_STACKSIZE	(16 * 1024)
 #define TCPDUMP_PRIO	(2048)
 
-static unsigned char g_log_buf[BUFSIZE];
-static int g_log_id;
+//static unsigned char g_log_buf[BUFSIZE];
+//static int g_log_id;
 static int g_sid;
 static int sock;
 static sockaddr_in target;
@@ -93,10 +93,26 @@ void net_send(const char *__format,...)
 	va_end(args);
 
 	int len=strlen(sendbuf);
-	sendto(sock,sendbuf,len,/*MSG_DONTWAIT*/0,(const sockaddr*)&target,sizeof(target));
+	sendto(sock,sendbuf,len,MSG_DONTWAIT,(const sockaddr*)&target,sizeof(target));
 
 	//sys_timer_usleep(10);
 }
+
+int std::printf(const char *__format,...)
+{
+	va_list args;
+
+	va_start(args,__format);
+	vsnprintf(sendbuf,4000,__format, args);
+	va_end(args);
+
+	int len=strlen(sendbuf);
+	sendto(sock,sendbuf,len,MSG_DONTWAIT,(const sockaddr*)&target,sizeof(target));
+
+	return len;
+	//sys_timer_usleep(10);
+}
+
 /*int s,
 void *buf,
 size_t len,

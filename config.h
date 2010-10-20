@@ -12,7 +12,7 @@
 #undef HAVE_X86
 #define SCUMM_NEED_ALIGNMENT
 #undef USE_MT32EMU
-#define USE_RGB_COLOR
+#undef USE_RGB_COLOR
 #undef USE_SCALERS
 #undef USE_HQ_SCALERS
 #undef USE_INDEO3
@@ -49,4 +49,8 @@ typedef signed int int32;
 
 #define getenv(x) NULL
 #define DISABLE_TOWNS_DUAL_LAYER_MODE
+#include "backends/platform/ps3/netdbg/net.h"
+//#define printf(fmt, ...) net_send(fmt, ##__VA_ARGS__)
+
+
 #endif /* CONFIG_H */

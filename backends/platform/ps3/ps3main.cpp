@@ -337,11 +337,6 @@ int main(int argc, char *argv[])
 	net_send("SCUMM_LITTLE_ENDIAN!\n");
 	#endif
 
-	for(int i=0;i<=argc;i++)
-	{
-		printf("%s\n",argv[i]);
-	}
-
 	net_send("STARTUP!\n");
 	sys_spu_initialize(6, 1);
 	initModules();

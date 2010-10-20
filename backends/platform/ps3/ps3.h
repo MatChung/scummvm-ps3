@@ -5,7 +5,8 @@
 #include "backends/base-backend.h"
 #include "sound/mixer_intern.h"
 #include "graphics/colormasks.h"
-#include "graphics/ps3gl.h"
+#include "graphics/video.h"
+//#include "graphics/ps3gl.h"
 
 
 class OSystem_PS3 : public BaseBackend
@@ -18,7 +19,7 @@ protected:
 
 	system_time_t _startTime;
 
-	PS3GL graphics;
+	//PS3GL graphics;
 	PS3Pad _pad;
 	bool _isInitialized;
 	bool _shutdownRequested;
@@ -60,7 +61,7 @@ public:
 	virtual void copyRectToOverlay(const OverlayColor *buf, int pitch, int x, int y, int w, int h);
 	virtual int16 getOverlayHeight();
 	virtual int16 getOverlayWidth();
-	virtual Graphics::PixelFormat getOverlayFormat() const { return Graphics::createPixelFormat<565>(); }
+	virtual Graphics::PixelFormat getOverlayFormat() const;
 
 	virtual bool showMouse(bool visible);
 	virtual void warpMouse(int x, int y);
@@ -85,6 +86,35 @@ public:
 
 	virtual bool allowMapping() const { return false; }
 
+
+	void initGraphics();
+
+protected:
+	int16 _egl_surface_width;
+	int16 _egl_surface_height;
+	float zRot;
+	unsigned int deviceWidth, deviceHeight;
+
+	GLESPaletteTexture* _game_texture;
+	int _shake_offset;
+	Common::Rect _focus_rect;
+	bool _full_screen_dirty;
+
+	GLES565Texture* _overlay_texture;
+	bool _show_overlay;
+
+	// Mouse layer
+	GLESPaletteATexture* _mouse_texture;
+	Common::Point _mouse_hotspot;
+	Common::Point _mouse_pos;
+	int _mouse_targetscale;
+	bool _show_mouse;
+	bool _use_mouse_palette;
+	bool _force_redraw;
+
+	void _setCursorPalette(const byte *colors, uint start, uint num);
+
+	void draw();
 };
 
 #endif

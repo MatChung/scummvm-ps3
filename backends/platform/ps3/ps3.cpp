@@ -60,7 +60,7 @@
 #include <netex/errno.h>
 
 
-static Common::List<Graphics::PixelFormat> __formats;
+Common::List<Graphics::PixelFormat> __formats;
 
 OSystem_PS3::OSystem_PS3()
 {
@@ -76,7 +76,8 @@ OSystem_PS3::OSystem_PS3()
 	_fsFactory = new Ps3FilesystemFactory();
 	printf("OSystem_PS3::OSystem_PS3() fs ready\n");
 
-	//__formats.
+	__formats.push_back(Graphics::PixelFormat(4,8,8,8,8,0,8,16,24));
+	__formats.push_back(Graphics::PixelFormat(2, 5, 5, 5, 0, 0, 5, 10, 0));
 }
 
 OSystem_PS3::~OSystem_PS3()
@@ -97,9 +98,9 @@ void OSystem_PS3::initBackend()
 	if(_isInitialized)
 		return;
 	printf("OSystem_PS3::initBackend()!\n");
-	graphics.init();
+	initGraphics();
 	printf("OSystem_PS3::initBackend()1\n");
-	graphics.setGraphicsMode(0);
+	//graphics.setGraphicsMode(0);
 	printf("OSystem_PS3::initBackend()2\n");
 
 
@@ -107,7 +108,7 @@ void OSystem_PS3::initBackend()
 	printf("OSystem_PS3::initBackend()7\n");
 
 	_startTime=sys_time_get_system_time();
-	printf("sys_time_get_system_time() %d\n",_startTime);
+	printf("sys_time_get_system_time() %d\n",(int)_startTime);
 
 	// Note that both the mixer and the timer manager are useless
 	// this way; they need to be hooked into the system somehow to
@@ -142,15 +143,6 @@ void OSystem_PS3::initBackend()
 	_isInitialized=true;
 }
 
-Common::List<Graphics::PixelFormat> OSystem_PS3::getSupportedFormats() const
-{
-	return __formats;
-}
-
-Graphics::PixelFormat OSystem_PS3::getScreenFormat() const
-{
-}
-
 bool OSystem_PS3::hasFeature(Feature f)
 {
 	printf("OSystem_PS3::hasFeature(%d)\n",f);
@@ -174,6 +166,13 @@ bool OSystem_PS3::hasFeature(Feature f)
 	}
 	return false;
 }
+void OSystem_PS3::setShakePos(int shakeOffset)
+{
+	if (_shake_offset != shakeOffset) {
+		_shake_offset = shakeOffset;
+		_force_redraw = true;
+	}
+}
 
 void OSystem_PS3::setFeatureState(Feature f, bool enable)
 {
@@ -186,159 +185,6 @@ bool OSystem_PS3::getFeatureState(Feature f)
 	return false;
 }
 
-const OSystem::GraphicsMode* OSystem_PS3::getSupportedGraphicsModes() const
-{
-	printf("OSystem_PS3::getSupportedGraphicsModes()\n");
-	return graphics.getSupportedGraphicsModes();
-}
-
-
-int OSystem_PS3::getDefaultGraphicsMode() const
-{
-	printf("OSystem_PS3::getDefaultGraphicsMode()\n");
-	return graphics.getDefaultGraphicsMode();
-}
-
-bool OSystem_PS3::setGraphicsMode(const char *mode)
-{
-	printf("OSystem_PS3::setGraphicsMode()\n");
-	return graphics.setGraphicsMode(0);
-}
-
-bool OSystem_PS3::setGraphicsMode(int mode)
-{
-	printf("OSystem_PS3::setGraphicsMode()\n");
-	return graphics.setGraphicsMode(0);
-}
-
-int OSystem_PS3::getGraphicsMode() const
-{
-	printf("OSystem_PS3::getGraphicsMode()\n");
-	return graphics.getGraphicsMode();
-}
-
-void OSystem_PS3::initSize(uint width, uint height, const Graphics::PixelFormat *format)
-{
-	printf("OSystem_PS3::initSize()\n");
-	_pad.setResolution(width,height);
-	return graphics.initSize(width,height,format);
-}
-
-int16 OSystem_PS3::getHeight()
-{
-	printf("OSystem_PS3::getHeight()\n");
-	return graphics.getHeight();
-}
-
-int16 OSystem_PS3::getWidth()
-{
-	printf("OSystem_PS3::getWidth()\n");
-	return graphics.getWidth();
-}
-
-void OSystem_PS3::setPalette(const byte *colors, uint start, uint num)
-{
-	printf("OSystem_PS3::setPalette()\n");
-	return graphics.setPalette(colors,start,num);
-}
-
-void OSystem_PS3::grabPalette(byte *colors, uint start, uint num)
-{
-	printf("OSystem_PS3::grabPalette()\n");
-	return graphics.grabPalette(colors,start,num);
-}
-
-void OSystem_PS3::copyRectToScreen(const byte *buf, int pitch, int x, int y, int w, int h)
-{
-	printf("OSystem_PS3::copyRectToScreen(%x,%d,%d,%d,%d,%d)\n",buf,pitch,x,y,w,h);
-	return graphics.copyRectToScreen(buf,pitch,x,y,w,h);
-}
-
-void OSystem_PS3::updateScreen()
-{
-	//printf("OSystem_PS3::updateScreen()\n");
-	return graphics.updateScreen();
-}
-
-Graphics::Surface *OSystem_PS3::lockScreen()
-{
-	printf("OSystem_PS3::lockScreen()\n");
-	return graphics.lockScreen();
-}
-
-void OSystem_PS3::unlockScreen()
-{
-	printf("OSystem_PS3::unlockScreen()\n");
-	return graphics.unlockScreen();
-}
-
-void OSystem_PS3::setShakePos(int shakeOffset)
-{
-	printf("OSystem_PS3::setShakePos()\n");
-	return graphics.setShakePos(shakeOffset);
-}
-
-void OSystem_PS3::showOverlay()
-{
-	printf("OSystem_PS3::showOverlay()\n");
-	return graphics.showOverlay();
-}
-
-void OSystem_PS3::hideOverlay()
-{
-	printf("OSystem_PS3::hideOverlay()\n");
-	return graphics.hideOverlay();
-}
-
-void OSystem_PS3::clearOverlay()
-{
-	printf("OSystem_PS3::clearOverlay()\n");
-	return graphics.clearOverlay();
-}
-
-void OSystem_PS3::grabOverlay(OverlayColor *buf, int pitch)
-{
-	printf("OSystem_PS3::grabOverlay()\n");
-	return graphics.grabOverlay(buf,pitch);
-}
-
-void OSystem_PS3::copyRectToOverlay(const OverlayColor *buf, int pitch, int x, int y, int w, int h)
-{
-	printf("OSystem_PS3::copyRectToOverlay()\n");
-	return graphics.copyRectToOverlay(buf,pitch,x,y,w,h);
-}
-
-int16 OSystem_PS3::getOverlayHeight()
-{
-	//printf("OSystem_PS3::getOverlayHeight()=%d\n",graphics.getOverlayHeight());
-	return graphics.getOverlayHeight();
-}
-
-int16 OSystem_PS3::getOverlayWidth()
-{
-	//printf("OSystem_PS3::getOverlayWidth()=%d\n",graphics.getOverlayWidth());
-	return graphics.getOverlayWidth();
-}
-
-
-bool OSystem_PS3::showMouse(bool visible)
-{
-	printf("OSystem_PS3::showMouse()\n");
-	return graphics.showMouse(visible);
-	return true;
-}
-
-void OSystem_PS3::warpMouse(int x, int y)
-{
-	//printf("OSystem_PS3::warpMouse()\n");
-	return graphics.warpMouse(x,y);
-}
-
-void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, int hotspotY, uint32 keycolor, int cursorTargetScale, const Graphics::PixelFormat *format)
-{
-	//printf("OSystem_PS3::setMouseCursor()\n");
-	return graphics.setMouseCursor(buf,w,h,hotspotX,hotspotY,keycolor,cursorTargetScale,format);
-}
 
 
 bool OSystem_PS3::pollEvent(Common::Event &event)
@@ -395,7 +241,7 @@ OSystem::MutexRef OSystem_PS3::createMutex(void)
 		printf("=NULL\n");
 		return NULL;
 	}
-	printf("=%X\n",mutex);
+	printf("=%X\n",(int)mutex);
 	return (MutexRef)mutex;
 }
 
@@ -430,7 +276,7 @@ void OSystem_PS3::quit()
 
 Common::SaveFileManager *OSystem_PS3::getSavefileManager()
 {
-	printf("OSystem_PS3::getSavefileManager()=%d\n",_savefile);
+	//printf("OSystem_PS3::getSavefileManager()=%d\n",(int)_savefile);
 	//assert(_savefile);
 	return _savefile;
 }
@@ -443,14 +289,14 @@ Audio::Mixer *OSystem_PS3::getMixer()
 		_mixer = new Audio::MixerImpl(this, 22050);
 	}
 
-	printf("OSystem_PS3::getMixer()=%d\n",_mixer);
+	//printf("OSystem_PS3::getMixer()=%d\n",_mixer);
 	//assert(_mixer);
 	return _mixer;
 }
 
 Common::TimerManager *OSystem_PS3::getTimerManager()
 {
-	printf("OSystem_PS3::getTimerManager()=%d\n",_timer);
+	//printf("OSystem_PS3::getTimerManager()=%d\n",_timer);
 	//assert(_timer);
 	return _timer;
 }
@@ -474,7 +320,7 @@ void OSystem_PS3::getTimeAndDate(TimeDate &t) const
 
 FilesystemFactory *OSystem_PS3::getFilesystemFactory()
 {
-	printf("OSystem_PS3::getFilesystemFactory()=%d\n",_fsFactory);
+	//printf("OSystem_PS3::getFilesystemFactory()=%d\n",_fsFactory);
 	//assert(_fsFactory);
 	return _fsFactory;
 }
