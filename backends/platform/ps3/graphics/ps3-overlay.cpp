@@ -5,21 +5,19 @@ void OSystem_PS3::showOverlay()
 {
 	net_send("OSystem_PS3::showOverlay()\n");
 	_show_overlay = true;
-	_force_redraw = true;
 }
 
 void OSystem_PS3::hideOverlay()
 {
 	net_send("OSystem_PS3::hideOverlay()\n");
 	_show_overlay = false;
-	_force_redraw = true;
 }
 
 void OSystem_PS3::clearOverlay()
 {
-	net_send("OSystem_PS3::clearOverlay()=%X\n",_overlay_texture);
+	net_send("OSystem_PS3::clearOverlay()\n");
 	if(_overlay_texture!=NULL)
-	_overlay_texture->fillBuffer(0);
+		_overlay_texture->fillBuffer(0);
 }
 
 Graphics::PixelFormat OSystem_PS3::getOverlayFormat() const
@@ -49,7 +47,7 @@ void OSystem_PS3::grabOverlay(OverlayColor *buf, int pitch)
 
 void OSystem_PS3::copyRectToOverlay(const OverlayColor *buf, int pitch, int x, int y, int w, int h)
 {
-	net_send("OSystem_PS3::copyRectToOverlay()\n");
+	//net_send("OSystem_PS3::copyRectToOverlay()\n");
 
 	/*
 	const Graphics::Surface* surface = _overlay_texture->surface_const();
@@ -82,12 +80,12 @@ void OSystem_PS3::copyRectToOverlay(const OverlayColor *buf, int pitch, int x, i
 
 int16 OSystem_PS3::getOverlayHeight()
 {
-	net_send("OSystem_PS3::getOverlayHeight()\n");
+	//net_send("OSystem_PS3::getOverlayHeight(%d)\n",_overlay_texture->height());
 	return _overlay_texture->height();
 }
 
 int16 OSystem_PS3::getOverlayWidth()
 {
-	net_send("OSystem_PS3::getOverlayWidth()\n");
+	//net_send("OSystem_PS3::getOverlayWidth(%d)\n",_overlay_texture->width());
 	return _overlay_texture->width();
 }

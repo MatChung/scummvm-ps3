@@ -66,6 +66,8 @@ public:
 	virtual bool showMouse(bool visible);
 	virtual void warpMouse(int x, int y);
 	virtual void setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, int hotspotY, uint32 keycolor, int cursorTargetScale, const Graphics::PixelFormat *format);
+	virtual void disableCursorPalette(bool disable);
+	virtual void setCursorPalette(const byte *colors, uint start, uint num);
 
 	virtual bool pollEvent(Common::Event &event);
 	virtual uint32 getMillis();
@@ -108,7 +110,6 @@ protected:
 	int _mouse_targetscale;
 	bool _show_mouse;
 	bool _use_mouse_palette;
-	bool _force_redraw;
 
 	void _setCursorPalette(const byte *colors, uint start, uint num);
 

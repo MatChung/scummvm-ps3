@@ -84,27 +84,35 @@ protected:
 };
 
 // RGB888 256-entry paletted texture
-class GLESPaletteTexture : public GLESTexture {
+class GLESPaletteTexture : public GLESTexture
+{
 public:
 	GLESPaletteTexture();
 	virtual ~GLESPaletteTexture();
 	virtual void allocBuffer(GLuint width, GLuint height);
 	virtual void updateBuffer(GLuint x, GLuint y, GLuint width, GLuint height,
 							  const void* buf, int pitch);
-	Graphics::Surface* surface() {
+	Graphics::Surface* surface()
+	{
 		setDirty();
 		return &_surface;
 	}
-	void* pixels() {
+	void* pixels()
+	{
 		setDirty();
 		return _surface.pixels;
 	}
-	const byte* palette_const() const { return _texture; };
-	byte* palette() {
+	const byte* palette_const() const
+	{
+		return _texture;
+	};
+	byte* palette()
+	{
 		setDirty();
 		return _texture;
 	};
-	virtual void drawTexture() {
+	virtual void drawTexture()
+	{
 		drawTexture(0, 0, _surface.w, _surface.h);
 	}
 	virtual void drawTexture(GLshort x, GLshort y, GLshort w, GLshort h);
@@ -118,7 +126,7 @@ protected:
 	virtual void uploadTexture() const;
 	byte* _texture;
 	int* _palette;
-	int* _textureRGB;
+	GLuint __palette_name;
 };
 
 // RGBA8888 256-entry paletted texture

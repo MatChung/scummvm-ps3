@@ -46,12 +46,12 @@ void OSystem_PS3::initGraphics()
 	net_send("PS3GL::init()glMatrixMode\n");
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
+	glOrthof(0, 1920, 1080, 0, -1, 1);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
 	net_send("PS3GL::init()clearFocusRectangle\n");
 	//	CHECK_GL_ERROR();
-	_force_redraw=true;
 	showMouse(true);
 }
 
@@ -59,8 +59,11 @@ void OSystem_PS3::initSize(uint width, uint height, const Graphics::PixelFormat 
 {
 	net_send("OSystem_PS3::initSize()\n");
 	_pad.setResolution(width,height);
-	net_send("PS3GL::initSize(%d,%d,%d,%d,%d,%d)\n",width,height,format->rBits(),format->gBits(),format->bBits(),format->aBits());
-	glOrthof(0, width, height, 0, -1, 1);
+	net_send("PS3GL::initSize(%d,%d",width,height);
+	if(format!=NULL)
+		net_send(",%d,%d,%d,%d)\n",format->rBits(),format->gBits(),format->bBits(),format->aBits());
+	else
+		net_send(")\n");
 
 	//_egl_surface_width=width;
 	//_egl_surface_height=height;
@@ -76,17 +79,23 @@ void OSystem_PS3::initSize(uint width, uint height, const Graphics::PixelFormat 
 	// setMouseCursor however, so just take a guess at the desired
 	// size (it's small).
 	_mouse_texture->allocBuffer(20, 20);
+
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrthof(-10, width+10, height+20, -7, -1, 1);
+	glMatrixMode(GL_MODELVIEW);
 }
 
 void OSystem_PS3::draw()
 {
-	net_send("OSystem_PS3::draw()\n");
+	//net_send("OSystem_PS3::draw()\n");
 	updateScreen();
 }
 
 void OSystem_PS3::updateScreen()
 {
-	net_send("OSystem_PS3::updateScreen()\n");
+	//net_send("OSystem_PS3::updateScreen()\n");
 	glClearColorx(0, 0, 0, 1 << 16);
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -95,7 +104,7 @@ void OSystem_PS3::updateScreen()
 	if (_shake_offset != 0)
 	{
 		// Move everything up by _shake_offset (game) pixels
-		glTranslatex(0, -_shake_offset << 16, 0);
+		glTranslatef(0, -_shake_offset, 0);
 	}
 
 	//net_send("PS3GL::updateScreen() - drawGame1\n");

@@ -125,7 +125,7 @@ void OSystem_PS3::initBackend()
 	if(_mixer==NULL)
 	{
 		net_send("OSystem_PS3::initBackend() mixer init\n");
-		_mixer = new Audio::MixerImpl(this, 22100);
+		_mixer = new Audio::MixerImpl(this, 48000);
 		assert(_mixer);
 		_mixer->setReady(true);
 		net_send("OSystem_PS3::initBackend() mixer ready\n");
@@ -171,7 +171,6 @@ void OSystem_PS3::setShakePos(int shakeOffset)
 {
 	if (_shake_offset != shakeOffset) {
 		_shake_offset = shakeOffset;
-		_force_redraw = true;
 	}
 }
 
@@ -183,21 +182,20 @@ void OSystem_PS3::setFeatureState(Feature f, bool enable)
 bool OSystem_PS3::getFeatureState(Feature f)
 {
 	net_send("OSystem_PS3::getFeatureState(%d)\n",f);
+
 	return false;
 }
 
-
-
 bool OSystem_PS3::pollEvent(Common::Event &event)
 {
-	net_send("OSystem_PS3::pollEvent()\n");
+	//net_send("OSystem_PS3::pollEvent()\n");
 	bool ret=_pad.pollEvent(event);
 	if(ret==true)
 	{
 		//net_send("OSystem_PS3::pollEvent() got Event: %d,%d,%d\n",event.type,event.mouse.x,event.mouse.y);
 
-		//if(event.type==Common::EVENT_MOUSEMOVE)
-		//	warpMouse(event.mouse.x,event.mouse.y);
+		if(event.type==Common::EVENT_MOUSEMOVE)
+			warpMouse(event.mouse.x,event.mouse.y);
 
 		return true;
 	}
@@ -219,13 +217,14 @@ bool OSystem_PS3::pollEvent(Common::Event &event)
 
 uint32 OSystem_PS3::getMillis()
 {
-	net_send("OSystem_PS3::getMillis()\n");
+	//net_send("OSystem_PS3::getMillis()\n");
 	return (sys_time_get_system_time()-_startTime)/1000;
 }
 
 void OSystem_PS3::delayMillis(uint msecs)
 {
-	net_send("OSystem_PS3::delayMillis()\n");
+	//if(msecs!=10)
+	//	net_send("OSystem_PS3::delayMillis(%d)\n",msecs);
 	sys_timer_usleep(msecs * 1000);
 }
 
@@ -249,14 +248,14 @@ OSystem::MutexRef OSystem_PS3::createMutex(void)
 
 void OSystem_PS3::lockMutex(MutexRef mutex)
 {
-	net_send("OSystem_PS3::lockMutex()\n");
+	//net_send("OSystem_PS3::lockMutex()\n");
 	if (pthread_mutex_lock((pthread_mutex_t*)mutex) != 0)
 		warning("pthread_mutex_lock() failed");
 }
 
 void OSystem_PS3::unlockMutex(MutexRef mutex)
 {
-	net_send("OSystem_PS3::unlockMutex()\n");
+	//net_send("OSystem_PS3::unlockMutex()\n");
 	if (pthread_mutex_unlock((pthread_mutex_t*)mutex) != 0)
 		warning("pthread_mutex_unlock() failed");
 }
@@ -285,13 +284,7 @@ Common::SaveFileManager *OSystem_PS3::getSavefileManager()
 
 Audio::Mixer *OSystem_PS3::getMixer()
 {
-	if(_mixer==NULL)
-	{
-		net_send("OSystem_PS3::initBackend()3\n");
-		_mixer = new Audio::MixerImpl(this, 22050);
-	}
-
-	//net_send("OSystem_PS3::getMixer()=%d\n",_mixer);
+	net_send("OSystem_PS3::getMixer()=%d\n",_mixer);
 	//assert(_mixer);
 	return _mixer;
 }
@@ -334,7 +327,7 @@ uint32 lastquery=-1;
 
 void OSystem_PS3::updateFrame()
 {
-	net_send("OSystem_PS3::updateFrame()\n");
+	//net_send("OSystem_PS3::updateFrame()\n");
 	_pad.frame();
 	if(_timer!=NULL)
 		((DefaultTimerManager*)_timer)->handler();

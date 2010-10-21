@@ -87,7 +87,7 @@ void GLESTexture::updateBuffer(GLuint x, GLuint y, GLuint w, GLuint h,
 
 	if (static_cast<int>(w) * bytesPerPixel() == pitch)
 	{
-		net_send("GLESTexture::updateBuffer()=AA\n");
+		//net_send("GLESTexture::updateBuffer()=AA\n");
 		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h,
 						glFormat(), glType(), buf);
 
@@ -95,7 +95,7 @@ void GLESTexture::updateBuffer(GLuint x, GLuint y, GLuint w, GLuint h,
 	}
 	else
 	{
-		net_send("GLESTexture::updateBuffer()=BB\n");
+		//net_send("GLESTexture::updateBuffer()=BB\n");
 		// GLES removed the ability to specify pitch, so we
 		// have to do this row by row.
 		const byte* src = static_cast<const byte*>(buf);
@@ -110,22 +110,13 @@ void GLESTexture::updateBuffer(GLuint x, GLuint y, GLuint w, GLuint h,
 	}
 }
 void GLESTexture::fillBuffer(byte x) {
-	net_send("GLESTexture::fillBuffer(%d)-%X\n",x,this);
-	net_send("GLESTexture::fillBuffer()-%X\n",&_surface);
-	net_send("GLESTexture::fillBuffer()-%X\n",_surface.pixels);
-	net_send("GLESTexture::fillBuffer()0-%d,%d,%d\n",_surface.h , _surface.w , bytesPerPixel());
 	byte *tmpbuf=new byte[_surface.h * _surface.w * bytesPerPixel()];
-	net_send("GLESTexture::fillBuffer()1\n");
 	memset(tmpbuf, 0, _surface.h * _surface.w * bytesPerPixel());
-	net_send("GLESTexture::fillBuffer()2-%d\n",_texture_name);
 	glBindTexture(GL_TEXTURE_2D, _texture_name);
-	net_send("GLESTexture::fillBuffer()3\n");
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _surface.w, _surface.h,
 					glFormat(), glType(), tmpbuf);
 		//CHECK_GL_ERROR();
-	net_send("GLESTexture::fillBuffer()4\n");
 	setDirty();
-	net_send("GLESTexture::fillBuffer()5\n");
 	delete[] tmpbuf;
 }
 
@@ -133,32 +124,31 @@ void GLESTexture::drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 {
 	glBindTexture(GL_TEXTURE_2D, _texture_name);
 
-	{
-		const GLfloat tex_width = (_surface.w/ _texture_width);
-		const GLfloat tex_height = (_surface.h/ _texture_height);
-		const GLfloat texcoords[] = {
-			0, 0,
-			tex_width, 0,
-			0, tex_height,
-			tex_width, tex_height,
-		};
-		glTexCoordPointer(2, GL_FIXED, 0, texcoords);
+	const GLfloat tex_width = _surface.w/((float)_texture_width);
+	const GLfloat tex_height = _surface.h/((float)_texture_height);
 
-		const GLshort vertices[] = {
-			x,	 y,
-			x+w, y,
-			x,	 y+h,
-			x+w, y+h,
-		};
-		glVertexPointer(2, GL_SHORT, 0, vertices);
+	const GLfloat texcoords[] = {
+		0, 0,
+		tex_width, 0,
+		0, tex_height,
+		tex_width, tex_height,
+	};
+	glTexCoordPointer(2, GL_FLOAT, 0, texcoords);
 
-		assert(ARRAYSIZE(vertices) == ARRAYSIZE(texcoords));
+	const GLfloat vertices[] = {
+		x,	 y,
+		x+w, y,
+		x,	 y+h,
+		x+w, y+h,
+	};
+	glVertexPointer(2, GL_FLOAT, 0, vertices);
 
-		//net_send("GLESTexture::drawTexture() - ");
-		//net_send("%d, %d, %d, %d, %d, %d\n",tex_width,tex_height,x,y,w,h);
+	assert(ARRAYSIZE(vertices) == ARRAYSIZE(texcoords));
 
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, ARRAYSIZE(vertices)/2);
-	}
+	//net_send("GLESTexture::drawTexture() - ");
+	//net_send("%d, %d, %d, %d, %d, %d\n",tex_width,tex_height,x,y,w,h);
+
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, ARRAYSIZE(vertices)/2);
 
 	_all_dirty = false;
 	_dirty_rect = Common::Rect();

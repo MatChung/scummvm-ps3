@@ -29,7 +29,7 @@ void OSystem_PS3::grabPalette(byte *colors, uint start, uint num)
 
 void OSystem_PS3::copyRectToScreen(const byte *buf, int pitch, int x, int y, int w, int h)
 {
-	net_send("OSystem_PS3::copyRectToScreen()\n");
+	//net_send("OSystem_PS3::copyRectToScreen()\n");
 	_game_texture->updateBuffer(x, y, w, h, buf, pitch);
 	draw();
 }
@@ -51,8 +51,8 @@ void OSystem_PS3::unlockScreen()
 
 void OSystem_PS3::setPalette(const byte *colors, uint start, uint num)
 {
-	net_send("OSystem_PS3::setPalette()\n");
-	if (!_use_mouse_palette)
+	//net_send("OSystem_PS3::setPalette()\n");
+	if (_use_mouse_palette)
 		_setCursorPalette(colors, start, num);
 
 	byte* palette = _game_texture->palette() + start*3;

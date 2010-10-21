@@ -9,61 +9,10 @@
 #include "base/main.h"
 #include "netdbg/net.h"
 
-float pos[] = { -1,-1,0,  -1,1,0,  1,-1,0,  1,1,0, };
 static bool want_to_quit = false;	// true when I need to quit
 
-void drawAxisAlignedLine(float cntrX, float cntrY, float halfWidth, float halfHeight)
-{
-	glPushMatrix();
-	glTranslatef(cntrX,cntrY,0);
-	glScalef(halfWidth,halfHeight,1);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-	glPopMatrix();
-}
 
-void drawGrid(const int numLines)
-{
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(3, GL_FLOAT, 0, pos);
 
-	const float hw=0.005f, hh=1.0f;
-	float dwh = 2.0f/numLines;
-
-	glColor4f(1,1,1,1);
-	for (float x=-1+(dwh*0.5f); x<1; x+=dwh)
-		drawAxisAlignedLine(x,0,hw,hh);
-	for (float y=-1+(dwh*0.5f); y<1; y+=dwh)
-		drawAxisAlignedLine(0,y,hh,hw);
-
-	glColor4f(1,0,0,1);
-	drawAxisAlignedLine(-1,0,hw,hh);
-	drawAxisAlignedLine(1,0,hw,hh);
-	drawAxisAlignedLine(0,-1,hh,hw);
-	drawAxisAlignedLine(0,1,hh,hw);
-	drawAxisAlignedLine(0,0,hw*2,hw*2);
-}
-
-void drawRotatingGrid(const int numSteps)
-{
-	float zRot=0;
-	for (int j=0; j<numSteps; j++)
-	{
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		glPushMatrix();
-		glRotatef(zRot,0,0,1);
-
-		drawGrid(20);
-		zRot+=0.01f; if (zRot>360) zRot-=360;
-
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-
-		psglSwap();
-	}
-}
 
 void initGraphics(PSGLdevice *device)
 {
@@ -354,8 +303,9 @@ int main(int argc, char *argv[])
 
 	// Invoke the actual ScummVM main entry point:
 	int res = scummvm_main(argc, argv);
-	//g_system->quit();       // TODO: Consider removing / replacing this!
 
+	net_send("SHUTDOWN!\n");
+	g_system->quit();       // TODO: Consider removing / replacing this!
 	psglDestroyContext(context);
 	psglDestroyDevice(device);
 	psglExit();
