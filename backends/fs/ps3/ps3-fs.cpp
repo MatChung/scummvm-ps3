@@ -54,20 +54,21 @@ const char *_lastPathComponent(const Common::String &str)
 	if (str.empty())
 		return "";
 
-	return strrchr(str.c_str(),'/')+1;
-	/*
+	//return strrchr(str.c_str(),'/')+1;
+	
 	const char *start = str.c_str();
 	const char *cur = start + str.size() - 2;
 
-	while (cur >= start && *cur != '/' && *cur != ':') {
-	--cur;
+	while (cur >= start && *cur != '/' && *cur != ':')
+	{
+		--cur;
 	}
 
 	cur++;
 
 	// printf("lastPathComponent path=%s token=%s\n", start, cur);
 
-	return cur;*/
+	return cur;
 }
 
 Ps3FilesystemNode::Ps3FilesystemNode()
