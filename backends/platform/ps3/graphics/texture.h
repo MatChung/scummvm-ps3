@@ -1,30 +1,3 @@
-/* ScummVM - Graphic Adventure Engine
- *
- * ScummVM is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
-
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
- *
- * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/null/null.cpp $
- * $Id: null.cpp 34912 2008-11-06 15:02:50Z fingolfin $
- *
- */
-
-#if 1
-
 #include <GLES/gl.h>
 #include <GLES/glext.h>
 
@@ -33,7 +6,9 @@
 #include "common/rect.h"
 #include "common/array.h"
 
-class GLESTexture {
+
+class GLESTexture
+{
 public:
 	static void initGLExtensions();
 
@@ -47,7 +22,7 @@ public:
 	GLuint texture_name() const { return _texture_name; }
 	bool dirty() const { return _all_dirty || !_dirty_rect.isEmpty(); }
 	virtual void updateBuffer(GLuint x, GLuint y, GLuint width, GLuint height,
-							  const void* buf, int pitch);
+		const void* buf, int pitch);
 	virtual void fillBuffer(byte x);
 	virtual void drawTexture() {
 		drawTexture(0, 0, _surface.w, _surface.h);
@@ -79,6 +54,7 @@ protected:
 	bool _all_dirty;
 	Common::Rect _dirty_rect;  // Covers dirty area
 };
+
 
 // RGBA4444 texture
 class GLES4444Texture : public GLESTexture {
@@ -153,5 +129,3 @@ protected:
 	virtual GLenum glType() const { return GL_PALETTE8_RGBA8_OES; }
 	virtual size_t paletteSize() const { return 256 * 4; };
 };
-
-#endif

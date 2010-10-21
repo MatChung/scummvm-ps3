@@ -5,7 +5,7 @@
 #include "backends/base-backend.h"
 #include "sound/mixer_intern.h"
 #include "graphics/colormasks.h"
-#include "graphics/video.h"
+#include "graphics/texture.h"
 //#include "graphics/ps3gl.h"
 
 
@@ -90,14 +90,12 @@ public:
 	void initGraphics();
 
 protected:
-	int16 _egl_surface_width;
-	int16 _egl_surface_height;
 	float zRot;
 	unsigned int deviceWidth, deviceHeight;
 
 	GLESPaletteTexture* _game_texture;
 	int _shake_offset;
-	Common::Rect _focus_rect;
+	//Common::Rect _focus_rect;
 	bool _full_screen_dirty;
 
 	GLES565Texture* _overlay_texture;

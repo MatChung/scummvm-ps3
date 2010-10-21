@@ -64,7 +64,7 @@ Common::List<Graphics::PixelFormat> __formats;
 
 OSystem_PS3::OSystem_PS3()
 {
-	printf("OSystem_PS3()\n");
+	net_send("OSystem_PS3()\n");
 	_isInitialized=false;
 	_savefile = NULL;
 	_mixer = NULL;
@@ -72,9 +72,9 @@ OSystem_PS3::OSystem_PS3()
 	_fsFactory = NULL;
 	_shutdownRequested=false;
 	
-	printf("OSystem_PS3::OSystem_PS3() fs init\n");
+	net_send("OSystem_PS3::OSystem_PS3() fs init\n");
 	_fsFactory = new Ps3FilesystemFactory();
-	printf("OSystem_PS3::OSystem_PS3() fs ready\n");
+	net_send("OSystem_PS3::OSystem_PS3() fs ready\n");
 
 	__formats.push_back(Graphics::PixelFormat(4,8,8,8,8,0,8,16,24));
 	__formats.push_back(Graphics::PixelFormat(2, 5, 5, 5, 0, 0, 5, 10, 0));
@@ -82,7 +82,7 @@ OSystem_PS3::OSystem_PS3()
 
 OSystem_PS3::~OSystem_PS3()
 {
-	printf("OSystem_PS3::~OSystem_PS3()\n");
+	net_send("OSystem_PS3::~OSystem_PS3()\n");
 	if(_savefile!=NULL)
 		delete _savefile;
 	if(_mixer!=NULL)
@@ -95,20 +95,21 @@ OSystem_PS3::~OSystem_PS3()
 
 void OSystem_PS3::initBackend()
 {
+	net_send("OSystem_PS3::initBackend()\n");
 	if(_isInitialized)
 		return;
-	printf("OSystem_PS3::initBackend()!\n");
+	net_send("OSystem_PS3::initBackend()!\n");
 	initGraphics();
-	printf("OSystem_PS3::initBackend()1\n");
+	net_send("OSystem_PS3::initBackend()1\n");
 	//graphics.setGraphicsMode(0);
-	printf("OSystem_PS3::initBackend()2\n");
+	net_send("OSystem_PS3::initBackend()2\n");
 
 
 	//_mixer->setReady(false);
-	printf("OSystem_PS3::initBackend()7\n");
+	net_send("OSystem_PS3::initBackend()7\n");
 
 	_startTime=sys_time_get_system_time();
-	printf("sys_time_get_system_time() %d\n",(int)_startTime);
+	net_send("sys_time_get_system_time() %d\n",(int)_startTime);
 
 	// Note that both the mixer and the timer manager are useless
 	// this way; they need to be hooked into the system somehow to
@@ -116,36 +117,36 @@ void OSystem_PS3::initBackend()
 
 	if(_savefile==NULL)
 	{
-		printf("OSystem_PS3::initBackend() save init\n");
+		net_send("OSystem_PS3::initBackend() save init\n");
 		_savefile = new DefaultSaveFileManager();
-		printf("OSystem_PS3::initBackend() save ready\n");
+		net_send("OSystem_PS3::initBackend() save ready\n");
 	}
 
 	if(_mixer==NULL)
 	{
-		printf("OSystem_PS3::initBackend() mixer init\n");
+		net_send("OSystem_PS3::initBackend() mixer init\n");
 		_mixer = new Audio::MixerImpl(this, 22100);
 		assert(_mixer);
 		_mixer->setReady(true);
-		printf("OSystem_PS3::initBackend() mixer ready\n");
+		net_send("OSystem_PS3::initBackend() mixer ready\n");
 	}
 	if(_timer==NULL)
 	{
-		printf("OSystem_PS3::initBackend() timer init\n");
+		net_send("OSystem_PS3::initBackend() timer init\n");
 		_timer = new DefaultTimerManager();
-		printf("OSystem_PS3::initBackend() timer ready\n");
+		net_send("OSystem_PS3::initBackend() timer ready\n");
 	}
 
 
 	OSystem::initBackend();
-	printf("OSystem_PS3::initBackend()9\n");
+	net_send("OSystem_PS3::initBackend()9\n");
 
 	_isInitialized=true;
 }
 
 bool OSystem_PS3::hasFeature(Feature f)
 {
-	printf("OSystem_PS3::hasFeature(%d)\n",f);
+	net_send("OSystem_PS3::hasFeature(%d)\n",f);
 	switch(f)
 	{
 	case kFeatureFullscreenMode:
@@ -176,12 +177,12 @@ void OSystem_PS3::setShakePos(int shakeOffset)
 
 void OSystem_PS3::setFeatureState(Feature f, bool enable)
 {
-	printf("OSystem_PS3::setFeatureState(%d,%d)\n",f,enable);
+	net_send("OSystem_PS3::setFeatureState(%d,%d)\n",f,enable);
 }
 
 bool OSystem_PS3::getFeatureState(Feature f)
 {
-	printf("OSystem_PS3::getFeatureState(%d)\n",f);
+	net_send("OSystem_PS3::getFeatureState(%d)\n",f);
 	return false;
 }
 
@@ -189,13 +190,14 @@ bool OSystem_PS3::getFeatureState(Feature f)
 
 bool OSystem_PS3::pollEvent(Common::Event &event)
 {
+	net_send("OSystem_PS3::pollEvent()\n");
 	bool ret=_pad.pollEvent(event);
 	if(ret==true)
 	{
-		//printf("OSystem_PS3::pollEvent() got Event: %d,%d,%d\n",event.type,event.mouse.x,event.mouse.y);
+		//net_send("OSystem_PS3::pollEvent() got Event: %d,%d,%d\n",event.type,event.mouse.x,event.mouse.y);
 
-		if(event.type==Common::EVENT_MOUSEMOVE)
-			warpMouse(event.mouse.x,event.mouse.y);
+		//if(event.type==Common::EVENT_MOUSEMOVE)
+		//	warpMouse(event.mouse.x,event.mouse.y);
 
 		return true;
 	}
@@ -206,30 +208,30 @@ bool OSystem_PS3::pollEvent(Common::Event &event)
 
 	if(_shutdownRequested)
 	{
-		printf("OSystem_PS3::pollEvent(want_to_quit)\n");
+		net_send("OSystem_PS3::pollEvent(want_to_quit)\n");
 		event.type=Common::EVENT_QUIT;
 		//_shutdownRequested=false;
 		return true;
 	}
-	//printf("OSystem_PS3::pollEvent()\n");
+	//net_send("OSystem_PS3::pollEvent()\n");
 	return false;
 }
 
 uint32 OSystem_PS3::getMillis()
 {
-	//printf("OSystem_PS3::getMillis()\n");
+	net_send("OSystem_PS3::getMillis()\n");
 	return (sys_time_get_system_time()-_startTime)/1000;
 }
 
 void OSystem_PS3::delayMillis(uint msecs)
 {
-	//printf("OSystem_PS3::delayMillis()\n");
+	net_send("OSystem_PS3::delayMillis()\n");
 	sys_timer_usleep(msecs * 1000);
 }
 
 OSystem::MutexRef OSystem_PS3::createMutex(void)
 {
-	printf("OSystem_PS3::createMutex()");
+	net_send("OSystem_PS3::createMutex()");
 	pthread_mutexattr_t attr;
 	pthread_mutexattr_init(&attr);
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
@@ -238,30 +240,30 @@ OSystem::MutexRef OSystem_PS3::createMutex(void)
 	if (pthread_mutex_init(mutex, &attr) != 0) {
 		warning("pthread_mutex_init() failed");
 		delete mutex;
-		printf("=NULL\n");
+		net_send("=NULL\n");
 		return NULL;
 	}
-	printf("=%X\n",(int)mutex);
+	net_send("=%X\n",(int)mutex);
 	return (MutexRef)mutex;
 }
 
 void OSystem_PS3::lockMutex(MutexRef mutex)
 {
-	//printf("OSystem_PS3::lockMutex()\n");
+	net_send("OSystem_PS3::lockMutex()\n");
 	if (pthread_mutex_lock((pthread_mutex_t*)mutex) != 0)
 		warning("pthread_mutex_lock() failed");
 }
 
 void OSystem_PS3::unlockMutex(MutexRef mutex)
 {
-	//printf("OSystem_PS3::unlockMutex()\n");
+	net_send("OSystem_PS3::unlockMutex()\n");
 	if (pthread_mutex_unlock((pthread_mutex_t*)mutex) != 0)
 		warning("pthread_mutex_unlock() failed");
 }
 
 void OSystem_PS3::deleteMutex(MutexRef mutex)
 {
-	printf("OSystem_PS3::deleteMutex()\n");
+	net_send("OSystem_PS3::deleteMutex()\n");
 	pthread_mutex_t* m = (pthread_mutex_t*)mutex;
 	if (pthread_mutex_destroy(m) != 0)
 		warning("pthread_mutex_destroy() failed");
@@ -271,12 +273,12 @@ void OSystem_PS3::deleteMutex(MutexRef mutex)
 
 void OSystem_PS3::quit()
 {
-	printf("OSystem_PS3::quit()\n");
+	net_send("OSystem_PS3::quit()\n");
 }
 
 Common::SaveFileManager *OSystem_PS3::getSavefileManager()
 {
-	//printf("OSystem_PS3::getSavefileManager()=%d\n",(int)_savefile);
+	net_send("OSystem_PS3::getSavefileManager()=%d\n",(int)_savefile);
 	//assert(_savefile);
 	return _savefile;
 }
@@ -285,25 +287,25 @@ Audio::Mixer *OSystem_PS3::getMixer()
 {
 	if(_mixer==NULL)
 	{
-		printf("OSystem_PS3::initBackend()3\n");
+		net_send("OSystem_PS3::initBackend()3\n");
 		_mixer = new Audio::MixerImpl(this, 22050);
 	}
 
-	//printf("OSystem_PS3::getMixer()=%d\n",_mixer);
+	//net_send("OSystem_PS3::getMixer()=%d\n",_mixer);
 	//assert(_mixer);
 	return _mixer;
 }
 
 Common::TimerManager *OSystem_PS3::getTimerManager()
 {
-	//printf("OSystem_PS3::getTimerManager()=%d\n",_timer);
+	net_send("OSystem_PS3::getTimerManager()=%d\n",_timer);
 	//assert(_timer);
 	return _timer;
 }
 
 void OSystem_PS3::getTimeAndDate(TimeDate &t) const
 {
-	printf("OSystem_PS3::getTimeAndDate()\n");
+	net_send("OSystem_PS3::getTimeAndDate()\n");
 	time_t now=time(NULL);
 	std::tm *time=localtime(&now);
 
@@ -320,22 +322,34 @@ void OSystem_PS3::getTimeAndDate(TimeDate &t) const
 
 FilesystemFactory *OSystem_PS3::getFilesystemFactory()
 {
-	//printf("OSystem_PS3::getFilesystemFactory()=%d\n",_fsFactory);
+	net_send("OSystem_PS3::getFilesystemFactory()=%d\n",_fsFactory);
 	//assert(_fsFactory);
 	return _fsFactory;
 }
 
+
+byte samples[1024*1024];
+int len=1024*1024/4;
+uint32 lastquery=-1;
+
 void OSystem_PS3::updateFrame()
 {
+	net_send("OSystem_PS3::updateFrame()\n");
 	_pad.frame();
-	//printf("OSystem_PS3::updateFrame()\n");
 	if(_timer!=NULL)
 		((DefaultTimerManager*)_timer)->handler();
 
-	byte samples[1024];
-	int len=1024/4;
+	if(lastquery==0)
+		lastquery=getMillis();
+
 	if(_mixer!=NULL)
-		_mixer->mixCallback(samples, len);
+	{
+		uint32 now=getMillis();
+		uint32 deltamilis=now-lastquery;
+		lastquery=now;
+		int ql=MAX(len,(int)(12 * deltamilis));//48000(hz)/1000(ms)/4(byte)*ms
+		_mixer->mixCallback(samples, ql);
+	}
 }
 
 

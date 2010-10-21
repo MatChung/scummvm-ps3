@@ -3,16 +3,19 @@
 
 int16 OSystem_PS3::getHeight()
 {
+	net_send("OSystem_PS3::getHeight()\n");
 	return _game_texture->height();
 }
 
 int16 OSystem_PS3::getWidth()
 {
+	net_send("OSystem_PS3::getWidth()\n");
 	return _game_texture->width();
 }
 
 void OSystem_PS3::grabPalette(byte *colors, uint start, uint num)
 {
+	net_send("OSystem_PS3::grabPalette()\n");
 	const byte* palette = _game_texture->palette_const() + start*3;
 	do {
 		for (int i = 0; i < 3; ++i)
@@ -26,12 +29,14 @@ void OSystem_PS3::grabPalette(byte *colors, uint start, uint num)
 
 void OSystem_PS3::copyRectToScreen(const byte *buf, int pitch, int x, int y, int w, int h)
 {
+	net_send("OSystem_PS3::copyRectToScreen()\n");
 	_game_texture->updateBuffer(x, y, w, h, buf, pitch);
 	draw();
 }
 
 Graphics::Surface *OSystem_PS3::lockScreen()
 {
+	net_send("OSystem_PS3::lockScreen()\n");
 	Graphics::Surface* surface = _game_texture->surface();
 	//assert(surface->pixels);
 	return surface;
@@ -39,12 +44,14 @@ Graphics::Surface *OSystem_PS3::lockScreen()
 
 void OSystem_PS3::unlockScreen()
 {
+	net_send("OSystem_PS3::unlockScreen()\n");
 	//assert(_game_texture->dirty());
 	draw();
 }
 
 void OSystem_PS3::setPalette(const byte *colors, uint start, uint num)
 {
+	net_send("OSystem_PS3::setPalette()\n");
 	if (!_use_mouse_palette)
 		_setCursorPalette(colors, start, num);
 

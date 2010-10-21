@@ -39,7 +39,7 @@ bool PS3Pad::pollEvent(Common::Event &event)
 		ret=cellPadGetData(0,&data);
 		if(ret==CELL_PAD_OK && data.len>0)
 		{
-			//printf("PS3Pad::pollEvent() got data: %d\n",i);
+			//net_send("PS3Pad::pollEvent() got data: %d\n",i);
 			_xPosPad+=data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_X]-127;
 			_yPosPad+=data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_Y]-127;
 			bState1|=data.button[CELL_PAD_BTN_OFFSET_DIGITAL1];

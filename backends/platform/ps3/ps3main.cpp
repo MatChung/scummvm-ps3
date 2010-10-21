@@ -139,7 +139,7 @@ static int getResolutionWidthHeight(const unsigned int resolutionId, unsigned in
 	case CELL_VIDEO_OUT_RESOLUTION_1280x1080 : w=1280; h=1080; return(1);
 	case CELL_VIDEO_OUT_RESOLUTION_960x1080  : w=960;  h=1080; return(1);
 	};
-	printf("getResolutionWidthHeight: resolutionId %d not a valid video mode\n",resolutionId);
+	net_send("getResolutionWidthHeight: resolutionId %d not a valid video mode\n",resolutionId);
 	return(0);
 }
 
@@ -185,14 +185,14 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param,
 	(void) userdata;
 	switch (status) {
 	case CELL_SYSUTIL_REQUEST_EXITGAME:
-		printf("CELL_SYSUTIL_REQUEST_EXITGAME");
-		printf("CELL_SYSUTIL_REQUEST_EXITGAME");
-		printf("CELL_SYSUTIL_REQUEST_EXITGAME");
-		printf("CELL_SYSUTIL_REQUEST_EXITGAME");
-		printf("CELL_SYSUTIL_REQUEST_EXITGAME");
-		printf("CELL_SYSUTIL_REQUEST_EXITGAME");
-		printf("CELL_SYSUTIL_REQUEST_EXITGAME");
-		printf("CELL_SYSUTIL_REQUEST_EXITGAME");
+		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
+		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
+		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
+		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
+		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
+		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
+		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
+		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
 		want_to_quit = true;
 		psglDestroyContext(context);
 		psglDestroyDevice(device);
@@ -205,7 +205,7 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param,
 	case CELL_SYSUTIL_DRAWING_END:
 		break;
 	default:
-		printf
+		net_send
 		    ("Graphics common: Unknown status received: 0x%llx\n",
 		     status);
 	}
@@ -260,7 +260,7 @@ hostMemorySize: 64* 1024*1024,  // 128 mbs for host memory
 
 	if (bestResolution)
 	{
-		printf("%d x %d is available...\n",deviceWidth,deviceHeight);
+		net_send("%d x %d is available...\n",deviceWidth,deviceHeight);
 
 		// (4) create the PSGL device based on the selected resolution mode
 		PSGLdeviceParameters params;
@@ -287,7 +287,7 @@ hostMemorySize: 64* 1024*1024,  // 128 mbs for host memory
 	}
 	else
 	{
-		printf("%d x %d is NOT available...\n",deviceWidth,deviceHeight);
+		net_send("%d x %d is NOT available...\n",deviceWidth,deviceHeight);
 		shutdownModules();
 		exit(0);
 	}
@@ -317,7 +317,7 @@ void shutdownInput()
 
 OSystem *OSystem_PS3_create()
 {
-	printf("OSystem_PS3::OSystem_PS3_create()\n");
+	net_send("OSystem_PS3::OSystem_PS3_create()\n");
 	return new OSystem_PS3();
 }
 

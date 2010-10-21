@@ -3,14 +3,14 @@
 
 bool OSystem_PS3::showMouse(bool visible)
 {
-	printf("PS3GL::showMouse(%d)\n",visible);
+	net_send("PS3GL::showMouse(%d)\n",visible);
 	//_show_mouse=visible;
 	return visible;
 }
 
 void OSystem_PS3::warpMouse(int x, int y)
 {
-	//printf("PS3GL::warpMouse(%d, %d)\n",x,y);
+	net_send("PS3GL::warpMouse(%d, %d)\n",x,y);
 	_mouse_pos.x=x;
 	_mouse_pos.y=y;
 
@@ -19,9 +19,9 @@ void OSystem_PS3::warpMouse(int x, int y)
 
 void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, int hotspotY, uint32 keycolor, int cursorTargetScale, const Graphics::PixelFormat *format)
 {
-	//printf("PS3GL::setMouseCursor(%p, %u, %u, %d, %d, %d, %d, %p)",
-	//	  buf, w, h, hotspotX, hotspotY, (int)keycolor, cursorTargetScale,
-	//	  format);
+	net_send("PS3GL::setMouseCursor(%p, %u, %u, %d, %d, %d, %d, %p)",
+		  buf, w, h, hotspotX, hotspotY, (int)keycolor, cursorTargetScale,
+		  format);
 
 	assert(keycolor < 256);
 
@@ -45,6 +45,7 @@ void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, 
 }
 void OSystem_PS3::_setCursorPalette(const byte *colors,
 					uint start, uint num) {
+	net_send("PS3GL::_setCursorPalette(%d, %d, %d)\n",colors,start,num);
 	byte* palette = _mouse_texture->palette() + start*4;
 	do {
 		for (int i = 0; i < 3; ++i)
