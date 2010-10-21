@@ -111,7 +111,7 @@ void GLESTexture::updateBuffer(GLuint x, GLuint y, GLuint w, GLuint h,
 }
 void GLESTexture::fillBuffer(byte x) {
 	byte *tmpbuf=new byte[_surface.h * _surface.w * bytesPerPixel()];
-	memset(tmpbuf, 0, _surface.h * _surface.w * bytesPerPixel());
+	memset(tmpbuf, x, _surface.h * _surface.w * bytesPerPixel());
 	glBindTexture(GL_TEXTURE_2D, _texture_name);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _surface.w, _surface.h,
 					glFormat(), glType(), tmpbuf);
@@ -123,7 +123,10 @@ void GLESTexture::fillBuffer(byte x) {
 void GLESTexture::drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 {
 	glBindTexture(GL_TEXTURE_2D, _texture_name);
-
+	_drawTexture(x,y,w,h);
+}
+void GLESTexture::_drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
+{
 	const GLfloat tex_width = _surface.w/((float)_texture_width);
 	const GLfloat tex_height = _surface.h/((float)_texture_height);
 

@@ -37,7 +37,7 @@ void OSystem_PS3::initGraphics()
 
 	net_send("PS3GL::init()_mouse_texture\n");
 	if (!_mouse_texture)
-		_mouse_texture = new GLESPaletteATexture();
+		_mouse_texture = new GLESPaletteTexture();
 	else
 		_mouse_texture->reinitGL();
 

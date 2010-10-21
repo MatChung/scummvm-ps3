@@ -340,7 +340,7 @@ void OSystem_PS3::updateFrame()
 		uint32 now=getMillis();
 		uint32 deltamilis=now-lastquery;
 		lastquery=now;
-		int ql=MAX(len,(int)(12 * deltamilis));//48000(hz)/1000(ms)/4(byte)*ms
+		int ql=MIN(len,(int)(12 * deltamilis));//48000(hz)/1000(ms)/4(byte)*ms
 		_mixer->mixCallback(samples, ql);
 	}
 }

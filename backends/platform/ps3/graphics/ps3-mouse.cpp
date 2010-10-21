@@ -28,15 +28,16 @@ void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, 
 	_mouse_texture->allocBuffer(w, h);
 
 	// Update palette alpha based on keycolor
-	byte* palette = _mouse_texture->palette();
+	/*byte* palette = _mouse_texture->palette();
 	int i = 256;
 	do {
 		palette[3] = 0xff;
 		palette += 4;
-	} while (--i);
-	palette = _mouse_texture->palette();
-	palette[keycolor*4 + 3] = 0x00;
+	} while (--i);*/
+	//palette = _mouse_texture->palette();
+	//palette[keycolor*4 + 3] = 0x00;
 	_mouse_texture->updateBuffer(0, 0, w, h, buf, w);
+	_mouse_texture->setKeyColor(keycolor);
 
 	_mouse_hotspot = Common::Point(hotspotX, hotspotY);
 	_mouse_targetscale = cursorTargetScale;
@@ -46,6 +47,9 @@ void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, 
 void OSystem_PS3::_setCursorPalette(const byte *colors,
 					uint start, uint num) {
 	net_send("PS3GL::_setCursorPalette(%d, %d, %d)\n",colors,start,num);
+
+	_mouse_texture->updatePalette(colors,start,num);
+/*
 	byte* palette = _mouse_texture->palette() + start*4;
 	do {
 		for (int i = 0; i < 3; ++i)
@@ -54,7 +58,7 @@ void OSystem_PS3::_setCursorPalette(const byte *colors,
 
 		palette += 4;
 		colors += 4;
-	} while (--num);
+	} while (--num);*/
 }
 
 void OSystem_PS3::disableCursorPalette(bool disable)

@@ -38,6 +38,8 @@ void initGraphics(PSGLdevice *device)
 	// PSGL doesn't clear the screen on startup, so let's do that here.
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	psglSwap();
+
+	cgRTCgcInit();
 }
 
 // Given an priority ordered array of desired resolutions (from most desired to least), chooses

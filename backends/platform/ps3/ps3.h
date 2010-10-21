@@ -104,7 +104,7 @@ protected:
 	bool _show_overlay;
 
 	// Mouse layer
-	GLESPaletteATexture* _mouse_texture;
+	GLESPaletteTexture* _mouse_texture;
 	Common::Point _mouse_hotspot;
 	Common::Point _mouse_pos;
 	int _mouse_targetscale;
