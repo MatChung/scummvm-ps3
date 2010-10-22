@@ -78,32 +78,32 @@ bool PS3FileStream::flush()
 int32 PS3FileStream::pos() const
 {
 //	printf("PS3FileStream::pos() - ");
-	uint64_t pos=0;
-	cellFsLseek(_fd,0,CELL_FS_SEEK_CUR,&pos);
+	uint64_t l_pos=0;
+	cellFsLseek(_fd,0,CELL_FS_SEEK_CUR,&l_pos);
 //	printf("%d\n",pos);
-	return pos;
+	return l_pos;
 }
 
 int32 PS3FileStream::size() const
 {
 //	printf("PS3FileStream::size() - ");
 	uint64_t old_pos=0;
-	uint64_t size=0;
-	int err;
-	err=cellFsLseek(_fd,0,CELL_FS_SEEK_CUR,&old_pos);
+	uint64_t l_size=0;
+	int l_err;
+	l_err=cellFsLseek(_fd,0,CELL_FS_SEEK_CUR,&old_pos);
 //	printf("%d,%d -- ",old_pos,err);
-	err=cellFsLseek(_fd,0,CELL_FS_SEEK_END,&size);
+	l_err=cellFsLseek(_fd,0,CELL_FS_SEEK_END,&l_size);
 //	printf("%d,%d -- ",size,err);
-	err=cellFsLseek(_fd,old_pos,CELL_FS_SEEK_SET,&old_pos);
+	l_err=cellFsLseek(_fd,old_pos,CELL_FS_SEEK_SET,&old_pos);
 //	printf("%d,%d\n",old_pos,err);
-	return size;
+	return l_size;
 }
 
 bool PS3FileStream::seek(int32 offs, int whence)
 {
 	//printf("PS3FileStream::seek(%d,%d)\n",offs,whence);
-	uint64_t pos=0;
-	_err=cellFsLseek(_fd,offs,whence,&pos);
+	uint64_t l_pos=0;
+	_err=cellFsLseek(_fd,offs,whence,&l_pos);
 	return err();
 }
 
@@ -113,12 +113,12 @@ uint32 PS3FileStream::read(void *dataPtr, uint32 dataSize)
 		return 0;
 
 	//printf("PS3FileStream::read() - %X,%d  ",dataPtr,dataSize);
-	uint64_t read=0;
-	_err=cellFsRead(_fd,dataPtr,dataSize,&read);
+	uint64_t l_read=0;
+	_err=cellFsRead(_fd,dataPtr,dataSize,&l_read);
 	//printf(" read: %d,%d\n",_err,read);
 
-	if(read==0)
+	if(l_read==0)
 		_eos=true;
 
-	return read;
+	return l_read;
 }

@@ -326,6 +326,16 @@
 	/* to make an efficient, inlined memcpy implementation */
 	#define memcpy(dst, src, size)   psp_memcpy(dst, src, size)
 
+#elif defined(__PPU__)
+	/* PS3 */
+
+	#define scumm_stricmp strcasecmp
+	#define scumm_strnicmp strncasecmp
+	/* no getenv */
+	#define getenv(x) NULL
+	/* net_send() */
+	#include "backends/platform/ps3/netdbg/net.h"
+
 #elif defined(__amigaos4__)
 
 	#define	scumm_stricmp strcasecmp
