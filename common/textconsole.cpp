@@ -81,6 +81,8 @@ void warning(const char *s, ...) {
 
 #if defined( ANDROID )
 	__android_log_write(ANDROID_LOG_WARN, "ScummVM", buf);
+#elif defined( __PPU__ )
+	net_send("WARNING: %s!\n",buf);
 #elif !defined (__SYMBIAN32__)
 	fputs("WARNING: ", stderr);
 	fputs(buf, stderr);
@@ -161,6 +163,9 @@ void NORETURN_PRE error(const char *s, ...) {
 
 #ifdef __PSP__
 	PspDebugTrace(false, "%s", buf_output);	// write to file
+#endif
+#ifdef __PPU__
+	net_send("Fatal error: %s!\n",buf_output);
 #endif
 
 	// Finally exit. quit() will terminate the program if g_system is present

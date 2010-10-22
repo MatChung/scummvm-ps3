@@ -236,7 +236,7 @@ AbstractFSNode *Ps3FilesystemNode::getChild(const Common::String &n) const
 bool Ps3FilesystemNode::getChildren(AbstractFSList &list, ListMode mode, bool hidden) const {
 	//TODO: honor the hidden flag
 
-//	printf("Ps3FilesystemNode::getChildren()\n");
+	printf("Ps3FilesystemNode::getChildren(%s)\n",_path.c_str());
 
 	if (!_isDirectory)
 		return false;
@@ -304,7 +304,7 @@ bool Ps3FilesystemNode::getChildren(AbstractFSList &list, ListMode mode, bool hi
 					*/
 					Common::String newPath=_path+dirent.d_name;
 					Ps3FilesystemNode *dirEntry=new Ps3FilesystemNode(newPath);
-					//printf("   child: %s\n",newPath.c_str());
+					printf("   child: %s\n",newPath.c_str());
 					list.push_back(dirEntry);
 				}
 				else
@@ -341,10 +341,12 @@ AbstractFSNode *Ps3FilesystemNode::getParent() const {
 
 
 Common::SeekableReadStream *Ps3FilesystemNode::createReadStream() {
+	printf("Ps3FilesystemNode::createReadStream(%s)\n", _path.c_str());
 	Common::SeekableReadStream *ss = PS3FileStream::makeFromPath(getPath().c_str(), false);
 	return ss;
 }
 
 Common::WriteStream *Ps3FilesystemNode::createWriteStream() {
+	printf("Ps3FilesystemNode::createWriteStream(%s)\n", _path.c_str());
 	return PS3FileStream::makeFromPath(getPath().c_str(), true);
 }
