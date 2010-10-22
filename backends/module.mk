@@ -71,5 +71,12 @@ MODULE_OBJS += \
 	fs/wii/wii-fs-factory.o
 endif
 
+ifeq ($(BACKEND),ps3)
+MODULE_OBJS += \
+	fs/ps3/ps3-filestream.o \
+	fs/ps3/ps3-fs.o \
+	fs/ps3/ps3-fs-factory.o
+endif
+
 # Include common rules
 include $(srcdir)/rules.mk

@@ -323,7 +323,7 @@ FilesystemFactory *OSystem_PS3::getFilesystemFactory()
 
 byte samples[1024*1024];
 int len=1024*1024/4;
-uint32 lastquery=-1;
+uint32 lastquery=0;
 
 void OSystem_PS3::updateFrame()
 {

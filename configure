@@ -1101,6 +1101,16 @@ ps2)
 		_release_build=yes
 	fi
 	;;
+ps3)
+	_host_os=ps3
+	_host_cpu=ppc
+	_host_alias=ppu-lv2
+	_backend=ps3
+	if test "$_release_build" = auto; then
+		# Enable release build by default.
+		_release_build=yes
+	fi
+	;;
 psp)
 	_host_os=psp
 	_host_cpu=mipsallegrexel
@@ -1210,6 +1220,12 @@ n64)
 ps2)
 	if test -z "$PS2SDK"; then
 		echo "Please set PS2SDK in your environment. export PS2SDK=<path to ps2 sdk>"
+		exit 1
+	fi
+	;;
+ps3)
+	if test -z "$SCE_PS3_ROOT"; then
+		echo "Please set SCE_PS3_ROOT in your environment. export SCE_PS3_ROOT=<path to ps3 sdk>"
 		exit 1
 	fi
 	;;
@@ -1562,6 +1578,12 @@ case $_host_os in
 		# TODO ps2
 		CXXFLAGS="$CXXFLAGS -G2"
 		DEFINES="$DEFINES -D_EE -D__PLAYSTATION2__"
+		;;
+	ps3)
+		#CXXFLAGS="$CXXFLAGS -Os -msoft-float -mtune=xscale -march=armv5te -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5TE__"
+		#add_line_to_config_mk "ANDROID_SDK = $ANDROID_SDK"
+		_unix=no
+		_seq_midi=no
 		;;
 	psp)
 		CXXFLAGS="$CXXFLAGS -O3 -I$PSPSDK/include -D_PSP_FW_VERSION=150"
@@ -2027,7 +2049,7 @@ fi
 # Enable 16bit support only for backends which support it
 #
 case $_backend in
-	dingux | dreamcast | gph | openpandora | psp | samsungtv | sdl | wii)
+	dingux | dreamcast | gph | openpandora | psp | ps3 | samsungtv | sdl | wii)
 		if test "$_16bit" = auto ; then
 			_16bit=yes
 		else
@@ -2830,6 +2852,37 @@ case $_backend in
 		LDFLAGS="$LDFLAGS -L$PS2SDK/ee/lib -L$PS2SDK/ports/lib"
 		LIBS="$LIBS -lmc -lpad -lmouse -lhdd -lpoweroff -lsjpcm -lm -lc -lfileXio -lkernel -lstdc++ "
 		;;
+	ps3)
+		static_libs=''
+		system_libs=''
+		#LDFLAGS="$LDFLAGS -mno-crt0 $PS2SDK/ee/startup/crt0.o -T $PS2SDK/ee/startup/linkfile"
+		LDFLAGS="-Wl,--start-group $LDFLAGS"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libm.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libpthread.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libio_stub.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libresc_stub.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libfs_stub.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libsysmodule_stub.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libsysutil_stub.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libdbgfont_gcm.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libaudio_stub.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libnet_stub.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libnetctl_stub.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libgcm_sys_stub.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libgcm_cmd.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/PSGL/RSX/ultra-opt/libPSGL.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/PSGL/RSX/ultra-opt/libPSGLFX.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/PSGL/RSX/ultra-opt/libPSGLcgc.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libgcm_pm.a"
+		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libcgc.a"
+		LIBS="$LIBS  -Wl,--end-group"
+		#add_line_to_config_h '#define DISABLE_TOWNS_DUAL_LAYER_MODE'
+
+		add_line_to_config_mk ''
+		add_line_to_config_mk 'eboot: all'
+		add_line_to_config_mk '	$(SCE_PS3_ROOT)/host-win32/bin/make_fself "$(EXECUTABLE)" "dists/ps3/EBOOT.BIN"'
+		add_line_to_config_mk ''
+		;;
 	psp)
 		DEFINES="$DEFINES -D__PSP__ -DDISABLE_TEXT_CONSOLE -DDISABLE_COMMAND_LINE -DDISABLE_DOSBOX_OPL"
 		LIBS="$LIBS -lpng -Wl,-Map,mapfile.txt"
@@ -2878,7 +2931,7 @@ if test "$have_gcc" = yes ; then
 		case $_host_os in
 		# newlib-based system include files suppress non-C89 function
 		# declarations under __STRICT_ANSI__
-		amigaos* | android | dreamcast | ds | gamecube | mingw* | n64 | psp | wii | wince )
+		amigaos* | android | dreamcast | ds | gamecube | mingw* | n64 | psp | ps3 | wii | wince )
 			CXXFLAGS="$CXXFLAGS -W -Wno-unused-parameter"
 			;;
 		*)
@@ -2899,7 +2952,7 @@ fi;
 
 # Some platforms use certain GNU extensions in header files
 case $_host_os in
-android | gamecube | psp | wii)
+android | gamecube | psp | ps3 | wii)
 	;;
 *)
 	CXXFLAGS="$CXXFLAGS -pedantic"
