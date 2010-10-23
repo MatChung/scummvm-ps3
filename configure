@@ -1589,6 +1589,7 @@ case $_host_os in
 		#add_line_to_config_mk "ANDROID_SDK = $ANDROID_SDK"
 		_unix=no
 		_seq_midi=no
+		_endian=big
 		;;
 	psp)
 		CXXFLAGS="$CXXFLAGS -O3 -I$PSPSDK/include -D_PSP_FW_VERSION=150"
