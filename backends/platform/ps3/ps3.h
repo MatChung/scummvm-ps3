@@ -6,8 +6,10 @@
 #include "sound/mixer_intern.h"
 #include "graphics/colormasks.h"
 #include "graphics/texture.h"
+#include <pthread.h>
 //#include "graphics/ps3gl.h"
 
+class PS3Sound;
 
 class OSystem_PS3 : public BaseBackend
 {
@@ -21,10 +23,13 @@ protected:
 
 	//PS3GL graphics;
 	PS3Pad _pad;
+	PS3Sound *_sound;
 	bool _isInitialized;
 	bool _shutdownRequested;
 
-	void updateFrame();
+	pthread_t _thread;
+	pthread_attr_t _thread_attribs;
+
 public:
 
 	OSystem_PS3();
@@ -89,6 +94,7 @@ public:
 	virtual bool allowMapping() const { return false; }
 
 
+	void update();
 	void initGraphics();
 
 protected:

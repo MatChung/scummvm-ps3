@@ -25,7 +25,7 @@
 
 #include "ps3.h"
 #include "pad.h"
-
+#include "sound/ps3-sound.h"
 
 #include <unistd.h>
 
@@ -62,6 +62,21 @@
 
 Common::List<Graphics::PixelFormat> __formats;
 
+void *thread_func(void *attr)
+{
+	int x=0;
+	OSystem_PS3 *sys=(OSystem_PS3*)attr;
+	while(true)
+	{
+		x++;
+		if(x%500==0)
+			net_send("thread_func\n");
+		sys_timer_usleep(1000);
+		sys->update();
+	}
+}
+
+
 OSystem_PS3::OSystem_PS3()
 {
 	net_send("OSystem_PS3()\n");
@@ -78,6 +93,9 @@ OSystem_PS3::OSystem_PS3()
 
 	__formats.push_back(Graphics::PixelFormat(4,8,8,8,8,0,8,16,24));
 	__formats.push_back(Graphics::PixelFormat(2, 5, 5, 5, 0, 0, 5, 10, 0));
+
+
+	pthread_create(&_thread,&_thread_attribs,thread_func,this);
 }
 
 OSystem_PS3::~OSystem_PS3()
@@ -127,6 +145,8 @@ void OSystem_PS3::initBackend()
 		net_send("OSystem_PS3::initBackend() mixer init\n");
 		_mixer = new Audio::MixerImpl(this, 48000);
 		assert(_mixer);
+		_sound=new PS3Sound(_mixer);
+		_sound->init();
 		_mixer->setReady(true);
 		net_send("OSystem_PS3::initBackend() mixer ready\n");
 	}
@@ -199,10 +219,6 @@ bool OSystem_PS3::pollEvent(Common::Event &event)
 
 		return true;
 	}
-	else
-	{
-		updateFrame();
-	}
 
 	if(_shutdownRequested)
 	{
@@ -249,15 +265,17 @@ OSystem::MutexRef OSystem_PS3::createMutex(void)
 void OSystem_PS3::lockMutex(MutexRef mutex)
 {
 	//net_send("OSystem_PS3::lockMutex()\n");
-	if (pthread_mutex_lock((pthread_mutex_t*)mutex) != 0)
-		warning("pthread_mutex_lock() failed");
+	int ret=pthread_mutex_lock((pthread_mutex_t*)mutex);
+	if (ret != 0)
+		net_send("pthread_mutex_lock() failed:%d\n",ret);
 }
 
 void OSystem_PS3::unlockMutex(MutexRef mutex)
 {
 	//net_send("OSystem_PS3::unlockMutex()\n");
-	if (pthread_mutex_unlock((pthread_mutex_t*)mutex) != 0)
-		warning("pthread_mutex_unlock() failed");
+	int ret=pthread_mutex_unlock((pthread_mutex_t*)mutex);
+	if (ret != 0)
+		net_send("pthread_mutex_unlock() failed:%d\n",ret);
 }
 
 void OSystem_PS3::deleteMutex(MutexRef mutex)
@@ -325,7 +343,7 @@ byte samples[1024*1024];
 int len=1024*1024/4;
 uint32 lastquery=0;
 
-void OSystem_PS3::updateFrame()
+void OSystem_PS3::update()
 {
 	//net_send("OSystem_PS3::updateFrame()\n");
 	_pad.frame();
@@ -335,13 +353,9 @@ void OSystem_PS3::updateFrame()
 	if(lastquery==0)
 		lastquery=getMillis();
 
-	if(_mixer!=NULL)
+	if(_sound!=NULL)
 	{
-		uint32 now=getMillis();
-		uint32 deltamilis=now-lastquery;
-		lastquery=now;
-		int ql=MIN(len,(int)(12 * deltamilis));//48000(hz)/1000(ms)/4(byte)*ms
-		_mixer->mixCallback(samples, ql);
+		_sound->play();
 	}
 }
 

@@ -3,7 +3,7 @@
 
 bool OSystem_PS3::showMouse(bool visible)
 {
-	net_send("PS3GL::showMouse(%d)\n",visible);
+	//net_send("PS3GL::showMouse(%d)\n",visible);
 	_show_mouse=visible;
 	return visible;
 }

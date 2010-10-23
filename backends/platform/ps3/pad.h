@@ -17,8 +17,8 @@ private:
 	uint16 _buttonState1Known;
 	uint16 _buttonState2Known;
 
-	int16 _xPos;
-	int16 _yPos;
+	float _xPos;
+	float _yPos;
 	int16 _xPosKnown;
 	int16 _yPosKnown;
 

@@ -110,14 +110,15 @@ void initModules()
 {
 	int ret;
 	ret = cellSysmoduleLoadModule (CELL_SYSMODULE_FS);
+	ret = cellSysmoduleLoadModule (CELL_SYSMODULE_AUDIO);
 }
 
 void shutdownModules()
 {
 	int ret;
+	ret = cellSysmoduleUnloadModule (CELL_SYSMODULE_AUDIO);
 	ret = cellSysmoduleUnloadModule (CELL_SYSMODULE_FS);
 }
-
 
 
 

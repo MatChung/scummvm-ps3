@@ -143,5 +143,4 @@ void OSystem_PS3::updateScreen()
 	//CHECK_GL_ERROR();
 
 	psglSwap();
-	updateFrame();
 }

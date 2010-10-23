@@ -11,7 +11,8 @@ MODULE_OBJS := \
 	graphics/ps3-overlay.o \
 	graphics/rgb-texture.o \
 	graphics/palette-texture.o \
-	netdbg/net.o
+	netdbg/net.o \
+	sound/ps3-sound.o
 
 # We don't use rules.mk but rather manually update OBJS and MODULE_DIRS.
 MODULE_OBJS := $(addprefix $(MODULE)/, $(MODULE_OBJS))
