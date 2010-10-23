@@ -23,13 +23,17 @@ What works:
 
  .) Maniac Mansion is playable (tested for 5 minutes)
 
+ .) Sound seems to work (tested with Day of the Tentacle)
+
 
 What doesn't:
 
 I have only tried a handful of games, this list is by far not complete
 
  .) You will get corrupted palettes in most games
+
  .) Many games will have an invisible cursor
- .) Sound is not yet implemented.
+
  .) Curse of Monkey Island does not play videos
+
  .) Beneath a Steel Sky crashes during the intro
