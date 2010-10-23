@@ -131,7 +131,7 @@ static PSGLdevice *device=NULL;
 
 
 static void gfxSysutilCallback(uint64_t status, uint64_t param,
-			       void *userdata)
+							   void *userdata)
 {
 	(void) param;
 	(void) userdata;
@@ -158,8 +158,8 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param,
 		break;
 	default:
 		net_send
-		    ("Graphics common: Unknown status received: 0x%llx\n",
-		     status);
+			("Graphics common: Unknown status received: 0x%llx\n",
+			status);
 	}
 }
 
@@ -169,7 +169,7 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param,
 #include "netdbg/net.h"
 
 
-void initGL()
+void initGL(unsigned int &deviceWidth, unsigned int &deviceHeight)
 {
 	// Check if the video output device is ready BEFORE calling psglInit.
 	// This will make sure HDMI devices are turned on and connected, and allow
@@ -198,14 +198,20 @@ hostMemorySize: 64* 1024*1024,  // 128 mbs for host memory
 	// (1) create array of all desired resolutions in priority order (most desired to least).
 	//     In this example, we choose 1080p if possible, then 960x1080-to-1920x1080 horizontal scaling,
 	//     and in the worst case, 720p.
-	const unsigned int resolutions[] = { CELL_VIDEO_OUT_RESOLUTION_1080, CELL_VIDEO_OUT_RESOLUTION_960x1080, CELL_VIDEO_OUT_RESOLUTION_720, CELL_VIDEO_OUT_RESOLUTION_576, CELL_VIDEO_OUT_RESOLUTION_480 };
+	const unsigned int resolutions[] =
+	{
+		CELL_VIDEO_OUT_RESOLUTION_1080,
+		CELL_VIDEO_OUT_RESOLUTION_720,
+		CELL_VIDEO_OUT_RESOLUTION_576,
+		CELL_VIDEO_OUT_RESOLUTION_480,
+	};
 	const int numResolutions = sizeof(resolutions)/sizeof(resolutions[0]);
 
 	// (2) loop through the modes and grab the first available
 	int bestResolution = chooseBestResolution(resolutions,numResolutions);
 
 	// (3) get the chosen video mode's pixel dimensions
-	unsigned int deviceWidth=0, deviceHeight=0;
+	//unsigned int deviceWidth=0, deviceHeight=0;
 	getResolutionWidthHeight(bestResolution,deviceWidth,deviceHeight);
 
 	// (3) if desired resolution is available, create the PSGL device and context
@@ -249,7 +255,7 @@ static CellPadInfo info;
 void initInput()
 {
 	int ret;
-	
+
 	ret=cellPadInit(7);
 
 	ret=cellPadGetInfo(&info);
@@ -267,10 +273,10 @@ void shutdownInput()
 }
 
 
-OSystem *OSystem_PS3_create()
+OSystem *OSystem_PS3_create(uint16 w,uint16 h)
 {
 	net_send("OSystem_PS3::OSystem_PS3_create()\n");
-	return new OSystem_PS3();
+	return new OSystem_PS3(w,h);
 }
 
 
@@ -282,24 +288,25 @@ int main(int argc, char *argv[])
 
 	setupHomeDir(argv[0]);
 
-	#ifdef SCUMM_BIG_ENDIAN
+#ifdef SCUMM_BIG_ENDIAN
 	net_send("SCUMM_BIG_ENDIAN!\n");
-	#endif
-	#ifdef SCUMM_LITTLE_ENDIAN
+#endif
+#ifdef SCUMM_LITTLE_ENDIAN
 	net_send("SCUMM_LITTLE_ENDIAN!\n");
-	#endif
+#endif
 
 	net_send("STARTUP!\n");
 	sys_spu_initialize(6, 1);
 	initModules();
 
-	initGL();
+	unsigned int w=0,h=0;
+	initGL(w,h);
 	initInput();
 
 	//drawRotatingGrid(1000);
 
 
-	g_system = OSystem_PS3_create();
+	g_system = OSystem_PS3_create(w,h);
 	assert(g_system);
 
 	cellSysutilRegisterCallback(0, gfxSysutilCallback, NULL);

@@ -77,15 +77,17 @@ void *thread_func(void *attr)
 }
 
 
-OSystem_PS3::OSystem_PS3()
+OSystem_PS3::OSystem_PS3(uint16 width, uint16 height)
 {
-	net_send("OSystem_PS3()\n");
+	net_send("OSystem_PS3(%d, %d)\n",width,height);
 	_isInitialized=false;
 	_savefile = NULL;
 	_mixer = NULL;
 	_timer = NULL;
 	_fsFactory = NULL;
 	_shutdownRequested=false;
+	_tv_screen_width=width;
+	_tv_screen_height=height;
 	
 	net_send("OSystem_PS3::OSystem_PS3() fs init\n");
 	_fsFactory = new Ps3FilesystemFactory();

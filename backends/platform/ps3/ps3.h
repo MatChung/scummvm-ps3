@@ -30,9 +30,12 @@ protected:
 	pthread_t _thread;
 	pthread_attr_t _thread_attribs;
 
+	uint16 _tv_screen_width;
+	uint16 _tv_screen_height;
+
 public:
 
-	OSystem_PS3();
+	OSystem_PS3(uint16 width, uint16 height);
 	virtual ~OSystem_PS3();
 
 	virtual void initBackend();

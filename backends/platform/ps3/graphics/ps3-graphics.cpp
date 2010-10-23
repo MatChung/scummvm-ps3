@@ -41,12 +41,12 @@ void OSystem_PS3::initGraphics()
 	else
 		_mouse_texture->reinitGL();
 
-	glViewport(0, 0, 1920, 1080);
+	glViewport(0, 0, _tv_screen_width, _tv_screen_height);
 
 	net_send("PS3GL::init()glMatrixMode\n");
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrthof(0, 1920, 1080, 0, -1, 1);
+	glOrthof(0, _tv_screen_width, _tv_screen_height, 0, -1, 1);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
