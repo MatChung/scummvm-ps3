@@ -170,6 +170,7 @@ _staticlibpath=/sw
 _sdlconfig=sdl-config
 _sdlpath="$PATH"
 _nasmpath="$PATH"
+_ps3_debugip=no
 NASMFLAGS=""
 NASM=""
 
@@ -759,6 +760,7 @@ Optional Libraries:
 
   --with-readline-prefix=DIR    Prefix where readline is installed (optional)
   --disable-readline       disable readline support in text console [autodetect]
+  --ps3-debug=IP           enable debugging for ps3 (messages are sent to IP)
 
 Some influential environment variables:
   LDFLAGS        linker flags, e.g. -L<lib dir> if you have libraries in a
@@ -951,6 +953,9 @@ for ac_option in $@; do
 		;;
 	--disable-*)
 		engine_disable `echo $ac_option | cut -d '-' -f 4-`
+		;;
+	--ps3-debug=*)
+		_ps3_debugip=`echo $ac_option | cut -d '=' -f 2`
 		;;
 	*)
 		option_error
@@ -2876,7 +2881,12 @@ case $_backend in
 		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libgcm_pm.a"
 		LDFLAGS="$LDFLAGS $SCE_PS3_ROOT/target/ppu/lib/libcgc.a"
 		LIBS="$LIBS  -Wl,--end-group"
-		#add_line_to_config_h '#define DISABLE_TOWNS_DUAL_LAYER_MODE'
+		
+		if test _ps3_debugip = no ; then
+			add_line_to_config_h '// #define PS3_DEBUG_IP'
+		else
+			add_line_to_config_h "#define PS3_DEBUG_IP \"$_ps3_debugip\""
+		fi
 
 		add_line_to_config_mk ''
 		add_line_to_config_mk 'eboot: all'
