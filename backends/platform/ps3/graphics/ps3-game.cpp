@@ -53,8 +53,8 @@ void OSystem_PS3::unlockScreen()
 
 void OSystem_PS3::setPalette(const byte *colors, uint start, uint num)
 {
-	//net_send("OSystem_PS3::setPalette()\n");
-	if (_use_mouse_palette)
+	net_send("OSystem_PS3::setPalette(%d,%d)\n",start,num);
+	if (!_use_mouse_palette)
 		_setCursorPalette(colors, start, num);
 
 	_game_texture->updatePalette(colors, start, num);

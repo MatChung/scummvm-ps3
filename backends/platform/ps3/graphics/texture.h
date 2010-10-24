@@ -121,7 +121,7 @@ protected:
 	uint32* _palette;
 	GLuint _palette_name;
 	bool _isLocked;
-
+	
 	CGcontext ctx;
 	CGprogram vprog;
 	CGprogram fprog;

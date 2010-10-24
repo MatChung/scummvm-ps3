@@ -57,8 +57,8 @@ void PS3Pad::frame()
 				_xPosPad=0;
 				_yPosPad=0;
 			}
-			net_send("PS3Pad::pollEvent() x: %d\n",data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_X]);
-			net_send("PS3Pad::pollEvent() y: %d\n",data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_Y]);
+			//net_send("PS3Pad::pollEvent() x: %d\n",data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_X]);
+			//net_send("PS3Pad::pollEvent() y: %d\n",data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_Y]);
 			int16 pad_raw_x=((int16)data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_X])-127;
 			int16 pad_raw_y=((int16)data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_Y])-127;
 			if(ABS(pad_raw_x)>20)

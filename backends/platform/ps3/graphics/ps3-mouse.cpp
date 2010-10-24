@@ -3,7 +3,7 @@
 
 bool OSystem_PS3::showMouse(bool visible)
 {
-	//net_send("PS3GL::showMouse(%d)\n",visible);
+	net_send("PS3GL::showMouse(%d)\n",visible);
 	_show_mouse=visible;
 	return visible;
 }
@@ -19,7 +19,7 @@ void OSystem_PS3::warpMouse(int x, int y)
 
 void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, int hotspotY, uint32 keycolor, int cursorTargetScale, const Graphics::PixelFormat *format)
 {
-	net_send("PS3GL::setMouseCursor(%p, %u, %u, %d, %d, %d, %d, %p)",
+	net_send("PS3GL::setMouseCursor(%p, %u, %u, %d, %d, %d, %d, %p)\n",
 		  buf, w, h, hotspotX, hotspotY, (int)keycolor, cursorTargetScale,
 		  format);
 
@@ -46,7 +46,7 @@ void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, 
 }
 void OSystem_PS3::_setCursorPalette(const byte *colors,
 					uint start, uint num) {
-	net_send("PS3GL::_setCursorPalette(%d, %d, %d)\n",colors,start,num);
+	net_send("PS3GL::_setCursorPalette(%d, %d)\n",start,num);
 
 	_mouse_texture->updatePalette(colors,start,num);
 /*
