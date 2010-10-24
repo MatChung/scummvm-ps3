@@ -16,7 +16,7 @@ void OSystem_PS3::initGraphics()
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 
 	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -25,7 +25,10 @@ void OSystem_PS3::initGraphics()
 
 	net_send("PS3GL::init()_game_texture\n");
 	if (!_game_texture)
+	{
 		_game_texture = new GLESPaletteTexture();
+		_game_texture_palette = (GLESPaletteTexture*)_game_texture;
+	}
 	else
 		_game_texture->reinitGL();
 
@@ -57,23 +60,34 @@ void OSystem_PS3::initGraphics()
 
 void OSystem_PS3::initSize(uint width, uint height, const Graphics::PixelFormat *format)
 {
-	net_send("OSystem_PS3::initSize()\n");
+	net_send("OSystem_PS3::initSize(%d,%d)\n",width,height);
 	_pad.setResolution(width,height);
-	net_send("PS3GL::initSize(%d,%d",width,height);
 
 	Graphics::PixelFormat newFormat;
-	if(format!=NULL)
+	if(format==NULL)
 		newFormat = Graphics::PixelFormat::createFormatCLUT8();
 	else
 		newFormat = *format;
 
+	if(_game_texture->getFormat()!=newFormat)
+	{
+		if(_game_texture!=NULL)
+			delete _game_texture;
+		_game_texture=createTextureFromPixelFormat(newFormat);
+
+		if(newFormat.bytesPerPixel==1)
+			_game_texture_palette=(GLESPaletteTexture*)_game_texture;
+		else
+			_game_texture_palette=NULL;
+	}
+
 	//_egl_surface_width=width;
 	//_egl_surface_height=height;
-	_game_texture->allocBuffer(320, 200);
+	_game_texture->allocBuffer(width, height);
 
 	// Cap at 320x200 or the ScummVM themes abort :/
-	GLuint overlay_width = MIN((int)width, 640);
-	GLuint overlay_height = MIN((int)height, 400);
+	GLuint overlay_width = MIN((int)width, 320);
+	GLuint overlay_height = MIN((int)height, 200);
 	_overlay_texture->allocBuffer(overlay_width, overlay_height);
 
 	// Don't know mouse size yet - it gets reallocated in
@@ -87,6 +101,8 @@ void OSystem_PS3::initSize(uint width, uint height, const Graphics::PixelFormat 
 	glLoadIdentity();
 	glOrthof(-10, width+10, height+20, -7, -1, 1);
 	glMatrixMode(GL_MODELVIEW);
+
+	_currentScreenFormat=newFormat;
 }
 
 void OSystem_PS3::draw()
@@ -145,4 +161,32 @@ void OSystem_PS3::updateScreen()
 	//CHECK_GL_ERROR();
 
 	psglSwap();
+}
+
+GLESTexture *OSystem_PS3::createTextureFromPixelFormat(Graphics::PixelFormat &format)
+{
+	if(format.bytesPerPixel==1)
+		return new GLESPaletteTexture();
+
+	if(format.bytesPerPixel==2)
+	{
+		if(format.rBits()==4 && format.gBits()==4 && format.bBits()==4 && format.aBits()==4)
+			return new GLES4444Texture();
+		if(format.rBits()==5 && format.gBits()==6 && format.bBits()==5 && format.aBits()==0)
+			return new GLES565Texture();
+	}
+
+	if(format.bytesPerPixel==4)
+	{
+		if(format.rBits()==8 && format.gBits()==8 && format.bBits()==8 && format.aBits()==8)
+			return new GLES8888Texture();
+	}
+
+	net_send("OSystem_PS3::createTextureFromPixelFormat - NO VALID TEXTURE FOUND\n");
+	net_send("  bytesPerPixel: %d\n",format.bytesPerPixel);
+	net_send("  rBits:         %d\n",format.rBits());
+	net_send("  gBits:         %d\n",format.gBits());
+	net_send("  bBits:         %d\n",format.bBits());
+	net_send("  aBits:         %d\n",format.aBits());
+	return NULL;
 }

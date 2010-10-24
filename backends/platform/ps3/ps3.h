@@ -100,12 +100,14 @@ public:
 	void update();
 	void initGraphics();
 	bool running();
+	void requestQuit();
 
 protected:
 	float zRot;
 	unsigned int deviceWidth, deviceHeight;
 
-	GLESPaletteTexture* _game_texture;
+	GLESTexture* _game_texture;
+	GLESPaletteTexture* _game_texture_palette;
 	int _shake_offset;
 	//Common::Rect _focus_rect;
 	bool _full_screen_dirty;
@@ -119,12 +121,18 @@ protected:
 	Common::Point _mouse_hotspot;
 	Common::Point _mouse_pos;
 	int _mouse_targetscale;
+	int _mouse_keycolor;
 	bool _show_mouse;
 	bool _use_mouse_palette;
 
 	void _setCursorPalette(const byte *colors, uint start, uint num);
 
 	void draw();
+
+	Graphics::PixelFormat _currentScreenFormat;
+
+
+	GLESTexture *createTextureFromPixelFormat(Graphics::PixelFormat &format);
 };
 
 #endif

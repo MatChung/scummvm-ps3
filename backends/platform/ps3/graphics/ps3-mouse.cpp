@@ -3,7 +3,8 @@
 
 bool OSystem_PS3::showMouse(bool visible)
 {
-	net_send("PS3GL::showMouse(%d)\n",visible);
+	if(_show_mouse!=visible)
+		net_send("PS3GL::showMouse(%d)\n",visible);
 	_show_mouse=visible;
 	return visible;
 }
@@ -14,14 +15,14 @@ void OSystem_PS3::warpMouse(int x, int y)
 	_mouse_pos.x=x;
 	_mouse_pos.y=y;
 
-	updateScreen();
+	//updateScreen();
 }
 
 void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, int hotspotY, uint32 keycolor, int cursorTargetScale, const Graphics::PixelFormat *format)
 {
-	net_send("PS3GL::setMouseCursor(%p, %u, %u, %d, %d, %d, %d, %p)\n",
-		  buf, w, h, hotspotX, hotspotY, (int)keycolor, cursorTargetScale,
-		  format);
+	//net_send("PS3GL::setMouseCursor(%p, %u, %u, %d, %d, %d, %d, %p)\n",
+	//	  buf, w, h, hotspotX, hotspotY, (int)keycolor, cursorTargetScale,
+	//	  format);
 
 	assert(keycolor < 256);
 
@@ -38,17 +39,19 @@ void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, 
 	//palette[keycolor*4 + 3] = 0x00;
 	_mouse_texture->updateBuffer(0, 0, w, h, buf, w);
 	_mouse_texture->setKeyColor(keycolor);
+	_mouse_keycolor=keycolor;
 
 	_mouse_hotspot = Common::Point(hotspotX, hotspotY);
 	_mouse_targetscale = cursorTargetScale;
 
-	draw();
+	//draw();
 }
 void OSystem_PS3::_setCursorPalette(const byte *colors,
 					uint start, uint num) {
-	net_send("PS3GL::_setCursorPalette(%d, %d)\n",start,num);
+	//net_send("PS3GL::_setCursorPalette(%d, %d)\n",start,num);
 
 	_mouse_texture->updatePalette(colors,start,num);
+	_mouse_texture->setKeyColor(_mouse_keycolor);
 /*
 	byte* palette = _mouse_texture->palette() + start*4;
 	do {
@@ -69,6 +72,6 @@ void OSystem_PS3::disableCursorPalette(bool disable)
 
 void OSystem_PS3::setCursorPalette(const byte *colors, uint start, uint num)
 {
-	net_send("PS3GL::setCursorPalette(%d, %d, %d)\n",colors,start,num);
+	//net_send("PS3GL::setCursorPalette(%d, %d, %d)\n",colors,start,num);
 	_setCursorPalette(colors,start,num);
 }

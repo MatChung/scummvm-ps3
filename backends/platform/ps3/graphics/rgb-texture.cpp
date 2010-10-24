@@ -12,6 +12,31 @@
 #include "common/util.h"
 #include "common/tokenizer.h"
 
+#if 1
+#define CHECK_GL_ERROR() checkGlError(__FILE__, __LINE__)
+static const char* getGlErrStr(GLenum error) {
+	switch (error) {
+	case GL_NO_ERROR:		   return "GL_NO_ERROR";
+	case GL_INVALID_ENUM:	   return "GL_INVALID_ENUM";
+	case GL_INVALID_VALUE:	   return "GL_INVALID_VALUE";
+	case GL_INVALID_OPERATION: return "GL_INVALID_OPERATION";
+	case GL_STACK_OVERFLOW:	   return "GL_STACK_OVERFLOW";
+	case GL_STACK_UNDERFLOW:   return "GL_STACK_UNDERFLOW";
+	case GL_OUT_OF_MEMORY:	   return "GL_OUT_OF_MEMORY";
+	}
+
+	static char buf[40];
+	snprintf(buf, sizeof(buf), "(Unknown GL error code 0x%x)", error);
+	return buf;
+}
+static void checkGlError(const char* file, int line) {
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR)
+		net_send("%s:%d: GL error: %s\n", file, line, getGlErrStr(error));
+}
+#else
+#define CHECK_GL_ERROR() do {} while (false)
+#endif
 
 void GLESTexture::initGLExtensions()
 {
@@ -32,7 +57,8 @@ GLESTexture::GLESTexture() :
 
 GLESTexture::~GLESTexture() {
 	debug("Destroying texture %u", _texture_name);
-	glDeleteTextures(1, &_texture_name);
+	if(_texture_name>0)
+		glDeleteTextures(1, &_texture_name);
 }
 
 void GLESTexture::reinitGL() {
@@ -43,7 +69,7 @@ void GLESTexture::reinitGL() {
 void GLESTexture::allocBuffer(GLuint w, GLuint h)
 {
 	net_send("GLESTexture::allocBuffer(%d,%d)\n",w,h);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	int bpp = bytesPerPixel();
 	_surface.w = w;
 	_surface.h = h;
@@ -61,27 +87,29 @@ void GLESTexture::allocBuffer(GLuint w, GLuint h)
 
 	// Allocate room for the texture now, but pixel data gets uploaded
 	// later (perhaps with multiple TexSubImage2D operations).
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	glBindTexture(GL_TEXTURE_2D, _texture_name);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	glTexImage2D(GL_TEXTURE_2D, 0, glInternalFormat(),
 		     _texture_width, _texture_height,
 		     0, glFormat(), glType(), NULL);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
+	glFlush();
 }
 
 void GLESTexture::updateBuffer(GLuint x, GLuint y, GLuint w, GLuint h,
 							   const void* buf, int pitch) {
 	//ENTER("updateBuffer(%u, %u, %u, %u, %p, %d, %d)\n", x, y, w, h, buf, pitch, _texture_name);
 	glBindTexture(GL_TEXTURE_2D, _texture_name);
+	CHECK_GL_ERROR();
 
 	setDirtyRect(Common::Rect(x, y, x+w, y+h));
 
@@ -91,7 +119,7 @@ void GLESTexture::updateBuffer(GLuint x, GLuint y, GLuint w, GLuint h,
 		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h,
 						glFormat(), glType(), buf);
 
-		//CHECK_GL_ERROR();
+		CHECK_GL_ERROR();
 	}
 	else
 	{
@@ -103,11 +131,12 @@ void GLESTexture::updateBuffer(GLuint x, GLuint y, GLuint w, GLuint h,
 			//net_send("GLESTexture::updateBuffer(linecopy): %d\n",h);
 			glTexSubImage2D(GL_TEXTURE_2D, 0, x, y,
 							w, 1, glFormat(), glType(), src);
-			//CHECK_GL_ERROR();
+			CHECK_GL_ERROR();
 			++y;
 			src += pitch;
 		} while (--h);
 	}
+	glFlush();
 }
 void GLESTexture::fillBuffer(byte x) {
 	byte *tmpbuf=new byte[_surface.h * _surface.w * bytesPerPixel()];
@@ -115,7 +144,8 @@ void GLESTexture::fillBuffer(byte x) {
 	glBindTexture(GL_TEXTURE_2D, _texture_name);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _surface.w, _surface.h,
 					glFormat(), glType(), tmpbuf);
-		//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
+	glFlush();
 	setDirty();
 	delete[] tmpbuf;
 }
@@ -152,6 +182,7 @@ void GLESTexture::_drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 	//net_send("%d, %d, %d, %d, %d, %d\n",tex_width,tex_height,x,y,w,h);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, ARRAYSIZE(vertices)/2);
+	CHECK_GL_ERROR();
 
 	_all_dirty = false;
 	_dirty_rect = Common::Rect();

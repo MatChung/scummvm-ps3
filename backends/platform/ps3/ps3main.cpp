@@ -10,9 +10,6 @@
 #include "netdbg/net.h"
 #include <cell/cell_fs.h>
 
-static bool want_to_quit = false;	// true when I need to quit
-
-
 
 
 void initGraphics(PSGLdevice *device)
@@ -129,7 +126,7 @@ void shutdownModules()
 
 static PSGLcontext *context=NULL;
 static PSGLdevice *device=NULL;
-
+OSystem_PS3 *theSystem;
 
 static void gfxSysutilCallback(uint64_t status, uint64_t param,
 							   void *userdata)
@@ -138,21 +135,15 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param,
 	(void) userdata;
 	switch (status) {
 	case CELL_SYSUTIL_REQUEST_EXITGAME:
-		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
-		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
-		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
-		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
-		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
-		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
-		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
-		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
-		g_system->quit();
-		psglDestroyContext(context);
-		psglDestroyDevice(device);
-		psglExit();
-		net_shutdown();
-		shutdownModules();
-		exit(0);
+		net_send("CELL_SYSUTIL_REQUEST_EXITGAME\n");
+		net_send("CELL_SYSUTIL_REQUEST_EXITGAME\n");
+		net_send("CELL_SYSUTIL_REQUEST_EXITGAME\n");
+		net_send("CELL_SYSUTIL_REQUEST_EXITGAME\n");
+		net_send("CELL_SYSUTIL_REQUEST_EXITGAME\n");
+		net_send("CELL_SYSUTIL_REQUEST_EXITGAME\n");
+		net_send("CELL_SYSUTIL_REQUEST_EXITGAME\n");
+		net_send("CELL_SYSUTIL_REQUEST_EXITGAME\n");
+		theSystem->requestQuit();
 		break;
 	case CELL_SYSUTIL_DRAWING_BEGIN:
 	case CELL_SYSUTIL_DRAWING_END:
@@ -277,7 +268,9 @@ void shutdownInput()
 OSystem *OSystem_PS3_create(uint16 w,uint16 h)
 {
 	net_send("OSystem_PS3::OSystem_PS3_create()\n");
-	return new OSystem_PS3(w,h);
+	theSystem = new OSystem_PS3(w,h);
+
+	return theSystem;
 }
 
 
@@ -312,6 +305,11 @@ int main(int argc, char *argv[])
 	assert(g_system);
 
 	cellSysutilRegisterCallback(0, gfxSysutilCallback, NULL);
+
+
+	net_send("wait for init...");
+	theSystem->delayMillis(1*1000);
+	net_send(" complete!\n");
 
 	// Invoke the actual ScummVM main entry point:
 	int res = scummvm_main(argc, argv);

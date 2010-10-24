@@ -1,6 +1,31 @@
 #include "texture.h"
 #include <Cg/NV/cgGL.h>
 
+#if 1
+#define CHECK_GL_ERROR() checkGlError(__FILE__, __LINE__)
+static const char* getGlErrStr(GLenum error) {
+	switch (error) {
+	case GL_NO_ERROR:		   return "GL_NO_ERROR";
+	case GL_INVALID_ENUM:	   return "GL_INVALID_ENUM";
+	case GL_INVALID_VALUE:	   return "GL_INVALID_VALUE";
+	case GL_INVALID_OPERATION: return "GL_INVALID_OPERATION";
+	case GL_STACK_OVERFLOW:	   return "GL_STACK_OVERFLOW";
+	case GL_STACK_UNDERFLOW:   return "GL_STACK_UNDERFLOW";
+	case GL_OUT_OF_MEMORY:	   return "GL_OUT_OF_MEMORY";
+	}
+
+	static char buf[40];
+	snprintf(buf, sizeof(buf), "(Unknown GL error code 0x%x)", error);
+	return buf;
+}
+static void checkGlError(const char* file, int line) {
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR)
+		net_send("%s:%d: GL error: %s\n", file, line, getGlErrStr(error));
+}
+#else
+#define CHECK_GL_ERROR() do {} while (false)
+#endif
 
 
 GLESPaletteTexture::GLESPaletteTexture() :
@@ -12,18 +37,21 @@ _texture(NULL)
 	_palette=new uint32[256];
 	memset(_palette,0,sizeof(uint32)*256);
 	glBindTexture(GL_TEXTURE_2D, _palette_name);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	CHECK_GL_ERROR();
 	glTexImage2D(GL_TEXTURE_2D, 0, glPaletteInternalFormat(),
 		256, 1,
 		0, glPaletteFormat(), glPaletteType(), _palette);
+	CHECK_GL_ERROR();
 	glFlush();
+	CHECK_GL_ERROR();
 	_isLocked=false;
 
 	initCG();
@@ -31,8 +59,22 @@ _texture(NULL)
 
 GLESPaletteTexture::~GLESPaletteTexture()
 {
-	delete[] _texture;
-	delete[] _palette;
+	if(_palette_name>0)
+		glDeleteTextures(1, &_palette_name);
+	CHECK_GL_ERROR();
+	if(_texture_name>0)
+		glDeleteTextures(1, &_texture_name);
+	CHECK_GL_ERROR();
+
+	if(_texture!=NULL)
+		delete[] _texture;
+	if(_palette!=NULL)
+		delete[] _palette;
+
+	_texture=NULL;
+	_palette=NULL;
+	_palette_name=0;
+	_texture_name=0;
 }
 
 
@@ -64,20 +106,26 @@ void GLESPaletteTexture::allocBuffer(GLuint w, GLuint h)
 
 	_texture = new byte[_texture_width * _texture_height * bpp];
 	_surface.pixels = _texture;
+	CHECK_GL_ERROR();
+	net_send("GLESPaletteTexture::allocBufferYYY(%d,%d)\n",_texture_width,_texture_height);
 
 	glBindTexture(GL_TEXTURE_2D, _texture_name);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	glTexImage2D(GL_TEXTURE_2D, 0, glInternalFormat(),
 		_texture_width, _texture_height,
 		0, glFormat(), glType(), NULL);
+	CHECK_GL_ERROR();
+	glFlush();
+	CHECK_GL_ERROR();
+	net_send("  finished\n");
 }
 
 void GLESPaletteTexture::fillBuffer(byte x)
@@ -87,10 +135,14 @@ void GLESPaletteTexture::fillBuffer(byte x)
 	//net_send("GLESPaletteTexture::fillBuffer()0-%d,%d,%d\n",_surface.h , _surface.w , bytesPerPixel());
 	assert(_surface.pixels);
 	memset(_surface.pixels, x, _surface.pitch * _surface.h);
+	CHECK_GL_ERROR();
 	glBindTexture(GL_TEXTURE_2D, _texture_name);
+	CHECK_GL_ERROR();
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _surface.w, _surface.h,
 		glFormat(), glType(), _surface.pixels);
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
+
+	glFlush();
 	setDirty();
 }
 
@@ -102,16 +154,21 @@ void GLESPaletteTexture::updateBuffer(GLuint x, GLuint y,
 
 	const byte* src = static_cast<const byte*>(buf);
 	byte* dst = static_cast<byte*>(_surface.getBasePtr(x, y));
+	CHECK_GL_ERROR();
 	glBindTexture(GL_TEXTURE_2D, _texture_name);
+	CHECK_GL_ERROR();
 	GLuint horig=h;
 	do
 	{
 		memcpy(dst, src, w * bytesPerPixel());
 		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y+horig-h, w, 1,
 			glFormat(), glType(), dst);
+		CHECK_GL_ERROR();
 		dst += _surface.pitch;
 		src += pitch;
 	} while (--h);
+
+	glFlush();
 }
 
 void GLESPaletteTexture::drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
@@ -143,6 +200,7 @@ void GLESPaletteTexture::drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 	cgGLDisableTextureParameter(_palette_param);
 	cgGLDisableProfile(CG_PROFILE_SCE_VP_RSX);
 	cgGLDisableProfile(CG_PROFILE_SCE_FP_RSX);
+	CHECK_GL_ERROR();
 	//CG stuff disable finished
 }
 
@@ -189,18 +247,28 @@ void GLESPaletteTexture::updatePalette(const byte *colors, uint start, uint num)
 
 	//dumpPalette(_palette,start,num);
 
+	CHECK_GL_ERROR();
 	glBindTexture(GL_TEXTURE_2D, _palette_name);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, start, 0, num, 1,
+	CHECK_GL_ERROR();
+	glTexSubImage2D(GL_TEXTURE_2D, 0, start, 0, num-1, 1,
 		glPaletteFormat(), glPaletteType(), &_palette[start]);
+	CHECK_GL_ERROR();
+
+	glFlush();
 }
 
 void GLESPaletteTexture::setKeyColor(uint32 color)
 {
-	net_send("GLESPaletteTexture::setKeyColor(%d)\n",color);
+	//net_send("GLESPaletteTexture::setKeyColor(%d)\n",color);
 	_palette[color]=0;
+	CHECK_GL_ERROR();
 	glBindTexture(GL_TEXTURE_2D, _palette_name);
+	CHECK_GL_ERROR();
 	glTexSubImage2D(GL_TEXTURE_2D, 0, color, 0, 1, 1,
 		glPaletteFormat(), glPaletteType(), &_palette[color]);
+	CHECK_GL_ERROR();
+
+	glFlush();
 }
 
 Graphics::Surface* GLESPaletteTexture::lock()
@@ -211,10 +279,15 @@ Graphics::Surface* GLESPaletteTexture::lock()
 
 void GLESPaletteTexture::unlock()
 {
+	CHECK_GL_ERROR();
 	glBindTexture(GL_TEXTURE_2D, _texture_name);
+	CHECK_GL_ERROR();
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _surface.w, _surface.h,
 		glFormat(), glType(), _surface.pixels);
+	CHECK_GL_ERROR();
 	_isLocked=false;
+
+	glFlush();
 }
 
 static const char *cg_vert="void main (float4 position : POSITION,     // Local-space position\n\

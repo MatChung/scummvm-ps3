@@ -15,8 +15,8 @@ Common::List<Graphics::PixelFormat> OSystem_PS3::getSupportedFormats() const
 
 Graphics::PixelFormat OSystem_PS3::getScreenFormat() const
 {
-	net_send("OSystem_PS3::getScreenFormat()\n");
-	return Graphics::PixelFormat(4,8,8,8,8,0,8,16,24);
+	//net_send("OSystem_PS3::getScreenFormat()\n");
+	return _currentScreenFormat;
 }
 
 const OSystem::GraphicsMode* OSystem_PS3::getSupportedGraphicsModes() const

@@ -71,11 +71,12 @@ void *thread_func(void *attr)
 	while(sys->running())
 	{
 		x++;
-		if(x%500==0)
+		if(x==0)
 			net_send("thread_func\n");
 		sys_timer_usleep(1000);
 		sys->update();
 		cellSysutilCheckCallback();
+		x=x%500;
 	}
 
 	net_send("thread_func EXIT!\n");
@@ -98,9 +99,13 @@ OSystem_PS3::OSystem_PS3(uint16 width, uint16 height)
 	_tv_screen_width=width;
 	_tv_screen_height=height;
 	_running=true;
+	_game_texture=NULL;
+	_game_texture_palette=NULL;
+	_mouse_keycolor=255;
 	
 	net_send("OSystem_PS3::OSystem_PS3() fs init\n");
-	_fsFactory = new Ps3FilesystemFactory();
+	if(_fsFactory==NULL)
+		_fsFactory = new Ps3FilesystemFactory();
 	net_send("OSystem_PS3::OSystem_PS3() fs ready\n");
 
 	// RGBA8888
@@ -108,7 +113,9 @@ OSystem_PS3::OSystem_PS3(uint16 width, uint16 height)
 	// RGB565
 	__formats.push_back(Graphics::PixelFormat(2, 5, 6, 5, 0, 11, 5, 0, 0));
 	// RGB555
-	__formats.push_back(Graphics::PixelFormat(2, 5, 5, 5, 0, 10, 5, 0, 0));
+	//__formats.push_back(Graphics::PixelFormat(2, 5, 5, 5, 0, 10, 5, 0, 0));
+	// RGB4444
+	__formats.push_back(Graphics::PixelFormat(2, 4, 4, 4, 4, 12, 8, 4, 0));
 	// Palette
 	__formats.push_back(Graphics::PixelFormat::createFormatCLUT8());
 
@@ -233,13 +240,13 @@ bool OSystem_PS3::getFeatureState(Feature f)
 
 bool OSystem_PS3::pollEvent(Common::Event &event)
 {
-	/*if(_shutdownRequested)
+	if(_shutdownRequested)
 	{
 		net_send("OSystem_PS3::pollEvent(want_to_quit)\n");
 		event.type=Common::EVENT_QUIT;
 		_shutdownRequested=false;
 		return true;
-	}*/
+	}
 
 	bool ret=_pad.pollEvent(event);
 	if(ret==true)
@@ -268,9 +275,9 @@ void OSystem_PS3::delayMillis(uint msecs)
 	sys_timer_usleep(msecs * 1000);
 }
 
+static int numMutexes=0;
 OSystem::MutexRef OSystem_PS3::createMutex(void)
 {
-	net_send("OSystem_PS3::createMutex()");
 	pthread_mutexattr_t attr;
 	pthread_mutexattr_init(&attr);
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
@@ -282,7 +289,9 @@ OSystem::MutexRef OSystem_PS3::createMutex(void)
 		net_send("=NULL\n");
 		return NULL;
 	}
-	net_send("=%X\n",(int)mutex);
+	numMutexes++;
+	net_send("OSystem_PS3::createMutex(%d)\n",numMutexes);
+
 	return (MutexRef)mutex;
 }
 
@@ -304,12 +313,15 @@ void OSystem_PS3::unlockMutex(MutexRef mutex)
 
 void OSystem_PS3::deleteMutex(MutexRef mutex)
 {
-	net_send("OSystem_PS3::deleteMutex()\n");
+	//net_send("OSystem_PS3::deleteMutex()\n");
 	pthread_mutex_t* m = (pthread_mutex_t*)mutex;
 	if (pthread_mutex_destroy(m) != 0)
 		warning("pthread_mutex_destroy() failed");
 	else
 		delete m;
+
+	numMutexes--;
+	net_send("OSystem_PS3::deleteMutex(%d)\n",numMutexes);
 }
 
 void OSystem_PS3::quit()
@@ -386,3 +398,7 @@ void OSystem_PS3::update()
 }
 
 
+void OSystem_PS3::requestQuit()
+{
+	_shutdownRequested=true;
+}

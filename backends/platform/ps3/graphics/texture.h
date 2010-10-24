@@ -3,6 +3,7 @@
 #include <Cg/NV/cg.h>
 
 #include "graphics/surface.h"
+#include "graphics/pixelformat.h"
 
 #include "common/rect.h"
 #include "common/array.h"
@@ -30,6 +31,7 @@ public:
 	}
 	virtual void drawTexture(GLshort x, GLshort y, GLshort w, GLshort h);
 	virtual void _drawTexture(GLshort x, GLshort y, GLshort w, GLshort h);
+	virtual Graphics::PixelFormat getFormat() = 0;
 
 protected:
 	virtual byte bytesPerPixel() const = 0;
@@ -65,6 +67,7 @@ protected:
 	virtual GLenum glInternalFormat() const { return GL_RGBA8; }
 	virtual GLenum glFormat() const { return GL_RGBA; }
 	virtual GLenum glType() const { return GL_UNSIGNED_SHORT_4_4_4_4; }
+	virtual Graphics::PixelFormat getFormat() { return Graphics::PixelFormat(2, 4, 4, 4, 4, 12, 8, 4, 0);};
 };
 
 // RGBA4444 texture
@@ -74,6 +77,7 @@ protected:
 	virtual GLenum glInternalFormat() const { return GL_RGBA8; }
 	virtual GLenum glFormat() const { return GL_RGBA; }
 	virtual GLenum glType() const { return GL_UNSIGNED_BYTE; }
+	virtual Graphics::PixelFormat getFormat() { return Graphics::PixelFormat(4, 8, 8, 8, 8, 24, 16, 8, 0);};
 };
 
 // RGB565 texture
@@ -83,6 +87,7 @@ protected:
 	virtual GLenum glInternalFormat() const { return GL_RGB8; }
 	virtual GLenum glFormat() const { return GL_RGB; }
 	virtual GLenum glType() const { return GL_UNSIGNED_SHORT_5_6_5; }
+	virtual Graphics::PixelFormat getFormat() { return Graphics::PixelFormat(2, 5, 6, 5, 0, 11, 5, 0, 0);};
 };
 
 // RGB888 256-entry paletted texture
@@ -107,11 +112,13 @@ public:
 	}
 	virtual void drawTexture(GLshort x, GLshort y, GLshort w, GLshort h);
 	virtual void fillBuffer(byte x);
+	virtual Graphics::PixelFormat getFormat() { return Graphics::PixelFormat::createFormatCLUT8();};
+
 protected:
 	void initCG();
 	virtual byte bytesPerPixel() const { return 1; }
-	virtual GLenum glInternalFormat() const { return GL_INTENSITY8; }
-	virtual GLenum glFormat() const { return GL_INTENSITY; }
+	virtual GLenum glInternalFormat() const { return GL_LUMINANCE8; }
+	virtual GLenum glFormat() const { return GL_LUMINANCE; }
 	virtual GLenum glType() const { return GL_UNSIGNED_BYTE; }
 	virtual GLenum glPaletteInternalFormat() const { return GL_RGBA8; }
 	virtual GLenum glPaletteFormat() const { return GL_RGBA; }
