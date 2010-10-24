@@ -58,22 +58,31 @@
 #include <netex/net.h>
 #include <netex/ifctl.h>
 #include <netex/errno.h>
+#include <sysutil/sysutil_common.h>
 
 
 Common::List<Graphics::PixelFormat> __formats;
 
 void *thread_func(void *attr)
 {
+	net_send("thread_func START!\n");
 	int x=0;
 	OSystem_PS3 *sys=(OSystem_PS3*)attr;
-	while(true)
+	while(sys->running())
 	{
 		x++;
 		if(x%500==0)
 			net_send("thread_func\n");
 		sys_timer_usleep(1000);
 		sys->update();
+		cellSysutilCheckCallback();
 	}
+
+	net_send("thread_func EXIT!\n");
+	net_send("thread_func EXIT!\n");
+	net_send("thread_func EXIT!\n");
+
+	return 0;
 }
 
 
@@ -88,16 +97,28 @@ OSystem_PS3::OSystem_PS3(uint16 width, uint16 height)
 	_shutdownRequested=false;
 	_tv_screen_width=width;
 	_tv_screen_height=height;
+	_running=true;
 	
 	net_send("OSystem_PS3::OSystem_PS3() fs init\n");
 	_fsFactory = new Ps3FilesystemFactory();
 	net_send("OSystem_PS3::OSystem_PS3() fs ready\n");
 
-	__formats.push_back(Graphics::PixelFormat(4,8,8,8,8,0,8,16,24));
-	__formats.push_back(Graphics::PixelFormat(2, 5, 5, 5, 0, 0, 5, 10, 0));
+	// RGBA8888
+	__formats.push_back(Graphics::PixelFormat(4, 8, 8, 8, 8, 24, 16, 8, 0));
+	// RGB565
+	__formats.push_back(Graphics::PixelFormat(2, 5, 6, 5, 0, 11, 5, 0, 0));
+	// RGB555
+	__formats.push_back(Graphics::PixelFormat(2, 5, 5, 5, 0, 10, 5, 0, 0));
+	// Palette
+	__formats.push_back(Graphics::PixelFormat::createFormatCLUT8());
 
 
-	pthread_create(&_thread,&_thread_attribs,thread_func,this);
+	pthread_create(&_thread,NULL,thread_func,this);
+}
+
+bool OSystem_PS3::running()
+{
+	return _running;
 }
 
 OSystem_PS3::~OSystem_PS3()
@@ -145,11 +166,13 @@ void OSystem_PS3::initBackend()
 	if(_mixer==NULL)
 	{
 		net_send("OSystem_PS3::initBackend() mixer init\n");
-		_mixer = new Audio::MixerImpl(this, 48000);
-		assert(_mixer);
-		_sound=new PS3Sound(_mixer);
-		_sound->init();
-		_mixer->setReady(true);
+		Audio::MixerImpl *mixer=new Audio::MixerImpl(this, 48000);
+		assert(mixer);
+		PS3Sound *sound=new PS3Sound(mixer);
+		sound->init();
+		mixer->setReady(true);
+		_mixer = mixer;
+		_sound = sound;
 		net_send("OSystem_PS3::initBackend() mixer ready\n");
 	}
 	if(_timer==NULL)
@@ -210,7 +233,14 @@ bool OSystem_PS3::getFeatureState(Feature f)
 
 bool OSystem_PS3::pollEvent(Common::Event &event)
 {
-	//net_send("OSystem_PS3::pollEvent()\n");
+	/*if(_shutdownRequested)
+	{
+		net_send("OSystem_PS3::pollEvent(want_to_quit)\n");
+		event.type=Common::EVENT_QUIT;
+		_shutdownRequested=false;
+		return true;
+	}*/
+
 	bool ret=_pad.pollEvent(event);
 	if(ret==true)
 	{
@@ -222,14 +252,6 @@ bool OSystem_PS3::pollEvent(Common::Event &event)
 		return true;
 	}
 
-	if(_shutdownRequested)
-	{
-		net_send("OSystem_PS3::pollEvent(want_to_quit)\n");
-		event.type=Common::EVENT_QUIT;
-		//_shutdownRequested=false;
-		return true;
-	}
-	//net_send("OSystem_PS3::pollEvent()\n");
 	return false;
 }
 
@@ -293,6 +315,12 @@ void OSystem_PS3::deleteMutex(MutexRef mutex)
 void OSystem_PS3::quit()
 {
 	net_send("OSystem_PS3::quit()\n");
+	_running=false;
+	pthread_join(_thread, NULL);
+
+	glFinish();
+	net_send("  exit(0)\n");
+	exit(0);
 }
 
 Common::SaveFileManager *OSystem_PS3::getSavefileManager()
@@ -343,7 +371,6 @@ FilesystemFactory *OSystem_PS3::getFilesystemFactory()
 
 byte samples[1024*1024];
 int len=1024*1024/4;
-uint32 lastquery=0;
 
 void OSystem_PS3::update()
 {
@@ -351,9 +378,6 @@ void OSystem_PS3::update()
 	_pad.frame();
 	if(_timer!=NULL)
 		((DefaultTimerManager*)_timer)->handler();
-
-	if(lastquery==0)
-		lastquery=getMillis();
 
 	if(_sound!=NULL)
 	{

@@ -60,14 +60,16 @@ void OSystem_PS3::initSize(uint width, uint height, const Graphics::PixelFormat 
 	net_send("OSystem_PS3::initSize()\n");
 	_pad.setResolution(width,height);
 	net_send("PS3GL::initSize(%d,%d",width,height);
+
+	Graphics::PixelFormat newFormat;
 	if(format!=NULL)
-		net_send(",%d,%d,%d,%d)\n",format->rBits(),format->gBits(),format->bBits(),format->aBits());
+		newFormat = Graphics::PixelFormat::createFormatCLUT8();
 	else
-		net_send(")\n");
+		newFormat = *format;
 
 	//_egl_surface_width=width;
 	//_egl_surface_height=height;
-	_game_texture->allocBuffer(width, height);
+	_game_texture->allocBuffer(320, 200);
 
 	// Cap at 320x200 or the ScummVM themes abort :/
 	GLuint overlay_width = MIN((int)width, 640);

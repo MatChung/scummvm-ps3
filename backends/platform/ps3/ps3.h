@@ -99,6 +99,7 @@ public:
 
 	void update();
 	void initGraphics();
+	bool running();
 
 protected:
 	float zRot;
@@ -111,6 +112,7 @@ protected:
 
 	GLES565Texture* _overlay_texture;
 	bool _show_overlay;
+	bool _running;
 
 	// Mouse layer
 	GLESPaletteTexture* _mouse_texture;
