@@ -32,21 +32,9 @@
 extern OSystem_PS3 *g_systemPs3;
 Common::String _homedir_;
 
-void setupHomeDir(const char *argv0)
+void setupHomeDir(const char *homedir)
 {
-	if(argv0==NULL)
-		return;
-
-	printf("setupHomeDir(%s)\n",argv0);
-
-	int lpos=((int)strrchr(argv0,'/'))-((int)argv0);
-
-
-	Common::String hd(argv0,lpos+1);
-
-	printf("setupHomeDir() - found \"%s\"\n",hd.c_str());
-
-	_homedir_=hd;
+	_homedir_=homedir;
 }
 
 const char *_lastPathComponent(const Common::String &str)

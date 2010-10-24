@@ -8,6 +8,7 @@
 #include <cell/pad.h>
 #include "base/main.h"
 #include "netdbg/net.h"
+#include <cell/cell_fs.h>
 
 static bool want_to_quit = false;	// true when I need to quit
 
@@ -145,7 +146,7 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param,
 		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
 		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
 		net_send("CELL_SYSUTIL_REQUEST_EXITGAME");
-		want_to_quit = true;
+		g_system->quit();
 		psglDestroyContext(context);
 		psglDestroyDevice(device);
 		psglExit();
@@ -286,7 +287,8 @@ int main(int argc, char *argv[])
 {
 	net_init();
 
-	setupHomeDir(argv[0]);
+	cellFsMkdir("/dev_hdd0/scummvm/",CELL_FS_DEFAULT_CREATE_MODE_1);
+	setupHomeDir("/dev_hdd0/scummvm/");
 
 #ifdef SCUMM_BIG_ENDIAN
 	net_send("SCUMM_BIG_ENDIAN!\n");
