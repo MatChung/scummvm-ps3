@@ -66,17 +66,24 @@ Common::List<Graphics::PixelFormat> __formats;
 void *thread_func(void *attr)
 {
 	net_send("thread_func START!\n");
-	int x=0;
 	OSystem_PS3 *sys=(OSystem_PS3*)attr;
+
+	system_time_t c=sys_time_get_system_time();
+
 	while(sys->running())
 	{
-		x++;
-		if(x==0)
-			net_send("thread_func\n");
-		sys_timer_usleep(1000);
-		sys->update();
-		cellSysutilCheckCallback();
-		x=x%500;
+		system_time_t n=sys_time_get_system_time();
+
+		if(n-10000>c)
+		{
+			c=n;
+			cellSysutilCheckCallback();
+			sys->update();
+		}
+		
+		//sys_timer_usleep(10);
+		sys->soundUpdate();
+
 	}
 
 	net_send("thread_func EXIT!\n");
@@ -100,7 +107,6 @@ OSystem_PS3::OSystem_PS3(uint16 width, uint16 height)
 	_tv_screen_height=height;
 	_running=true;
 	_game_texture=NULL;
-	_game_texture_palette=NULL;
 	_mouse_keycolor=255;
 	
 	net_send("OSystem_PS3::OSystem_PS3() fs init\n");
@@ -108,16 +114,18 @@ OSystem_PS3::OSystem_PS3(uint16 width, uint16 height)
 		_fsFactory = new Ps3FilesystemFactory();
 	net_send("OSystem_PS3::OSystem_PS3() fs ready\n");
 
+	// Palette
+	__formats.push_back(Graphics::PixelFormat::createFormatCLUT8());
 	// RGBA8888
 	__formats.push_back(Graphics::PixelFormat(4, 8, 8, 8, 8, 24, 16, 8, 0));
 	// RGB565
 	__formats.push_back(Graphics::PixelFormat(2, 5, 6, 5, 0, 11, 5, 0, 0));
 	// RGB555
-	//__formats.push_back(Graphics::PixelFormat(2, 5, 5, 5, 0, 10, 5, 0, 0));
+	__formats.push_back(Graphics::PixelFormat(2, 5, 5, 5, 0, 10, 5, 0, 0));
+	// RGB5551
+	__formats.push_back(Graphics::PixelFormat(2, 5, 5, 5, 1, 11, 6, 1, 0));
 	// RGB4444
 	__formats.push_back(Graphics::PixelFormat(2, 4, 4, 4, 4, 12, 8, 4, 0));
-	// Palette
-	__formats.push_back(Graphics::PixelFormat::createFormatCLUT8());
 
 
 	pthread_create(&_thread,NULL,thread_func,this);
@@ -221,6 +229,7 @@ bool OSystem_PS3::hasFeature(Feature f)
 }
 void OSystem_PS3::setShakePos(int shakeOffset)
 {
+	net_send("OSystem_PS3::setShakePos(%d)\n",shakeOffset);
 	if (_shake_offset != shakeOffset) {
 		_shake_offset = shakeOffset;
 	}
@@ -271,13 +280,14 @@ uint32 OSystem_PS3::getMillis()
 void OSystem_PS3::delayMillis(uint msecs)
 {
 	//if(msecs!=10)
-	//	net_send("OSystem_PS3::delayMillis(%d)\n",msecs);
+		//net_send("OSystem_PS3::delayMillis(%d)\n",msecs);
 	sys_timer_usleep(msecs * 1000);
 }
 
 static int numMutexes=0;
 OSystem::MutexRef OSystem_PS3::createMutex(void)
 {
+	//net_send("OSystem_PS3::createMutex()\n");
 	pthread_mutexattr_t attr;
 	pthread_mutexattr_init(&attr);
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
@@ -290,7 +300,7 @@ OSystem::MutexRef OSystem_PS3::createMutex(void)
 		return NULL;
 	}
 	numMutexes++;
-	net_send("OSystem_PS3::createMutex(%d)\n",numMutexes);
+	//net_send("OSystem_PS3::createMutex(%d)\n",numMutexes);
 
 	return (MutexRef)mutex;
 }
@@ -321,7 +331,7 @@ void OSystem_PS3::deleteMutex(MutexRef mutex)
 		delete m;
 
 	numMutexes--;
-	net_send("OSystem_PS3::deleteMutex(%d)\n",numMutexes);
+	//net_send("OSystem_PS3::deleteMutex(%d)\n",numMutexes);
 }
 
 void OSystem_PS3::quit()
@@ -380,17 +390,16 @@ FilesystemFactory *OSystem_PS3::getFilesystemFactory()
 	return _fsFactory;
 }
 
-
-byte samples[1024*1024];
-int len=1024*1024/4;
-
 void OSystem_PS3::update()
 {
 	//net_send("OSystem_PS3::updateFrame()\n");
 	_pad.frame();
 	if(_timer!=NULL)
 		((DefaultTimerManager*)_timer)->handler();
+}
 
+void OSystem_PS3::soundUpdate()
+{
 	if(_sound!=NULL)
 	{
 		_sound->play();

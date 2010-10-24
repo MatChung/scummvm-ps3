@@ -9,7 +9,7 @@ You need the 1.92 PS3 SDK completely set up (Paths, environment variables, MSYS 
 
 Start MSYS, cd to the checked out path and run
 
-    ./configure --host=ps3 --disable-debug  --enable-release  --disable-scalers --disable-hq-scalers
+    ./configure --host=ps3 --disable-debug --enable-release --disable-mt32emu
     make
 
 If all runs well you will get an EBOOT.BIN in dists/ps3. Copy the contents of dists/ps3 to you PS3, and run it with GAIA Manager (Homebrew Mode)
@@ -18,6 +18,16 @@ If you want debug information or get crashes add "--ps3-debug=IP" to your config
 
 The rest of the configure switches work too ("./configure --help" to list them), all engines build except the Hugo series.
 
+
+Keybindings:
+------------
+
+ Left Stick - move mouse
+ X - left mouse button
+ O - right mouse button
+ D-Pad - cursor keys
+ start - show overlay (save, load, quit, etc)
+ select - ESC (to quit videos or other sequences)
 
 
 
@@ -40,20 +50,27 @@ My testsetup:
 
 What works:
 
- .) Maniac Mansion is playable (tested for 5 minutes)
-
- .) Sound seems to work (tested with Day of the Tentacle Talkie)
+ .) most of it
 
 
 What doesn't:
 
 I have only tried a handful of games, this list is by far not complete
 
- .) You will get corrupted palettes in most games
+ .) You will get corrupted palettes in most games (corruption is usually just minor)
 
  .) Beneath a Steel Sky crashes during the intro
 
+ .) Many scumm games crash when showinf the overlay (Start button)
 
-If you try it and get crashes, please include the log output you got from --ps3-debug=IP
-----------------------------------------------------------------------------------------
+ .) in some games the cursor has no transparent colors
+
+ .) slowdowns may occur
+
+ .) MT32 emu disabled, does not work correctly with 48000khz sound output
+
+
+
+If you try it and get crashes, please include the log output you got from --ps3-debug=IP and send it to lousy[at]lousy{dot}at
+-----------------------------------------------------------------------------------------------------------------------------
 

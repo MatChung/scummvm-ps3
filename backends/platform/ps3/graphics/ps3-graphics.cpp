@@ -1,10 +1,12 @@
 #include "../ps3.h"
 #include <PSGL/psgl.h>
 
+void testTex();
 void OSystem_PS3::initGraphics()
 {
-	net_send("PS3GL::init()\n");
+	net_send("OSystem_PS3::init()\n");
 	GLESTexture::initGLExtensions();
+
 
 	// Turn off anything that looks like 3D ;)
 	glDisable(GL_CULL_FACE);
@@ -23,22 +25,23 @@ void OSystem_PS3::initGraphics()
 
 	glEnable(GL_TEXTURE_2D);
 
-	net_send("PS3GL::init()_game_texture\n");
+	testTex();
+
+	net_send("OSystem_PS3::init()_game_texture\n");
 	if (!_game_texture)
 	{
 		_game_texture = new GLESPaletteTexture();
-		_game_texture_palette = (GLESPaletteTexture*)_game_texture;
 	}
 	else
 		_game_texture->reinitGL();
 
-	net_send("PS3GL::init()_overlay_texture\n");
+	net_send("OSystem_PS3::init()_overlay_texture\n");
 	if (!_overlay_texture)
 		_overlay_texture = new GLES565Texture();
 	else
 		_overlay_texture->reinitGL();
 
-	net_send("PS3GL::init()_mouse_texture\n");
+	net_send("OSystem_PS3::init()_mouse_texture\n");
 	if (!_mouse_texture)
 		_mouse_texture = new GLESPaletteTexture();
 	else
@@ -46,14 +49,14 @@ void OSystem_PS3::initGraphics()
 
 	glViewport(0, 0, _tv_screen_width, _tv_screen_height);
 
-	net_send("PS3GL::init()glMatrixMode\n");
+	net_send("OSystem_PS3::init()glMatrixMode\n");
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrthof(0, _tv_screen_width, _tv_screen_height, 0, -1, 1);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	net_send("PS3GL::init()clearFocusRectangle\n");
+	net_send("OSystem_PS3::init()clearFocusRectangle\n");
 	//	CHECK_GL_ERROR();
 	showMouse(true);
 }
@@ -74,11 +77,6 @@ void OSystem_PS3::initSize(uint width, uint height, const Graphics::PixelFormat 
 		if(_game_texture!=NULL)
 			delete _game_texture;
 		_game_texture=createTextureFromPixelFormat(newFormat);
-
-		if(newFormat.bytesPerPixel==1)
-			_game_texture_palette=(GLESPaletteTexture*)_game_texture;
-		else
-			_game_texture_palette=NULL;
 	}
 
 	//_egl_surface_width=width;
@@ -125,7 +123,7 @@ void OSystem_PS3::updateScreen()
 		glTranslatef(0, -_shake_offset, 0);
 	}
 
-	//net_send("PS3GL::updateScreen() - drawGame1\n");
+	//net_send("OSystem_PS3::updateScreen() - drawGame1\n");
 	_game_texture->drawTexture(0, 0,
 		_game_texture->width(), _game_texture->height());
 
@@ -133,7 +131,7 @@ void OSystem_PS3::updateScreen()
 
 	if (_show_overlay)
 	{
-		//net_send("PS3GL::updateScreen() - _show_overlay\n");
+		//net_send("OSystem_PS3::updateScreen() - _show_overlay\n");
 		_overlay_texture->drawTexture(0, 0,
 			_game_texture->width(),
 			_game_texture->height());
@@ -142,7 +140,7 @@ void OSystem_PS3::updateScreen()
 
 	if (_show_mouse)
 	{
-		//net_send("PS3GL::updateScreen() - _show_mouse\n");
+		//net_send("OSystem_PS3::updateScreen() - _show_mouse\n");
 		glPushMatrix();
 
 		glTranslatef(_mouse_pos.x-_mouse_hotspot.x,
@@ -165,6 +163,17 @@ void OSystem_PS3::updateScreen()
 
 GLESTexture *OSystem_PS3::createTextureFromPixelFormat(Graphics::PixelFormat &format)
 {
+	net_send("OSystem_PS3::createTextureFromPixelFormat:\n");
+	net_send("  bytesPerPixel: %d\n",format.bytesPerPixel);
+	net_send("  rBits:         %d\n",format.rBits());
+	net_send("  gBits:         %d\n",format.gBits());
+	net_send("  bBits:         %d\n",format.bBits());
+	net_send("  aBits:         %d\n",format.aBits());
+	net_send("  rShift:        %d\n",format.rShift);
+	net_send("  gShift:        %d\n",format.gShift);
+	net_send("  bShift:        %d\n",format.bShift);
+	net_send("  aShift:        %d\n",format.aShift);
+
 	if(format.bytesPerPixel==1)
 		return new GLESPaletteTexture();
 
@@ -174,6 +183,10 @@ GLESTexture *OSystem_PS3::createTextureFromPixelFormat(Graphics::PixelFormat &fo
 			return new GLES4444Texture();
 		if(format.rBits()==5 && format.gBits()==6 && format.bBits()==5 && format.aBits()==0)
 			return new GLES565Texture();
+		if(format.rBits()==5 && format.gBits()==5 && format.bBits()==5 && format.aBits()==0)
+			return new GLES555Texture();
+		if(format.rBits()==5 && format.gBits()==5 && format.bBits()==5 && format.aBits()==1)
+			return new GLES5551Texture();
 	}
 
 	if(format.bytesPerPixel==4)
@@ -182,11 +195,119 @@ GLESTexture *OSystem_PS3::createTextureFromPixelFormat(Graphics::PixelFormat &fo
 			return new GLES8888Texture();
 	}
 
-	net_send("OSystem_PS3::createTextureFromPixelFormat - NO VALID TEXTURE FOUND\n");
-	net_send("  bytesPerPixel: %d\n",format.bytesPerPixel);
-	net_send("  rBits:         %d\n",format.rBits());
-	net_send("  gBits:         %d\n",format.gBits());
-	net_send("  bBits:         %d\n",format.bBits());
-	net_send("  aBits:         %d\n",format.aBits());
+	net_send("  no valid texture\n");
 	return NULL;
+}
+
+
+
+
+static const char* getGlErrStr(GLenum error) {
+	switch (error) {
+	case GL_NO_ERROR:		   return "GL_NO_ERROR";
+	case GL_INVALID_ENUM:	   return "GL_INVALID_ENUM";
+	case GL_INVALID_VALUE:	   return "GL_INVALID_VALUE";
+	case GL_INVALID_OPERATION: return "GL_INVALID_OPERATION";
+	case GL_STACK_OVERFLOW:	   return "GL_STACK_OVERFLOW";
+	case GL_STACK_UNDERFLOW:   return "GL_STACK_UNDERFLOW";
+	case GL_OUT_OF_MEMORY:	   return "GL_OUT_OF_MEMORY";
+	}
+
+	static char buf[40];
+	snprintf(buf, sizeof(buf), "(Unknown GL error code 0x%x)", error);
+	return buf;
+}
+static void checkGlError() {
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR)
+		net_send("    GL error: %s\n", getGlErrStr(error));
+	else
+		net_send("    success\n");
+}
+
+void testTex()
+{
+	net_send("testTex()\n");
+	GLuint temptex;
+	glGenTextures(1, &temptex);
+	glBindTexture(GL_TEXTURE_2D ,temptex);
+	checkGlError();
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	checkGlError();
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	checkGlError();
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	checkGlError();
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	checkGlError();
+
+	GLint internalFormat;
+	GLenum format;
+	GLenum type;
+
+
+	internalFormat=GL_RGB5_A1;
+	format=GL_RGBA;
+	type=GL_UNSIGNED_SHORT_1_5_5_5_REV ;
+	net_send("  testing: %s,%s,%s\n","GL_RGB5_A1","GL_RGBA","GL_UNSIGNED_SHORT_1_5_5_5_REV");
+	glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, 320,200, 0, format, type, NULL);
+	checkGlError();
+	glFlush();
+	glFinish();
+	checkGlError();
+
+	internalFormat=GL_RGB5_A1;
+	format=GL_RGBA;
+	type=GL_UNSIGNED_SHORT_5_5_5_1;
+	net_send("  testing: %s,%s,%s\n","GL_RGB5_A1","GL_RGBA","GL_UNSIGNED_SHORT_5_5_5_1");
+	glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, 320,200, 0, format, type, NULL);
+	checkGlError();
+	glFlush();
+	glFinish();
+	checkGlError();
+
+	internalFormat=GL_RGB;
+	format=GL_RGB;
+	type=GL_UNSIGNED_SHORT_5_6_5_REV;
+	net_send("  testing: %s,%s,%s\n","GL_RGB","GL_RGB","GL_UNSIGNED_SHORT_5_6_5_REV");
+	glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, 320,200, 0, format, type, NULL);
+	checkGlError();
+	glFlush();
+	glFinish();
+	checkGlError();
+
+	internalFormat=GL_RGB;
+	format=GL_RGB;
+	type=GL_UNSIGNED_SHORT_5_6_5;
+	net_send("  testing: %s,%s,%s\n","GL_RGB","GL_RGB","GL_UNSIGNED_SHORT_5_6_5");
+	glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, 320,200, 0, format, type, NULL);
+	checkGlError();
+	glFlush();
+	glFinish();
+	checkGlError();
+
+	internalFormat=GL_RGB;
+	format=GL_RGB;
+	type=GL_UNSIGNED_SHORT_5_5_5_1;
+	net_send("  testing: %s,%s,%s\n","GL_RGB","GL_RGB","GL_UNSIGNED_SHORT_5_5_5_1");
+	glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, 320,200, 0, format, type, NULL);
+	checkGlError();
+	glFlush();
+	glFinish();
+	checkGlError();
+
+	internalFormat=GL_RGBA;
+	format=GL_RGBA;
+	type=GL_UNSIGNED_SHORT_5_5_5_1;
+	net_send("  testing: %s,%s,%s\n","GL_RGBA","GL_RGBA","GL_UNSIGNED_SHORT_5_5_5_1");
+	glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, 320,200, 0, format, type, NULL);
+	checkGlError();
+	glFlush();
+	glFinish();
+	checkGlError();
+
+
+
+	glDeleteTextures(1, &temptex);
+
 }

@@ -29,10 +29,11 @@ static void checkGlError(const char* file, int line) {
 
 
 GLESPaletteTexture::GLESPaletteTexture() :
-GLESTexture(),
-_texture(NULL)
+GLESTexture()
 {
+	CHECK_GL_ERROR();
 	glGenTextures(1, &_palette_name);
+	CHECK_GL_ERROR();
 	glGenTextures(1, &_texture_name);
 	_palette=new uint32[256];
 	memset(_palette,0,sizeof(uint32)*256);
@@ -55,10 +56,12 @@ _texture(NULL)
 	_isLocked=false;
 
 	initCG();
+	CHECK_GL_ERROR();
 }
 
 GLESPaletteTexture::~GLESPaletteTexture()
 {
+	CHECK_GL_ERROR();
 	if(_palette_name>0)
 		glDeleteTextures(1, &_palette_name);
 	CHECK_GL_ERROR();
@@ -82,7 +85,7 @@ void GLESPaletteTexture::allocBuffer(GLuint w, GLuint h)
 {
 	//net_send("GLESPaletteTexture::allocBuffer(%d,%d)\n",w,h);
 
-	//CHECK_GL_ERROR();
+	CHECK_GL_ERROR();
 	int bpp = bytesPerPixel();
 	_surface.w = w;
 	_surface.h = h;
@@ -133,6 +136,7 @@ void GLESPaletteTexture::fillBuffer(byte x)
 	//net_send("GLESPaletteTexture::fillBuffer(%d)-%X\n",&_surface);
 	//net_send("GLESPaletteTexture::fillBuffer(%d)-%X\n",_surface.pixels);
 	//net_send("GLESPaletteTexture::fillBuffer()0-%d,%d,%d\n",_surface.h , _surface.w , bytesPerPixel());
+	net_send("GLESPaletteTexture::fillBuffer(%d)\n",x);
 	assert(_surface.pixels);
 	memset(_surface.pixels, x, _surface.pitch * _surface.h);
 	CHECK_GL_ERROR();
@@ -143,6 +147,7 @@ void GLESPaletteTexture::fillBuffer(byte x)
 	CHECK_GL_ERROR();
 
 	glFlush();
+	CHECK_GL_ERROR();
 	setDirty();
 }
 
@@ -150,6 +155,7 @@ void GLESPaletteTexture::updateBuffer(GLuint x, GLuint y,
 									  GLuint w, GLuint h,
 									  const void* buf, int pitch)
 {
+	//net_send("GLESPaletteTexture::updateBuffer(%d,%d,%d,%d)\n",x,y,w,h);
 	_all_dirty = true;
 
 	const byte* src = static_cast<const byte*>(buf);
@@ -163,12 +169,13 @@ void GLESPaletteTexture::updateBuffer(GLuint x, GLuint y,
 		memcpy(dst, src, w * bytesPerPixel());
 		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y+horig-h, w, 1,
 			glFormat(), glType(), dst);
-		CHECK_GL_ERROR();
 		dst += _surface.pitch;
 		src += pitch;
 	} while (--h);
+	CHECK_GL_ERROR();
 
 	glFlush();
+	CHECK_GL_ERROR();
 }
 
 void GLESPaletteTexture::drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
@@ -194,6 +201,7 @@ void GLESPaletteTexture::drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 
 	//draw
 	GLESTexture::_drawTexture(x, y, w*1, h);
+	CHECK_GL_ERROR();
 
 	//CG stuff disable
 	cgGLDisableTextureParameter(_texture_param);
@@ -255,11 +263,14 @@ void GLESPaletteTexture::updatePalette(const byte *colors, uint start, uint num)
 	CHECK_GL_ERROR();
 
 	glFlush();
+	glFinish();
+	CHECK_GL_ERROR();
 }
 
 void GLESPaletteTexture::setKeyColor(uint32 color)
 {
 	//net_send("GLESPaletteTexture::setKeyColor(%d)\n",color);
+	_keycolor=color;
 	_palette[color]=0;
 	CHECK_GL_ERROR();
 	glBindTexture(GL_TEXTURE_2D, _palette_name);
@@ -269,25 +280,7 @@ void GLESPaletteTexture::setKeyColor(uint32 color)
 	CHECK_GL_ERROR();
 
 	glFlush();
-}
-
-Graphics::Surface* GLESPaletteTexture::lock()
-{
-	_isLocked=true;
-	return &_surface;
-}
-
-void GLESPaletteTexture::unlock()
-{
 	CHECK_GL_ERROR();
-	glBindTexture(GL_TEXTURE_2D, _texture_name);
-	CHECK_GL_ERROR();
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _surface.w, _surface.h,
-		glFormat(), glType(), _surface.pixels);
-	CHECK_GL_ERROR();
-	_isLocked=false;
-
-	glFlush();
 }
 
 static const char *cg_vert="void main (float4 position : POSITION,     // Local-space position\n\

@@ -22,7 +22,7 @@ void OSystem_PS3::clearOverlay()
 
 Graphics::PixelFormat OSystem_PS3::getOverlayFormat() const
 {
-	net_send("OSystem_PS3::getOverlayFormat()\n");
+	//net_send("OSystem_PS3::getOverlayFormat()\n");
 	return Graphics::createPixelFormat<565>();
 }
 
@@ -32,10 +32,10 @@ void OSystem_PS3::grabOverlay(OverlayColor *buf, int pitch)
 	// We support overlay alpha blending, so the pixel data here
 	// shouldn't actually be used.	Let's fill it with zeros, I'm sure
 	// it will be fine...
-	//net_send("PS3GL::grabOverlay()=%X\n",_overlay_texture);
-	//net_send("PS3GL::grabOverlay()=%X\n",_overlay_texture->surface_const());
+	//net_send("OSystem_PS3::grabOverlay()=%X\n",_overlay_texture);
+	//net_send("OSystem_PS3::grabOverlay()=%X\n",_overlay_texture->surface_const());
 	const Graphics::Surface* surface = _overlay_texture->surface_const();
-	//net_send("PS3GL::grabOverlay()=%X\n",surface);
+	//net_send("OSystem_PS3::grabOverlay()=%X\n",surface);
 	//assert(surface->bytesPerPixel == sizeof(buf[0]));
 	int h = surface->h;
 	do {

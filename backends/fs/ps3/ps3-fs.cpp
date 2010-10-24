@@ -28,6 +28,7 @@
 #include "ps3-filestream.h"
 #include <cell/cell_fs.h>
 #include <sys/paths.h>
+#include "backends/fs/stdiostream.h"
 
 extern OSystem_PS3 *g_systemPs3;
 Common::String _homedir_;
@@ -330,11 +331,11 @@ AbstractFSNode *Ps3FilesystemNode::getParent() const {
 
 Common::SeekableReadStream *Ps3FilesystemNode::createReadStream() {
 	printf("Ps3FilesystemNode::createReadStream(%s)\n", _path.c_str());
-	Common::SeekableReadStream *ss = PS3FileStream::makeFromPath(getPath().c_str(), false);
+	Common::SeekableReadStream *ss = StdioStream::makeFromPath(getPath().c_str(), false);
 	return ss;
 }
 
 Common::WriteStream *Ps3FilesystemNode::createWriteStream() {
 	printf("Ps3FilesystemNode::createWriteStream(%s)\n", _path.c_str());
-	return PS3FileStream::makeFromPath(getPath().c_str(), true);
+	return StdioStream::makeFromPath(getPath().c_str(), true);
 }

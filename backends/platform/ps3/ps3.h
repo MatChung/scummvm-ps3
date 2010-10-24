@@ -1,13 +1,14 @@
 #ifndef BACKENDS_PLATFORM_PS3_PS3_H
 #define BACKENDS_PLATFORM_PS3_PS3_H
 
+#define DEEP_DEBUG 1
+
 #include "pad.h"
 #include "backends/base-backend.h"
 #include "sound/mixer_intern.h"
 #include "graphics/colormasks.h"
 #include "graphics/texture.h"
 #include <pthread.h>
-//#include "graphics/ps3gl.h"
 
 class PS3Sound;
 
@@ -21,7 +22,7 @@ protected:
 
 	system_time_t _startTime;
 
-	//PS3GL graphics;
+	//OSystem_PS3 graphics;
 	PS3Pad _pad;
 	PS3Sound *_sound;
 	bool _isInitialized;
@@ -98,6 +99,7 @@ public:
 
 
 	void update();
+	void soundUpdate();
 	void initGraphics();
 	bool running();
 	void requestQuit();
@@ -107,7 +109,7 @@ protected:
 	unsigned int deviceWidth, deviceHeight;
 
 	GLESTexture* _game_texture;
-	GLESPaletteTexture* _game_texture_palette;
+	//GLESPaletteTexture* _game_texture_palette;
 	int _shake_offset;
 	//Common::Rect _focus_rect;
 	bool _full_screen_dirty;
@@ -117,7 +119,7 @@ protected:
 	bool _running;
 
 	// Mouse layer
-	GLESPaletteTexture* _mouse_texture;
+	GLESTexture* _mouse_texture;
 	Common::Point _mouse_hotspot;
 	Common::Point _mouse_pos;
 	int _mouse_targetscale;

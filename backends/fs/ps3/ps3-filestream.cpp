@@ -13,7 +13,7 @@ PS3FileStream *PS3FileStream::makeFromPath(const Common::String &path, bool writ
 
 	CellFsErrno err=cellFsOpen(path.c_str(),mode,&fd,NULL,0);
 	
-	printf("PS3FileStream::makeFromPath(%s) --> %d, %d, %d\n",path.c_str(),err,fd,mode);
+	net_send("PS3FileStream::makeFromPath(%s) --> %d, %d, %d\n",path.c_str(),err,fd,mode);
 
 	if(err==CELL_FS_SUCCEEDED)
 		return new PS3FileStream(fd);
@@ -37,40 +37,40 @@ PS3FileStream:: ~PS3FileStream()
 
 bool PS3FileStream::err() const
 {
-//	if(_err)
-//		printf("PS3FileStream::err() - %d\n",_err);
+	if(_err)
+		net_send("PS3FileStream::err() - %d\n",_err);
 	return _err!=0;
 }
 
 void PS3FileStream::clearErr()
 {
-//	if(_err)
-//		printf("PS3FileStream::clearErr() - %d\n",_err);
+	if(_err)
+		net_send("PS3FileStream::clearErr() - %d\n",_err);
 	_err=0;
 }
 
 bool PS3FileStream::eos() const
 {
-//	if(_eos)
-//		printf("PS3FileStream::eos() - %d\n",_eos);
+	if(_eos)
+		net_send("PS3FileStream::eos() - %d\n",_eos);
 	return _eos;
 }
 
 uint32 PS3FileStream::write(const void *dataPtr, uint32 dataSize)
 {
-	printf("PS3FileStream::write() - %d  ",dataSize);
+	net_send("PS3FileStream::write() - %d  ",dataSize);
 
 	uint64_t written=0;
 	_err=cellFsWrite(_fd,dataPtr,dataSize,&written);
 
-	printf(" written: %d,%d\n",_err,(int)written);
+	net_send(" written: %d,%d\n",_err,(int)written);
 
 	return written;
 }
 
 bool PS3FileStream::flush()
 {
-	printf("PS3FileStream::flush()\n");
+	net_send("PS3FileStream::flush()\n");
 	_err=cellFsFsync(_fd);
 	
 	return err();
@@ -113,10 +113,10 @@ uint32 PS3FileStream::read(void *dataPtr, uint32 dataSize)
 	if(dataSize<1)
 		return 0;
 
-	//printf("PS3FileStream::read() - %X,%d  ",dataPtr,dataSize);
+	//net_send("PS3FileStream::read() - %X,%d  ",dataPtr,dataSize);
 	uint64_t l_read=0;
 	_err=cellFsRead(_fd,dataPtr,dataSize,&l_read);
-	//printf(" read: %d,%d\n",_err,read);
+	//net_send(" read: %d,%d\n",_err,l_read);
 
 	if(l_read==0)
 		_eos=true;

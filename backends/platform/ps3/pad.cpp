@@ -78,8 +78,8 @@ void PS3Pad::frame()
 		_buttonState2=bState2;
 	}
 
-	_xPos+=(_xPosPad>>4)/10.0f;
-	_yPos+=(_yPosPad>>4)/10.0f;
+	_xPos+=(_xPosPad>>4)/3.0f;
+	_yPos+=(_yPosPad>>4)/3.0f;
 
 	if(_xPos<0)_xPos=0;
 	if(_xPos>_w)_xPos=_w;
@@ -183,14 +183,14 @@ bool PS3Pad::mapPS3ToEvent(Common::Event &event)
 	}
 	if(diffstate2&CELL_PAD_CTRL_CIRCLE)
 	{
-		if(_buttonState2&CELL_PAD_CTRL_LEFT)//pressed
+		if(_buttonState2&CELL_PAD_CTRL_CIRCLE)//pressed
 		{
-			event.type=Common::EVENT_LBUTTONDOWN;
+			event.type=Common::EVENT_RBUTTONDOWN;
 			_buttonState2Known|=CELL_PAD_CTRL_CIRCLE;
 		}
 		else//released
 		{
-			event.type=Common::EVENT_LBUTTONUP;
+			event.type=Common::EVENT_RBUTTONUP;
 			_buttonState2Known&=~CELL_PAD_CTRL_CIRCLE;
 		}
 		event.mouse.x=(int16)_xPos;
