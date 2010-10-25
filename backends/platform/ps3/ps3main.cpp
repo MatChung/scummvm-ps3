@@ -1,6 +1,7 @@
 #include "ps3.h"
 // PS3 includes
 #include <PSGL/psgl.h>
+#include <sys/process.h>
 #include <sys/spu_initialize.h>
 #include <sys/paths.h>
 #include <cell/sysmodule.h>
@@ -10,7 +11,7 @@
 #include "netdbg/net.h"
 #include <cell/cell_fs.h>
 
-
+//SYS_PROCESS_PARAM(1001, SYS_PROCESS_PRIMARY_STACK_SIZE_1M)
 
 void initGraphics(PSGLdevice *device)
 {
