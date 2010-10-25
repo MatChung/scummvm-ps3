@@ -14,6 +14,7 @@ void OSystem_PS3::initGraphics()
 	glDisable(GL_LIGHTING);
 	glDisable(GL_FOG);
 	glDisable(GL_DITHER);
+	//glEnable(GL_VSYNC_SCE);
 	glShadeModel(GL_FLAT);
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 
@@ -296,11 +297,11 @@ void testTex()
 	glFinish();
 	checkGlError();
 
-	internalFormat=GL_RGBA;
+	internalFormat=GL_RGBA8;
 	format=GL_RGBA;
-	type=GL_UNSIGNED_SHORT_5_5_5_1;
-	net_send("  testing: %s,%s,%s\n","GL_RGBA","GL_RGBA","GL_UNSIGNED_SHORT_5_5_5_1");
-	glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, 320,200, 0, format, type, NULL);
+	type=GL_UNSIGNED_INT_8_8_8_8 ;
+	net_send("  testing: %s,%s,%s\n","GL_RGBA","GL_RGBA","GL_UNSIGNED_INT_8_8_8_8 ");
+	glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, 256,1, 0, format, type, NULL);
 	checkGlError();
 	glFlush();
 	glFinish();

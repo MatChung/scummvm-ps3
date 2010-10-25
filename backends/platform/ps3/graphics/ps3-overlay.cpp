@@ -3,13 +3,15 @@
 
 void OSystem_PS3::showOverlay()
 {
-	net_send("OSystem_PS3::showOverlay()\n");
+	if(!_show_overlay)
+		net_send("OSystem_PS3::showOverlay()\n");
 	_show_overlay = true;
 }
 
 void OSystem_PS3::hideOverlay()
 {
-	net_send("OSystem_PS3::hideOverlay()\n");
+	if(_show_overlay)
+		net_send("OSystem_PS3::hideOverlay()\n");
 	_show_overlay = false;
 }
 
@@ -22,7 +24,7 @@ void OSystem_PS3::clearOverlay()
 
 Graphics::PixelFormat OSystem_PS3::getOverlayFormat() const
 {
-	//net_send("OSystem_PS3::getOverlayFormat()\n");
+	net_send("OSystem_PS3::getOverlayFormat()\n");
 	return Graphics::createPixelFormat<565>();
 }
 
@@ -38,16 +40,18 @@ void OSystem_PS3::grabOverlay(OverlayColor *buf, int pitch)
 	//net_send("OSystem_PS3::grabOverlay()=%X\n",surface);
 	//assert(surface->bytesPerPixel == sizeof(buf[0]));
 	int h = surface->h;
+	byte *src = (byte *)surface->pixels;
 	do {
-		memset(buf, 0, surface->w * sizeof(buf[0]));
-		buf += pitch;  // This 'pitch' is pixels not bytes
+		memcpy(buf, src, surface->w * 2);
+		src += surface->pitch;
+		buf += pitch;
 	} while (--h);
 }
 
 
 void OSystem_PS3::copyRectToOverlay(const OverlayColor *buf, int pitch, int x, int y, int w, int h)
 {
-	//net_send("OSystem_PS3::copyRectToOverlay()\n");
+	net_send("OSystem_PS3::copyRectToOverlay(%d,%d,%d,%d,%d)\n",pitch,x,y,w,h);
 
 	/*
 	const Graphics::Surface* surface = _overlay_texture->surface_const();
@@ -80,12 +84,12 @@ void OSystem_PS3::copyRectToOverlay(const OverlayColor *buf, int pitch, int x, i
 
 int16 OSystem_PS3::getOverlayHeight()
 {
-	//net_send("OSystem_PS3::getOverlayHeight(%d)\n",_overlay_texture->height());
+	net_send("OSystem_PS3::getOverlayHeight(%d)\n",_overlay_texture->height());
 	return _overlay_texture->height();
 }
 
 int16 OSystem_PS3::getOverlayWidth()
 {
-	//net_send("OSystem_PS3::getOverlayWidth(%d)\n",_overlay_texture->width());
+	net_send("OSystem_PS3::getOverlayWidth(%d)\n",_overlay_texture->width());
 	return _overlay_texture->width();
 }

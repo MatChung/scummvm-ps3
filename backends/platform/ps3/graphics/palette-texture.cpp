@@ -74,6 +74,8 @@ GLESPaletteTexture::~GLESPaletteTexture()
 	if(_palette!=NULL)
 		delete[] _palette;
 
+	shutdownCG();
+
 	_texture=NULL;
 	_palette=NULL;
 	_palette_name=0;
@@ -149,6 +151,7 @@ void GLESPaletteTexture::fillBuffer(byte x)
 	glFlush();
 	CHECK_GL_ERROR();
 	setDirty();
+	_updatesPerFrame++;
 }
 
 void GLESPaletteTexture::updateBuffer(GLuint x, GLuint y,
@@ -176,10 +179,12 @@ void GLESPaletteTexture::updateBuffer(GLuint x, GLuint y,
 
 	glFlush();
 	CHECK_GL_ERROR();
+	_updatesPerFrame++;
 }
 
 void GLESPaletteTexture::drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 {
+	CHECK_GL_ERROR();
 	//glActiveTexture(GL_TEXTURE0);
 	//glBindTexture(GL_TEXTURE_2D, _texture_name);
 	//glActiveTexture(GL_TEXTURE1);
@@ -188,17 +193,18 @@ void GLESPaletteTexture::drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 
 	//CG stuff enable
 	cgGLEnableProfile(CG_PROFILE_SCE_VP_RSX);
-	cgGLBindProgram(vprog);
+	cgGLBindProgram(_vprog);
 	cgGLSetStateMatrixParameter(_mvp_param, CG_GL_MODELVIEW_PROJECTION_MATRIX,
 		CG_GL_MATRIX_IDENTITY);
 	cgGLEnableProfile(CG_PROFILE_SCE_FP_RSX);
-	cgGLBindProgram(fprog);
+	cgGLBindProgram(_fprog);
 	cgGLSetTextureParameter(_texture_param,_texture_name);
 	cgGLEnableTextureParameter(_texture_param);
 	cgGLSetTextureParameter(_palette_param,_palette_name);
 	cgGLEnableTextureParameter(_palette_param);
 
 
+	CHECK_GL_ERROR();
 	//draw
 	GLESTexture::_drawTexture(x, y, w*1, h);
 	CHECK_GL_ERROR();
@@ -215,12 +221,17 @@ void GLESPaletteTexture::drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 void GLESPaletteTexture::grabPalette(byte *colors, uint start, uint num)
 {
 	net_send("GLESPaletteTexture::grabPalette(%d,%d)\n",start, num);
+	uint32* dst = (uint32*)(colors);
 	for(uint i=start;i<start+num;i++)
 	{
+		*dst=_palette[i];
+		dst++;
+		/*
 		uint32 col=_palette[i];
 		colors[i*4+0]=(col>>24)&0xff;
 		colors[i*4+1]=(col>>16)&0xff;
 		colors[i*4+2]=(col>>8)&0xff;
+		*/
 	}
 }
 
@@ -266,14 +277,13 @@ void GLESPaletteTexture::updatePalette(const byte *colors, uint start, uint num)
 	CHECK_GL_ERROR();
 
 	glFlush();
-	glFinish();
 	CHECK_GL_ERROR();
 }
 
 void GLESPaletteTexture::setKeyColor(uint32 color)
 {
 	//net_send("GLESPaletteTexture::setKeyColor(%d)\n",color);
-	_keycolor=color;
+	//_keycolor=color;
 	_palette[color]=0;
 	CHECK_GL_ERROR();
 	glBindTexture(GL_TEXTURE_2D, _palette_name);
@@ -319,31 +329,40 @@ static const char *cg_frag="void main (float2 diffuseTexCoord : TEXCOORD0,	// In
 void GLESPaletteTexture::initCG()
 {
 	net_send("GLESPaletteTexture::initCG(ctx): ");
-	ctx = cgCreateContext();
-	net_send("%X\n",ctx);
+	_ctx = cgCreateContext();
+	net_send("%X\n",_ctx);
 
 
 	net_send("GLESPaletteTexture::initCG(vprog): ");
-	vprog = cgCreateProgram(ctx,
+	_vprog = cgCreateProgram(_ctx,
 		CG_SOURCE,
 		cg_vert,
 		CG_PROFILE_SCE_VP_RSX,
 		"main",
 		NULL);
-	net_send("%X\n",vprog);
+	net_send("%X\n",_vprog);
 
 
 	net_send("GLESPaletteTexture::initCG(fprog): ");
-	fprog = cgCreateProgram(ctx,
+	_fprog = cgCreateProgram(_ctx,
 		CG_SOURCE,
 		cg_frag,
 		CG_PROFILE_SCE_FP_RSX,
 		"main",
 		NULL);
-	_texture_param = cgGetNamedParameter(fprog, "index");
-	_palette_param = cgGetNamedParameter(fprog, "palette");
-	_mvp_param = cgGetNamedParameter(vprog, "modelViewProj");
-	net_send("%X,%X,%X\n",fprog,_texture_param,_palette_param);
+	_texture_param = cgGetNamedParameter(_fprog, "index");
+	_palette_param = cgGetNamedParameter(_fprog, "palette");
+	_mvp_param = cgGetNamedParameter(_vprog, "modelViewProj");
+}
 
+void GLESPaletteTexture::shutdownCG()
+{
+	cgDestroyParameter(_texture_param);
+	cgDestroyParameter(_palette_param);
+	cgDestroyParameter(_mvp_param);
 
+	cgDestroyProgram(_fprog);
+	cgDestroyProgram(_vprog);
+
+	cgDestroyContext(_ctx);
 }

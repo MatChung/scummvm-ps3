@@ -57,17 +57,13 @@ What doesn't:
 
 I have only tried a handful of games, this list is by far not complete
 
- .) You will get corrupted palettes in most games (corruption is usually just minor)
-
  .) Beneath a Steel Sky crashes during the intro
-
- .) Many scumm games crash when showing the overlay (Start button)
 
  .) in some games the cursor has no transparent colors
 
  .) slowdowns may occur
 
- .) MT32 emu shows problems at least in MI2
+ .) MT32 emu has some performance problems (very bad in MI2 intro)
 
 
 

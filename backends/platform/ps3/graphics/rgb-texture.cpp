@@ -147,12 +147,14 @@ void GLESTexture::updateBuffer(GLuint x, GLuint y, GLuint w, GLuint h,
 
 	glFlush();
 	CHECK_GL_ERROR();
+	_updatesPerFrame++;
 }
 void GLES555Texture::updateBuffer(GLuint x, GLuint y, GLuint w, GLuint h,
 							   const void* buf, int pitch)
 {
 	net_send("GLESTexture::updateBuffer(%d,%d,%d,%d)\n",x,y,w,h);
 	_all_dirty = true;
+	byte bpp=bytesPerPixel();
 
 	const uint16* src = static_cast<const uint16*>(buf);
 	uint16* dst = static_cast<uint16*>(_surface.getBasePtr(x, y));
@@ -173,13 +175,14 @@ void GLES555Texture::updateBuffer(GLuint x, GLuint y, GLuint w, GLuint h,
 		//memcpy(dst, src, w * bytesPerPixel());
 		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y+horig-h, w, 1,
 			glFormat(), glType(), dst);
-		dst += _surface.pitch/2;
-		src += pitch/2;
+		dst += _surface.pitch/bpp;
+		src += pitch/bpp;
 	} while (--h);
 	CHECK_GL_ERROR();
 
 	glFlush();
 	CHECK_GL_ERROR();
+	_updatesPerFrame++;
 }
 /*	//ENTER("updateBuffer(%u, %u, %u, %u, %p, %d, %d)\n", x, y, w, h, buf, pitch, _texture_name);
 	CHECK_GL_ERROR();
@@ -230,6 +233,7 @@ void GLESTexture::fillBuffer(byte x)
 	glFlush();
 	CHECK_GL_ERROR();
 	setDirty();
+	_updatesPerFrame++;
 }
 
 void GLESTexture::drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
@@ -275,6 +279,10 @@ void GLESTexture::_drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 
 	_all_dirty = false;
 	_dirty_rect = Common::Rect();
+
+	if(_updatesPerFrame>2)
+		net_send("GLESTexture::_updatesPerFrame(%d)\n",_updatesPerFrame);
+	_updatesPerFrame=0;
 }
 
 Graphics::Surface* GLESTexture::lock()
@@ -297,12 +305,14 @@ void GLESTexture::unlock()
 
 	glFlush();
 	CHECK_GL_ERROR();
+	_updatesPerFrame++;
 }
 
 Graphics::Surface *GLES555Texture::lock()
 {
 	//net_send("GLES555Texture::lock()\n");
 	uint16* dst = static_cast<uint16*>(_surface.pixels);
+
 	for(uint16 y=0;y<_surface.h;y++)
 	{
 		for(uint16 x=0;x<_surface.w;x++)
@@ -334,10 +344,11 @@ void GLES555Texture::unlock()
 
 	glFlush();
 	CHECK_GL_ERROR();
+	_updatesPerFrame++;
 }
 
 void GLESTexture::setKeyColor(uint32 color)
 {
 	//net_send("GLESPaletteTexture::setKeyColor(%d)\n",color);
-	_keycolor=color;
+	//_keycolor=color;
 }

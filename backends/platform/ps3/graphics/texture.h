@@ -60,7 +60,8 @@ protected:
 	GLuint _texture_height;
 	bool _all_dirty;
 	Common::Rect _dirty_rect;  // Covers dirty area
-	int32 _keycolor;
+	//int32 _keycolor;
+	uint16 _updatesPerFrame;
 };
 
 
@@ -141,6 +142,7 @@ public:
 
 protected:
 	void initCG();
+	void shutdownCG();
 	virtual byte bytesPerPixel() const { return 1; }
 	virtual GLenum glInternalFormat() const { return GL_LUMINANCE8; }
 	virtual GLenum glFormat() const { return GL_LUMINANCE; }
@@ -152,9 +154,9 @@ protected:
 	uint32* _palette;
 	GLuint _palette_name;
 	
-	CGcontext ctx;
-	CGprogram vprog;
-	CGprogram fprog;
+	CGcontext _ctx;
+	CGprogram _vprog;
+	CGprogram _fprog;
 	CGparameter _texture_param;
 	CGparameter _palette_param;
 	CGparameter _mvp_param;

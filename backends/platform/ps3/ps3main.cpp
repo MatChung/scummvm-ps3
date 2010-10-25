@@ -183,8 +183,8 @@ initializeSPUs: false,
 persistentMemorySize: 0,
 transientMemorySize: 0,
 errorConsole: 0,
-fifoSize: 1* 1024*1024,  
-hostMemorySize: 64* 1024*1024,  // 128 mbs for host memory 
+fifoSize: 256 * 1024,  
+hostMemorySize: 1 * 1024*1024,  // 128 mbs for host memory 
 	};
 	psglInit(&initOpts);
 

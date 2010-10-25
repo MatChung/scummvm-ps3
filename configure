@@ -1590,6 +1590,8 @@ case $_host_os in
 		_unix=no
 		_seq_midi=no
 		_endian=big
+		_build_scalers=no
+		_build_hq_scalers=no
 		;;
 	psp)
 		CXXFLAGS="$CXXFLAGS -O3 -I$PSPSDK/include -D_PSP_FW_VERSION=150"
@@ -2891,10 +2893,12 @@ case $_backend in
 
 		add_line_to_config_mk ''
 		add_line_to_config_mk 'eboot: all'
-		add_line_to_config_mk '	$(SCE_PS3_ROOT)/host-win32/bin/make_fself "$(EXECUTABLE)" "dists/ps3/EBOOT.BIN"'
+		add_line_to_config_mk '	ppu-lv2-strip --strip-debug "$(EXECUTABLE)"'
+		add_line_to_config_mk '	make_fself "$(EXECUTABLE)" "dists/ps3/EBOOT.BIN"'
+		add_line_to_config_mk ''
 		add_line_to_config_mk 'pkg: all'
-		add_line_to_config_mk '	$(SCE_PS3_ROOT)/host-win32/bin/make_fself_npdrm "$(EXECUTABLE)" "PS3_GAME/USRDIR/EBOOT.BIN"'
-		add_line_to_config_mk '	$(SCE_PS3_ROOT)/host-win32/bin/make_package_npdrm scummvm.conf "PS3_GAME"'
+		add_line_to_config_mk '	make_fself_npdrm "$(EXECUTABLE)" "PS3_GAME/USRDIR/EBOOT.BIN"'
+		add_line_to_config_mk '	make_package_npdrm scummvm.conf "PS3_GAME"'
 		add_line_to_config_mk ''
 		;;
 	psp)

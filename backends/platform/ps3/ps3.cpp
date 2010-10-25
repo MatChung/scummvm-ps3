@@ -80,8 +80,8 @@ void *thread_func(void *attr)
 			cellSysutilCheckCallback();
 			sys->update();
 		}
-		
-		//sys_timer_usleep(10);
+		// reduce this if there are sound problems (MT32 is still too CPU heavy)
+		sys_timer_usleep(10);
 		sys->soundUpdate();
 
 	}
@@ -108,6 +108,8 @@ OSystem_PS3::OSystem_PS3(uint16 width, uint16 height)
 	_running=true;
 	_game_texture=NULL;
 	_mouse_keycolor=255;
+	_use_mouse_palette=0;
+	_mouse_is_palette=true;
 	
 	net_send("OSystem_PS3::OSystem_PS3() fs init\n");
 	if(_fsFactory==NULL)
@@ -238,11 +240,17 @@ void OSystem_PS3::setShakePos(int shakeOffset)
 void OSystem_PS3::setFeatureState(Feature f, bool enable)
 {
 	net_send("OSystem_PS3::setFeatureState(%d,%d)\n",f,enable);
+
+	if(f==kFeatureAspectRatioCorrection)
+		_aspectRatioCorrection=enable;
 }
 
 bool OSystem_PS3::getFeatureState(Feature f)
 {
 	net_send("OSystem_PS3::getFeatureState(%d)\n",f);
+
+	if(f==kFeatureAspectRatioCorrection)
+		return _aspectRatioCorrection;
 
 	return false;
 }

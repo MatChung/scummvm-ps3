@@ -126,6 +126,9 @@ protected:
 	int _mouse_keycolor;
 	bool _show_mouse;
 	bool _use_mouse_palette;
+	bool _aspectRatioCorrection;
+	bool _mouse_is_palette;
+	uint32 _tempMousePalette[256];
 
 	void _setCursorPalette(const byte *colors, uint start, uint num);
 

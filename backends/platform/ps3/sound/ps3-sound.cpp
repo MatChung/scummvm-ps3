@@ -1,7 +1,7 @@
 #include "ps3-sound.h"
 
 #define AUDIO_CHANNEL_COUNT CELL_AUDIO_PORT_2CH
-#define AUDIO_BLOCK_COUNT CELL_AUDIO_BLOCK_8
+#define AUDIO_BLOCK_COUNT CELL_AUDIO_BLOCK_32
 //snes uses 512?
 #define AUDIO_BLOCK_SIZE 256
 
@@ -49,19 +49,24 @@ void PS3Sound::play()
 {
 	while(playOneBlock());
 }
-
+//static int __counterr=0;
 bool PS3Sound::playOneBlock()
 {
 	unsigned int current_block = *(uint64_t *)_audio_read_index_addr;
 
 	if (current_block == _audio_last_read_block)
 	{
+		//__counterr++;
 		return false;
 	}
 	if(_audio_block_index != current_block)
+	{
+		//__counterr++;
 		return false;
+	}
 
-	//net_send("PS3Sound::playOneBlock()\n");
+	//net_send("PS3Sound::playOneBlock(%d)\n",__counterr);
+	//__counterr=0;
 
 	_mixer->mixCallback(_buffer,AUDIO_BLOCK_SIZE*4);
 	int16 *samples = (int16 *)_buffer;
