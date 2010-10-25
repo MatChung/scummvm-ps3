@@ -61,13 +61,13 @@ I have only tried a handful of games, this list is by far not complete
 
  .) Beneath a Steel Sky crashes during the intro
 
- .) Many scumm games crash when showinf the overlay (Start button)
+ .) Many scumm games crash when showing the overlay (Start button)
 
  .) in some games the cursor has no transparent colors
 
  .) slowdowns may occur
 
- .) MT32 emu disabled, does not work correctly with 48000khz sound output
+ .) MT32 emu shows problems at least in MI2
 
 
 
