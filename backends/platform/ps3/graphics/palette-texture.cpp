@@ -244,16 +244,19 @@ void dumpPalette(const uint32 *colors, uint start, uint num)
 void GLESPaletteTexture::updatePalette(const byte *colors, uint start, uint num)
 {
 	//net_send("GLESPaletteTexture::updatePalette(%d,%d)\n",start, num);
+	const uint32* src = (uint32*)(colors);
 	for(uint i=start;i<start+num;i++)
 	{
-		uint32 r=colors[i*4+0];
+		_palette[i]=(*src)|0xFF;
+		src++;
+/*		uint32 r=colors[i*4+0];
 		uint32 g=colors[i*4+1];
 		uint32 b=colors[i*4+2];
 		_palette[i]=(r<<24)|(g<<16)|(b<<8)|(0xff);
-		//net_send("    %d, %d, %d, %X\n",r,g,b,_palette[i]);
+*/		//net_send("    %d, %d, %d, %X\n",r,g,b,_palette[i]);
 	}
 
-	//dumpPalette(_palette,start,num);
+//	dumpPalette(_palette,start,num);
 
 	CHECK_GL_ERROR();
 	glBindTexture(GL_TEXTURE_2D, _palette_name);

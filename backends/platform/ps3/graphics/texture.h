@@ -147,7 +147,7 @@ protected:
 	virtual GLenum glType() const { return GL_UNSIGNED_BYTE; }
 	virtual GLenum glPaletteInternalFormat() const { return GL_RGBA8; }
 	virtual GLenum glPaletteFormat() const { return GL_RGBA; }
-	virtual GLenum glPaletteType() const { return GL_UNSIGNED_BYTE; }
+	virtual GLenum glPaletteType() const { return GL_UNSIGNED_INT_8_8_8_8 ; }
 	//virtual size_t paletteSize() const { return 256 * 4; };
 	uint32* _palette;
 	GLuint _palette_name;
