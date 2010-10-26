@@ -113,7 +113,8 @@ void GLESTexture::reinitGL()
 {
 	net_send("GLESTexture::reinitGL()\n");
 	CHECK_GL_ERROR();
-	//glGenTextures(1, &_texture_name);
+	_texture_width = 0;
+	_texture_height = 0;
 	CHECK_GL_ERROR();
 }
 
@@ -123,9 +124,12 @@ void GLESTexture::setFormat(Graphics::PixelFormat &format)
 	{
 		_texture_width = 0;
 		_texture_height = 0;
+		_surface.w=0;
+		_surface.h=0;
+		_surface.bytesPerPixel=0;
 		_pixelFormat=format;
 		_internalFormat=getFormatFromPixelFormat();
-		allocBuffer(_surface.w,_surface.h);
+		//allocBuffer(_surface.w,_surface.h);
 	}
 }
 
@@ -135,10 +139,9 @@ void GLESTexture::allocBuffer(GLuint w, GLuint h)
 	CHECK_GL_ERROR();
 	_surface.w = w;
 	_surface.h = h;
-	_surface.pitch = _surface.w * _surface.bytesPerPixel;
 	_surface.bytesPerPixel = _pixelFormat.bytesPerPixel;
 
-	if (w == _texture_width && h == _texture_height)
+	if (w <= _texture_width && h <= _texture_height)
 		// Already allocated a sufficiently large buffer
 		return;
 
@@ -157,7 +160,7 @@ void GLESTexture::allocBuffer(GLuint w, GLuint h)
 	net_send("    alloc new texture\n");
 	_texture = new byte[_texture_width * _texture_height * _surface.bytesPerPixel];
 	_surface.pixels = _texture;
-	_surface.pitch = _surface.w * _surface.bytesPerPixel;
+	_surface.pitch = _texture_width * _surface.bytesPerPixel;
 
 	net_send("    gl init\n");
 
@@ -175,7 +178,7 @@ void GLESTexture::allocBuffer(GLuint w, GLuint h)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	CHECK_GL_ERROR();
 	glTexImage2D(GL_TEXTURE_2D, 0, glInternalFormat(),
-		_surface.w, _surface.h,
+		_texture_width, _texture_height,
 		0, glFormat(), glType(), NULL);
 	CHECK_GL_ERROR();
 	glFlush();
@@ -284,7 +287,7 @@ void GLESTexture::fillBuffer(byte x)
 
 void GLESTexture::drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 {
-	net_send("GLESTexture::drawTexture %d (%d,%d,%d,%d)\n",_texture_name,x,y,w,h);
+	//net_send("GLESTexture::drawTexture %d (%d,%d,%d,%d)\n",_texture_name,x,y,w,h);
 	CHECK_GL_ERROR();
 	glBindTexture(GL_TEXTURE_2D, _texture_name);
 	CHECK_GL_ERROR();
@@ -295,10 +298,10 @@ void GLESTexture::drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 			_dirty_bottom=_surface.h;
 
 
-		net_send("    glTexSubImage2D(%d,%d,%d,%d)\n",0,_dirty_top,_surface.w, _dirty_bottom-_dirty_top);
+		//net_send("    glTexSubImage2D(%d,%d,%d,%d)\n",0,_dirty_top,_surface.w, _dirty_bottom-_dirty_top);
 		glTexSubImage2D(GL_TEXTURE_2D, 0,
 			0, _dirty_top, // x,y
-			_surface.w, _dirty_bottom-_dirty_top,//w,h
+			_texture_width, _dirty_bottom-_dirty_top,//w,h
 			glFormat(), glType(), _surface.getBasePtr(0,_dirty_top));
 		CHECK_GL_ERROR();
 		glFlush();
@@ -309,29 +312,29 @@ void GLESTexture::drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 
 	if(_palette_dirty)
 	{
-		net_send("    glTexSubImage2D(%d,%d,%d,%d) pal\n",0,0,256, 1);
+		//net_send("    glTexSubImage2D(%d,%d,%d,%d) pal\n",0,0,256, 1);
 		if(_keycolor<256)
 			_palette[_keycolor]=0;
-		net_send("    1\n",0,0,256, 1);
+		//net_send("    1\n",0,0,256, 1);
 		CHECK_GL_ERROR();
-		net_send("    2\n",0,0,256, 1);
+		//net_send("    2\n",0,0,256, 1);
 		glBindTexture(GL_TEXTURE_2D, _palette_name);
-		net_send("    3\n",0,0,256, 1);
+		//net_send("    3\n",0,0,256, 1);
 		CHECK_GL_ERROR();
-		net_send("    4\n",0,0,256, 1);
+		//net_send("    4\n",0,0,256, 1);
 		glTexSubImage1D(0,0,256,glPaletteFormat(),glPaletteType(),_palette);
-		net_send("    5\n",0,0,256, 1);
+		//net_send("    5\n",0,0,256, 1);
 		CHECK_GL_ERROR();
-		net_send("    6\n",0,0,256, 1);
+		//net_send("    6\n",0,0,256, 1);
 		glFlush();
-		net_send("    7\n",0,0,256, 1);
+		//net_send("    7\n",0,0,256, 1);
 		CHECK_GL_ERROR();
-		net_send("    8\n",0,0,256, 1);
+		//net_send("    8\n",0,0,256, 1);
 		_palette_dirty=false;
-		net_send("    9\n",0,0,256, 1);
+		//net_send("    9\n",0,0,256, 1);
 	}
 
-	net_send("    drawing...\n");
+	//net_send("    drawing...\n");
 	switch(_internalFormat)
 	{
 	case FORMAT_PALETTE:
@@ -369,7 +372,7 @@ void GLESTexture::drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 		_drawTexture(x,y,w,h);
 		break;
 	}
-	net_send("    finished\n");
+	//net_send("    finished\n");
 }
 void GLESTexture::_drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 {

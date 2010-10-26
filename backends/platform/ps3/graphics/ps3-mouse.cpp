@@ -57,7 +57,7 @@ void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, 
 
 	//assert(keycolor < 256);
 
-	if(_mouse_texture->height()<h || _mouse_texture->width()<w)
+	//if(_mouse_texture->height()<h || _mouse_texture->width()<w)
 		_mouse_texture->allocBuffer(w, h);
 
 	// Update palette alpha based on keycolor
