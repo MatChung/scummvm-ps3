@@ -661,6 +661,10 @@ static const char *cg_frag="void main (float2 diffuseTexCoord : TEXCOORD0,	// In
 						   out float4 oColor      : COLOR)      // Final fragment color\n\
 						   {\n\
 						   float2 colorIndex = tex2D (index, diffuseTexCoord).xx;\n\
+						   colorIndex.y=0;\n\
+						   colorIndex.x*=255.0;\n\
+						   colorIndex.x+=0.5;\n\
+						   colorIndex.x/=256.0;\n\
 						   oColor = tex2D (palette, colorIndex);\n\
 						   \n\
 						   //oColor = color;\n\
