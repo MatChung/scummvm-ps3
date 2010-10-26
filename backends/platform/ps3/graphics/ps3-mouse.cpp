@@ -20,9 +20,9 @@ void OSystem_PS3::warpMouse(int x, int y)
 
 void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, int hotspotY, uint32 keycolor, int cursorTargetScale, const Graphics::PixelFormat *format)
 {
-	//net_send("OSystem_PS3::setMouseCursor(%p, %u, %u, %d, %d, %d, %d, %p)\n",
-	//	  buf, w, h, hotspotX, hotspotY, (int)keycolor, cursorTargetScale,
-	//	  format);
+	net_send("OSystem_PS3::setMouseCursor(%p, %u, %u, %d, %d, %d, %d, %p)\n",
+		  buf, w, h, hotspotX, hotspotY, (int)keycolor, cursorTargetScale,
+		  format);
 
 	if(w<1 || h<1)
 		return;
@@ -36,33 +36,34 @@ void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, 
 	if(_mouse_texture->getFormat()!=newFormat)
 	{
 		Graphics::PixelFormat format2=_mouse_texture->getFormat();
-		net_send("OSystem_PS3::setMouseCursor MISMATCH!!:\n");
-		net_send("  bytesPerPixel: %d\n",format2.bytesPerPixel);
-		net_send("  rBits:         %d\n",format2.rBits());
-		net_send("  gBits:         %d\n",format2.gBits());
-		net_send("  bBits:         %d\n",format2.bBits());
-		net_send("  aBits:         %d\n",format2.aBits());
-		net_send("  rShift:        %d\n",format2.rShift);
-		net_send("  gShift:        %d\n",format2.gShift);
-		net_send("  bShift:        %d\n",format2.bShift);
-		net_send("  aShift:        %d\n",format2.aShift);
+		net_send("    MISMATCH!!:\n");
+		net_send("      bytesPerPixel: %d\n",format2.bytesPerPixel);
+		net_send("      rBits:         %d\n",format2.rBits());
+		net_send("      gBits:         %d\n",format2.gBits());
+		net_send("      bBits:         %d\n",format2.bBits());
+		net_send("      aBits:         %d\n",format2.aBits());
+		net_send("      rShift:        %d\n",format2.rShift);
+		net_send("      gShift:        %d\n",format2.gShift);
+		net_send("      bShift:        %d\n",format2.bShift);
+		net_send("      aShift:        %d\n",format2.aShift);
 
 		if(_mouse_texture!=NULL)
 			delete _mouse_texture;
+
 		_mouse_texture=createTextureFromPixelFormat(newFormat);
 
 		if(newFormat.bytesPerPixel==1)
 		{
-			if(_mouse_texture->height()!=h || _mouse_texture->width()!=w)
-				_mouse_texture->allocBuffer(w, h);
-			((GLESPaletteTexture*)_mouse_texture)->updatePalette((byte*)_tempMousePalette,0,256);
+			//if(_mouse_texture->height()!=h || _mouse_texture->width()!=w)
+			_mouse_texture->allocBuffer(w, h);
+			_mouse_texture->updatePalette((byte*)_tempMousePalette,0,256);
 		}
 	}
 
 
 	//assert(keycolor < 256);
 
-	if(_mouse_texture->height()!=h || _mouse_texture->width()!=w)
+	if(_mouse_texture->height()<h || _mouse_texture->width()<w)
 		_mouse_texture->allocBuffer(w, h);
 
 	// Update palette alpha based on keycolor
@@ -98,7 +99,7 @@ void OSystem_PS3::_setCursorPalette(const byte *colors,
 		return;
 	}
 
-	((GLESPaletteTexture*)_mouse_texture)->updatePalette(colors,start,num);
+	_mouse_texture->updatePalette(colors,start,num);
 	_mouse_texture->setKeyColor(_mouse_keycolor);
 /*
 	byte* palette = _mouse_texture->palette() + start*4;
@@ -120,6 +121,6 @@ void OSystem_PS3::disableCursorPalette(bool disable)
 
 void OSystem_PS3::setCursorPalette(const byte *colors, uint start, uint num)
 {
-	//net_send("OSystem_PS3::setCursorPalette(%d, %d, %d)\n",colors,start,num);
+	net_send("OSystem_PS3::setCursorPalette(%d, %d, %d)\n",colors,start,num);
 	_setCursorPalette(colors,start,num);
 }

@@ -29,14 +29,16 @@ static void checkGlError(const char* file, int line) {
 
 
 GLESPaletteTexture::GLESPaletteTexture() :
-GLESTexture()
+GLESTexture(),
+_palette_dirty(0)
 {
 	CHECK_GL_ERROR();
 	glGenTextures(1, &_palette_name);
 	CHECK_GL_ERROR();
-	glGenTextures(1, &_texture_name);
+
 	_palette=new uint32[256];
 	memset(_palette,0,sizeof(uint32)*256);
+
 	glBindTexture(GL_TEXTURE_2D, _palette_name);
 	CHECK_GL_ERROR();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -49,11 +51,10 @@ GLESTexture()
 	CHECK_GL_ERROR();
 	glTexImage2D(GL_TEXTURE_2D, 0, glPaletteInternalFormat(),
 		256, 1,
-		0, glPaletteFormat(), glPaletteType(), _palette);
+		0, glPaletteFormat(), glPaletteType(), NULL);
 	CHECK_GL_ERROR();
 	glFlush();
 	CHECK_GL_ERROR();
-	_isLocked=false;
 
 	initCG();
 	CHECK_GL_ERROR();
@@ -61,27 +62,30 @@ GLESTexture()
 
 GLESPaletteTexture::~GLESPaletteTexture()
 {
+	net_send("GLESPaletteTexture::~GLESPaletteTexture(%u)\n", _palette_name);
 	CHECK_GL_ERROR();
+	net_send("    delete GL texture\n");
 	if(_palette_name>0)
 		glDeleteTextures(1, &_palette_name);
 	CHECK_GL_ERROR();
-	if(_texture_name>0)
-		glDeleteTextures(1, &_texture_name);
-	CHECK_GL_ERROR();
 
-	if(_texture!=NULL)
-		delete[] _texture;
-	if(_palette!=NULL)
+	net_send("    delete mem texture\n");
+	if(_palette)
 		delete[] _palette;
 
+	net_send("    shutdown CG\n");
 	shutdownCG();
-
-	_texture=NULL;
-	_palette=NULL;
-	_palette_name=0;
-	_texture_name=0;
+	net_send("    destroyed\n");
 }
 
+/* not needed?
+void GLESPaletteTexture::reinitGL()
+{
+	net_send("GLESPaletteTexture::reinitGL()\n");
+	CHECK_GL_ERROR();
+	//glGenTextures(1, &_texture_name);
+	CHECK_GL_ERROR();
+}
 
 void GLESPaletteTexture::allocBuffer(GLuint w, GLuint h)
 {
@@ -97,18 +101,18 @@ void GLESPaletteTexture::allocBuffer(GLuint w, GLuint h)
 		// Already allocated a sufficiently large buffer
 		return;
 
-	_texture_width = _surface.w;
-	_texture_height = _surface.h;
+	_texture_width = w;
+	_texture_height = h;
 
-	net_send("GLESPaletteTexture::allocBufferXXX(%d,%d)\n",_texture_width,_texture_height);
-	_surface.pitch = _texture_width * bpp;
-
-	// Texture gets uploaded later (from drawTexture())
-
+	net_send("GLESPaletteTexture::allocBuffer(%d,%d)\n",w,h);
 
 	if (_texture)
+	{
+		net_send("    delete old texture\n");
 		delete[] _texture;
+	}
 
+	net_send("    alloc new texture\n");
 	_texture = new byte[_texture_width * _texture_height * bpp];
 	_surface.pixels = _texture;
 	CHECK_GL_ERROR();
@@ -150,16 +154,13 @@ void GLESPaletteTexture::fillBuffer(byte x)
 
 	glFlush();
 	CHECK_GL_ERROR();
-	setDirty();
 	_updatesPerFrame++;
 }
-
 void GLESPaletteTexture::updateBuffer(GLuint x, GLuint y,
 									  GLuint w, GLuint h,
 									  const void* buf, int pitch)
 {
 	//net_send("GLESPaletteTexture::updateBuffer(%d,%d,%d,%d)\n",x,y,w,h);
-	_all_dirty = true;
 
 	const byte* src = static_cast<const byte*>(buf);
 	byte* dst = static_cast<byte*>(_surface.getBasePtr(x, y));
@@ -181,15 +182,48 @@ void GLESPaletteTexture::updateBuffer(GLuint x, GLuint y,
 	CHECK_GL_ERROR();
 	_updatesPerFrame++;
 }
+*/
 
 void GLESPaletteTexture::drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 {
+	net_send("GLESPaletteTexture::drawTexture(%d,%d,%d,%d)\n",x,y,w,h);
+	if(_dirty_top<_dirty_bottom)
+	{
+		net_send("    glTexSubImage2D(%d,%d,%d,%d)\n",0,_dirty_top,_texture_width, _dirty_bottom-_dirty_top);
+		CHECK_GL_ERROR();
+		glBindTexture(GL_TEXTURE_2D, _texture_name);
+		CHECK_GL_ERROR();
+		//glTexSubImage2D(GL_TEXTURE_2D, 0, 0, _dirty_top,
+		//	_texture_width, _dirty_bottom-_dirty_top, glFormat(), glType(), _texture);
+		glTexSubImage2D(GL_TEXTURE_2D, 0,
+			0, 0, // x,y
+			_texture_width, _texture_height,//w,h
+			glFormat(), glType(), _surface.getBasePtr(0,0));
+		CHECK_GL_ERROR();
+		glFlush();
+		CHECK_GL_ERROR();
+
+		_dirty_bottom=0;
+		_dirty_top=99999;
+	}
+
+	if(_palette_dirty)
+	{
+		net_send("    glTexSubImage2D(%d,%d,%d,%d) pal\n",0,0,256, 1);
+		CHECK_GL_ERROR();
+		glBindTexture(GL_TEXTURE_2D, _palette_name);
+		CHECK_GL_ERROR();
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+			256, 1, glPaletteFormat(), glPaletteType(), _palette);
+		CHECK_GL_ERROR();
+		glFlush();
+		CHECK_GL_ERROR();
+
+		_palette_dirty=false;
+	}
+
+
 	CHECK_GL_ERROR();
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, _texture_name);
-	//glActiveTexture(GL_TEXTURE1);
-	//glBindTexture(GL_TEXTURE_2D, _palette_name);
-	//uploadTexture();
 
 	//CG stuff enable
 	cgGLEnableProfile(CG_PROFILE_SCE_VP_RSX);
@@ -226,15 +260,9 @@ void GLESPaletteTexture::grabPalette(byte *colors, uint start, uint num)
 	{
 		*dst=_palette[i];
 		dst++;
-		/*
-		uint32 col=_palette[i];
-		colors[i*4+0]=(col>>24)&0xff;
-		colors[i*4+1]=(col>>16)&0xff;
-		colors[i*4+2]=(col>>8)&0xff;
-		*/
 	}
 }
-
+/*
 void dumpPalette(const uint32 *colors, uint start, uint num)
 {
 	net_send("GLESPaletteTexture::dumpPalette(%d,%d)\n",start, num);
@@ -250,50 +278,27 @@ void dumpPalette(const uint32 *colors, uint start, uint num)
 		net_send("    %d, %d, %d",r,g,b);
 		net_send("    %d, %d, %d\n",r1,g1,b1);
 	}
-}
+}*/
 
 void GLESPaletteTexture::updatePalette(const byte *colors, uint start, uint num)
 {
-	//net_send("GLESPaletteTexture::updatePalette(%d,%d)\n",start, num);
+	net_send("GLESPaletteTexture::updatePalette(%d,%d)\n",start, num);
 	const uint32* src = (uint32*)(colors);
 	for(uint i=start;i<start+num;i++)
 	{
 		_palette[i]=(*src)|0xFF;
 		src++;
-/*		uint32 r=colors[i*4+0];
-		uint32 g=colors[i*4+1];
-		uint32 b=colors[i*4+2];
-		_palette[i]=(r<<24)|(g<<16)|(b<<8)|(0xff);
-*/		//net_send("    %d, %d, %d, %X\n",r,g,b,_palette[i]);
 	}
 
-//	dumpPalette(_palette,start,num);
-
-	CHECK_GL_ERROR();
-	glBindTexture(GL_TEXTURE_2D, _palette_name);
-	CHECK_GL_ERROR();
-	glTexSubImage2D(GL_TEXTURE_2D, 0, start, 0, num-1, 1,
-		glPaletteFormat(), glPaletteType(), &_palette[start]);
-	CHECK_GL_ERROR();
-
-	glFlush();
-	CHECK_GL_ERROR();
+	_palette_dirty=true;
 }
 
 void GLESPaletteTexture::setKeyColor(uint32 color)
 {
-	//net_send("GLESPaletteTexture::setKeyColor(%d)\n",color);
+	net_send("GLESPaletteTexture::setKeyColor(%d)\n",color);
 	//_keycolor=color;
 	_palette[color]=0;
-	CHECK_GL_ERROR();
-	glBindTexture(GL_TEXTURE_2D, _palette_name);
-	CHECK_GL_ERROR();
-	glTexSubImage2D(GL_TEXTURE_2D, 0, color, 0, 1, 1,
-		glPaletteFormat(), glPaletteType(), &_palette[color]);
-	CHECK_GL_ERROR();
-
-	glFlush();
-	CHECK_GL_ERROR();
+	_palette_dirty=true;
 }
 
 static const char *cg_vert="void main (float4 position : POSITION,     // Local-space position\n\

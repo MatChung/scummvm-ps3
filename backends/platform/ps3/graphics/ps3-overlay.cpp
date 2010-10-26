@@ -30,7 +30,7 @@ Graphics::PixelFormat OSystem_PS3::getOverlayFormat() const
 
 void OSystem_PS3::grabOverlay(OverlayColor *buf, int pitch)
 {
-	net_send("OSystem_PS3::grabOverlay()\n");
+	net_send("OSystem_PS3::grabOverlay(%d)\n",pitch);
 	// We support overlay alpha blending, so the pixel data here
 	// shouldn't actually be used.	Let's fill it with zeros, I'm sure
 	// it will be fine...
@@ -53,33 +53,8 @@ void OSystem_PS3::copyRectToOverlay(const OverlayColor *buf, int pitch, int x, i
 {
 	net_send("OSystem_PS3::copyRectToOverlay(%d,%d,%d,%d,%d)\n",pitch,x,y,w,h);
 
-	/*
-	const Graphics::Surface* surface = _overlay_texture->surface_const();
-	//assert(surface->bytesPerPixel == sizeof(buf[0]));
-
-	int *temp=new int[w*h];
-	//Graphics::crossBlit((byte*)temp,(byte*)buf,w*4,pitch,w,h,get8888Format(),getOverlayFormat());
-	//const byte* src = static_cast<const byte*>(buf);
-	//net_send("converting...\n");
-	
-	for(int __y=0;__y<h;__y++)
-	{
-		for(int __x=0;__x<w;__x++)
-		{
-			OverlayColor scol=buf[__y*pitch+__x];
-			int r=((scol>>12)&0xF)<<4;
-			int g=((scol>>8)&0xF)<<4;
-			int b=((scol>>4)&0xF)<<4;
-			int a=((scol>>0)&0xF)<<4;
-			temp[__y*w+__x]=(r<<24)|(g<<16)|(b<<8)|(a<<0);
-			//net_send("%d,%d,%d,%d  ",r,g,b,a);
-		}
-		//net_send("\n");
-	}*/
-
 	// This 'pitch' is pixels not bytes
-	_overlay_texture->updateBuffer(x, y, w, h, buf, pitch * sizeof(buf[0]));
-//	delete[] temp;
+	_overlay_texture->updateBuffer(x, y, w, h, buf, pitch * sizeof(OverlayColor));
 }
 
 int16 OSystem_PS3::getOverlayHeight()

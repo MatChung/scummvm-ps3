@@ -132,8 +132,6 @@ protected:
 
 	void _setCursorPalette(const byte *colors, uint start, uint num);
 
-	void draw();
-
 	Graphics::PixelFormat _currentScreenFormat;
 
 
