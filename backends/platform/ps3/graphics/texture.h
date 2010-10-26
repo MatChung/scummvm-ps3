@@ -10,51 +10,91 @@
 
 class GLESTexture
 {
+	enum GLESTextureFormat
+	{
+		FORMAT_PALETTE,
+		FORMAT_4444,
+		FORMAT_565,
+		FORMAT_555,
+		FORMAT_5551,
+		FORMAT_8888,
+	};
 public:
 	static void initGLExtensions();
 
 	GLESTexture();
-	virtual ~GLESTexture();
-	virtual void reinitGL();
-	virtual void allocBuffer(GLuint width, GLuint height);
+	~GLESTexture();
+	void reinitGL();
+	void allocBuffer(GLuint width, GLuint height);
 
 	GLuint width() const { return _surface.w; }
 	GLuint height() const { return _surface.h; }
-	virtual Graphics::PixelFormat getFormat() = 0;
+	Graphics::PixelFormat getFormat() {return _pixelFormat;};
+	void setFormat(Graphics::PixelFormat &format);
 	const Graphics::Surface* surface_const() const { return &_surface; }
 
-	virtual void updateBuffer(GLuint x, GLuint y, GLuint width, GLuint height, const void* buf, int pitch);
-	virtual void fillBuffer(byte x);
-	virtual Graphics::Surface* lock();
-	virtual void unlock();
+	void updateBuffer(GLuint x, GLuint y, GLuint width, GLuint height, const void* buf, int pitch);
+	void fillBuffer(byte x);
+	Graphics::Surface* lock();
+	void unlock();
 
-	virtual void grabPalette(byte *colors, uint start, uint num);
-	virtual void updatePalette(const byte *colors, uint start, uint num);
-	virtual void setKeyColor(uint32 color);
+	void grabPalette(byte *colors, uint start, uint num);
+	void updatePalette(const byte *colors, uint start, uint num);
+	void setKeyColor(uint32 color);
 
-	virtual void drawTexture() { drawTexture(0, 0, _surface.w, _surface.h); }
-	virtual void drawTexture(GLshort x, GLshort y, GLshort w, GLshort h);
-	virtual void _drawTexture(GLshort x, GLshort y, GLshort w, GLshort h);
+	void drawTexture() { drawTexture(0, 0, _surface.w, _surface.h); }
+	void drawTexture(GLshort x, GLshort y, GLshort w, GLshort h);
+	void _drawTexture(GLshort x, GLshort y, GLshort w, GLshort h);
 
 protected:
-	virtual byte bytesPerPixel() const = 0;
-	virtual GLenum glFormat() const = 0;
-	virtual GLenum glType() const = 0;
-	virtual GLenum glInternalFormat() const = 0;
+	GLenum glFormat() const;
+	GLenum glType() const;
+	GLenum glInternalFormat();
+
+	void glTexImage1D(GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
+	void glTexSubImage1D(GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const GLvoid *pixels);
+
+	void initCG();
+	void shutdownCG();
+	GLenum glPaletteInternalFormat() const { return GL_RGBA8; }
+	GLenum glPaletteFormat() const { return GL_RGBA; }
+	GLenum glPaletteType() const { return GL_UNSIGNED_INT_8_8_8_8 ; }
+	GLESTextureFormat getFormatFromPixelFormat();
+
+	void allDirty(){_dirty_top=0;_dirty_bottom=_surface.h;};
+	void clearDirty(){_dirty_top=99999;_dirty_bottom=0;};
+
 	//virtual size_t paletteSize() const { return 0; };
 	GLuint _texture_name;
 	byte* _texture;
-	Graphics::Surface _surface;
-	bool _isLocked;
+	GLuint _palette_name;
+	uint32* _palette;
+
 	GLuint _texture_width;
 	GLuint _texture_height;
+
+	Graphics::Surface _surface;
+	uint32 _keycolor;
+	Graphics::PixelFormat _pixelFormat;
+	GLESTextureFormat _internalFormat;
+	uint32 _renderType;
+
 	GLuint  _dirty_top;
 	GLuint  _dirty_bottom;
-	//int32 _keycolor;
+	bool _palette_dirty;
+
 	uint16 _updatesPerFrame;
+	bool _isLocked;
+
+	CGcontext _ctx;
+	CGprogram _vprog;
+	CGprogram _fprog;
+	CGparameter _texture_param;
+	CGparameter _palette_param;
+	CGparameter _mvp_param;
 };
 
-
+/*
 // RGB888 256-entry paletted texture
 class GLESPaletteTexture : public GLESTexture
 {
@@ -70,9 +110,9 @@ public:
 	//virtual void updateBuffer(GLuint x, GLuint y, GLuint width, GLuint height, const void* buf, int pitch);
 	//virtual void fillBuffer(byte x);
 
-	void grabPalette(byte *colors, uint start, uint num);
-	void updatePalette(const byte *colors, uint start, uint num);
-	void setKeyColor(uint32 color);
+	virtual void grabPalette(byte *colors, uint start, uint num);
+	virtual void updatePalette(const byte *colors, uint start, uint num);
+	virtual void setKeyColor(uint32 color);
 
 	virtual void drawTexture(GLshort x, GLshort y, GLshort w, GLshort h);
 
@@ -87,16 +127,6 @@ protected:
 	virtual GLenum glPaletteFormat() const { return GL_RGBA; }
 	virtual GLenum glPaletteType() const { return GL_UNSIGNED_INT_8_8_8_8 ; }
 	//virtual size_t paletteSize() const { return 256 * 4; };
-	uint32* _palette;
-	GLuint _palette_name;
-	bool _palette_dirty;
-	
-	CGcontext _ctx;
-	CGprogram _vprog;
-	CGprogram _fprog;
-	CGparameter _texture_param;
-	CGparameter _palette_param;
-	CGparameter _mvp_param;
 };
 
 
@@ -152,3 +182,4 @@ protected:
 	virtual GLenum glType() const { return GL_UNSIGNED_SHORT_5_5_5_1; }
 	virtual Graphics::PixelFormat getFormat() { return Graphics::PixelFormat(2, 5, 5, 5, 1, 11, 6, 1, 0);};
 };
+*/

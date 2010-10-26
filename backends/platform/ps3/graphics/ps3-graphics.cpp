@@ -31,20 +31,24 @@ void OSystem_PS3::initGraphics()
 	net_send("OSystem_PS3::init()_game_texture\n");
 	if (!_game_texture)
 	{
-		_game_texture = new GLESPaletteTexture();
+		_game_texture = new GLESTexture();
 	}
 	else
 		_game_texture->reinitGL();
 
 	net_send("OSystem_PS3::init()_overlay_texture\n");
 	if (!_overlay_texture)
-		_overlay_texture = new GLES565Texture();
+	{
+		_overlay_texture = new GLESTexture();
+		Graphics::PixelFormat ff=Graphics::PixelFormat(2, 5, 6, 5, 0, 11, 5, 0, 0);
+		_overlay_texture->setFormat(ff);
+	}
 	else
 		_overlay_texture->reinitGL();
 
 	net_send("OSystem_PS3::init()_mouse_texture\n");
 	if (!_mouse_texture)
-		_mouse_texture = new GLESPaletteTexture();
+		_mouse_texture = new GLESTexture();
 	else
 		_mouse_texture->reinitGL();
 
@@ -75,9 +79,10 @@ void OSystem_PS3::initSize(uint width, uint height, const Graphics::PixelFormat 
 
 	if(_game_texture->getFormat()!=newFormat)
 	{
-		if(_game_texture!=NULL)
-			delete _game_texture;
-		_game_texture=createTextureFromPixelFormat(newFormat);
+		//if(_game_texture!=NULL)
+		//	delete _game_texture;
+		//_game_texture=createTextureFromPixelFormat(newFormat);
+		_game_texture->setFormat(newFormat);
 	}
 
 	//_egl_surface_width=width;
@@ -155,7 +160,7 @@ void OSystem_PS3::updateScreen()
 
 	psglSwap();
 }
-
+/*
 GLESTexture *OSystem_PS3::createTextureFromPixelFormat(Graphics::PixelFormat &format)
 {
 	net_send("OSystem_PS3::createTextureFromPixelFormat:\n");
@@ -193,7 +198,7 @@ GLESTexture *OSystem_PS3::createTextureFromPixelFormat(Graphics::PixelFormat &fo
 	net_send("  no valid texture\n");
 	return NULL;
 }
-
+*/
 
 
 

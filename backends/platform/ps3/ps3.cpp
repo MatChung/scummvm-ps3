@@ -81,7 +81,7 @@ void *thread_func(void *attr)
 			sys->update();
 		}
 		// reduce this if there are sound problems (MT32 is still too CPU heavy)
-		sys_timer_usleep(10);
+		//sys_timer_usleep(10);
 		sys->soundUpdate();
 
 	}
@@ -355,21 +355,21 @@ void OSystem_PS3::quit()
 
 Common::SaveFileManager *OSystem_PS3::getSavefileManager()
 {
-	net_send("OSystem_PS3::getSavefileManager()=%d\n",(int)_savefile);
+	//net_send("OSystem_PS3::getSavefileManager()=%d\n",(int)_savefile);
 	//assert(_savefile);
 	return _savefile;
 }
 
 Audio::Mixer *OSystem_PS3::getMixer()
 {
-	net_send("OSystem_PS3::getMixer()=%d\n",_mixer);
+	//net_send("OSystem_PS3::getMixer()=%d\n",_mixer);
 	//assert(_mixer);
 	return _mixer;
 }
 
 Common::TimerManager *OSystem_PS3::getTimerManager()
 {
-	net_send("OSystem_PS3::getTimerManager()=%d\n",_timer);
+	//net_send("OSystem_PS3::getTimerManager()=%d\n",_timer);
 	//assert(_timer);
 	return _timer;
 }
@@ -393,7 +393,7 @@ void OSystem_PS3::getTimeAndDate(TimeDate &t) const
 
 FilesystemFactory *OSystem_PS3::getFilesystemFactory()
 {
-	net_send("OSystem_PS3::getFilesystemFactory()=%d\n",_fsFactory);
+	//net_send("OSystem_PS3::getFilesystemFactory()=%d\n",_fsFactory);
 	//assert(_fsFactory);
 	return _fsFactory;
 }

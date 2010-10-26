@@ -114,7 +114,7 @@ protected:
 	//Common::Rect _focus_rect;
 	bool _full_screen_dirty;
 
-	GLES565Texture* _overlay_texture;
+	GLESTexture* _overlay_texture;
 	bool _show_overlay;
 	bool _running;
 
@@ -135,7 +135,7 @@ protected:
 	Graphics::PixelFormat _currentScreenFormat;
 
 
-	GLESTexture *createTextureFromPixelFormat(Graphics::PixelFormat &format);
+	//GLESTexture *createTextureFromPixelFormat(Graphics::PixelFormat &format);
 };
 
 #endif

@@ -47,17 +47,11 @@ void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, 
 		net_send("      bShift:        %d\n",format2.bShift);
 		net_send("      aShift:        %d\n",format2.aShift);
 
-		if(_mouse_texture!=NULL)
-			delete _mouse_texture;
+		//if(_mouse_texture!=NULL)
+		//	delete _mouse_texture;
 
-		_mouse_texture=createTextureFromPixelFormat(newFormat);
-
-		if(newFormat.bytesPerPixel==1)
-		{
-			//if(_mouse_texture->height()!=h || _mouse_texture->width()!=w)
-			_mouse_texture->allocBuffer(w, h);
-			_mouse_texture->updatePalette((byte*)_tempMousePalette,0,256);
-		}
+		//_mouse_texture=createTextureFromPixelFormat(newFormat);
+		_mouse_texture->setFormat(newFormat);
 	}
 
 
@@ -76,6 +70,7 @@ void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, 
 	//palette = _mouse_texture->palette();
 	//palette[keycolor*4 + 3] = 0x00;
 	_mouse_texture->updateBuffer(0, 0, w, h, buf, w*newFormat.bytesPerPixel);
+	//_mouse_texture->updatePalette((byte*)_tempMousePalette,0,256);
 	_mouse_texture->setKeyColor(keycolor);
 	_mouse_keycolor=keycolor;
 
@@ -92,9 +87,11 @@ void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, 
 void OSystem_PS3::_setCursorPalette(const byte *colors,
 					uint start, uint num) {
 	//net_send("OSystem_PS3::_setCursorPalette(%d, %d, %d)\n",start,num,_mouse_is_palette);
+	memcpy(&_tempMousePalette[start],colors,sizeof(uint32)*num);
 
 	if(!_mouse_is_palette)
 	{
+		net_send("OSystem_PS3::_setCursorPalette(%d, %d, %d) - TEMPORARY\n",start,num,_mouse_is_palette);
 		memcpy(&_tempMousePalette[start],colors,sizeof(uint32)*num);
 		return;
 	}
