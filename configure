@@ -1115,6 +1115,10 @@ ps3)
 		# Enable release build by default.
 		_release_build=yes
 	fi
+	if test "$_debug_build" = auto; then
+		# Disable debug build by default.
+		_debug_build=no
+	fi
 	;;
 psp)
 	_host_os=psp
