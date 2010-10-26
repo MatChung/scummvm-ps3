@@ -103,6 +103,7 @@ public:
 	void initGraphics();
 	bool running();
 	void requestQuit();
+	void showVirtualKeyboard(bool show);
 
 protected:
 	float zRot;
@@ -128,7 +129,7 @@ protected:
 	bool _use_mouse_palette;
 	bool _aspectRatioCorrection;
 	bool _mouse_is_palette;
-	uint32 _tempMousePalette[256];
+	bool _virtkeybd_on;
 
 	void _setCursorPalette(const byte *colors, uint start, uint num);
 

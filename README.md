@@ -48,25 +48,19 @@ My testsetup:
 
 
 
-What works:
+99% of the graphics glitches are gone, the worst thing is a broken cursor
 
- .) most of it
-
-
-What doesn't:
-
-I have only tried a handful of games, this list is by far not complete
-
- .) Beneath a Steel Sky crashes during the intro
-
- .) in some games the cursor has no transparent colors
-
- .) slowdowns may occur
-
- .) MT32 emu has some performance problems (very bad in MI2 intro)
-
-
-
-If you try it and get crashes, please include the log output you got from --ps3-debug=IP and send it to lousy[at]lousy{dot}at
------------------------------------------------------------------------------------------------------------------------------
+Games tested:
+Monkey Island 1 & 2 (FMTowns Version)
+works, except the cursor is broken after playing
+Monkey Island 3
+works, sometimes sound skipping (cracks)
+Day of the Tentacle:
+works 100%
+The Legend of Kyrandia (CD Version)
+works 100%
+Beneath a Steel Sky (CD and Floppy)
+crashes at intro, but if skipped it works fine
+Discworld
+works 100%
 

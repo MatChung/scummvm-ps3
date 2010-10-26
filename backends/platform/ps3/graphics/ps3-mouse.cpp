@@ -87,12 +87,12 @@ void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, 
 void OSystem_PS3::_setCursorPalette(const byte *colors,
 					uint start, uint num) {
 	//net_send("OSystem_PS3::_setCursorPalette(%d, %d, %d)\n",start,num,_mouse_is_palette);
-	memcpy(&_tempMousePalette[start],colors,sizeof(uint32)*num);
+	//memcpy(&_tempMousePalette[start],colors,sizeof(uint32)*num);
 
 	if(!_mouse_is_palette)
 	{
 		net_send("OSystem_PS3::_setCursorPalette(%d, %d, %d) - TEMPORARY\n",start,num,_mouse_is_palette);
-		memcpy(&_tempMousePalette[start],colors,sizeof(uint32)*num);
+		//memcpy(&_tempMousePalette[start],colors,sizeof(uint32)*num);
 		return;
 	}
 
