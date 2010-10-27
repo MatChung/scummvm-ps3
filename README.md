@@ -46,6 +46,15 @@ My testsetup:
 
 .) scummmodern.zip installed to "/dev_hdd0/scummvm/" (not needed if you want the default theme)
 
+.) automatically builds installable package with "make pkg" (may need testing)
+
+.) Virtual keyboard enabled (I will select a better layout later)
+
+.) enable keyboard everywhere with R1 (if its not automatic)
+
+
+Feedback, patches, or anything like it is welcome, the location I watch is http://psx-scene.com/forums/f149/project-scummvm-ps3-port-69286/ or my github account.
+(I am looking at you MagicSeb! If you add something, or are aware of bugs a short line should not be to much.)
 
 
 99% of the graphics glitches are gone, the worst thing is a broken cursor
