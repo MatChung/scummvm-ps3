@@ -24,7 +24,6 @@
 */
 
 #include "ps3.h"
-#include "pad.h"
 #include "sound/ps3-sound.h"
 
 #include <unistd.h>
@@ -216,8 +215,7 @@ bool OSystem_PS3::hasFeature(Feature f)
 	case kFeatureAspectRatioCorrection:
 		return true;
 	case kFeatureVirtualKeyboard:
-		return false;
-		//return true;
+		return true;
 	case kFeatureCursorHasPalette:
 		return true;
 	case kFeatureOverlaySupportsAlpha:
@@ -243,6 +241,11 @@ void OSystem_PS3::setFeatureState(Feature f, bool enable)
 
 	if(f==kFeatureAspectRatioCorrection)
 		_aspectRatioCorrection=enable;
+	if(f==kFeatureVirtualKeyboard)
+	{
+		_virtkeybd_on=enable;
+		showVirtualKeyboard(enable);
+	}
 }
 
 bool OSystem_PS3::getFeatureState(Feature f)
@@ -251,6 +254,8 @@ bool OSystem_PS3::getFeatureState(Feature f)
 
 	if(f==kFeatureAspectRatioCorrection)
 		return _aspectRatioCorrection;
+	if(f==kFeatureVirtualKeyboard)
+		return _virtkeybd_on;
 
 	return false;
 }
@@ -265,13 +270,24 @@ bool OSystem_PS3::pollEvent(Common::Event &event)
 		return true;
 	}
 
-	bool ret=_pad.pollEvent(event);
+	bool ret;
+
+	ret=_vkeyboard.pollEvent(event);
+	if(ret==true)
+		return true;
+
+
+	ret=_pad.pollEvent(event);
 	if(ret==true)
 	{
 		//net_send("OSystem_PS3::pollEvent() got Event: %d,%d,%d\n",event.type,event.mouse.x,event.mouse.y);
 
 		if(event.type==Common::EVENT_MOUSEMOVE)
-			warpMouse(event.mouse.x,event.mouse.y);
+		{
+			_mouse_pos.x=event.mouse.x;
+			_mouse_pos.y=event.mouse.y;
+			//warpMouse(event.mouse.x,event.mouse.y);
+		}
 
 		return true;
 	}
@@ -418,4 +434,18 @@ void OSystem_PS3::soundUpdate()
 void OSystem_PS3::requestQuit()
 {
 	_shutdownRequested=true;
+}
+
+
+void OSystem_PS3::showVirtualKeyboard(bool show)
+{
+	if(show)
+		_vkeyboard.show();
+	else
+		_vkeyboard.kill();
+}
+
+void OSystem_PS3::finishVirtualKeyboard()
+{
+	_vkeyboard.finish();
 }

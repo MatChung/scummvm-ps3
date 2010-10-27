@@ -1,10 +1,11 @@
 MODULE := backends/platform/ps3
 
 MODULE_OBJS := \
-	graphics.o \
-	pad.o \
-	ps3.o \
 	ps3main.o \
+	graphics.o \
+	ps3.o \
+	input/ps3-pad.o \
+	input/ps3-vkey.o \
 	graphics/ps3-game.o \
 	graphics/ps3-graphics.o \
 	graphics/ps3-mouse.o \

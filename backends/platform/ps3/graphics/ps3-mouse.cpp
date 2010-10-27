@@ -15,6 +15,8 @@ void OSystem_PS3::warpMouse(int x, int y)
 	_mouse_pos.x=x;
 	_mouse_pos.y=y;
 
+	_pad.setPosition(x,y);
+
 	//updateScreen();
 }
 

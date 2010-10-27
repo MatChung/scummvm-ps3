@@ -3,7 +3,8 @@
 
 #define DEEP_DEBUG 1
 
-#include "pad.h"
+#include "input/ps3-pad.h"
+#include "input/ps3-vkey.h"
 #include "backends/base-backend.h"
 #include "sound/mixer_intern.h"
 #include "graphics/colormasks.h"
@@ -104,6 +105,7 @@ public:
 	bool running();
 	void requestQuit();
 	void showVirtualKeyboard(bool show);
+	void finishVirtualKeyboard();
 
 protected:
 	float zRot;
@@ -135,6 +137,7 @@ protected:
 
 	Graphics::PixelFormat _currentScreenFormat;
 
+	PS3VKeyboard _vkeyboard;
 
 	//GLESTexture *createTextureFromPixelFormat(Graphics::PixelFormat &format);
 };

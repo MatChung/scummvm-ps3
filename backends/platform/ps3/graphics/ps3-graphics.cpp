@@ -111,7 +111,7 @@ void OSystem_PS3::initSize(uint width, uint height, const Graphics::PixelFormat 
 
 void OSystem_PS3::updateScreen()
 {
-	net_send("OSystem_PS3::updateScreen()\n");
+	//net_send("OSystem_PS3::updateScreen()\n");
 	glClearColorx(0, 0, 0, 1 << 16);
 	glClear(GL_COLOR_BUFFER_BIT);
 

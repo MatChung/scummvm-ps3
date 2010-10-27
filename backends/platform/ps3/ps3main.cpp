@@ -10,6 +10,7 @@
 #include "base/main.h"
 #include "netdbg/net.h"
 #include <cell/cell_fs.h>
+#include <sysutil/sysutil_oskdialog.h>
 
 
 void initGraphics(PSGLdevice *device)
@@ -147,6 +148,9 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param,
 		break;
 	case CELL_SYSUTIL_DRAWING_BEGIN:
 	case CELL_SYSUTIL_DRAWING_END:
+		break;
+	case CELL_SYSUTIL_OSKDIALOG_FINISHED:
+		theSystem->finishVirtualKeyboard();
 		break;
 	default:
 		net_send
