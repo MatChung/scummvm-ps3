@@ -2897,7 +2897,6 @@ case $_backend in
 
 		add_line_to_config_mk ''
 		add_line_to_config_mk 'eboot: all'
-		add_line_to_config_mk '	ppu-lv2-strip --strip-debug "$(EXECUTABLE)"'
 		add_line_to_config_mk '	make_fself "$(EXECUTABLE)" "dists/ps3/EBOOT.BIN"'
 		add_line_to_config_mk ''
 		add_line_to_config_mk 'pkg: all'
