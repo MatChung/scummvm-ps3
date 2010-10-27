@@ -288,6 +288,11 @@ bool OSystem_PS3::pollEvent(Common::Event &event)
 			_mouse_pos.y=event.mouse.y;
 			//warpMouse(event.mouse.x,event.mouse.y);
 		}
+		if(event.type==Common::EVENT_MAINMENU)
+		{
+			_vkeyboard.show();
+			return false;
+		}
 
 		return true;
 	}
