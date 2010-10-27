@@ -11,7 +11,6 @@
 #include "netdbg/net.h"
 #include <cell/cell_fs.h>
 
-//SYS_PROCESS_PARAM(1001, SYS_PROCESS_PRIMARY_STACK_SIZE_1M)
 
 void initGraphics(PSGLdevice *device)
 {
@@ -277,6 +276,8 @@ OSystem *OSystem_PS3_create(uint16 w,uint16 h)
 
 void setupHomeDir(const char *argv0);
 
+SYS_PROCESS_PARAM(1001, 0x10000)
+
 int main(int argc, char *argv[])
 {
 	net_init();
@@ -324,4 +325,3 @@ int main(int argc, char *argv[])
 	shutdownModules();
 	exit(res);
 }
-
