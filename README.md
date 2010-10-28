@@ -54,7 +54,6 @@ My testsetup:
 
 
 Feedback, patches, or anything like it is welcome, the location I watch is http://psx-scene.com/forums/f149/project-scummvm-ps3-port-69286/ or my github account.
-(I am looking at you MagicSeb! If you add something, or are aware of bugs a short line should not be to much.)
 
 
 99% of the graphics glitches are gone, the worst thing is a broken cursor
