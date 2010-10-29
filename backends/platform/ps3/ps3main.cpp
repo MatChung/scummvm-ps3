@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
 	net_init();
 
 	//cellFsMkdir("/dev_hdd0/scummvm/",CELL_FS_DEFAULT_CREATE_MODE_1);
-	setupHomeDir("/dev_hdd0/scummvm/");
+	setupHomeDir("/dev_hdd0/game/SCUM12000/USRDIR/");
 
 #ifdef SCUMM_BIG_ENDIAN
 	net_send("SCUMM_BIG_ENDIAN!\n");
