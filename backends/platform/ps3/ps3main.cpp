@@ -247,14 +247,27 @@ hostMemorySize: 1 * 1024*1024,  // 128 mbs for host memory
 	}
 }
 
+#if CELL_SDK_VERSION == 0x192001
 static CellPadInfo info;
+#elif CELL_SDK_VERSION == 0x340001
+static CellPadInfo2 info;
+#else
+#error Unknown SDK version - please check you SDK for a fitting CellPadInfo and submit a patch to http://github.com/lousyphreak/scummvm-ps3
+#endif
+
 void initInput()
 {
 	int ret;
 
 	ret=cellPadInit(7);
 
+#if CELL_SDK_VERSION == 0x192001
 	ret=cellPadGetInfo(&info);
+#elif CELL_SDK_VERSION == 0x340001
+	ret=cellPadGetInfo2(&info);
+#else
+#error Unknown SDK version - please check you SDK for a fitting CellPadInfo and submit a patch to http://github.com/lousyphreak/scummvm-ps3
+#endif
 
 	for(int i=0;i<7;i++)
 	{
