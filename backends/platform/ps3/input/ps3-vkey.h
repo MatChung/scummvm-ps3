@@ -21,4 +21,5 @@ private:
 	wchar_t _buffer[PS3_MAX_VKEY_CHARS+1];
 	char _cbuffer[PS3_MAX_VKEY_CHARS+1];
 	int _sent;
+	uint64_t _nextsend;
 };

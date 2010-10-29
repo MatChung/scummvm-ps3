@@ -1,11 +1,14 @@
 #include "ps3-vkey.h"
-#include <sysutil/sysutil_oskdialog.h>
 #include "../netdbg/net.h"
+#include <sysutil/sysutil_oskdialog.h>
+#include <sys/sys_time.h>
 
 
 #define MESSAGE	L"OSK Dialog"
 #define INIT_TEXT	L""
 #define OSK_DIALOG_MEMORY_CONTAINER_SIZE 1024*1024*7
+
+#define INPUT_DELAY (100*1000)
 
 PS3VKeyboard::PS3VKeyboard()
 {
@@ -46,19 +49,13 @@ void PS3VKeyboard::show()
 	/*E On-screen keyboard dialog utility activation parameters */ 
 	CellOskDialogParam dialogParam;
 	/*E Select panels to be used using flag(s) (alphabet input, hiragana input, etc.) */
-	dialogParam.allowOskPanelFlg = CELL_OSKDIALOG_PANELMODE_ALPHABET_FULL_WIDTH |
-		CELL_OSKDIALOG_PANELMODE_ALPHABET |
-		CELL_OSKDIALOG_PANELMODE_NUMERAL_FULL_WIDTH |
-		CELL_OSKDIALOG_PANELMODE_NUMERAL              |
-		CELL_OSKDIALOG_PANELMODE_JAPANESE             |
-		CELL_OSKDIALOG_PANELMODE_JAPANESE_KATAKANA  |
-		CELL_OSKDIALOG_PANELMODE_ENGLISH;
+	dialogParam.allowOskPanelFlg = CELL_OSKDIALOG_PANELMODE_ALPHABET_FULL_WIDTH | CELL_OSKDIALOG_PANELMODE_NUMERAL_FULL_WIDTH;
 	/*E Panel to be displayed first */
-	dialogParam.firstViewPanel = CELL_OSKDIALOG_PANELMODE_ALPHABET;	
+	dialogParam.firstViewPanel = CELL_OSKDIALOG_PANELMODE_DEFAULT;	
 	/*E Initial display position of the on-screen keyboard dialog */
 	dialogParam.controlPoint = pos;
 	/*E Prohibited operation flag(s) (ex. CELL_OSKDIALOG_NO_SPACE) */
-	dialogParam.prohibitFlgs = 0;
+	dialogParam.prohibitFlgs = CELL_OSKDIALOG_NO_RETURN;
 
 	//ret = cellSysutilRegisterCallback( 0, sysutil_callback, NULL );
 
@@ -98,6 +95,8 @@ void PS3VKeyboard::finish()
 	net_send("    numchars: %d\n",OutputInfo.numCharsResultString);
 	net_send("    text: %S\n",(wchar_t*)OutputInfo.pResultString);
 	net_send("    text: %s\n",_cbuffer);
+
+	_nextsend=sys_time_get_system_time();
 }
 
 void PS3VKeyboard::kill()
@@ -111,7 +110,9 @@ void PS3VKeyboard::kill()
 
 bool PS3VKeyboard::pollEvent(Common::Event &event)
 {
-	net_send("PS3VKeyboard::pollEvent(%d,%d,%d)\n",_isShown,strlen(_cbuffer),_sent);
+	uint64_t time_now=sys_time_get_system_time();
+	
+	net_send("PS3VKeyboard::pollEvent(%d,%ld,%ld)\n",_isShown,time_now,_nextsend);
 
 	if(_isShown)
 		return false;
@@ -119,6 +120,13 @@ bool PS3VKeyboard::pollEvent(Common::Event &event)
 	int str=strlen(_cbuffer);
 	if(str*2<=_sent)
 		return false;
+
+	if(_nextsend>time_now)
+	{
+		return false;
+	}
+
+	_nextsend=sys_time_get_system_time()+INPUT_DELAY;
 
 	char c=_cbuffer[_sent>>1];
 	_sent++;
