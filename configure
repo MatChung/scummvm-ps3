@@ -2896,12 +2896,12 @@ case $_backend in
 		fi
 
 		add_line_to_config_mk ''
-		add_line_to_config_mk 'eboot: all'
-		add_line_to_config_mk '	make_fself "$(EXECUTABLE)" "dists/ps3/EBOOT.BIN"'
-		add_line_to_config_mk ''
 		add_line_to_config_mk 'pkg: all'
 		add_line_to_config_mk '	make_fself_npdrm "$(EXECUTABLE)" "dists/ps3/PS3_GAME/USRDIR/EBOOT.BIN"'
 		add_line_to_config_mk '	make_package_npdrm dists/ps3/scummvm-pkg.conf "dists/ps3/PS3_GAME"'
+		add_line_to_config_mk ''
+		add_line_to_config_mk 'eboot: all'
+		add_line_to_config_mk '	make_fself "$(EXECUTABLE)" "dists/ps3/EBOOT.BIN"'
 		add_line_to_config_mk ''
 		;;
 	psp)
