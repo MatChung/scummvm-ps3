@@ -49,20 +49,15 @@ void PS3VKeyboard::show()
 	/*E On-screen keyboard dialog utility activation parameters */ 
 	CellOskDialogParam dialogParam;
 	/*E Select panels to be used using flag(s) (alphabet input, hiragana input, etc.) */
-	dialogParam.allowOskPanelFlg = CELL_OSKDIALOG_PANELMODE_KOREAN |
-				   CELL_OSKDIALOG_PANELMODE_ALPHABET             |
-				   CELL_OSKDIALOG_PANELMODE_NUMERAL_FULL_WIDTH |
-				   CELL_OSKDIALOG_PANELMODE_NUMERAL              |
-				   CELL_OSKDIALOG_PANELMODE_JAPANESE             |
-				   CELL_OSKDIALOG_PANELMODE_JAPANESE_KATAKANA  |
-				   CELL_OSKDIALOG_PANELMODE_ENGLISH;
+	dialogParam.allowOskPanelFlg = CELL_OSKDIALOG_PANELMODE_ALPHABET|
+				   CELL_OSKDIALOG_PANELMODE_NUMERAL;
 
 	/*E Panel to be displayed first */
 	dialogParam.firstViewPanel = CELL_OSKDIALOG_PANELMODE_ALPHABET;	
 	/*E Initial display position of the on-screen keyboard dialog */
 	dialogParam.controlPoint = pos;
 	/*E Prohibited operation flag(s) (ex. CELL_OSKDIALOG_NO_SPACE) */
-	dialogParam.prohibitFlgs = CELL_OSKDIALOG_NO_RETURN;
+	dialogParam.prohibitFlgs = 0;
 
 	//ret = cellSysutilRegisterCallback( 0, sysutil_callback, NULL );
 
@@ -144,6 +139,12 @@ bool PS3VKeyboard::pollEvent(Common::Event &event)
 		event.type=Common::EVENT_KEYUP;
 
 	char lower=tolower(c);
+
+	if(c==10)
+	{
+		lower=Common::KEYCODE_RETURN;
+		c=13;
+	}
 
 	event.kbd.ascii=c;
 	event.kbd.keycode=(Common::KeyCode)lower;
