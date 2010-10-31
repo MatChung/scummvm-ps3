@@ -88,18 +88,21 @@ void OSystem_PS3::initSize(uint width, uint height, const Graphics::PixelFormat 
 	//_egl_surface_width=width;
 	//_egl_surface_height=height;
 	_game_texture->allocBuffer(width, height);
+	_game_texture->fillBuffer(0);
 
 	// Cap at 320x200 or the ScummVM themes abort :/
-	GLuint overlay_width = MIN((int)width, 320);
-	GLuint overlay_height = MIN((int)height, 200);
+	GLuint overlay_width = MIN((int)width*2, 320*2);
+	GLuint overlay_height = MIN((int)height*2, 200*2);
 	_overlay_texture->allocBuffer(overlay_width, overlay_height);
+	_overlay_texture->fillBuffer(0);
 
 	// Don't know mouse size yet - it gets reallocated in
 	// setMouseCursor.  We need the palette allocated before
 	// setMouseCursor however, so just take a guess at the desired
 	// size (it's small).
+	//_mouse_texture->setDebug(true);
 	_mouse_texture->allocBuffer(20, 20);
-
+	_overlay_texture->fillBuffer(0);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -142,6 +145,9 @@ void OSystem_PS3::updateScreen()
 	{
 		//net_send("OSystem_PS3::updateScreen() - _show_mouse\n");
 		glPushMatrix();
+
+		if (_show_overlay)
+			glScalef(_game_texture->width()/(float)_overlay_texture->width(),_game_texture->height()/(float)_overlay_texture->height(),1);
 
 		glTranslatef(_mouse_pos.x-_mouse_hotspot.x,
 			_mouse_pos.y-_mouse_hotspot.y,

@@ -6,6 +6,9 @@ void OSystem_PS3::showOverlay()
 	if(!_show_overlay)
 		net_send("OSystem_PS3::showOverlay()\n");
 	_show_overlay = true;
+
+	if(_overlay_texture!=NULL)
+		_pad.setResolution(_overlay_texture->width(),_overlay_texture->height());
 }
 
 void OSystem_PS3::hideOverlay()
@@ -13,6 +16,9 @@ void OSystem_PS3::hideOverlay()
 	if(_show_overlay)
 		net_send("OSystem_PS3::hideOverlay()\n");
 	_show_overlay = false;
+
+	if(_overlay_texture!=NULL)
+		_pad.setResolution(_game_texture->width(),_game_texture->height());
 }
 
 void OSystem_PS3::clearOverlay()

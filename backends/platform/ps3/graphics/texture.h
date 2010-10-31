@@ -33,6 +33,7 @@ public:
 	void setFormat(Graphics::PixelFormat &format);
 	const Graphics::Surface* surface_const() const { return &_surface; }
 
+	void setBuffer(GLuint width, GLuint height, const void* buf);
 	void updateBuffer(GLuint x, GLuint y, GLuint width, GLuint height, const void* buf, int pitch);
 	void fillBuffer(byte x);
 	Graphics::Surface* lock();
@@ -45,6 +46,8 @@ public:
 	void drawTexture() { drawTexture(0, 0, _surface.w, _surface.h); }
 	void drawTexture(GLshort x, GLshort y, GLshort w, GLshort h);
 	void _drawTexture(GLshort x, GLshort y, GLshort w, GLshort h);
+
+	void setDebug(bool set);
 
 protected:
 	GLenum glFormat() const;
@@ -92,6 +95,8 @@ protected:
 	CGparameter _texture_param;
 	CGparameter _palette_param;
 	CGparameter _mvp_param;
+
+	bool _debug;
 };
 
 /*

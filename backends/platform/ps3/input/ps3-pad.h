@@ -31,4 +31,6 @@ private:
 
 
 	bool mapPS3ToEvent(Common::Event &event);
+	int16 getMappedX();
+	int16 getMappedY();
 };

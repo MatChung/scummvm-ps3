@@ -34,7 +34,7 @@ void OSystem_PS3::grabPalette(byte *colors, uint start, uint num)
 
 void OSystem_PS3::copyRectToScreen(const byte *buf, int pitch, int x, int y, int w, int h)
 {
-	net_send("OSystem_PS3::copyRectToScreen(%d,%d,%d,%d,%d)\n",pitch,x,y,w,h);
+	//net_send("OSystem_PS3::copyRectToScreen(%d,%d,%d,%d,%d)\n",pitch,x,y,w,h);
 	_game_texture->updateBuffer(x, y, w, h, buf, pitch);
 	//draw();
 }

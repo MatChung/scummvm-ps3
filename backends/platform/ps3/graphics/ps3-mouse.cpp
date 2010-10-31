@@ -20,6 +20,14 @@ void OSystem_PS3::warpMouse(int x, int y)
 	//updateScreen();
 }
 
+GLuint power2(GLuint num)
+{
+	GLuint x;
+	for(x=1;x<num;x*=2);
+
+	return x;
+}
+
 void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, int hotspotY, uint32 keycolor, int cursorTargetScale, const Graphics::PixelFormat *format)
 {
 	net_send("OSystem_PS3::setMouseCursor(%p, %u, %u, %d, %d, %d, %d, %p)\n",
@@ -59,8 +67,13 @@ void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, 
 
 	//assert(keycolor < 256);
 
-	//if(_mouse_texture->height()<h || _mouse_texture->width()<w)
-		_mouse_texture->allocBuffer(w, h);
+	//if(_mouse_texture->height()!=h || _mouse_texture->width()!=w)
+		_mouse_texture->allocBuffer(power2(w), power2(h));
+
+		Graphics::Surface *l=_mouse_texture->lock();
+		l->w=w;
+		l->h=h;
+		_mouse_texture->unlock();
 
 	// Update palette alpha based on keycolor
 	/*byte* palette = _mouse_texture->palette();
@@ -71,9 +84,10 @@ void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, 
 	} while (--i);*/
 	//palette = _mouse_texture->palette();
 	//palette[keycolor*4 + 3] = 0x00;
+	_mouse_texture->setKeyColor(keycolor);
+	//_mouse_texture->setBuffer(w, h, buf);
 	_mouse_texture->updateBuffer(0, 0, w, h, buf, w*newFormat.bytesPerPixel);
 	//_mouse_texture->updatePalette((byte*)_tempMousePalette,0,256);
-	_mouse_texture->setKeyColor(keycolor);
 	_mouse_keycolor=keycolor;
 
 	_mouse_hotspot = Common::Point(hotspotX, hotspotY);

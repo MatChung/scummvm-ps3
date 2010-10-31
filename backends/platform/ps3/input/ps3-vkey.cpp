@@ -49,9 +49,16 @@ void PS3VKeyboard::show()
 	/*E On-screen keyboard dialog utility activation parameters */ 
 	CellOskDialogParam dialogParam;
 	/*E Select panels to be used using flag(s) (alphabet input, hiragana input, etc.) */
-	dialogParam.allowOskPanelFlg = CELL_OSKDIALOG_PANELMODE_ALPHABET_FULL_WIDTH | CELL_OSKDIALOG_PANELMODE_NUMERAL_FULL_WIDTH;
+	dialogParam.allowOskPanelFlg = CELL_OSKDIALOG_PANELMODE_KOREAN |
+				   CELL_OSKDIALOG_PANELMODE_ALPHABET             |
+				   CELL_OSKDIALOG_PANELMODE_NUMERAL_FULL_WIDTH |
+				   CELL_OSKDIALOG_PANELMODE_NUMERAL              |
+				   CELL_OSKDIALOG_PANELMODE_JAPANESE             |
+				   CELL_OSKDIALOG_PANELMODE_JAPANESE_KATAKANA  |
+				   CELL_OSKDIALOG_PANELMODE_ENGLISH;
+
 	/*E Panel to be displayed first */
-	dialogParam.firstViewPanel = CELL_OSKDIALOG_PANELMODE_DEFAULT;	
+	dialogParam.firstViewPanel = CELL_OSKDIALOG_PANELMODE_ALPHABET;	
 	/*E Initial display position of the on-screen keyboard dialog */
 	dialogParam.controlPoint = pos;
 	/*E Prohibited operation flag(s) (ex. CELL_OSKDIALOG_NO_SPACE) */
@@ -112,7 +119,7 @@ bool PS3VKeyboard::pollEvent(Common::Event &event)
 {
 	uint64_t time_now=sys_time_get_system_time();
 	
-	net_send("PS3VKeyboard::pollEvent(%d,%ld,%ld)\n",_isShown,time_now,_nextsend);
+	//net_send("PS3VKeyboard::pollEvent(%d,%ld,%ld)\n",_isShown,time_now,_nextsend);
 
 	if(_isShown)
 		return false;

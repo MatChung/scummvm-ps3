@@ -86,6 +86,8 @@ _palette_dirty(0)
 	_pixelFormat=Graphics::PixelFormat::createFormatCLUT8();
 	_internalFormat=getFormatFromPixelFormat();
 
+	_debug=false;
+
 	allDirty();
 }
 
@@ -141,13 +143,13 @@ void GLESTexture::allocBuffer(GLuint w, GLuint h)
 	_surface.h = h;
 	_surface.bytesPerPixel = _pixelFormat.bytesPerPixel;
 
-	if (w <= _texture_width && h <= _texture_height)
+	if (w == _texture_width && h == _texture_height)
 		// Already allocated a sufficiently large buffer
 		return;
 
 
-	_texture_width = w;
-	_texture_height = h;
+	_texture_width = (MAX(w,_texture_width));
+	_texture_height = (MAX(h,_texture_height));
 
 	net_send("GLESTexture::allocBuffer(%d,%d,%d)\n",w,h,_surface.bytesPerPixel);
 
@@ -186,15 +188,61 @@ void GLESTexture::allocBuffer(GLuint w, GLuint h)
 	fillBuffer(0);
 }
 
+void GLESTexture::setBuffer(GLuint w, GLuint h, const void* buf)
+{
+	glBindTexture(GL_TEXTURE_2D, _texture_name);
+	if(_texture_width==w && _texture_height==h)
+	{
+		_surface.w = w;
+		_surface.h = h;
+		_surface.bytesPerPixel = _pixelFormat.bytesPerPixel;
+		_surface.pitch = _texture_width * _surface.bytesPerPixel;
+		memcpy(_texture,buf,_texture_width * _texture_height * _surface.bytesPerPixel);
+		glTexImage2D(GL_TEXTURE_2D, 0, glInternalFormat(),
+			_texture_width, _texture_height,
+			0, glFormat(), glType(), _texture);
+	}
+	else
+	{
+		_texture_width=w;
+		_texture_height=h;
+		_surface.w = w;
+		_surface.h = h;
+		_surface.bytesPerPixel = _pixelFormat.bytesPerPixel;
+		_surface.pitch = _texture_width * _surface.bytesPerPixel;
+
+		if (_texture)
+		{
+			delete[] _texture;
+		}
+
+		_texture = new byte[_texture_width * _texture_height * _surface.bytesPerPixel];
+		_surface.pixels = _texture;
+
+		memcpy(_texture,buf,_texture_width * _texture_height * _surface.bytesPerPixel);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, glInternalFormat(),
+			_texture_width, _texture_height,
+			0, glFormat(), glType(), _texture);
+	}
+
+	clearDirty();
+}
+
 void GLESTexture::updateBuffer(GLuint x, GLuint y, GLuint w, GLuint h,
 							   const void* buf, int pitch)
 {
-	net_send("GLESTexture::updateBuffer(%d,%d,%d,%d,%d)\n",x,y,w,h,pitch);
+	if(_debug)
+		net_send("GLESTexture::updateBuffer(%d,%d,%d,%d,%d)\n",x,y,w,h,pitch);
 
 	x=MIN(x,((GLuint)_surface.w));
 	y=MIN(y,((GLuint)_surface.h));
 	w=MIN(w,((GLuint)_surface.w-x));
 	h=MIN(h,((GLuint)_surface.h-y));
+	if(_debug)
+		net_send("                         (%d,%d,%d,%d,%d)\n",x,y,w,h,pitch);
+	if(_debug)
+		net_send("                         (%d,%d,%d,%d,%d)\n",_texture_width,_texture_height,_surface.w,_surface.h,_surface.pitch);
 
 	_dirty_top=MIN(y,_dirty_top);
 	_dirty_bottom=MAX(y+h,_dirty_bottom);
@@ -261,15 +309,23 @@ void GLESTexture::updateBuffer(GLuint x, GLuint y, GLuint w, GLuint h,
 		}
 		break;
 	case FORMAT_PALETTE:
+		if(_debug)
+			net_send("    palette\n");
 		{
 			const uint8* src = static_cast<const uint8*>(buf);
-			uint8* dst = static_cast<uint8*>(_surface.getBasePtr(x, y));
+			uint8* dst = &_texture[x+y*_texture_width];
 
 			do
 			{
-				memcpy(dst,src,w);
-				dst += _surface.pitch;
+				dst = &_texture[x+y*_texture_width];
+				for(GLuint xx=0;xx<w;xx++)
+				{
+					dst[xx]=src[xx];
+				}
+				//memcpy(dst,src,w);
+				dst += _texture_width;
 				src += pitch;
+				y++;
 			} while (--h);
 		}
 		break;
@@ -278,7 +334,8 @@ void GLESTexture::updateBuffer(GLuint x, GLuint y, GLuint w, GLuint h,
 
 void GLESTexture::fillBuffer(byte x)
 {
-	net_send("GLESTexture::fillBuffer(%d)\n",x);
+	if(_debug)
+		net_send("GLESTexture::fillBuffer(%d)\n",x);
 
 	allDirty();
 
@@ -298,7 +355,8 @@ void GLESTexture::drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 			_dirty_bottom=_surface.h;
 
 
-		//net_send("    glTexSubImage2D(%d,%d,%d,%d)\n",0,_dirty_top,_surface.w, _dirty_bottom-_dirty_top);
+		if(_debug)
+			net_send("    glTexSubImage2D(%d,%d,%d,%d)\n",0,_dirty_top,_texture_width, _dirty_bottom-_dirty_top);
 		glTexSubImage2D(GL_TEXTURE_2D, 0,
 			0, _dirty_top, // x,y
 			_texture_width, _dirty_bottom-_dirty_top,//w,h
@@ -401,8 +459,12 @@ void GLESTexture::_drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 
 	assert(ARRAYSIZE(vertices) == ARRAYSIZE(texcoords));
 
-	//net_send("GLESTexture::drawTexture() - ");
-	//net_send("%d, %d, %d, %d, %d, %d\n",tex_width,tex_height,x,y,w,h);
+	if(_debug)
+	{
+		net_send("GLESTexture::drawTexture() - ");
+		net_send("    %f, %f, %d, %d, %d, %d\n",tex_width,tex_height,x,y,w,h);
+		net_send("    %d, %d, %d, %d\n",_surface.w,_texture_width,_surface.h,_texture_height);
+	}
 
 	CHECK_GL_ERROR();
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, ARRAYSIZE(vertices)/2);
@@ -411,7 +473,8 @@ void GLESTexture::_drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 
 Graphics::Surface* GLESTexture::lock()
 {
-	net_send("GLESTexture::lock()\n");
+	if(_debug)
+		net_send("GLESTexture::lock()\n");
 	_isLocked=true;
 
 	switch(_internalFormat)
@@ -438,7 +501,8 @@ Graphics::Surface* GLESTexture::lock()
 
 void GLESTexture::unlock()
 {
-	net_send("GLESTexture::unlock()\n");
+	if(_debug)
+		net_send("GLESTexture::unlock()\n");
 	_isLocked=false;
 
 	switch(_internalFormat)
@@ -496,14 +560,16 @@ _dirty_bottom=_surface.h;
 
 void GLESTexture::setKeyColor(uint32 color)
 {
-	net_send("GLESTexture::setKeyColor(%d)\n",color);
+	if(_debug)
+		net_send("GLESTexture::setKeyColor(%d)\n",color);
 	_keycolor=color;
 	_palette_dirty=true;
 }
 
 void GLESTexture::grabPalette(byte *colors, uint start, uint num)
 {
-	net_send("GLESTexture::grabPalette(%d,%d)\n",start,num);
+	if(_debug)
+		net_send("GLESTexture::grabPalette(%d,%d)\n",start,num);
 
 	uint32* dst = (uint32*)(colors);
 	for(uint i=start;i<start+num;i++)
@@ -515,7 +581,8 @@ void GLESTexture::grabPalette(byte *colors, uint start, uint num)
 
 void GLESTexture::updatePalette(const byte *colors, uint start, uint num)
 {
-	net_send("GLESTexture::updatePalette(%d,%d)\n",start,num);
+	if(_debug)
+		net_send("GLESTexture::updatePalette(%d,%d)\n",start,num);
 	const uint32* src = (uint32*)(colors);
 	for(uint i=start;i<start+num;i++)
 	{
@@ -713,4 +780,9 @@ void GLESTexture::shutdownCG()
 	cgDestroyProgram(_vprog);
 
 	cgDestroyContext(_ctx);
+}
+
+void GLESTexture::setDebug(bool set)
+{
+	_debug=set;
 }

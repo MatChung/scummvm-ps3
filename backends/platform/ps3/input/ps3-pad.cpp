@@ -25,19 +25,19 @@ void PS3Pad::setResolution(int16 w,int16 h)
 
 void PS3Pad::setPosition(int16 x,int16 y)
 {
-	_xPos=x;
-	_yPos=y;
+	_xPos=x/(float)_w;
+	_yPos=y/(float)_h;
 	_xPosKnown=x;
 	_yPosKnown=y;
 }
 
 bool PS3Pad::pollEvent(Common::Event &event)
 {
-	if(((int16)_xPos)!=_xPosKnown || ((int16)_yPos)!=_yPosKnown)
+	if(((int16)(_xPos*_w))!=_xPosKnown || ((int16)(_yPos*_h))!=_yPosKnown)
 	{
 		event.type=Common::EVENT_MOUSEMOVE;
-		event.mouse.x=(int16)_xPos;
-		event.mouse.y=(int16)_yPos;
+		event.mouse.x=getMappedX();
+		event.mouse.y=getMappedY();
 		_xPosKnown=event.mouse.x;
 		_yPosKnown=event.mouse.y;
 
@@ -86,13 +86,13 @@ void PS3Pad::frame()
 		_buttonState2=bState2;
 	}
 
-	_xPos+=(_xPosPad>>4)/3.0f;
-	_yPos+=(_yPosPad>>4)/3.0f;
+	_xPos+=(_xPosPad>>4)/1000.0f;
+	_yPos+=(_yPosPad>>4)/1000.0f;
 
 	if(_xPos<0)_xPos=0;
-	if(_xPos>_w)_xPos=_w;
+	if(_xPos>1)_xPos=1;
 	if(_yPos<0)_yPos=0;
-	if(_yPos>_h)_yPos=_h;
+	if(_yPos>1)_yPos=1;
 
 }
 
@@ -185,8 +185,8 @@ bool PS3Pad::mapPS3ToEvent(Common::Event &event)
 			event.type=Common::EVENT_LBUTTONUP;
 			_buttonState2Known&=~CELL_PAD_CTRL_CROSS;
 		}
-		event.mouse.x=(int16)_xPos;
-		event.mouse.y=(int16)_yPos;
+		event.mouse.x=getMappedX();
+		event.mouse.y=getMappedY();
 		return true;
 	}
 	if(diffstate2&CELL_PAD_CTRL_CIRCLE)
@@ -201,8 +201,8 @@ bool PS3Pad::mapPS3ToEvent(Common::Event &event)
 			event.type=Common::EVENT_RBUTTONUP;
 			_buttonState2Known&=~CELL_PAD_CTRL_CIRCLE;
 		}
-		event.mouse.x=(int16)_xPos;
-		event.mouse.y=(int16)_yPos;
+		event.mouse.x=getMappedX();
+		event.mouse.y=getMappedY();
 		return true;
 	}
 	if(diffstate1&CELL_PAD_CTRL_START)
@@ -261,4 +261,12 @@ bool PS3Pad::mapPS3ToEvent(Common::Event &event)
 	return false;
 }
 
+int16 PS3Pad::getMappedX()
+{
+	return (int16)(_xPos*_w);
+}
 
+int16 PS3Pad::getMappedY()
+{
+	return (int16)(_yPos*_h);
+}
