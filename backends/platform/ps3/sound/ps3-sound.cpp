@@ -11,7 +11,8 @@ PS3Sound::PS3Sound(Audio::MixerImpl *mixer)
 	_mixer=mixer;
 	_lastquery=0;
 	_audio_last_read_block=0xFFFFFFFF;
-	_audio_block_index=0;
+	_audio_block_index=1;
+	_stored_blocks=0;
 	_buffer=new byte[AUDIO_BLOCK_SIZE*4];
 }
 
@@ -54,12 +55,12 @@ bool PS3Sound::playOneBlock()
 {
 	unsigned int current_block = *(uint64_t *)_audio_read_index_addr;
 
-	if (current_block == _audio_last_read_block)
+	/*if (current_block == _audio_last_read_block)
 	{
 		//__counterr++;
 		return false;
-	}
-	if(_audio_block_index != current_block)
+	}*/
+	if(_audio_block_index == current_block)
 	{
 		//__counterr++;
 		return false;
@@ -83,13 +84,18 @@ bool PS3Sound::playOneBlock()
 		_audio_block_index = (_audio_block_index + 1) % AUDIO_BLOCK_COUNT;
 	}
 
+	int delta=current_block-_audio_last_read_block;
+	if(delta<0)delta+=AUDIO_BLOCK_COUNT;
 	_audio_last_read_block = current_block;
 
-	//net_send("  current_block=%d\n",current_block);
-	//net_send("  _audio_last_read_block=%d\n",_audio_last_read_block);
-	//net_send("  _audio_block_index=%d\n",_audio_block_index);
-	//net_send("  _audio_last_read_block=%d\n",_audio_last_read_block);
-	//net_send("  _audio_last_read_block=%d\n",_audio_last_read_block);
+	if(delta!=1)
+	{
+		net_send("  current_block = %d\n",current_block);
+		net_send("  delta         = %d\n",delta);
+		//net_send("  _audio_block_index=%d\n",_audio_block_index);
+		//net_send("  _audio_last_read_block=%d\n",_audio_last_read_block);
+		//net_send("  _audio_last_read_block=%d\n",_audio_last_read_block);
+	}
 
 	return true;
 }

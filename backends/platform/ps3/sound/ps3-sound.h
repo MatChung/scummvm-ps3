@@ -26,4 +26,5 @@ private:
 	sys_addr_t _audio_read_index_addr;
 	unsigned int _audio_block_index;
 	unsigned int _audio_last_read_block;
+	uint32_t _stored_blocks;
 };
