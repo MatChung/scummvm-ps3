@@ -202,6 +202,8 @@ void OSystem_PS3::initBackend()
 	OSystem::initBackend();
 	net_send("OSystem_PS3::initBackend()9\n");
 
+	_main_thread=pthread_self();
+
 	_isInitialized=true;
 }
 

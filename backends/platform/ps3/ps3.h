@@ -139,6 +139,8 @@ protected:
 
 	PS3VKeyboard _vkeyboard;
 
+	pthread_t _main_thread;
+
 	//GLESTexture *createTextureFromPixelFormat(Graphics::PixelFormat &format);
 };
 
