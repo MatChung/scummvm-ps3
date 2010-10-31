@@ -140,6 +140,8 @@ protected:
 	PS3VKeyboard _vkeyboard;
 
 	pthread_t _main_thread;
+	int _current_graphics_mode;
+	bool _stretch_to_full;
 
 	//GLESTexture *createTextureFromPixelFormat(Graphics::PixelFormat &format);
 };

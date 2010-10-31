@@ -47,6 +47,7 @@ public:
 	void drawTexture(GLshort x, GLshort y, GLshort w, GLshort h);
 	void _drawTexture(GLshort x, GLshort y, GLshort w, GLshort h);
 
+	void setFilter(int filter);
 	void setDebug(bool set);
 
 protected:
@@ -97,6 +98,7 @@ protected:
 	CGparameter _mvp_param;
 
 	bool _debug;
+	int _current_filter;
 };
 
 /*

@@ -171,7 +171,10 @@ void GLESTexture::allocBuffer(GLuint w, GLuint h)
 	CHECK_GL_ERROR();
 	glBindTexture(GL_TEXTURE_2D, _texture_name);
 	CHECK_GL_ERROR();
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	if(_current_filter==0 || _surface.bytesPerPixel==1)
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	else
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	CHECK_GL_ERROR();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	CHECK_GL_ERROR();
@@ -469,6 +472,24 @@ void GLESTexture::_drawTexture(GLshort x, GLshort y, GLshort w, GLshort h)
 	CHECK_GL_ERROR();
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, ARRAYSIZE(vertices)/2);
 	CHECK_GL_ERROR();
+}
+
+void GLESTexture::setFilter(int filter)
+{
+	if(_current_filter==filter)
+		return;
+
+	_current_filter=filter;
+
+	glBindTexture(GL_TEXTURE_2D, _texture_name);
+	if(filter==0)
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	}
+	else
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	}
 }
 
 Graphics::Surface* GLESTexture::lock()

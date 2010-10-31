@@ -61,6 +61,7 @@ void OSystem_PS3::initGraphics()
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
+	_current_graphics_mode=1;
 	net_send("OSystem_PS3::init()clearFocusRectangle\n");
 	//	CHECK_GL_ERROR();
 	showMouse(true);
@@ -122,6 +123,13 @@ void OSystem_PS3::updateScreen()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glPushMatrix();
+
+	if(!_stretch_to_full)
+	{
+		float aspect=(_tv_screen_width/_tv_screen_height)/(4.0/3.0);
+		glTranslatef(_game_texture->width()/aspect*0.1,0,0);
+		glScalef(aspect	,1,1);
+	}
 
 	if (_shake_offset != 0)
 	{
