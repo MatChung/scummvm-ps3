@@ -18,6 +18,8 @@ If you want debug information or get crashes add "--ps3-debug=IP" to your config
 
 The rest of the configure switches work too ("./configure --help" to list them), all engines build except the Hugo series.
 
+If you want mp3/ogg/flac/theora support check out http://github.com/lousyphreak/ps3-libs.
+
 
 Keybindings:
 ------------
@@ -28,6 +30,20 @@ Keybindings:
  D-Pad - cursor keys
  start - show overlay (save, load, quit, etc)
  select - ESC (to quit videos or other sequences)
+ R1 - show virtual keyboard
+
+Features imlemented
+-------------------
+
+.) should build out of the box with 1.92 and 3.41 SDK
+
+.) automatically builds installable package with "make pkg" (may need testing)
+
+.) Virtual keyboard enabled (I will select a better layout later)
+
+.) enable keyboard everywhere with R1 (if its not automatic)
+
+.) every game I tested works
 
 
 
@@ -42,33 +58,8 @@ My testsetup:
 
 .) psgroove (with PL3): git pull 614cdb6e7d2d5bc400b39b5bd9585cba43ab80d6
 
-.) scummvm installed to "/dev_hdd0/game/GAIA01985/homebrew/scumm/"
-
-.) scummmodern.zip installed to "/dev_hdd0/scummvm/" (not needed if you want the default theme)
-
-.) automatically builds installable package with "make pkg" (may need testing)
-
-.) Virtual keyboard enabled (I will select a better layout later)
-
-.) enable keyboard everywhere with R1 (if its not automatic)
 
 
-Feedback, patches, or anything like it is welcome, the location I watch is http://psx-scene.com/forums/f149/project-scummvm-ps3-port-69286/ or my github account.
 
-
-99% of the graphics glitches are gone, the worst thing is a broken cursor
-
-Games tested:
-Monkey Island 1 & 2 (FMTowns Version)
-works, except the cursor is broken after playing
-Monkey Island 3
-works, sometimes sound skipping (cracks)
-Day of the Tentacle:
-works 100%
-The Legend of Kyrandia (CD Version)
-works 100%
-Beneath a Steel Sky (CD and Floppy)
-crashes at intro, but if skipped it works fine
-Discworld
-works 100%
+Feedback, patches, or anything like it is welcome, the location I watch is http://psx-scene.com/forums/f149/project-scummvm-ps3-port-69286/ or http://github.com/lousyphreak/scummvm-ps3 account.
 
