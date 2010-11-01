@@ -326,13 +326,21 @@
 	/* to make an efficient, inlined memcpy implementation */
 	#define memcpy(dst, src, size)   psp_memcpy(dst, src, size)
 
+#elif defined (__PPU__)
+	#define scumm_stricmp strcasecmp
+	#define scumm_strnicmp strncasecmp
+	#define SCUMM_BIG_ENDIAN
+	#define SCUMM_NEED_ALIGNMENT
+	
+
 #elif defined(__amigaos4__)
 
 	#define	scumm_stricmp strcasecmp
 	#define	scumm_strnicmp strncasecmp
 
 	#define	SCUMM_BIG_ENDIAN
-	#define	SCUMM_NEED_ALIGNMENT
+
+#define	SCUMM_NEED_ALIGNMENT
 
 #elif defined (__DS__)
 
