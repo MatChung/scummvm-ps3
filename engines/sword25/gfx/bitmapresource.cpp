@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/bitmapresource.cpp $
- * $Id: bitmapresource.cpp 53310 2010-10-12 23:32:32Z sev $
+ * $Id: bitmapresource.cpp 53755 2010-10-24 01:32:15Z fingolfin $
  *
  */
 
@@ -35,15 +35,11 @@
 #include "sword25/gfx/bitmapresource.h"
 #include "sword25/kernel/kernel.h"
 #include "sword25/gfx/graphicengine.h"
-#include "sword25/gfx/image/imageloader.h"
 #include "sword25/package/packagemanager.h"
 
 namespace Sword25 {
 
 #define BS_LOG_PREFIX "BITMAP"
-
-// Konstruktion / Destruktion
-// --------------------------
 
 BitmapResource::BitmapResource(const Common::String &filename, Image *pImage) :
 	_valid(false),
@@ -55,8 +51,6 @@ BitmapResource::BitmapResource(const Common::String &filename, Image *pImage) :
 BitmapResource::~BitmapResource() {
 	delete _pImage;
 }
-
-// -----------------------------------------------------------------------------
 
 uint BitmapResource::getPixel(int x, int y) const {
 	BS_ASSERT(x >= 0 && x < _pImage->getWidth());

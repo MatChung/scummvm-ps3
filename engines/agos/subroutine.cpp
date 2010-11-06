@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/subroutine.cpp $
- * $Id: subroutine.cpp 47451 2010-01-22 23:58:24Z fingolfin $
+ * $Id: subroutine.cpp 54031 2010-11-01 21:37:47Z fingolfin $
  *
  */
 
@@ -29,8 +29,6 @@
 
 #include "agos/agos.h"
 #include "agos/intern.h"
-
-using Common::File;
 
 namespace AGOS {
 
@@ -262,22 +260,22 @@ void AGOSEngine::endCutscene() {
 	_runScriptReturn1 = true;
 }
 
-File *AGOSEngine::openTablesFile(const char *filename) {
+Common::File *AGOSEngine::openTablesFile(const char *filename) {
 	if (getFeatures() & GF_OLD_BUNDLE)
 		return openTablesFile_simon1(filename);
 	else
 		return openTablesFile_gme(filename);
 }
 
-File *AGOSEngine::openTablesFile_simon1(const char *filename) {
-	File *fo = new File();
+Common::File *AGOSEngine::openTablesFile_simon1(const char *filename) {
+	Common::File *fo = new Common::File();
 	fo->open(filename);
 	if (fo->isOpen() == false)
 		error("openTablesFile: Can't open '%s'", filename);
 	return fo;
 }
 
-File *AGOSEngine::openTablesFile_gme(const char *filename) {
+Common::File *AGOSEngine::openTablesFile_gme(const char *filename) {
 	uint res;
 	uint32 offs;
 
@@ -291,7 +289,7 @@ File *AGOSEngine::openTablesFile_gme(const char *filename) {
 bool AGOSEngine::loadTablesIntoMem(uint16 subrId) {
 	byte *p;
 	uint16 min_num, max_num, file_num;
-	File *in;
+	Common::File *in;
 	char filename[30];
 
 	if (_tblList == NULL)
@@ -340,7 +338,7 @@ bool AGOSEngine::loadTablesIntoMem(uint16 subrId) {
 bool AGOSEngine_Waxworks::loadTablesIntoMem(uint16 subrId) {
 	byte *p;
 	uint min_num, max_num;
-	File *in;
+	Common::File *in;
 
 	p = _tblList;
 	if (p == NULL)
@@ -407,7 +405,7 @@ bool AGOSEngine::loadXTablesIntoMem(uint16 subrId) {
 	int i;
 	uint min_num, max_num;
 	char filename[30];
-	File *in;
+	Common::File *in;
 
 	p = _xtblList;
 	if (p == NULL)
@@ -457,7 +455,7 @@ bool AGOSEngine::loadXTablesIntoMem(uint16 subrId) {
 	return 0;
 }
 
-void AGOSEngine::closeTablesFile(File *in) {
+void AGOSEngine::closeTablesFile(Common::File *in) {
 	if (getFeatures() & GF_OLD_BUNDLE) {
 		in->close();
 		delete in;
@@ -572,7 +570,7 @@ restart:
 				_codePtr += 8;
 
 			if (_dumpOpcodes)
-				printf("; %d\n", sub->id);
+				debug("; %d", sub->id);
 			result = runScript();
 			if (result != 0) {
 				break;

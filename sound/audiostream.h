@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/sound/audiostream.h $
- * $Id: audiostream.h 49867 2010-06-15 17:13:18Z lordhoto $
+ * $Id: audiostream.h 54098 2010-11-05 15:38:31Z lordhoto $
  *
  */
 
@@ -276,11 +276,6 @@ private:
  * The same caveats apply to SubSeekableAudioStream as do to SeekableAudioStream.
  *
  * Manipulating the parent stream directly /will/ mess up a substream.
- *
- * IMPORTANT:
- * Note for engine authors. This object is currently under inspection. In case
- * we need to revise the looping API we might drop this. So if you really need
- * something like this object, please drop a mail to LordHoto.
  */
 class SubSeekableAudioStream : public SeekableAudioStream {
 public:

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/saveload_lol.cpp $
- * $Id: saveload_lol.cpp 47354 2010-01-18 07:21:54Z athrxx $
+ * $Id: saveload_lol.cpp 53912 2010-10-28 23:57:24Z lordhoto $
  *
  */
 
@@ -117,7 +117,7 @@ Common::Error LoLEngine::loadGameState(int slot) {
 	_selectedCharacter = in.readSByte();
 	_currentLevel = in.readByte();
 	for (int i = 0; i < 48; i++)
-		_inventory[i] = in.readUint16BE();
+		_inventory[i] = in.readSint16BE();
 	_inventoryCurItem = in.readSint16BE();
 	_itemInHand = in.readSint16BE();
 	_lastMouseRegion = in.readSint16BE();
@@ -243,7 +243,7 @@ Common::Error LoLEngine::loadGameState(int slot) {
 			m->enable = in.readByte();
 			m->objectType = in.readByte();
 			m->attackerId = in.readUint16BE();
-			m->item = in.readUint16BE();
+			m->item = in.readSint16BE();
 			m->x = in.readUint16BE();
 			m->y = in.readUint16BE();
 			m->flyingHeight = in.readByte();
@@ -274,7 +274,7 @@ Common::Error LoLEngine::loadGameState(int slot) {
 	return Common::kNoError;
 }
 
-Common::Error LoLEngine::saveGameState(int slot, const char *saveName, const Graphics::Surface *thumbnail) {
+Common::Error LoLEngine::saveGameStateIntern(int slot, const char *saveName, const Graphics::Surface *thumbnail) {
 	const char *fileName = getSavegameFilename(slot);
 
 	Common::OutSaveFile *out = openSaveForWriting(fileName, saveName, thumbnail);
@@ -340,7 +340,7 @@ Common::Error LoLEngine::saveGameState(int slot, const char *saveName, const Gra
 	out->writeSByte(_selectedCharacter);
 	out->writeByte(_currentLevel);
 	for (int i = 0; i < 48; i++)
-		out->writeUint16BE(_inventory[i]);
+		out->writeSint16BE(_inventory[i]);
 	out->writeSint16BE(_inventoryCurItem);
 	out->writeSint16BE(_itemInHand);
 	out->writeSint16BE(_lastMouseRegion);
@@ -423,7 +423,7 @@ Common::Error LoLEngine::saveGameState(int slot, const char *saveName, const Gra
 			out->writeByte(m->enable);
 			out->writeByte(m->objectType);
 			out->writeUint16BE(m->attackerId);
-			out->writeUint16BE(m->item);
+			out->writeSint16BE(m->item);
 			out->writeUint16BE(m->x);
 			out->writeUint16BE(m->y);
 			out->writeByte(m->flyingHeight);

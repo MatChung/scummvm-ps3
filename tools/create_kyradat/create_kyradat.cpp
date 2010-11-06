@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/tools/create_kyradat/create_kyradat.cpp $
- * $Id: create_kyradat.cpp 51834 2010-08-07 14:38:07Z athrxx $
+ * $Id: create_kyradat.cpp 53965 2010-10-30 22:44:15Z fingolfin $
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 // HACK to allow building with the SDL backend on MinGW
 // see bug #1800764 "TOOLS: MinGW tools building broken"
@@ -45,7 +48,7 @@
 #include <map>
 
 enum {
-	kKyraDatVersion = 72
+	kKyraDatVersion = 73
 };
 
 const ExtractFilename extractFilenames[] = {
@@ -53,7 +56,7 @@ const ExtractFilename extractFilenames[] = {
 	{ kIdMap, -1, true },
 
 	// INTRO / OUTRO sequences
-	{ k1ForestSeq, kTypeRawData, false },
+	{ k1ForestSeq, kTypeForestSeqData, false },
 	{ k1KallakWritingSeq, kTypeRawData, false },
 	{ k1KyrandiaLogoSeq, kTypeRawData, false },
 	{ k1KallakMalcolmSeq, kTypeRawData, false },

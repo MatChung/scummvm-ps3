@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/unzip.cpp $
- * $Id: unzip.cpp 53160 2010-10-12 02:18:11Z jvprat $
+ * $Id: unzip.cpp 53762 2010-10-24 13:04:33Z fingolfin $
  */
 
 /* unzip.c -- IO on .zip files using zlib
@@ -401,7 +401,7 @@ typedef struct {
 /* ===========================================================================
      Read a byte from a gz_stream; update next_in and avail_in. Return EOF
    for end of file.
-   IN assertion: the stream s has been sucessfully opened for reading.
+   IN assertion: the stream s has been successfully opened for reading.
 */
 
 

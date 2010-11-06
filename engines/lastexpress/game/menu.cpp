@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/menu.cpp $
- * $Id: menu.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: menu.cpp 53885 2010-10-27 19:22:05Z littleboy $
  *
  */
 
@@ -44,6 +44,8 @@
 #include "lastexpress/helpers.h"
 #include "lastexpress/lastexpress.h"
 #include "lastexpress/resource.h"
+
+#include "common/rational.h"
 
 #define getNextGameId() (GameId)((_gameId + 1) % 6)
 
@@ -212,10 +214,10 @@ Clock::~Clock() {
 }
 
 void Clock::clear() {
-	getScenes()->removeAndRedraw(&_frameMinutes, false);
-	getScenes()->removeAndRedraw(&_frameHour, false);
-	getScenes()->removeAndRedraw(&_frameSun, false);
-	getScenes()->removeAndRedraw(&_frameDate, false);
+	getScenes()->removeFromQueue(_frameMinutes);
+	getScenes()->removeFromQueue(_frameHour);
+	getScenes()->removeFromQueue(_frameSun);
+	getScenes()->removeFromQueue(_frameDate);
 }
 
 void Clock::draw(uint32 time) {
@@ -238,8 +240,10 @@ void Clock::draw(uint32 time) {
 	// 54000 * 24 = 1296000 = 1 day
 
 	// Calculate each sequence index from the current time
-	uint8 hour = (uint8)((time % 1296000) / 54000);
-	uint8 minute =  (uint8)((time % 54000) / 900);
+
+	uint8 hour = 0;
+	uint8 minute = 0;
+	State::getHourMinutes(time, &hour, &minute);
 	uint32 index_date = 18 * time / 1296000;
 	if (hour == 23)
 		index_date += 18 * minute / 60;
@@ -295,8 +299,8 @@ TrainLine::~TrainLine() {
 }
 
 void TrainLine::clear() {
-	getScenes()->removeAndRedraw(&_frameLine1, false);
-	getScenes()->removeAndRedraw(&_frameLine2, false);
+	getScenes()->removeFromQueue(_frameLine1);
+	getScenes()->removeFromQueue(_frameLine2);
 }
 
 // Draw the train line at the time
@@ -358,7 +362,7 @@ Menu::Menu(LastExpressEngine *engine) : _engine(engine),
 	_gameId(kGameBlue), _hasShownStartScreen(false), _hasShownIntro(false),
 	_isShowingCredits(false), _isGameStarted(false), _isShowingMenu(false),
 	_creditsSequenceIndex(0), _checkHotspotsTicks(15),  _mouseFlags(Common::EVENT_INVALID), _lastHotspot(NULL),
-	_currentIndex(0), _currentTime(0), _lowerTime(0), _index(0), _index2(0), _time(0), _delta(0), _handleTimeDelta(false) {
+	_currentTime(kTimeNone), _lowerTime(kTimeNone), _time(kTimeNone), _currentIndex(0), _index(0), _lastIndex(0), _delta(0), _handleTimeDelta(false) {
 
 	_clock = new Clock(_engine);
 	_trainLine = new TrainLine(_engine);
@@ -659,8 +663,8 @@ bool Menu::handleEvent(StartMenuAction action, Common::EventType type) {
 			if (_isGameStarted) {
 				showFrame(kOverlayEggButtons, kButtonContinue, true);
 
-				if (_index2 == _index) {
-					showFrame(kOverlayTooltip, isGameFinished() ? kTooltipViewGameEnding : kTooltipContinueGame, true);
+				if (_lastIndex == _index) {
+					showFrame(kOverlayTooltip, getSaveLoad()->isGameFinished(_index, _lastIndex) ? kTooltipViewGameEnding : kTooltipContinueGame, true);
 				} else {
 					showFrame(kOverlayTooltip, kTooltipContinueRewoundGame, true);
 				}
@@ -690,35 +694,37 @@ bool Menu::handleEvent(StartMenuAction action, Common::EventType type) {
 		getSavePoints()->reset();
 		setLogicEventHandlers();
 
-		getSound()->processEntry(SoundManager::kSoundType11);
-
-		if (!getFlags()->mouseRightClick) {
-			getScenes()->loadScene((SceneIndex)(5 * _gameId + 3));
-
+		if (_index) {
+			getSound()->processEntry(SoundManager::kSoundType11);
+		} else {
 			if (!getFlags()->mouseRightClick) {
-				getScenes()->loadScene((SceneIndex)(5 * _gameId + 4));
+				getScenes()->loadScene((SceneIndex)(5 * _gameId + 3));
 
 				if (!getFlags()->mouseRightClick) {
-					getScenes()->loadScene((SceneIndex)(5 * _gameId + 5));
+					getScenes()->loadScene((SceneIndex)(5 * _gameId + 4));
 
 					if (!getFlags()->mouseRightClick) {
-						getSound()->processEntry(SoundManager::kSoundType11);
+						getScenes()->loadScene((SceneIndex)(5 * _gameId + 5));
 
-						// Show intro
-						Animation animation;
-						if (animation.load(getArchive("1601.nis")))
-							animation.play();
+						if (!getFlags()->mouseRightClick) {
+							getSound()->processEntry(SoundManager::kSoundType11);
 
-						getEvent(kEventIntro) = 1;
+							// Show intro
+							Animation animation;
+							if (animation.load(getArchive("1601.nis")))
+								animation.play();
+
+							getEvent(kEventIntro) = 1;
+						}
 					}
 				}
 			}
-		}
 
-		if (!getEvent(kEventIntro))	{
-			getEvent(kEventIntro) = 1;
+			if (!getEvent(kEventIntro))	{
+				getEvent(kEventIntro) = 1;
 
-			getSound()->processEntry(SoundManager::kSoundType11);
+				getSound()->processEntry(SoundManager::kSoundType11);
+			}
 		}
 
 		// Setup game
@@ -826,7 +832,7 @@ bool Menu::handleEvent(StartMenuAction action, Common::EventType type) {
 
 	//////////////////////////////////////////////////////////////////////////
 	case kMenuForwardGame:
-		if (_index2 <= _index || _currentTime > _time) {
+		if (_lastIndex <= _index || _currentTime > _time) {
 			hideOverlays();
 			break;
 		}
@@ -1073,7 +1079,7 @@ void Menu::init(bool doSavegame, SavegameType type, uint32 value) {
 
 	// Create a new savegame if needed
 	if (!SaveLoad::isSavegamePresent(_gameId))
-		SaveLoad::writeMainHeader(_gameId);
+		getSaveLoad()->create(_gameId);
 
 	if (doSavegame)
 		getSaveLoad()->saveGame(kSavegameTypeEvent2, kEntityPlayer, kEventNone);
@@ -1082,18 +1088,12 @@ void Menu::init(bool doSavegame, SavegameType type, uint32 value) {
 		// TODO: remove existing savegame temp file
 	}
 
-	// Init savegame and get the header data
-	getSaveLoad()->initSavegame(_gameId, true);
-	SaveLoad::SavegameMainHeader header;
-	if (!SaveLoad::loadMainHeader(_gameId, &header))
-		error("Menu::init: Corrupted savegame - Recovery path not implemented!");
-
-	// Init Menu values
-	_index2 = header.index;
-	_lowerTime = getSaveLoad()->getEntry(_index2)->time;
+	// Init savegame & menu values
+	_lastIndex = getSaveLoad()->init(_gameId, true);
+	_lowerTime = getSaveLoad()->getTime(_lastIndex);
 
 	if (useSameIndex)
-		_index = _index2;
+		_index = _lastIndex;
 
 	//if (!getGlobalTimer())
 	//	_index3 = 0;
@@ -1101,12 +1101,12 @@ void Menu::init(bool doSavegame, SavegameType type, uint32 value) {
 	if (!getProgress().chapter)
 		getProgress().chapter = kChapter1;
 
-	getState()->time = getSaveLoad()->getEntry(_index)->time;
-	getProgress().chapter = getSaveLoad()->getEntry(_index)->chapter;
+	getState()->time = (TimeValue)getSaveLoad()->getTime(_index);
+	getProgress().chapter = getSaveLoad()->getChapter(_index);
 
 	if (_lowerTime >= kTimeStartGame) {
-		_currentTime = getState()->time;
-		_time = getState()->time;
+		_currentTime = (uint32)getState()->time;
+		_time = (uint32)getState()->time;
 		_clock->draw(_time);
 		_trainLine->draw(_time);
 
@@ -1114,12 +1114,26 @@ void Menu::init(bool doSavegame, SavegameType type, uint32 value) {
 	}
 }
 
+// Start a game (or load an existing savegame)
 void Menu::startGame() {
-	// TODO: we need to reset the current scene
-	getState()->scene = kSceneDefault;
+	// Clear savegame headers
+	getSaveLoad()->clear();
 
-	getEntities()->setup(true, kEntityPlayer);
-	warning("Menu::startGame: not implemented!");
+	// Hide menu elements
+	_clock->clear();
+	_trainLine->clear();
+
+	if (_lastIndex == _index) {
+		setGlobalTimer(0);
+		if (_index) {
+			getSaveLoad()->loadGame(_gameId);
+		} else {
+			getLogic()->resetState();
+			getEntities()->setup(true, kEntityPlayer);
+		}
+	} else {
+		getSaveLoad()->loadGame(_gameId, _index);
+	}
 }
 
 // Switch to the next savegame
@@ -1130,60 +1144,18 @@ void Menu::switchGame() {
 
 	// Initialize savegame if needed
 	if (!SaveLoad::isSavegamePresent(_gameId))
-		SaveLoad::writeMainHeader(_gameId);
+		getSaveLoad()->create(_gameId);
 
-	getState()->time = 0;
+	getState()->time = kTimeNone;
 
 	// Clear menu elements
 	_clock->clear();
 	_trainLine->clear();
 
 	// Clear loaded savegame data
-	getSaveLoad()->clearEntries();
+	getSaveLoad()->clear(true);
 
 	init(false, kSavegameTypeIndex, 0);
-}
-
-bool Menu::isGameFinished() const {
-	SaveLoad::SavegameEntryHeader *data = getSaveLoad()->getEntry(_index);
-
-	if (_index2 != _index)
-		return false;
-
-	if (data->type != SaveLoad::kHeaderType2)
-		return false;
-
-	return (data->event == kEventAnnaKilled
-		 || data->event == kEventKronosHostageAnnaNoFirebird
-		 || data->event == kEventKahinaPunchBaggageCarEntrance
-		 || data->event == kEventKahinaPunchBlue
-		 || data->event == kEventKahinaPunchYellow
-		 || data->event == kEventKahinaPunchSalon
-		 || data->event == kEventKahinaPunchKitchen
-		 || data->event == kEventKahinaPunchBaggageCar
-		 || data->event == kEventKahinaPunchCar
-		 || data->event == kEventKahinaPunchSuite4
-		 || data->event == kEventKahinaPunchRestaurant
-		 || data->event == kEventKahinaPunch
-		 || data->event == kEventKronosGiveFirebird
-		 || data->event == kEventAugustFindCorpse
-		 || data->event == kEventMertensBloodJacket
-		 || data->event == kEventMertensCorpseFloor
-		 || data->event == kEventMertensCorpseBed
-		 || data->event == kEventCoudertBloodJacket
-		 || data->event == kEventGendarmesArrestation
-		 || data->event == kEventAbbotDrinkGiveDetonator
-		 || data->event == kEventMilosCorpseFloor
-		 || data->event == kEventLocomotiveAnnaStopsTrain
-		 || data->event == kEventTrainStopped
-		 || data->event == kEventCathVesnaRestaurantKilled
-		 || data->event == kEventCathVesnaTrainTopKilled
-		 || data->event == kEventLocomotiveConductorsDiscovered
-		 || data->event == kEventViennaAugustUnloadGuns
-		 || data->event == kEventViennaKronosFirebird
-		 || data->event == kEventVergesAnnaDead
-		 || data->event == kEventTrainExplosionBridge
-		 || data->event == kEventKronosBringNothing);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1305,7 +1277,7 @@ void Menu::initTime(SavegameType type, uint32 value) {
 
 		// Iterate through existing entries
 		do {
-			if (getSaveLoad()->getEntry(entryIndex)->time <= value)
+			if (getSaveLoad()->getTime(entryIndex) <= value)
 				break;
 
 			entryIndex--;
@@ -1318,7 +1290,7 @@ void Menu::initTime(SavegameType type, uint32 value) {
 			break;
 
 		do {
-			if (getSaveLoad()->getEntry(entryIndex)->event == (EventIndex)value)
+			if (getSaveLoad()->getValue(entryIndex) == value)
 				break;
 
 			entryIndex--;
@@ -1330,7 +1302,7 @@ void Menu::initTime(SavegameType type, uint32 value) {
 		if (_index > 1) {
 			uint32 index = _index;
 			do {
-				if (getSaveLoad()->getEntry(index)->event == (EventIndex)value)
+				if (getSaveLoad()->getValue(index) == value)
 					break;
 
 				index--;
@@ -1345,7 +1317,7 @@ void Menu::initTime(SavegameType type, uint32 value) {
 
 	if (entryIndex) {
 		_currentIndex = entryIndex;
-		updateTime(getSaveLoad()->getEntry(entryIndex)->time);
+		updateTime(getSaveLoad()->getTime(entryIndex));
 	}
 }
 
@@ -1379,7 +1351,7 @@ void Menu::adjustIndex(uint32 time1, uint32 time2, bool searchEntry) {
 				if ((int32)_index >= 0) {
 					do {
 						// Calculate new delta
-						int32 newDelta = time1 - getSaveLoad()->getEntry(currentIndex)->time;
+						int32 newDelta = time1 - (uint32)getSaveLoad()->getTime(currentIndex);
 
 						if (newDelta >= 0 && timeDelta >= newDelta) {
 							timeDelta = newDelta;
@@ -1396,10 +1368,10 @@ void Menu::adjustIndex(uint32 time1, uint32 time2, bool searchEntry) {
 			if (searchEntry) {
 				uint32 currentIndex = _index;
 
-				if (_index2 >= _index) {
+				if (_lastIndex >= _index) {
 					do {
 						// Calculate new delta
-						int32 newDelta = getSaveLoad()->getEntry(currentIndex)->time - time1;
+						int32 newDelta = (uint32)getSaveLoad()->getTime(currentIndex) - time1;
 
 						if (newDelta >= 0 && timeDelta > newDelta) {
 							timeDelta = newDelta;
@@ -1407,7 +1379,7 @@ void Menu::adjustIndex(uint32 time1, uint32 time2, bool searchEntry) {
 						}
 
 						++currentIndex;
-					} while (currentIndex >= _index2);
+					} while (currentIndex <= _lastIndex);
 				}
 			} else {
 				index = _index + 1;
@@ -1419,45 +1391,45 @@ void Menu::adjustIndex(uint32 time1, uint32 time2, bool searchEntry) {
 	}
 
 	if (_index == _currentIndex) {
-		if (getProgress().chapter != getSaveLoad()->getEntry(index)->chapter)
-			getProgress().chapter = getSaveLoad()->getEntry(_index)->chapter;
+		if (getProgress().chapter != getSaveLoad()->getChapter(index))
+			getProgress().chapter = getSaveLoad()->getChapter(_index);
 	}
 }
 
 void Menu::goToTime(uint32 time) {
 
 	uint32 entryIndex = 0;
-	uint32 deltaTime = (uint32)ABS((int32)(getSaveLoad()->getEntry(0)->time - time));
+	uint32 deltaTime = (uint32)ABS((int32)(getSaveLoad()->getTime(0) - time));
 	uint32 index = 0;
 
 	do {
-		uint32 deltaTime2 = (uint32)ABS((int32)(getSaveLoad()->getEntry(index)->time - time));
+		uint32 deltaTime2 = (uint32)ABS((int32)(getSaveLoad()->getTime(index) - time));
 		if (deltaTime2 < deltaTime) {
 			deltaTime = deltaTime2;
 			entryIndex = index;
 		}
 
 		++index;
-	} while (_index2 >= index);
+	} while (_lastIndex >= index);
 
 	_currentIndex = entryIndex;
-	updateTime(getSaveLoad()->getEntry(entryIndex)->time);
+	updateTime(getSaveLoad()->getTime(entryIndex));
 }
 
 void Menu::setTime() {
 	_currentIndex = _index;
-	_currentTime = getSaveLoad()->getEntry(_currentIndex)->time;
+	_currentTime = getSaveLoad()->getTime(_currentIndex);
 
 	if (_time == _currentTime)
 		adjustTime();
 }
 
 void Menu::forwardTime() {
-	if (_index2 <= _index)
+	if (_lastIndex <= _index)
 		return;
 
-	_currentIndex = _index2;
-	updateTime(getSaveLoad()->getEntry(_currentIndex)->time);
+	_currentIndex = _lastIndex;
+	updateTime(getSaveLoad()->getTime(_currentIndex));
 }
 
 void Menu::rewindTime() {
@@ -1465,24 +1437,26 @@ void Menu::rewindTime() {
 		return;
 
 	_currentIndex = 0;
-	updateTime(getSaveLoad()->getEntry(_currentIndex)->time);
+	updateTime(getSaveLoad()->getTime(_currentIndex));
 }
 
 void Menu::adjustTime() {
 	uint32 originalTime = _time;
 
 	// Adjust time delta
-	uint32 timeDelta = (_delta >= 90) ? 9 : (9 * _delta + 89) / 90;
+	Common::Rational timeDelta(_delta >= 90 ? 9 : (9 * _delta + 89), _delta >= 90 ? 1 : 90);
 
 	if (_currentTime < _time) {
-		_time -= 900 * timeDelta;
+		timeDelta *= 900;
+		_time -= timeDelta.toInt();
 
-		if (_time >= _currentTime)
+		if (_currentTime > _time)
 			_time = _currentTime;
 	} else {
-		_time += 900 * timeDelta;
+		timeDelta *= 900;
+		_time += timeDelta.toInt();
 
-		if (_time < _currentTime)
+		if (_currentTime < _time)
 			_time = _currentTime;
 	}
 

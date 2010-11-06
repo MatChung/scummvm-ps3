@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/vesna.cpp $
- * $Id: vesna.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: vesna.cpp 53880 2010-10-27 19:19:22Z littleboy $
  *
  */
 
@@ -258,7 +258,7 @@ IMPLEMENT_FUNCTION(12, Vesna, chapter1)
 		break;
 
 	case kActionNone:
-		TIME_CHECK_CHAPTER1(setup_chapter1Handler);
+		TIME_CHECK(kTimeChapter1, params->param1, setup_chapter1Handler);
 		break;
 
 	case kActionDefault:
@@ -505,7 +505,7 @@ IMPLEMENT_FUNCTION(20, Vesna, chapter3Handler)
 			}
 
 			if (!getEntities()->isPlayerInCar(kCarRedSleeping) || !parameters->param7)
-				parameters->param7 = getState()->time;
+				parameters->param7 = (uint)getState()->time;
 
 			if (parameters->param7 < getState()->time) {
 				parameters->param7 = kTimeInvalid;
@@ -1122,7 +1122,7 @@ IMPLEMENT_FUNCTION(30, Vesna, function30)
 			} else {
 				getSound()->playSound(kEntityPlayer, "TUNNEL");
 
-				getState()->time += 1800;
+				getState()->time = (TimeValue)(getState()->time + 1800);
 
 				setCallback(5);
 				setup_savegame(kSavegameTypeEvent, kEventCathVesnaTrainTopWin);

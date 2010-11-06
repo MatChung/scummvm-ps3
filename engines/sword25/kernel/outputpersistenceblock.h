@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/kernel/outputpersistenceblock.h $
- * $Id: outputpersistenceblock.h 53310 2010-10-12 23:32:32Z sev $
+ * $Id: outputpersistenceblock.h 53899 2010-10-28 00:26:25Z fingolfin $
  *
  */
 
@@ -35,42 +35,34 @@
 #ifndef SWORD25_OUTPUTPERSISTENCEBLOCK_H
 #define SWORD25_OUTPUTPERSISTENCEBLOCK_H
 
-// -----------------------------------------------------------------------------
-// Includes
-// -----------------------------------------------------------------------------
-
 #include "sword25/kernel/common.h"
 #include "sword25/kernel/persistenceblock.h"
 
 namespace Sword25 {
 
-// -----------------------------------------------------------------------------
-// Class declaration
-// -----------------------------------------------------------------------------
-
 class OutputPersistenceBlock : public PersistenceBlock {
 public:
 	OutputPersistenceBlock();
 
-	void write(signed int Value);
-	void write(uint Value);
-	void write(float Value);
-	void write(bool Value);
-	void write(const Common::String &String);
-	void write(const void *BufferPtr, size_t Size);
+	void write(signed int value);
+	void write(uint value);
+	void write(float value);
+	void write(bool value);
+	void writeString(const Common::String &string);
+	void writeByteArray(Common::Array<byte> &value);
 
-	const void *GetData() const {
-		return &m_Data[0];
+	const void *getData() const {
+		return &_data[0];
 	}
-	uint GetDataSize() const {
-		return m_Data.size();
+	uint getDataSize() const {
+		return _data.size();
 	}
 
 private:
-	void WriteMarker(byte Marker);
-	void RawWrite(const void *DataPtr, size_t Size);
+	void writeMarker(byte marker);
+	void rawWrite(const void *dataPtr, size_t size);
 
-	Common::Array<byte> m_Data;
+	Common::Array<byte> _data;
 };
 
 } // End of namespace Sword25

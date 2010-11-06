@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/file.h $
- * $Id: file.h 52988 2010-10-03 08:08:42Z strangerke $
+ * $Id: file.h 53987 2010-10-31 21:20:22Z strangerke $
  *
  */
 
@@ -47,33 +47,25 @@ struct PCC_header_t {                               // Structure of PCX file hea
 	byte   fill2[60];
 };                                                  // Header of a PCC file
 
-// Record and playback handling stuff:
-struct pbdata_t {
-//	int    key;                                     // Character
-	uint32 time;                                    // Time at which character was pressed
-};
-
 namespace Hugo {
 
 class FileManager {
 public:
-	FileManager(HugoEngine &vm);
+	FileManager(HugoEngine *vm);
 	virtual ~FileManager();
 
 
 	bool     fileExists(char *filename);
 	sound_pt getSound(short sound, uint16 *size);
 
-	void     closePlaybackFile();
 	void     initSavedGame();
 	void     instructions();
 	void     readBootFile();
 	void     readImage(int objNum, object_t *objPtr);
+	void     readUIFImages();
 	void     readUIFItem(short id, byte *buf);
 	void     restoreGame(short slot);
-	void     restoreSeq(object_t *obj);
 	void     saveGame(short slot, const char *descrip);
-	void     saveSeq(object_t *obj);
 
 	virtual void openDatabaseFiles() = 0;
 	virtual void closeDatabaseFiles() = 0;
@@ -84,7 +76,7 @@ public:
 	virtual char *fetchString(int index) = 0;
 
 protected:
-	HugoEngine &_vm;
+	HugoEngine *_vm;
 
 	Common::File _stringArchive;                    // Handle for string file
 	Common::File _sceneryArchive1;                  // Handle for scenery file
@@ -96,19 +88,13 @@ private:
 	byte *convertPCC(byte *p, uint16 y, uint16 bpl, image_pt data_p);
 	uif_hdr_t *getUIFHeader(uif_t id);
 
-	pbdata_t pbdata;
-	FILE *fpb;
-
 //Strangerke : Not used?
-	void     openPlaybackFile(bool playbackFl, bool recordFl);
 	void     printBootText();
-//	bool     pkkey();
-//	char     pbget();
 };
 
 class FileManager_v1d : public FileManager {
 public:
-	FileManager_v1d(HugoEngine &vm);
+	FileManager_v1d(HugoEngine *vm);
 	~FileManager_v1d();
 
 	void openDatabaseFiles();
@@ -120,7 +106,7 @@ public:
 
 class FileManager_v2d : public FileManager {
 public:
-	FileManager_v2d(HugoEngine &vm);
+	FileManager_v2d(HugoEngine *vm);
 	~FileManager_v2d();
 
 	void openDatabaseFiles();
@@ -132,7 +118,7 @@ public:
 
 class FileManager_v3d : public FileManager_v2d {
 public:
-	FileManager_v3d(HugoEngine &vm);
+	FileManager_v3d(HugoEngine *vm);
 	~FileManager_v3d();
 
 	void openDatabaseFiles();
@@ -145,7 +131,7 @@ private:
 
 class FileManager_v1w : public FileManager_v2d {
 public:
-	FileManager_v1w(HugoEngine &vm);
+	FileManager_v1w(HugoEngine *vm);
 	~FileManager_v1w();
 
 	void readOverlay(int screenNum, image_pt image, ovl_t overlayType);

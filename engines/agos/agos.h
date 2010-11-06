@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/agos.h $
- * $Id: agos.h 53484 2010-10-15 12:48:19Z fingolfin $
+ * $Id: agos.h 54084 2010-11-05 03:30:45Z Kirben $
  *
  */
 
@@ -2097,6 +2097,8 @@ protected:
 
 	void startOverlayAnims();
 	void startAnOverlayAnim();
+
+	void printInfoText(const char *itemText);
 
 	virtual char *genSaveName(int slot);
 };

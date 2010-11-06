@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/palette.cpp $
- * $Id: palette.cpp 47541 2010-01-25 01:39:44Z lordhoto $
+ * $Id: palette.cpp 54011 2010-11-01 16:04:47Z fingolfin $
  *
  * Palette Allocator for IBM PC.
  */
@@ -198,8 +198,8 @@ void ResetPalAllocator() {
  * Shows the maximum number of palettes used at once.
  */
 void PaletteStats() {
-	printf("%i palettes of %i used.\n", maxPals, NUM_PALETTES);
-	printf("%i DAC queue entries of %i used.\n", maxDACQ, VDACQLENGTH);
+	debug("%i palettes of %i used", maxPals, NUM_PALETTES);
+	debug("%i DAC queue entries of %i used", maxDACQ, VDACQLENGTH);
 }
 #endif
 

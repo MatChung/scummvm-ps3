@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/savepoint.cpp $
- * $Id: savepoint.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: savepoint.cpp 53888 2010-10-27 19:43:35Z eriktorbjorn $
  *
  */
 
@@ -61,7 +61,7 @@ void SavePoints::push(EntityIndex entity2, EntityIndex entity1, ActionIndex acti
 	_savepoints.push_back(point);
 }
 
-void SavePoints::push(EntityIndex entity2, EntityIndex entity1, ActionIndex action, const char* param) {
+void SavePoints::push(EntityIndex entity2, EntityIndex entity1, ActionIndex action, const char *param) {
 	if (_savepoints.size() >= _savePointsMaxSize)
 		return;
 
@@ -129,7 +129,7 @@ void SavePoints::addData(EntityIndex entity, ActionIndex action, uint32 param) {
 //////////////////////////////////////////////////////////////////////////
 // Callbacks
 //////////////////////////////////////////////////////////////////////////
-void SavePoints::setCallback(EntityIndex index, Entity::Callback* callback) {
+void SavePoints::setCallback(EntityIndex index, Entity::Callback *callback) {
 	if (index >= 40)
 		error("SavePoints::setCallback - attempting to use an invalid entity index. Valid values 0-39, was %d", index);
 
@@ -249,12 +249,12 @@ void SavePoints::saveLoadWithSerializer(Common::Serializer &s) {
 	s.skip((_savePointsMaxSize - dataSize) * 16);
 
 	// Number of savepoints
-	uint32 count = _savepoints.size();
-	s.syncAsUint32LE(count);
+	uint32 numSavepoints = _savepoints.size();
+	s.syncAsUint32LE(numSavepoints);
 
 	// Savepoints
 	if (s.isLoading()) {
-		for (uint i= 0; i < count; i++) {
+		for (uint i = 0; i < numSavepoints; i++) {
 			SavePoint point;
 			s.syncAsUint32LE(point.entity1);
 			s.syncAsUint32LE(point.action);

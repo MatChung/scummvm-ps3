@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/screen.h $
- * $Id: screen.h 48359 2010-03-22 20:28:08Z fingolfin $
+ * $Id: screen.h 53740 2010-10-23 16:01:40Z athrxx $
  *
  */
 
@@ -423,6 +423,7 @@ public:
 
 	virtual void setScreenDim(int dim) = 0;
 	virtual const ScreenDim *getScreenDim(int dim) = 0;
+	virtual int screenDimTableCount() const = 0;
 
 	const ScreenDim *_curDim;
 

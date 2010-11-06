@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/saveload.cpp $
- * $Id: saveload.cpp 52791 2010-09-18 10:55:16Z eriktorbjorn $
+ * $Id: saveload.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -230,7 +230,7 @@ const char *KyraEngine_v1::getSavegameFilename(int num) {
 
 Common::String KyraEngine_v1::getSavegameFilename(const Common::String &target, int num) {
 	assert(num >= 0 && num <= 999);
-	return target + Common::String::printf(".%03d", num);
+	return target + Common::String::format(".%03d", num);
 }
 
 bool KyraEngine_v1::saveFileLoadable(int slot) {
@@ -250,7 +250,7 @@ bool KyraEngine_v1::saveFileLoadable(int slot) {
 
 void KyraEngine_v1::checkAutosave() {
 	if (shouldPerformAutoSave(_lastAutosave)) {
-		saveGameState(999, "Autosave", 0);
+		saveGameStateIntern(999, "Autosave", 0);
 		_lastAutosave = _system->getMillis();
 	}
 }

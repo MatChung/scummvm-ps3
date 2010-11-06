@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cruise/dataLoader.cpp $
- * $Id: dataLoader.cpp 48218 2010-03-10 06:39:23Z eriktorbjorn $
+ * $Id: dataLoader.cpp 53762 2010-10-24 13:04:33Z fingolfin $
  *
  */
 
@@ -55,7 +55,7 @@ void decodeGfxUnified(dataFileEntry *pCurrentFileEntry, int16 format) {
 		break;
 
 	default:
-		error("Unkown gfx format %d", format);
+		error("Unknown gfx format %d", format);
 	}
 
 	uint8 *buffer = (uint8 *)MemAlloc(spriteSize);

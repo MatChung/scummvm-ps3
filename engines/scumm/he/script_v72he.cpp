@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/he/script_v72he.cpp $
- * $Id: script_v72he.cpp 44029 2009-09-11 10:13:54Z Kirben $
+ * $Id: script_v72he.cpp 53739 2010-10-23 15:47:23Z fingolfin $
  *
  */
 
@@ -36,7 +36,6 @@
 #include "scumm/he/intern_he.h"
 #include "scumm/object.h"
 #include "scumm/resource.h"
-#include "scumm/he/resource_he.h"
 #include "scumm/scumm.h"
 #include "scumm/he/sound_he.h"
 #include "scumm/util.h"
@@ -173,7 +172,7 @@ int ScummEngine_v72he::readArray(int array, int idx2, int idx1) {
 	}
 
 	const int offset = (FROM_LE_32(ah->dim1end) - FROM_LE_32(ah->dim1start) + 1) *
-		(idx2 - FROM_LE_32(ah->dim2start)) - FROM_LE_32(ah->dim1start) + idx1;
+		(idx2 - FROM_LE_32(ah->dim2start)) + (idx1 - FROM_LE_32(ah->dim1start));
 
 	switch (FROM_LE_32(ah->type)) {
 	case kByteArray:
@@ -711,13 +710,11 @@ void ScummEngine_v72he::o72_roomOps() {
 
 	case 221:
 		byte buffer[256];
-		int r;
 
 		copyScriptString((byte *)buffer, sizeof(buffer));
 
-		r = convertFilePath(buffer, sizeof(buffer));
-		memcpy(_saveLoadFileName, buffer + r, sizeof(buffer) - r);
-		debug(1, "o72_roomOps: case 221: filename %s", _saveLoadFileName);
+		_saveLoadFileName = (char *)buffer + convertFilePath(buffer, sizeof(buffer));
+		debug(1, "o72_roomOps: case 221: filename %s", _saveLoadFileName.c_str());
 
 		_saveLoadFlag = pop();
 		_saveLoadSlot = 255;

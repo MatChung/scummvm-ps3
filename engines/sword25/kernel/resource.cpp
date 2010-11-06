@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/kernel/resource.cpp $
- * $Id: resource.cpp 53477 2010-10-15 12:18:19Z fingolfin $
+ * $Id: resource.cpp 53759 2010-10-24 01:53:01Z fingolfin $
  *
  */
 
@@ -33,7 +33,6 @@
  */
 
 #include "sword25/kernel/resource.h"
-#include "sword25/kernel/string.h"
 #include "sword25/kernel/kernel.h"
 #include "sword25/package/packagemanager.h"
 
@@ -44,11 +43,10 @@ namespace Sword25 {
 Resource::Resource(const Common::String &fileName, RESOURCE_TYPES type) :
 	_type(type),
 	_refCount(0) {
-	PackageManager *pPM = Kernel::GetInstance()->GetPackage();
+	PackageManager *pPM = Kernel::getInstance()->getPackage();
 	BS_ASSERT(pPM);
 
 	_fileName = pPM->getAbsolutePath(fileName);
-	_fileNameHash = BS_String::GetHash(fileName);
 }
 
 void Resource::release() {

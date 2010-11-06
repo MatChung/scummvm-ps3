@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/vga.cpp $
- * $Id: vga.cpp 48365 2010-03-23 00:42:42Z Kirben $
+ * $Id: vga.cpp 54031 2010-11-01 21:37:47Z fingolfin $
  *
  */
 
@@ -155,7 +155,7 @@ void AGOSEngine::runVgaScript() {
 
 		if (_dumpVgaOpcodes) {
 			if (_vcPtr != (const byte *)&_vcGetOutOfCode) {
-				printf("%.5d %.5X: %5d %4d ", _vgaTickCounter, (unsigned int)(_vcPtr - _curVgaFile1), _vgaCurSpriteId, _vgaCurZoneNum);
+				debugN("%.5d %.5X: %5d %4d ", _vgaTickCounter, (unsigned int)(_vcPtr - _curVgaFile1), _vgaCurSpriteId, _vgaCurZoneNum);
 				dumpVideoScript(_vcPtr, true);
 			}
 		}
@@ -383,7 +383,7 @@ void AGOSEngine::vcSkipNextInstruction() {
 	}
 
 	if (_dumpVgaOpcodes)
-		printf("; skipped\n");
+		debugN("; skipped\n");
 }
 
 // VGA Script commands

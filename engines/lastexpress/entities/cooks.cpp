@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/cooks.cpp $
- * $Id: cooks.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: cooks.cpp 53692 2010-10-21 23:46:00Z littleboy $
  *
  */
 
@@ -242,7 +242,7 @@ IMPLEMENT_FUNCTION(5, Cooks, chapter1)
 		break;
 
 	case kActionNone:
-		TIME_CHECK_CHAPTER1(setup_chapter1Handler);
+		TIME_CHECK(kTimeChapter1, params->param1, setup_chapter1Handler);
 		break;
 
 	case kActionDefault:

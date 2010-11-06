@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/kyra_v1.h $
- * $Id: kyra_v1.h 53484 2010-10-15 12:48:19Z fingolfin $
+ * $Id: kyra_v1.h 53912 2010-10-28 23:57:24Z lordhoto $
  *
  */
 
@@ -37,6 +37,7 @@
 #include "sound/mixer.h"
 
 #include "kyra/script.h"
+#include "kyra/item.h"
 
 namespace Common {
 class SeekableReadStream;
@@ -339,7 +340,7 @@ protected:
 	// items
 	int _mouseState;
 
-	virtual void setHandItem(uint16 item) = 0;
+	virtual void setHandItem(Item item) = 0;
 	virtual void removeHandItem() = 0;
 
 	// game flags
@@ -414,8 +415,8 @@ protected:
 
 	void loadGameStateCheck(int slot);
 	virtual Common::Error loadGameState(int slot) = 0;
-	Common::Error saveGameState(int slot, const char *saveName) { return saveGameState(slot, saveName, 0); }
-	virtual Common::Error saveGameState(int slot, const char *saveName, const Graphics::Surface *thumbnail) = 0;
+	Common::Error saveGameState(int slot, const char *saveName) { return saveGameStateIntern(slot, saveName, 0); }
+	virtual Common::Error saveGameStateIntern(int slot, const char *saveName, const Graphics::Surface *thumbnail) = 0;
 
 	Common::SeekableReadStream *openSaveForReading(const char *filename, SaveHeader &header);
 	Common::WriteStream *openSaveForWriting(const char *filename, const char *saveName, const Graphics::Surface *thumbnail) const;

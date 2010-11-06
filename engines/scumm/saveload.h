@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/saveload.h $
- * $Id: saveload.h 53052 2010-10-07 19:23:49Z athrxx $
+ * $Id: saveload.h 53842 2010-10-26 04:20:20Z Kirben $
  *
  */
 
@@ -50,7 +50,7 @@ namespace Scumm {
  * only saves/loads those which are valid for the version of the savegame
  * which is being loaded/saved currently.
  */
-#define CURRENT_VER 83
+#define CURRENT_VER 84
 
 /**
  * An auxillary macro, used to specify savegame versions. We use this instead

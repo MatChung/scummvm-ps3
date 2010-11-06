@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/sjis.h $
- * $Id: sjis.h 53555 2010-10-17 14:11:06Z athrxx $
+ * $Id: sjis.h 54099 2010-11-05 20:36:13Z athrxx $
  */
 
 // The code in this file is currently only used in KYRA and SCI.
@@ -36,6 +36,14 @@
 
 #ifndef GRAPHICS_SJIS_H
 #define GRAPHICS_SJIS_H
+
+#ifdef __DS__
+/* This disables the flipped mode which is used in FM-Towns versions
+ * of Monkey Island 1 (and maybe other SCUMM 5 games). These are not supported
+ * on the DS, so it makes sense to have a corresponding setting here.
+ */
+#define DISABLE_FLIPPED_MODE
+#endif
 
 #include "common/scummsys.h"
 #include "common/stream.h"
@@ -71,19 +79,24 @@ public:
 	virtual bool loadData() = 0;
 
 	/**
-	 * Enable outline/shadow drawing.
+	 * Enable drawing with outline or shadow.
 	 *
 	 * After changing outline state, getFontHeight and getMaxFontWidth / getCharWidth might return
 	 * different values!
 	 */
-	enum ShadowType {
-		kShadowTypeNone,
-		kShadowTypeOutline,
-		kShadowTypeScumm3,
-		kShadowTypeScumm3Towns
+	enum DrawingMode {
+		kDefaultMode,
+		kOutlineMode,
+		kShadowMode,
+		kFMTownsShadowMode
 	};
 
-	virtual void setShadowMode(ShadowType type) {}
+	virtual void setDrawingMode(DrawingMode mode) {}
+
+	/**
+	 * Enable flipped character drawing (e.g. in the MI1 circus scene after Guybrush gets shot out of the cannon).
+	 */
+	virtual void toggleFlippedMode(bool enable) {}
 
 	/**
 	 * Returns the height of the font.
@@ -102,13 +115,9 @@ public:
 
 	/**
 	 * Draws a SJIS encoded character on the given surface.
-	 *
-	 * TODO: Currently there is no assurance, that this method will only draw within
-	 * the surface boundaries. Thus the caller has to assure the glyph will fit at
-	 * the specified position.
 	 */
 	void drawChar(Graphics::Surface &dst, uint16 ch, int x, int y, uint32 c1, uint32 c2) const {
-		drawChar(dst.getBasePtr(x, y), ch, c1, c2, dst.pitch, dst.bytesPerPixel);
+		drawChar(dst.getBasePtr(x, y), ch, dst.pitch, dst.bytesPerPixel, c1, c2, dst.w - x, dst.h - y);
 	}
 
 	/**
@@ -120,8 +129,10 @@ public:
 	 * @param bpp   bytes per pixel of the destination buffer
 	 * @param c1    forground color
 	 * @param c2    outline color
+	 * @param maxW  max draw width (to ensure that character drawing takes place within surface boundaries)
+	 * @param maxH  max draw height (to ensure that character drawing takes place within surface boundaries)
 	 */
-	virtual void drawChar(void *dst, uint16 ch, int pitch, int bpp, uint32 c1, uint32 c2) const = 0;
+	virtual void drawChar(void *dst, uint16 ch, int pitch, int bpp, uint32 c1, uint32 c2, int maxW = -1, int maxH = -1) const = 0;
 };
 
 /**
@@ -129,23 +140,33 @@ public:
  */
 class FontSJISBase : public FontSJIS {
 public:
-	FontSJISBase() : _shadowType(kShadowTypeNone) {}
+	FontSJISBase() : _drawMode(kDefaultMode), _flippedMode(false) {}
 
-	void setShadowMode(ShadowType type) { _shadowType = type; }
+	void setDrawingMode(DrawingMode mode) { _drawMode = mode; }
 
-	uint getFontHeight() const { return (_shadowType == kShadowTypeOutline) ? 18 : (_shadowType == kShadowTypeNone ? 16 : 17); }
+	void toggleFlippedMode(bool enable) { _flippedMode = enable; }
+
+	uint getFontHeight() const { return (_drawMode == kOutlineMode) ? 18 : (_drawMode == kDefaultMode ? 16 : 17); }
 	
-	uint getMaxFontWidth() const { return (_shadowType == kShadowTypeOutline) ? 18 : (_shadowType == kShadowTypeNone ? 16 : 17); }
+	uint getMaxFontWidth() const { return (_drawMode == kOutlineMode) ? 18 : (_drawMode == kDefaultMode ? 16 : 17); }
 
 	uint getCharWidth(uint16 ch) const;
 
-	void drawChar(void *dst, uint16 ch, int pitch, int bpp, uint32 c1, uint32 c2) const;
+	void drawChar(void *dst, uint16 ch, int pitch, int bpp, uint32 c1, uint32 c2, int maxW = -1, int maxH = -1) const;
 private:
 	template<typename Color>
-	void blitCharacter(const uint8 *glyph, const int w, const int h, uint8 *dst, int pitch, Color c1, Color c2 = 0) const;
+	void blitCharacter(const uint8 *glyph, const int w, const int h, uint8 *dst, int pitch, Color c) const;
 	void createOutline(uint8 *outline, const uint8 *glyph, const int w, const int h) const;
+
+#ifndef DISABLE_FLIPPED_MODE
+	// This is used in the FM-Towns version of Monkey Island 1
+	// when Guybrush gets shot out of the cannon in the circus tent.
+	const uint8 *flipCharacter(const uint8 *glyph, const int w) const;
+	mutable uint8 _tempGlyph[32];
+#endif
 protected:
-	ShadowType _shadowType;
+	DrawingMode _drawMode;
+	bool _flippedMode;
 
 	bool is8x16(uint16 ch) const;
 

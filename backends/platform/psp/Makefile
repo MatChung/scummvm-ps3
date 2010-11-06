@@ -1,6 +1,6 @@
 # SCUMMVM-PSP MakeFile
 # $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/psp/Makefile $
-# $Id: Makefile 53455 2010-10-14 13:19:32Z Bluddy $
+# $Id: Makefile 54060 2010-11-04 06:28:34Z bluddy $
 
 
 #Use only this section to modify how the makefile behaves ------------
@@ -67,7 +67,7 @@ endif
 # Variables for common Scummvm makefile
 CXX      = psp-g++
 CXXFLAGS = -O3 -Wall -Wno-multichar -fno-exceptions -fno-rtti
-DEFINES  = -D__PSP__ -DNONSTANDARD_PORT -DDISABLE_TEXT_CONSOLE -DDISABLE_COMMAND_LINE -DUSE_ZLIB  -DDISABLE_DOSBOX_OPL -DUSE_RGB_COLOR
+DEFINES  = -D__PSP__ -DNONSTANDARD_PORT -DDISABLE_TEXT_CONSOLE -DDISABLE_COMMAND_LINE -DUSE_ZLIB  -DDISABLE_DOSBOX_OPL -DUSE_RGB_COLOR -DUSE_ELF_LOADER -DMIPS_TARGET
 
 LDFLAGS  :=
 INCDIR   := $(srcdir) . $(srcdir)/engines/ $(PSPSDK)/include
@@ -87,8 +87,8 @@ CXX_UPDATE_DEP_FLAG = -Wp,-MMD,"$(*D)/$(DEPDIR)/$(*F).d",-MQ,"$@",-MP
 # Variables for dynamic plugin building
 PLUGIN_PREFIX =
 PLUGIN_SUFFIX = .plg
-PLUGIN_EXTRA_DEPS = plugin.syms scummvm-psp.elf
-PLUGIN_LDFLAGS = -nostartfiles -Wl,-q,--just-symbols=scummvm-psp.org.elf,-Tplugin.ld,--retain-symbols-file,plugin.syms -lstdc++ -lc
+PLUGIN_EXTRA_DEPS = $(srcdir)/backends/plugins/elf/plugin.syms scummvm-psp.elf
+PLUGIN_LDFLAGS = -nostartfiles -Wl,-q,--just-symbols=scummvm-psp.org.elf,-T$(srcdir)/backends/plugins/psp/plugin.ld,--retain-symbols-file,$(srcdir)/backends/plugins/elf/plugin.syms -lstdc++ -lc
 
 # PSP-specific variables
 STRIP   = psp-strip
@@ -126,7 +126,8 @@ endif
 # PSP LIBS
 PSPLIBS =  -lpspprof -lpspvfpu -lpspdebug -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspsdk \
 	-lpsputility -lpspuser -lpsppower -lpsphprm -lpspsdk -lpsprtc -lpspaudio -lpspaudiocodec \
-	-lpspkernel
+	-lpspkernel -lpspnet_inet
+
 
 # Add in PSPSDK includes and libraries.
 LIBS     += -lpng -lz -lstdc++ -lc -lm $(PSPLIBS)
@@ -142,7 +143,6 @@ OBJS := powerman.o \
 	input.o \
 	cursor.o \
 	trace.o \
-	psploader.o \
 	pspkeyboard.o \
 	audio.o \
 	thread.o \
@@ -150,7 +150,9 @@ OBJS := powerman.o \
 	mp3.o \
 	png_loader.o \
 	image_viewer.o \
-	tests.o
+	tests.o \
+	dummy.o
+
 
 BACKEND := psp
 
@@ -168,7 +170,7 @@ PSP_EBOOT_PIC1 = pic1.png
 PSP_EBOOT_SND0 = NULL
 PSP_EBOOT_PSAR = NULL
 
-LDFLAGS += -Wl,-Tmain_prog.ld
+LDFLAGS += -Wl,-T../../plugins/psp/main_prog.ld
 
 all: $(PSP_EBOOT)
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/sound_midi.cpp $
- * $Id: sound_midi.cpp 53166 2010-10-12 19:44:40Z sev $
+ * $Id: sound_midi.cpp 53738 2010-10-23 15:46:50Z fingolfin $
  *
  */
 
@@ -294,7 +294,7 @@ static uint32 convertSND2MIDI(byte *snddata, byte **data) {
 
 	for (n = 0; n < 3; n++) {
 		uint16 start, end, pos;
-        
+
 		st.write("MTrk", 4);
 		lp = st.pos();
 		st.writeUint32BE(0);        /* chunklength */

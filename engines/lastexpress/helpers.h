@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/helpers.h $
- * $Id: helpers.h 53579 2010-10-18 19:17:38Z sev $
+ * $Id: helpers.h 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -94,7 +94,7 @@ extern const char *g_actionNames[];
 extern const char *g_directionNames[];
 extern const char *g_entityNames[];
 
-#define ACTION_NAME(action) (action > 18 ? Common::String::printf("%d", action).c_str() : g_actionNames[action])
+#define ACTION_NAME(action) (action > 18 ? Common::String::format("%d", action).c_str() : g_actionNames[action])
 #define DIRECTION_NAME(direction) (direction >= 6 ? "INVALID" : g_directionNames[direction])
 #define ENTITY_NAME(index) (index >= 40 ? "INVALID" : g_entityNames[index])
 

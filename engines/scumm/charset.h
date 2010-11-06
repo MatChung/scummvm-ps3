@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/charset.h $
- * $Id: charset.h 53554 2010-10-17 13:08:00Z athrxx $
+ * $Id: charset.h 54079 2010-11-05 00:36:23Z athrxx $
  */
 
 #ifndef SCUMM_CHARSET_H
@@ -75,7 +75,7 @@ public:
 	virtual ~CharsetRenderer();
 
 	virtual void printChar(int chr, bool ignoreCharsetMask) = 0;
-	virtual void drawChar(int chr, const Graphics::Surface &s, int x, int y) {}
+	virtual void drawChar(int chr, Graphics::Surface &s, int x, int y) {}
 
 	int getStringWidth(int a, const byte *str);
 	void addLinebreaks(int a, byte *str, int pos, int maxwidth);
@@ -134,7 +134,7 @@ public:
 	CharsetRendererClassic(ScummEngine *vm) : CharsetRendererCommon(vm) {}
 
 	void printChar(int chr, bool ignoreCharsetMask);
-	void drawChar(int chr, const Graphics::Surface &s, int x, int y);
+	void drawChar(int chr, Graphics::Surface &s, int x, int y);
 
 	int getCharWidth(uint16 chr);
 
@@ -155,7 +155,7 @@ public:
 
 	void setCurID(int32 id) {}
 	void printChar(int chr, bool ignoreCharsetMask);
-	void drawChar(int chr, const Graphics::Surface &s, int x, int y);
+	void drawChar(int chr, Graphics::Surface &s, int x, int y);
 
 	int getFontHeight() { return 8; }
 	int getCharWidth(uint16 chr) { return 8; }
@@ -169,7 +169,7 @@ public:
 	CharsetRendererV3(ScummEngine *vm) : CharsetRendererCommon(vm) {}
 
 	void printChar(int chr, bool ignoreCharsetMask);
-	void drawChar(int chr, const Graphics::Surface &s, int x, int y);
+	void drawChar(int chr, Graphics::Surface &s, int x, int y);
 	void setCurID(int32 id);
 	void setColor(byte color);
 	int getCharWidth(uint16 chr);

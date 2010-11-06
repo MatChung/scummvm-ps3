@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/sdl/graphics.cpp $
- * $Id: graphics.cpp 52934 2010-09-28 20:29:25Z fingolfin $
+ * $Id: graphics.cpp 53639 2010-10-20 13:00:58Z djwillis $
  *
  */
 
@@ -539,7 +539,7 @@ bool OSystem_SDL::loadGFXMode() {
 	assert(_inited);
 	_forceFull = true;
 
-#if !defined(__MAEMO__) && !defined(GP2XWIZ) && !defined(LINUXMOTO) && !defined(DINGUX) && !defined(OPENPANDORA)
+#if !defined(__MAEMO__) && !defined(DINGUX) && !defined(GPH_DEVICE) && !defined(LINUXMOTO) && !defined(OPENPANDORA)
 	_videoMode.overlayWidth = _videoMode.screenWidth * _videoMode.scaleFactor;
 	_videoMode.overlayHeight = _videoMode.screenHeight * _videoMode.scaleFactor;
 

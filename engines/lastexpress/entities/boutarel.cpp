@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/boutarel.cpp $
- * $Id: boutarel.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: boutarel.cpp 53880 2010-10-27 19:19:22Z littleboy $
  *
  */
 
@@ -616,7 +616,7 @@ IMPLEMENT_FUNCTION(19, Boutarel, chapter1)
 		break;
 
 	case kActionNone:
-		TIME_CHECK_CHAPTER1(setup_chapter1Handler);
+		TIME_CHECK(kTimeChapter1, params->param1, setup_chapter1Handler);
 		break;
 
 	case kActionDefault:
@@ -949,7 +949,7 @@ IMPLEMENT_FUNCTION(29, Boutarel, function29)
 
 			if (getState()->time <= kTime1998000)
 				if (!getEntities()->isInRestaurant(kEntityPlayer) || !params->param3)
-					params->param3 = getState()->time + 450;
+					params->param3 = (uint)(getState()->time + 450);
 
 			if (params->param3 < getState()->time || getState()->time > kTime1998000) {
 				params->param3 = kTimeInvalid;

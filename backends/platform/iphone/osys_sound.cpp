@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/iphone/osys_sound.cpp $
- * $Id: osys_sound.cpp 48238 2010-03-11 23:39:51Z fingolfin $
+ * $Id: osys_sound.cpp 53971 2010-10-31 00:04:24Z fingolfin $
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "osys_main.h"
 

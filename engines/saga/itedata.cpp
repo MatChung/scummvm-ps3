@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/itedata.cpp $
- * $Id: itedata.cpp 48842 2010-04-28 22:23:34Z fingolfin $
+ * $Id: itedata.cpp 53719 2010-10-22 23:13:17Z h00ligan $
  *
  */
 
@@ -269,7 +269,7 @@ ObjectTableData ITE_ObjectTable[ITE_OBJECTCOUNT] = {
 	{ 54, 281,  620,  352,  0, 80, 46, 0           }  // Orb of Storms in Dam Lab
 };
 
-FxTable ITE_SfxTable[ITE_SFXCOUNT] = {
+IteFxTable ITE_SfxTable[ITE_SFXCOUNT] = {
 	{ 14,	127 },	// Door open
 	{ 15,   127 },	// Door close
 	{ 16,    63 },	// Rush water (floppy volume: 127)

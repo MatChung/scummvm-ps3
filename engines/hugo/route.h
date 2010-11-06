@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/route.h $
- * $Id: route.h 52406 2010-08-27 09:48:53Z strangerke $
+ * $Id: route.h 53674 2010-10-21 17:09:57Z strangerke $
  *
  */
 
@@ -53,7 +53,7 @@ struct segment_t {                                  // Search segment
 
 class Route {
 public:
-	Route(HugoEngine &vm);
+	Route(HugoEngine *vm);
 
 	void processRoute();
 	bool startRoute(go_t go_for, short id, short cx, short cy);
@@ -61,7 +61,7 @@ public:
 	void setWalk(uint16 direction);
 
 private:
-	HugoEngine &_vm;
+	HugoEngine *_vm;
 
 	byte _boundaryMap[YPIX][XPIX];                  // Boundary byte map
 	segment_t _segment[kMaxSeg];                    // List of points in fill-path

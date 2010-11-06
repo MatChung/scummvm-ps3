@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/view.cpp $
- * $Id: view.cpp 53522 2010-10-15 22:19:27Z m_kiewitz $
+ * $Id: view.cpp 53855 2010-10-26 20:19:17Z m_kiewitz $
  *
  */
 
@@ -352,6 +352,16 @@ void GfxView::getCelRect(int16 loopNo, int16 celNo, int16 x, int16 y, int16 z, C
 	outRect.right = outRect.left + celInfo->width;
 	outRect.bottom = y + celInfo->displaceY - z + 1 + _adjustForSci0Early;
 	outRect.top = outRect.bottom - celInfo->height;
+}
+
+void GfxView::getCelSpecialHoyle4Rect(int16 loopNo, int16 celNo, int16 x, int16 y, int16 z, Common::Rect &outRect) const {
+	const CelInfo *celInfo = getCelInfo(loopNo, celNo);
+	int16 adjustY = y - celInfo->height + celInfo->displaceY + 1;
+	int16 adjustX = x - ((celInfo->width - 1) >> 1) + celInfo->displaceX;
+	outRect.top += adjustY;
+	outRect.bottom += adjustY;
+	outRect.left += adjustX;
+	outRect.right += adjustX;
 }
 
 void GfxView::getCelScaledRect(int16 loopNo, int16 celNo, int16 x, int16 y, int16 z, int16 scaleX, int16 scaleY, Common::Rect &outRect) const {

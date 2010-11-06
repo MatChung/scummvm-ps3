@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/debugger.h $
- * $Id: debugger.h 50963 2010-07-17 18:38:42Z fingolfin $
+ * $Id: debugger.h 54007 2010-11-01 16:03:35Z fingolfin $
  */
 
 #ifndef GUI_DEBUGGER_H
@@ -41,7 +41,7 @@ public:
 	Debugger();
 	virtual ~Debugger();
 
-	int DebugPrintf(const char *format, ...);
+	int DebugPrintf(const char *format, ...) GCC_PRINTF(2, 3);
 
 	/**
 	 * The onFrame() method should be invoked by the engine at regular

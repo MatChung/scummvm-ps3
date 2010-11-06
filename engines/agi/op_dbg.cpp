@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/op_dbg.cpp $
- * $Id: op_dbg.cpp 45255 2009-10-19 22:51:37Z fingolfin $
+ * $Id: op_dbg.cpp 53868 2010-10-26 22:33:49Z fingolfin $
  *
  */
 
@@ -275,11 +275,11 @@ void AgiEngine::debugConsole(int lognum, int mode, const char *str) {
 	uint8 a, c, z;
 
 	if (str) {
-		report("         %s\n", str);
+		debug(0, "         %s", str);
 		return;
 	}
 
-	report("%03d:%04x ", lognum, ip);
+	debugN(0, "%03d:%04x ", lognum, ip);
 
 	switch (*(code + ip)) {
 	case 0xFC:
@@ -289,7 +289,7 @@ void AgiEngine::debugConsole(int lognum, int mode, const char *str) {
 		x = logicNamesIf;
 
 		if (_debug.opcodes) {
-			report("%02X %02X %02X %02X %02X %02X %02X %02X %02X\n"
+			debugN(0, "%02X %02X %02X %02X %02X %02X %02X %02X %02X\n"
 			    "         ",
 			    (uint8)*(code + (0 + ip)) & 0xFF,
 			    (uint8)*(code + (1 + ip)) & 0xFF,
@@ -301,7 +301,7 @@ void AgiEngine::debugConsole(int lognum, int mode, const char *str) {
 			    (uint8)*(code + (7 + ip)) & 0xFF,
 			    (uint8)*(code + (8 + ip)) & 0xFF);
 		}
-		report("%s ", (x + *(code + ip) - 0xFC)->name);
+		debugN(0, "%s ", (x + *(code + ip) - 0xFC)->name);
 		break;
 	default:
 		x = mode == lCOMMAND_MODE ? logicNamesCmd : logicNamesTest;
@@ -309,7 +309,7 @@ void AgiEngine::debugConsole(int lognum, int mode, const char *str) {
 		c = (unsigned char)(x + *(code + ip))->argMask;
 
 		if (_debug.opcodes) {
-			report("%02X %02X %02X %02X %02X %02X %02X %02X %02X\n"
+			debugN(0, "%02X %02X %02X %02X %02X %02X %02X %02X %02X\n"
 			    "         ",
 			    (uint8)*(code + (0 + ip)) & 0xFF,
 			    (uint8)*(code + (1 + ip)) & 0xFF,
@@ -321,23 +321,23 @@ void AgiEngine::debugConsole(int lognum, int mode, const char *str) {
 			    (uint8)*(code + (7 + ip)) & 0xFF,
 			    (uint8)*(code + (8 + ip)) & 0xFF);
 		}
-		report("%s ", (x + *(code + ip))->name);
+		debugN(0, "%s ", (x + *(code + ip))->name);
 
 		for (z = 1; a > 0;) {
 			if (~c & 0x80) {
-				report("%d", *(code + (ip + z)));
+				debugN(0, "%d", *(code + (ip + z)));
 			} else {
-				report("v%d[%d]", *(code + (ip + z)), getvar(*(code + (ip + z))));
+				debugN(0, "v%d[%d]", *(code + (ip + z)), getvar(*(code + (ip + z))));
 			}
 			c <<= 1;
 			z++;
 			if (--a > 0)
-				report(",");
+				debugN(0, ",");
 		}
 		break;
 	}
 
-	report("\n");
+	debugN(0, "\n");
 }
 
 } // End of namespace Agi

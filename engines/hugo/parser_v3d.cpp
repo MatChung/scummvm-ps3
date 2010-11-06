@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/parser_v3d.cpp $
- * $Id: parser_v3d.cpp 53170 2010-10-12 21:12:54Z strangerke $
+ * $Id: parser_v3d.cpp 54018 2010-11-01 20:20:21Z strangerke $
  *
  */
 
@@ -39,24 +39,27 @@
 #include "hugo/schedule.h"
 #include "hugo/util.h"
 #include "hugo/sound.h"
+#include "hugo/object.h"
 
 namespace Hugo {
 
-Parser_v3d::Parser_v3d(HugoEngine &vm) : Parser_v1w(vm) {
+Parser_v3d::Parser_v3d(HugoEngine *vm) : Parser_v1w(vm) {
 }
 
 Parser_v3d::~Parser_v3d() {
 }
 
-// Parse the user's line of text input.  Generate events as necessary
+/**
+* Parse the user's line of text input.  Generate events as necessary
+*/
 void Parser_v3d::lineHandler() {
 	debugC(1, kDebugParser, "lineHandler()");
 
-	status_t &gameStatus = _vm.getGameStatus();
+	status_t &gameStatus = _vm->getGameStatus();
 
 	// Toggle God Mode
 	if (!strncmp(_line, "PPG", 3)) {
-		_vm.sound().playSound(!_vm._soundTest, BOTH_CHANNELS, HIGH_PRI);
+		_vm->_sound->playSound(!_vm->_soundTest, BOTH_CHANNELS, HIGH_PRI);
 		gameStatus.godModeFl ^= 1;
 		return;
 	}
@@ -71,9 +74,9 @@ void Parser_v3d::lineHandler() {
 	if (gameStatus.godModeFl) {
 		// Special code to allow me to go straight to any screen
 		if (strstr(_line, "goto")) {
-			for (int i = 0; i < _vm._numScreens; i++) {
-				if (!strcmp(&_line[strlen("goto") + 1], _vm._screenNames[i])) {
-					_vm.scheduler().newScreen(i);
+			for (int i = 0; i < _vm->_numScreens; i++) {
+				if (!strcmp(&_line[strlen("goto") + 1], _vm->_screenNames[i])) {
+					_vm->_scheduler->newScreen(i);
 					return;
 				}
 			}
@@ -81,17 +84,17 @@ void Parser_v3d::lineHandler() {
 
 		// Special code to allow me to get objects from anywhere
 		if (strstr(_line, "fetch all")) {
-			for (int i = 0; i < _vm._numObj; i++) {
-				if (_vm._objects[i].genericCmd & TAKE)
-					takeObject(&_vm._objects[i]);
+			for (int i = 0; i < _vm->_numObj; i++) {
+				if (_vm->_object->_objects[i].genericCmd & TAKE)
+					takeObject(&_vm->_object->_objects[i]);
 			}
 			return;
 		}
 
 		if (strstr(_line, "fetch")) {
-			for (int i = 0; i < _vm._numObj; i++) {
-				if (!strcmp(&_line[strlen("fetch") + 1], _vm._arrayNouns[_vm._objects[i].nounIndex][0])) {
-					takeObject(&_vm._objects[i]);
+			for (int i = 0; i < _vm->_numObj; i++) {
+				if (!strcmp(&_line[strlen("fetch") + 1], _vm->_arrayNouns[_vm->_object->_objects[i].nounIndex][0])) {
+					takeObject(&_vm->_object->_objects[i]);
 					return;
 				}
 			}
@@ -99,9 +102,9 @@ void Parser_v3d::lineHandler() {
 
 		// Special code to allow me to goto objects
 		if (strstr(_line, "find")) {
-			for (int i = 0; i < _vm._numObj; i++) {
-				if (!strcmp(&_line[strlen("find") + 1], _vm._arrayNouns[_vm._objects[i].nounIndex][0])) {
-					_vm.scheduler().newScreen(_vm._objects[i].screenIndex);
+			for (int i = 0; i < _vm->_numObj; i++) {
+				if (!strcmp(&_line[strlen("find") + 1], _vm->_arrayNouns[_vm->_object->_objects[i].nounIndex][0])) {
+					_vm->_scheduler->newScreen(_vm->_object->_objects[i].screenIndex);
 					return;
 				}
 			}
@@ -111,8 +114,8 @@ void Parser_v3d::lineHandler() {
 	// Special meta commands
 	// EXIT/QUIT
 	if (!strcmp("exit", _line) || strstr(_line, "quit")) {
-		if (Utils::Box(BOX_YESNO, "%s", _vm._textParser[kTBExit_1d]) != 0)
-			_vm.endGame();
+		if (Utils::Box(BOX_YESNO, "%s", _vm->_textParser[kTBExit_1d]) != 0)
+			_vm->endGame();
 		else
 			return;
 	}
@@ -123,14 +126,14 @@ void Parser_v3d::lineHandler() {
 		if (gameStatus.gameOverFl)
 			Utils::gameOverMsg();
 		else
-//			_vm.file().saveOrRestore(true);
+//			_vm->_file->saveOrRestore(true);
 			warning("STUB: saveOrRestore()");
 		return;
 	}
 
 	if (!strcmp("restore", _line)) {
 		_config.soundFl = false;
-//		_vm.file().saveOrRestore(false);
+//		_vm->_file->saveOrRestore(false);
 		warning("STUB: saveOrRestore()");
 		return;
 	}
@@ -150,9 +153,9 @@ void Parser_v3d::lineHandler() {
 	char farComment[XBYTES * 5] = "";               // hold 5 line comment if object not nearby
 
 	// Test for nearby objects referenced explicitly
-	for (int i = 0; i < _vm._numObj; i++) {
-		object_t *obj = &_vm._objects[i];
-		if (isWordPresent(_vm._arrayNouns[obj->nounIndex])) {
+	for (int i = 0; i < _vm->_numObj; i++) {
+		object_t *obj = &_vm->_object->_objects[i];
+		if (isWordPresent(_vm->_arrayNouns[obj->nounIndex])) {
 			if (isObjectVerb(obj, farComment) || isGenericVerb(obj, farComment))
 				return;
 		}
@@ -160,8 +163,8 @@ void Parser_v3d::lineHandler() {
 
 	// Test for nearby objects that only require a verb
 	// Note comment is unused if not near.
-	for (int i = 0; i < _vm._numObj; i++) {
-		object_t *obj = &_vm._objects[i];
+	for (int i = 0; i < _vm->_numObj; i++) {
+		object_t *obj = &_vm->_object->_objects[i];
 		if (obj->verbOnlyFl) {
 			char contextComment[XBYTES * 5] = "";   // Unused comment for context objects
 			if (isObjectVerb(obj, contextComment) || isGenericVerb(obj, contextComment))
@@ -170,13 +173,13 @@ void Parser_v3d::lineHandler() {
 	}
 
 	// No objects match command line, try background and catchall commands
-	if (isBackgroundWord(_vm._backgroundObjects[*_vm._screen_p]))
+	if (isBackgroundWord(_vm->_backgroundObjects[*_vm->_screen_p]))
 		return;
-	if (isCatchallVerb(_vm._backgroundObjects[*_vm._screen_p]))
+	if (isCatchallVerb(_vm->_backgroundObjects[*_vm->_screen_p]))
 		return;
-	if (isBackgroundWord(_vm._catchallList))
+	if (isBackgroundWord(_vm->_catchallList))
 		return;
-	if (isCatchallVerb(_vm._catchallList))
+	if (isCatchallVerb(_vm->_catchallList))
 		return;
 
 	// If a not-near comment was generated, print it
@@ -188,15 +191,15 @@ void Parser_v3d::lineHandler() {
 	// Nothing matches.  Report recognition success to user.
 	char *verb = findVerb();
 	char *noun = findNoun();
-	
+
 	if (verb && noun) {                             // A combination I didn't think of
-		Utils::Box(BOX_ANY, "%s", _vm._textParser[kTBNoPoint]);
+		Utils::Box(BOX_ANY, "%s", _vm->_textParser[kTBNoPoint]);
 	} else if (noun) {
-		Utils::Box(BOX_ANY, "%s", _vm._textParser[kTBNoun]);
+		Utils::Box(BOX_ANY, "%s", _vm->_textParser[kTBNoun]);
 	} else if (verb) {
-		Utils::Box(BOX_ANY, "%s", _vm._textParser[kTBVerb]);
+		Utils::Box(BOX_ANY, "%s", _vm->_textParser[kTBVerb]);
 	} else {
-		Utils::Box(BOX_ANY, "%s", _vm._textParser[kTBEh]);
+		Utils::Box(BOX_ANY, "%s", _vm->_textParser[kTBEh]);
 	}
 }
 

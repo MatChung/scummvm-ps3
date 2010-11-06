@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/resource.cpp $
- * $Id: resource.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: resource.cpp 53967 2010-10-30 22:44:57Z fingolfin $
  *
  */
 
@@ -106,9 +106,9 @@ bool ResourceManager::loadArchive(ArchiveIndex type) {
 
 void ResourceManager::reset() {
 	// Free the loaded archives
-	for (Common::Array<HPFArchive *>::iterator it = _archives.begin(); it != _archives.end(); ++it) {
+	for (Common::Array<HPFArchive *>::iterator it = _archives.begin(); it != _archives.end(); ++it)
 		delete (*it);
-	}
+
 	_archives.clear();
 }
 
@@ -180,7 +180,7 @@ Common::ArchiveMemberPtr ResourceManager::getMember(const Common::String &name) 
 }
 
 Common::SeekableReadStream *ResourceManager::createReadStreamForMember(const Common::String &name) const {
-	for (Common::Array<HPFArchive * const>::iterator it = _archives.begin(); it != _archives.end(); ++it) {
+	for (Common::Array<HPFArchive *>::const_iterator it = _archives.begin(); it != _archives.end(); ++it) {
 
 		Common::SeekableReadStream *stream = (*it)->createReadStreamForMember(name);
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/akos.cpp $
- * $Id: akos.cpp 48987 2010-05-09 20:17:30Z lordhoto $
+ * $Id: akos.cpp 53738 2010-10-23 15:46:50Z fingolfin $
  *
  */
 
@@ -1087,10 +1087,10 @@ void AkosRenderer::akos16SetupBitReader(const byte *src) {
 }
 
 #define AKOS16_FILL_BITS()                                        \
-        if (_akos16.numbits <= 8) {                                \
-          _akos16.bits |= (*_akos16.dataptr++) << _akos16.numbits;   \
-          _akos16.numbits += 8;                                    \
-        }
+		if (_akos16.numbits <= 8) {                                \
+		  _akos16.bits |= (*_akos16.dataptr++) << _akos16.numbits;   \
+		  _akos16.numbits += 8;                                    \
+		}
 
 #define AKOS16_EAT_BITS(n)                                        \
 		_akos16.numbits -= (n);                                    \

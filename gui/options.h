@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/options.h $
- * $Id: options.h 51265 2010-07-24 22:29:17Z sev $
+ * $Id: options.h 54090 2010-11-05 10:53:37Z thebluegr $
  */
 
 #ifndef OPTIONS_DIALOG_H
@@ -96,6 +96,7 @@ private:
 	PopUpWidget *_gfxPopUp;
 	CheckboxWidget *_fullscreenCheckbox;
 	CheckboxWidget *_aspectCheckbox;
+	CheckboxWidget *_disableDitheringCheckbox;
 	StaticTextWidget *_renderModePopUpDesc;
 	PopUpWidget *_renderModePopUp;
 

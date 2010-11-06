@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/screen_hof.h $
- * $Id: screen_hof.h 41885 2009-06-25 19:59:56Z lordhoto $
+ * $Id: screen_hof.h 53740 2010-10-23 16:01:40Z athrxx $
  *
  */
 
@@ -39,6 +39,7 @@ public:
 
 	void setScreenDim(int dim);
 	const ScreenDim *getScreenDim(int dim);
+	int screenDimTableCount() const { return _screenDimTableCount; }
 
 	// sequence player
 	void generateGrayOverlay(const Palette &pal, uint8 *grayOverlay, int factor, int addR, int addG, int addB, int lastColor, bool flag);

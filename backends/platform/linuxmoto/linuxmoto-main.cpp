@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/linuxmoto/linuxmoto-main.cpp $
- * $Id: linuxmoto-main.cpp 51977 2010-08-11 12:50:00Z fingolfin $
+ * $Id: linuxmoto-main.cpp 53963 2010-10-30 21:49:46Z fingolfin $
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "common/scummsys.h"
 #include "common/system.h"

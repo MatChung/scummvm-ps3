@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/ports.cpp $
- * $Id: ports.cpp 52791 2010-09-18 10:55:16Z eriktorbjorn $
+ * $Id: ports.cpp 54012 2010-11-01 16:09:33Z m_kiewitz $
  *
  */
 
@@ -37,15 +37,6 @@
 #include "sci/graphics/ports.h"
 
 namespace Sci {
-
-// window styles
-enum {
-	SCI_WINDOWMGR_STYLE_TRANSPARENT = (1 << 0),
-	SCI_WINDOWMGR_STYLE_NOFRAME     = (1 << 1),
-	SCI_WINDOWMGR_STYLE_TITLE       = (1 << 2),
-	SCI_WINDOWMGR_STYLE_TOPMOST     = (1 << 3),
-	SCI_WINDOWMGR_STYLE_USER        = (1 << 7)
-};
 
 GfxPorts::GfxPorts(SegManager *segMan, GfxScreen *screen)
 	: _segMan(segMan), _screen(screen) {

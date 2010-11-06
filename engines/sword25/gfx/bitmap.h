@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/bitmap.h $
- * $Id: bitmap.h 53310 2010-10-12 23:32:32Z sev $
+ * $Id: bitmap.h 53625 2010-10-19 20:54:30Z sev $
  *
  */
 
@@ -35,18 +35,10 @@
 #ifndef SWORD25_BITMAP_H
 #define SWORD25_BITMAP_H
 
-// -----------------------------------------------------------------------------
-// Includes
-// -----------------------------------------------------------------------------
-
 #include "sword25/kernel/common.h"
 #include "sword25/gfx/renderobject.h"
 
 namespace Sword25 {
-
-// -----------------------------------------------------------------------------
-// Klassendeklaration
-// -----------------------------------------------------------------------------
 
 class Bitmap : public RenderObject {
 protected:

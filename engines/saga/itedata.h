@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/itedata.h $
- * $Id: itedata.h 48842 2010-04-28 22:23:34Z fingolfin $
+ * $Id: itedata.h 53719 2010-10-22 23:13:17Z h00ligan $
  *
  */
 
@@ -77,16 +77,16 @@ struct ObjectTableData {
 	uint16 interactBits;
 };
 
-struct FxTable {
-	int res;
-	int vol;
+struct IteFxTable {
+	byte res;
+	byte vol;
 };
 
 #define ITE_OBJECTCOUNT 39
 #define ITE_SFXCOUNT 63
 
 extern ObjectTableData ITE_ObjectTable[ITE_OBJECTCOUNT];
-extern FxTable ITE_SfxTable[ITE_SFXCOUNT];
+extern IteFxTable ITE_SfxTable[ITE_SFXCOUNT];
 
 extern const char *ITEinterfaceTextStrings[][53];
 

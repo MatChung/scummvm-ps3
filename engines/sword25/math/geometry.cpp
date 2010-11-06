@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/math/geometry.cpp $
- * $Id: geometry.cpp 53392 2010-10-13 00:09:32Z sev $
+ * $Id: geometry.cpp 53835 2010-10-25 22:41:25Z fingolfin $
  *
  */
 
@@ -45,9 +45,5 @@ Geometry::Geometry(Kernel *pKernel) : Service(pKernel) {
 		BS_LOGLN("Script bindings registered.");
 }
 
-
-Service *Geometry_CreateObject(Kernel *pKernel) {
-	return new Geometry(pKernel);
-}
 
 } // End of namespace Sword25

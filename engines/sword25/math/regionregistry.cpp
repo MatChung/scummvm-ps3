@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/math/regionregistry.cpp $
- * $Id: regionregistry.cpp 53431 2010-10-13 15:41:34Z fingolfin $
+ * $Id: regionregistry.cpp 53752 2010-10-24 01:29:59Z fingolfin $
  *
  */
 
@@ -39,9 +39,6 @@
 #include "sword25/math/regionregistry.h"
 #include "sword25/math/region.h"
 
-// TODO: Destroy the singletons when closing the engine;
-// even better, turn them into non-singleton members of
-// e.g. Sword25Engine.
 DECLARE_SINGLETON(Sword25::RegionRegistry)
 
 namespace Sword25 {

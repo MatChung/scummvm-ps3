@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/scumm.h $
- * $Id: scumm.h 53572 2010-10-18 18:55:24Z fingolfin $
+ * $Id: scumm.h 53892 2010-10-27 22:37:51Z lordhoto $
  *
  */
 
@@ -253,6 +253,7 @@ enum ScummGameId {
 	GID_FUNSHOP,	// Used for all three funshops
 	GID_FOOTBALL,
 	GID_SOCCER,
+	GID_BASEBALL2001,
 	GID_BASKETBALL,
 	GID_MOONBASE,
 	GID_HECUP		// CUP demos
@@ -592,6 +593,7 @@ protected:
 
 	bool _v0ObjectIndex;			// V0 Use object index, instead of object number
 	bool _v0ObjectInInventory;		// V0 Use object number from inventory
+	byte _v0ObjectFlag;
 
 	/* Global resource tables */
 	int _numVariables, _numBitVariables, _numLocalObjects;
@@ -659,7 +661,7 @@ protected:
 	byte _saveLoadFlag, _saveLoadSlot;
 	uint32 _lastSaveTime;
 	bool _saveTemporaryState;
-	char _saveLoadFileName[32];
+	Common::String _saveLoadFileName;
 	char _saveLoadName[32];
 
 	bool saveState(Common::OutSaveFile *out, bool writeHeader = true);
@@ -697,9 +699,6 @@ public:
 protected:
 	void saveInfos(Common::WriteStream* file);
 	static bool loadInfos(Common::SeekableReadStream *file, InfoStuff *stuff);
-
-	int32 _engineStartTime;
-	int32 _pauseStartTime;
 
 protected:
 	/* Script VM - should be in Script class */

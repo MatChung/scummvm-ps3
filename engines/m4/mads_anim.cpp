@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/mads_anim.cpp $
- * $Id: mads_anim.cpp 50523 2010-06-30 10:13:20Z dreammaster $
+ * $Id: mads_anim.cpp 54035 2010-11-02 00:51:12Z dreammaster $
  *
  */
 
@@ -721,21 +721,21 @@ void AnimviewView::processCommand() {
 
 	case 'O':
 		param = param + 2;
-		//printf("O:%i ", atoi(param));
+		//warning(kDebugGraphics, "O:%i ", atoi(param));
 		_transition = atoi(param);
 		break;
 
 	case 'R':
 		param = param + 2;
-		//printf("R:%s ", param);
+		//warning(kDebugGraphics, "R:%s ", param);
 		break;
 
 	case 'W':
-		//printf("W ");
+		//warning(kDebugGraphics, "W ");
 		break;
 
 	case 'X':
-		//printf("X ");
+		//warning(kDebugGraphics, "X ");
 		break;
 
 	default:

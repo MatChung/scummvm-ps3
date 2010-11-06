@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/dialogs.cpp $
- * $Id: dialogs.cpp 52461 2010-08-30 22:24:40Z criezy $
+ * $Id: dialogs.cpp 54001 2010-11-01 16:00:17Z fingolfin $
  */
 
 #include "base/version.h"
@@ -36,6 +36,7 @@
 #include "gui/GuiManager.h"
 #include "gui/launcher.h"
 #include "gui/ListWidget.h"
+#include "gui/message.h"
 #include "gui/options.h"
 #include "gui/saveload.h"
 #include "gui/ThemeEval.h"
@@ -47,9 +48,6 @@
 #ifdef SMALL_SCREEN_DEVICE
 #include "gui/KeysDialog.h"
 #endif
-
-using GUI::CommandSender;
-using GUI::StaticTextWidget;
 
 class ConfigDialog : public GUI::OptionsDialog {
 protected:
@@ -75,15 +73,15 @@ MainMenuDialog::MainMenuDialog(Engine *engine)
 		_logo->useThemeTransparency(true);
 		_logo->setGfx(g_gui.theme()->getImageSurface(GUI::ThemeEngine::kImageLogoSmall));
 	} else {
-		StaticTextWidget *title = new StaticTextWidget(this, "GlobalMenu.Title", "ScummVM");
+		GUI::StaticTextWidget *title = new GUI::StaticTextWidget(this, "GlobalMenu.Title", "ScummVM");
 		title->setAlign(Graphics::kTextAlignCenter);
 	}
 #else
-	StaticTextWidget *title = new StaticTextWidget(this, "GlobalMenu.Title", "ScummVM");
+	GUI::StaticTextWidget *title = new GUI::StaticTextWidget(this, "GlobalMenu.Title", "ScummVM");
 	title->setAlign(Graphics::kTextAlignCenter);
 #endif
 
-	StaticTextWidget *version = new StaticTextWidget(this, "GlobalMenu.Version", gScummVMVersionDate);
+	GUI::StaticTextWidget *version = new GUI::StaticTextWidget(this, "GlobalMenu.Version", gScummVMVersionDate);
 	version->setAlign(Graphics::kTextAlignCenter);
 
 	new GUI::ButtonWidget(this, "GlobalMenu.Resume", _("~R~esume"), 0, kPlayCmd, 'P');
@@ -102,7 +100,6 @@ MainMenuDialog::MainMenuDialog(Engine *engine)
 	// To enable "Help", an engine needs to use a subclass of MainMenuDialog
 	// (at least for now, we might change how this works in the future).
 	_helpButton = new GUI::ButtonWidget(this, "GlobalMenu.Help", _("~H~elp"), 0, kHelpCmd);
-	_helpButton->setEnabled(false);
 
 	new GUI::ButtonWidget(this, "GlobalMenu.About", _("~A~bout"), 0, kAboutCmd);
 
@@ -130,7 +127,7 @@ MainMenuDialog::~MainMenuDialog() {
 	delete _saveDialog;
 }
 
-void MainMenuDialog::handleCommand(CommandSender *sender, uint32 cmd, uint32 data) {
+void MainMenuDialog::handleCommand(GUI::CommandSender *sender, uint32 cmd, uint32 data) {
 	switch (cmd) {
 	case kPlayCmd:
 		close();
@@ -147,8 +144,13 @@ void MainMenuDialog::handleCommand(CommandSender *sender, uint32 cmd, uint32 dat
 	case kAboutCmd:
 		_aboutDialog->runModal();
 		break;
-	case kHelpCmd:
-		// Not handled here -- needs to be handled by a subclass (for now)
+	case kHelpCmd: {
+		GUI::MessageDialog dialog(
+					"Sorry, this engine does not currently provide in-game help. "
+					"Please consult the README for basic information, and for "
+					"instructions on how to obtain further assistance.");
+		dialog.runModal();
+		}
 		break;
 	case kRTLCmd: {
 		Common::Event eventRTL;
@@ -182,16 +184,16 @@ void MainMenuDialog::reflowLayout() {
 		_logo->useThemeTransparency(true);
 		_logo->setGfx(g_gui.theme()->getImageSurface(GUI::ThemeEngine::kImageLogoSmall));
 
-		GUI::StaticTextWidget *title = (StaticTextWidget *)findWidget("GlobalMenu.Title");
+		GUI::StaticTextWidget *title = (GUI::StaticTextWidget *)findWidget("GlobalMenu.Title");
 		if (title) {
 			removeWidget(title);
 			title->setNext(0);
 			delete title;
 		}
 	} else {
-		GUI::StaticTextWidget *title = (StaticTextWidget *)findWidget("GlobalMenu.Title");
+		GUI::StaticTextWidget *title = (GUI::StaticTextWidget *)findWidget("GlobalMenu.Title");
 		if (!title) {
-			title = new StaticTextWidget(this, "GlobalMenu.Title", "ScummVM");
+			title = new GUI::StaticTextWidget(this, "GlobalMenu.Title", "ScummVM");
 			title->setAlign(Graphics::kTextAlignCenter);
 		}
 
@@ -316,7 +318,7 @@ ConfigDialog::~ConfigDialog() {
 #endif
 }
 
-void ConfigDialog::handleCommand(CommandSender *sender, uint32 cmd, uint32 data) {
+void ConfigDialog::handleCommand(GUI::CommandSender *sender, uint32 cmd, uint32 data) {
 	switch (cmd) {
 	case kKeysCmd:
 

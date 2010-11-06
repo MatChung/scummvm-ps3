@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/ThemeEngine.h $
- * $Id: ThemeEngine.h 52717 2010-09-14 00:34:12Z lordhoto $
+ * $Id: ThemeEngine.h 54090 2010-11-05 10:53:37Z thebluegr $
  *
  */
 
@@ -32,7 +32,7 @@
 #include "graphics/surface.h"
 #include "graphics/font.h"
 
-#define SCUMMVM_THEME_VERSION_STR "SCUMMVM_STX0.8"
+#define SCUMMVM_THEME_VERSION_STR "SCUMMVM_STX0.8.2"
 
 namespace Graphics {
 	struct DrawStep;

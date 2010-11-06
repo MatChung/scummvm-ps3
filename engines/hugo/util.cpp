@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/util.cpp $
- * $Id: util.cpp 52988 2010-10-03 08:08:42Z strangerke $
+ * $Id: util.cpp 54021 2010-11-01 20:40:33Z fingolfin $
  *
  */
 
@@ -40,8 +40,10 @@
 
 namespace Hugo {
 
+/**
+ * Returns index (0 to 7) of first 1 in supplied byte, or 8 if not found
+ */
 int Utils::firstBit(byte data) {
-// Returns index (0 to 7) of first 1 in supplied byte, or 8 if not found
 	if (!data)
 		return 8;
 
@@ -54,8 +56,10 @@ int Utils::firstBit(byte data) {
 	return i;
 }
 
+/**
+ * Returns index (0 to 7) of last 1 in supplied byte, or 8 if not found
+ */
 int Utils::lastBit(byte data) {
-// Returns index (0 to 7) of last 1 in supplied byte, or 8 if not found
 	if (!data)
 		return 8;
 
@@ -68,8 +72,10 @@ int Utils::lastBit(byte data) {
 	return i;
 }
 
+/**
+ * Reverse the bit order in supplied byte
+ */
 void Utils::reverseByte(byte *data) {
-// Reverse the bit order in supplied byte
 	byte maskIn = 0x80;
 	byte maskOut = 0x01;
 	byte result = 0;
@@ -78,21 +84,21 @@ void Utils::reverseByte(byte *data) {
 		if (*data & maskIn)
 			result |= maskOut;
 	}
-	
+
 	*data = result;
 }
 
 char *Utils::Box(box_t dismiss, const char *s, ...) {
 	static char buffer[MAX_STRLEN + 1];             // Format text into this
 
-	if (!s) 
+	if (!s)
 		return 0;                                   // NULL strings catered for
 
 	if (s[0] == '\0')
 		return 0;
 
 	if (strlen(s) > MAX_STRLEN - 100) {             // Test length
-		Warn("String too big:\n%s", s);
+		warning("String too big: '%s'", s);
 		return 0;
 	}
 
@@ -129,20 +135,11 @@ char *Utils::Box(box_t dismiss, const char *s, ...) {
 	return buffer;
 }
 
-void Utils::Warn(const char *format, ...) {
-// Warning handler.  Print supplied message and continue
-// Arguments are same as printf
-	char buffer[WARNLEN];
-	va_list marker;
-	va_start(marker, format);
-	vsnprintf(buffer, WARNLEN, format, marker);
-	va_end(marker);
-	warning("Hugo warning: %s", buffer);
-}
-
+/**
+ * Fatal error handler.  Reset environment, print error and exit
+ * Arguments are same as printf
+ */
 void Utils::Error(int error_type, const char *format, ...) {
-// Fatal error handler.  Reset environment, print error and exit
-// Arguments are same as printf
 	char buffer[ERRLEN + 1];
 	bool fatal = true;                              // Fatal error, else continue
 
@@ -183,8 +180,10 @@ void Utils::Error(int error_type, const char *format, ...) {
 		exit(1);
 }
 
+/**
+ * Print options for user when dead
+ */
 void Utils::gameOverMsg(void) {
-	// Print options for user when dead
 	//MessageBox(hwnd, gameoverstring, "Be more careful next time!", MB_OK | MB_ICONINFORMATION);
 	warning("STUB: Gameover_msg(): %s", HugoEngine::get()._textUtil[kGameOver]);
 }
@@ -200,6 +199,5 @@ char *Utils::strlwr(char *buffer) {
 
 	return result;
 }
-
 
 } // End of namespace Hugo

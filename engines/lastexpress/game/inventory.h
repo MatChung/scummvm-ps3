@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/inventory.h $
- * $Id: inventory.h 53579 2010-10-18 19:17:38Z sev $
+ * $Id: inventory.h 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -56,7 +56,7 @@ class Inventory : Common::Serializable, public EventHandler {
 public:
 
 	// Entry
-	struct InventoryEntry {
+	struct InventoryEntry : Common::Serializable {
 		CursorStyle cursor;
 		SceneIndex scene;
 		byte field_2;
@@ -76,7 +76,17 @@ public:
 		}
 
 		Common::String toString() {
-			return Common::String::printf("{ %d - %d - %d - %d - %d - %d - %d }", cursor, scene, field_2, isSelectable, isPresent, manualSelect, location);
+			return Common::String::format("{ %d - %d - %d - %d - %d - %d - %d }", cursor, scene, field_2, isSelectable, isPresent, manualSelect, location);
+		}
+
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			s.syncAsByte(cursor);
+			s.syncAsByte(scene);
+			s.syncAsByte(field_2);
+			s.syncAsByte(isSelectable);
+			s.syncAsByte(isPresent);
+			s.syncAsByte(manualSelect);
+			s.syncAsByte(location);
 		}
 	};
 
@@ -115,7 +125,8 @@ public:
 	bool isEggHighlighted() { return _flagEggHightlighted; }
 
 	// Serializable
-	void saveLoadWithSerializer(Common::Serializer &ser);
+	void saveLoadWithSerializer(Common::Serializer &s);
+	void saveSelectedItem(Common::Serializer &s);
 
 	/**
 	 * Convert this object into a string representation.

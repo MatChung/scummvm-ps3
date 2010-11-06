@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/tinsel.h $
- * $Id: tinsel.h 53484 2010-10-15 12:48:19Z fingolfin $
+ * $Id: tinsel.h 53709 2010-10-22 21:17:54Z dreammaster $
  *
  */
 
@@ -139,6 +139,7 @@ typedef bool (*KEYFPTR)(const Common::KeyState &);
 #define TinselV1 (TinselVersion == TINSEL_V1)
 #define TinselV2 (TinselVersion == TINSEL_V2)
 #define TinselV1PSX (TinselVersion == TINSEL_V1 && _vm->getPlatform() == Common::kPlatformPSX)
+#define IsDemo (_vm->getFeatures() & GF_DEMO)
 
 // Global reference to the TinselEngine object
 extern TinselEngine *_vm;
@@ -183,6 +184,7 @@ public:
 	uint32 getFeatures() const;
 	Common::Language getLanguage() const;
 	uint16 getVersion() const;
+	uint32 getFlags() const;
 	Common::Platform getPlatform() const;
 
 	const char *getSampleIndex(LANGUAGE lang);

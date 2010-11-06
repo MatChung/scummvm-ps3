@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/animation.h $
- * $Id: animation.h 49154 2010-05-23 11:16:10Z eriktorbjorn $
+ * $Id: animation.h 53997 2010-11-01 11:25:11Z eriktorbjorn $
  */
 
 #ifndef SWORD2_ANIMATION_H
@@ -76,7 +76,6 @@ public:
 
 	bool load(const char *name);
 	void play(MovieText *movieTexts, uint32 numMovieTexts, uint32 leadIn, uint32 leadOut);
-	void pauseMovie(bool pause);
 
 protected:
 	Sword2Engine *_vm;

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/font.cpp $
- * $Id: font.cpp 47180 2010-01-08 22:07:35Z fingolfin $
+ * $Id: font.cpp 54031 2010-11-01 21:37:47Z fingolfin $
  *
  */
 
@@ -574,7 +574,7 @@ void AmigaFont::blitData(byte c) {
 }
 
 uint16 AmigaFont::width(byte c) {
-//	printf("kern(%i) = %i, space(%i) = %i\t", c, getKerning(c), c, getSpacing(c));
+//	debug("kern(%i) = %i, space(%i) = %i\t", c, getKerning(c), c, getSpacing(c));
 	return getKerning(c) + getSpacing(c);
 }
 
@@ -642,7 +642,7 @@ Font *AmigaDisk_ns::createFont(const char *name, Common::SeekableReadStream &str
 }
 
 Font *DosDisk_br::createFont(const char *name, Common::ReadStream &stream) {
-//	printf("DosDisk_br::createFont(%s)\n", name);
+//	debug("DosDisk_br::createFont(%s)", name);
 	Font *font;
 
 	if (_vm->getFeatures() & GF_DEMO) {

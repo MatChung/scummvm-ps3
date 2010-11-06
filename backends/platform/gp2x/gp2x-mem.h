@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/gp2x/gp2x-mem.h $
- * $Id: gp2x-mem.h 43167 2009-08-09 12:12:24Z djwillis $
+ * $Id: gp2x-mem.h 53982 2010-10-31 17:24:27Z fingolfin $
  *
  */
 
@@ -46,9 +46,6 @@ extern void patchMMU (void);
 extern void unpatchMMU (void);
 
 #define SYS_CLK_FREQ 7372800
-
-static          unsigned long   gp2x_dev[8]={0,0,0,0,0,0,0,0};//, gp2x_ticks_per_second;
-static volatile unsigned short *gp2x_ram, *gp2x_memregs;
 
 #ifdef __cplusplus
     }

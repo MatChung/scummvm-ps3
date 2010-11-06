@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/draci/game.cpp $
- * $Id: game.cpp 50519 2010-06-30 08:27:09Z spalek $
+ * $Id: game.cpp 53738 2010-10-23 15:46:50Z fingolfin $
  *
  */
 
@@ -207,7 +207,7 @@ void Game::init() {
 
 	_currentItem = _itemUnderCursor = NULL;
 	_previousItemPosition = -1;
-  
+
 	_vm->_mouse->setCursorType(kHighlightedCursor);	// anything different from kNormalCursor
 
 	_objUnderCursor = NULL;
@@ -1618,15 +1618,15 @@ int GameObject::addAnim(Animation *anim) {
 }
 
 void GameObject::playAnim(int i) {
-      _anim[i]->play();
-      _playingAnim = i;
+	_anim[i]->play();
+	_playingAnim = i;
 }
 
 void GameObject::stopAnim() {
-      if (_playingAnim >= 0) {
-	      _anim[_playingAnim]->stop();
-	      _playingAnim = -1;
-      }
+	if (_playingAnim >= 0) {
+		_anim[_playingAnim]->stop();
+		_playingAnim = -1;
+	}
 }
 
 void GameObject::deleteAnims() {

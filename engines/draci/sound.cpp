@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/draci/sound.cpp $
- * $Id: sound.cpp 50618 2010-07-03 05:05:28Z spalek $
+ * $Id: sound.cpp 53738 2010-10-23 15:46:50Z fingolfin $
  *
  */
 
@@ -407,14 +407,14 @@ void Sound::stopVoice() {
 }
 
 void Sound::setVolume() {
-        if (_mixer->isReady()) {
-                _muteSound = ConfMan.getBool("sfx_mute");
-                _muteVoice = ConfMan.getBool("speech_mute");
-        } else {
-                _muteSound = _muteVoice = true;
-        }
+	if (_mixer->isReady()) {
+		_muteSound = ConfMan.getBool("sfx_mute");
+		_muteVoice = ConfMan.getBool("speech_mute");
+	} else {
+		_muteSound = _muteVoice = true;
+	}
 	if (ConfMan.getBool("mute")) {
-                _muteSound = _muteVoice = true;
+		_muteSound = _muteVoice = true;
 	}
 	_showSubtitles = ConfMan.getBool("subtitles");
 	_talkSpeed = ConfMan.getInt("talkspeed");

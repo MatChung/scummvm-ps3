@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/coktel_decoder.cpp $
- * $Id: coktel_decoder.cpp 53493 2010-10-15 13:56:14Z drmccoy $
+ * $Id: coktel_decoder.cpp 54072 2010-11-04 20:36:28Z drmccoy $
  *
  */
 
@@ -685,6 +685,10 @@ Surface *PreIMDDecoder::decodeNextFrame() {
 
 void PreIMDDecoder::processFrame() {
 	uint16 frameSize = _stream->readUint16LE();
+	if (frameSize == 0) {
+		_curFrame++;
+		return;
+	}
 
 	uint32 nextFramePos = _stream->pos() + frameSize + 2;
 

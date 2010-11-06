@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/schedule.h $
- * $Id: schedule.h 52988 2010-10-03 08:08:42Z strangerke $
+ * $Id: schedule.h 54044 2010-11-02 23:22:25Z strangerke $
  *
  */
 
@@ -33,8 +33,11 @@
 #ifndef HUGO_SCHEDULE_H
 #define HUGO_SCHEDULE_H
 
+#include "common/file.h"
+
 namespace Hugo {
 
+#define SIGN(X)       ((X < 0) ? -1 : 1)
 #define kMaxEvents     50                           // Max events in event queue
 
 struct event_t {
@@ -47,59 +50,103 @@ struct event_t {
 
 class Scheduler {
 public:
-	Scheduler(HugoEngine &vm);
+	Scheduler(HugoEngine *vm);
 	virtual ~Scheduler();
 
-	void   initEventQueue();
-	void   insertAction(act *action);
-	void   insertActionList(uint16 actIndex);
-	void   decodeString(char *line);
-	void   runScheduler();
-	uint32 getTicks();
-	void   processBonus(int bonusIndex);
-	void   newScreen(int screenIndex);
-	void   restoreEvents(Common::SeekableReadStream *f);
-	void   saveEvents(Common::WriteStream *f);
-	void   restoreScreen(int screenIndex);
-	void   swapImages(int objNumb1, int objNumb2);
+	virtual void restoreEvents(Common::SeekableReadStream *f) = 0;
+	virtual void runScheduler() = 0;
+	virtual void saveEvents(Common::WriteStream *f) = 0;
 
-private:
+	void   decodeString(char *line);
+	void   freeActListArr();
+	void   initEventQueue();
+	void   insertActionList(uint16 actIndex);
+	void   loadActListArr(Common::File &in);
+	void   loadAlNewscrIndex(Common::File &in);
+	void   newScreen(int screenIndex);
+	void   processBonus(int bonusIndex);
+	void   processMaze(int x1, int x2, int y1, int y2);
+	void   restoreScreen(int screenIndex);
+	void   waitForRefresh(void);
+
+protected:
+	HugoEngine *_vm;
+
 	enum seqTextSchedule {
 		kSsNoBackground = 0,
 		kSsBadSaveGame  = 1
 	};
 
-	HugoEngine &_vm;
-
-	event_t _events[kMaxEvents];                        // Statically declare event structures
+	uint16   _actListArrSize;
+	uint16   _alNewscrIndex;
 
 	event_t *_freeEvent;                                // Free list of event structures
 	event_t *_headEvent;                                // Head of list (earliest time)
 	event_t *_tailEvent;                                // Tail of list (latest time)
+	event_t  _events[kMaxEvents];                       // Statically declare event structures
+
+	act    **_actListArr;
+
+	virtual const char *getCypher() = 0;
+	virtual event_t *doAction(event_t *curEvent) = 0;
+	virtual void delQueue(event_t *curEvent) = 0;
+	virtual void insertAction(act *action) = 0;
 
 	event_t *getQueue();
-	void     delQueue(event_t *curEvent);
-	event_t *doAction(event_t *curEvent);
-	
-	virtual const char *getCypher() = 0;
+
+	uint32 getDosTicks(bool updateFl);
+	uint32 getWinTicks();
+
 };
 
 class Scheduler_v1d : public Scheduler {
 public:
-	Scheduler_v1d(HugoEngine &vm);
+	Scheduler_v1d(HugoEngine *vm);
 	~Scheduler_v1d();
 
-	const char *getCypher();
+	virtual const char *getCypher();
+	virtual void insertAction(act *action);
+	virtual void restoreEvents(Common::SeekableReadStream *f);
+	virtual void saveEvents(Common::WriteStream *f);
+	virtual void runScheduler();
+protected:
+	virtual void delQueue(event_t *curEvent);
+	virtual event_t *doAction(event_t *curEvent);
 };
 
-class Scheduler_v3d : public Scheduler {
+class Scheduler_v2d : public Scheduler_v1d {
 public:
-	Scheduler_v3d(HugoEngine &vm);
+	Scheduler_v2d(HugoEngine *vm);
+	virtual ~Scheduler_v2d();
+
+	virtual const char *getCypher();
+	virtual void insertAction(act *action);
+protected:
+	virtual void delQueue(event_t *curEvent);
+	virtual event_t *doAction(event_t *curEvent);
+};
+
+class Scheduler_v3d : public Scheduler_v2d {
+public:
+	Scheduler_v3d(HugoEngine *vm);
 	~Scheduler_v3d();
 
 	const char *getCypher();
+protected:
+	virtual event_t *doAction(event_t *curEvent);
+
 };
 
-} // End of namespace Hugo
+class Scheduler_v1w : public Scheduler_v3d {
+public:
+	Scheduler_v1w(HugoEngine *vm);
+	~Scheduler_v1w();
 
+	virtual event_t *doAction(event_t *curEvent);
+	void insertAction(act *action);
+	void restoreEvents(Common::SeekableReadStream *f);
+	void runScheduler();
+	void saveEvents(Common::WriteStream *f);
+};
+} // End of namespace Hugo
 #endif //HUGO_SCHEDULE_H

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/browser.h $
- * $Id: browser.h 34716 2008-10-02 16:58:59Z fingolfin $
+ * $Id: browser.h 53960 2010-10-30 21:26:32Z fingolfin $
  */
 
 #ifndef BROWSER_DIALOG_H
@@ -28,10 +28,6 @@
 #include "gui/dialog.h"
 #include "common/str.h"
 #include "common/fs.h"
-
-#ifdef MACOSX
-#include <Carbon/Carbon.h>
-#endif
 
 namespace GUI {
 
@@ -54,7 +50,7 @@ public:
 
 protected:
 #ifdef MACOSX
-	CFStringRef		_titleRef;
+	const void *_titleRef;
 #else
 	ListWidget		*_fileList;
 	StaticTextWidget	*_currentPath;

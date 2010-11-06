@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/screenshot.h $
- * $Id: screenshot.h 53373 2010-10-12 23:59:23Z sev $
+ * $Id: screenshot.h 53625 2010-10-19 20:54:30Z sev $
  *
  */
 
@@ -35,23 +35,15 @@
 #ifndef SWORD25_SCREENSHOT_H
 #define SWORD25_SCREENSHOT_H
 
-// -----------------------------------------------------------------------------
-// Includes
-// -----------------------------------------------------------------------------
-
 #include "graphics/surface.h"
 #include "sword25/kernel/common.h"
 
 namespace Sword25 {
 
-// -----------------------------------------------------------------------------
-// Class declaration
-// -----------------------------------------------------------------------------
-
 class Screenshot {
 public:
-	static bool SaveToFile(Graphics::Surface *Data, Common::WriteStream *Stream);
-	static Common::MemoryReadStream *createThumbnail(Graphics::Surface *Data);
+	static bool saveToFile(Graphics::Surface *data, Common::WriteStream *stream);
+	static Common::MemoryReadStream *createThumbnail(Graphics::Surface *data);
 };
 
 } // End of namespace Sword25

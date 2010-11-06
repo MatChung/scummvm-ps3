@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/logic.cpp $
- * $Id: logic.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: logic.cpp 53880 2010-10-27 19:19:22Z littleboy $
  *
  */
 
@@ -316,7 +316,7 @@ void Logic::eventTick(const Common::Event &) {
 	// Adjust time and save game if needed
 	if (getFlags()->isGameRunning) {
 		getState()->timeTicks += ticks;
-		getState()->time += ticks * getState()->timeDelta;
+		getState()->time = (TimeValue)(getState()->time + (TimeValue)(ticks * getState()->timeDelta));
 
 		if (getState()->timeDelta) {
 
@@ -402,7 +402,23 @@ void Logic::eventTick(const Common::Event &) {
 // Game over, Chapters & credits
 //////////////////////////////////////////////////////////////////////////
 
-// Handle game over
+/**
+ * Resets the game state.
+ */
+void Logic::resetState() {
+	getState()->scene = kSceneDefault;
+
+	warning("Logic::resetState: not implemented! You need to restart the engine until this is implemented.");
+}
+
+/**
+ * Handle game over
+ *
+ * @param type 		 The savegame type.
+ * @param value 	 The value (event, time, index, ...)
+ * @param sceneIndex Index of the scene to show.
+ * @param showScene  true to show a scene, false to return to menu directly
+ */
 void Logic::gameOver(SavegameType type, uint32 value, SceneIndex sceneIndex, bool showScene) const {
 
 	getSound()->processEntries();

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEgui/PanelItem.h $
- * $Id: PanelItem.h 52935 2010-09-28 20:30:50Z fingolfin $
+ * $Id: PanelItem.h 53979 2010-10-31 17:11:43Z fingolfin $
  *
  */
 
@@ -33,18 +33,19 @@
 
 namespace CEGUI {
 
-	class Panel;
+class Panel;
 
-	class PanelItem : public GUIElement {
-	friend class Panel;
-	public:
-		PanelItem(WORD reference);
-		virtual ~PanelItem();
-		virtual bool action(int x, int y, bool pushed);
-	protected:
-		void setPanel(Panel *panel);
-		Panel *_panel;
-	};
-}
+class PanelItem : public GUIElement {
+friend class Panel;
+public:
+	PanelItem(WORD reference);
+	virtual ~PanelItem();
+	virtual bool action(int x, int y, bool pushed);
+protected:
+	void setPanel(Panel *panel);
+	Panel *_panel;
+};
+
+} // End of namespace CEGUI
 
 #endif

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/image/renderedimage.cpp $
- * $Id: renderedimage.cpp 53477 2010-10-15 12:18:19Z fingolfin $
+ * $Id: renderedimage.cpp 54045 2010-11-03 00:19:28Z fingolfin $
  *
  */
 
@@ -37,7 +37,7 @@
 // -----------------------------------------------------------------------------
 
 #include "sword25/package/packagemanager.h"
-#include "sword25/gfx/image/imageloader.h"
+#include "sword25/gfx/image/pngloader.h"
 #include "sword25/gfx/image/renderedimage.h"
 
 #include "common/system.h"
@@ -56,30 +56,30 @@ RenderedImage::RenderedImage(const Common::String &filename, bool &result) :
 	_height(0) {
 	result = false;
 
-	PackageManager *pPackage = Kernel::GetInstance()->GetPackage();
+	PackageManager *pPackage = Kernel::getInstance()->getPackage();
 	BS_ASSERT(pPackage);
 
-	_backSurface = Kernel::GetInstance()->GetGfx()->getSurface();
+	_backSurface = Kernel::getInstance()->getGfx()->getSurface();
 
 	// Datei laden
 	byte *pFileData;
 	uint fileSize;
-	if (!(pFileData = (byte *)pPackage->getFile(filename, &fileSize))) {
+	pFileData = pPackage->getFile(filename, &fileSize);
+	if (!pFileData) {
 		BS_LOG_ERRORLN("File \"%s\" could not be loaded.", filename.c_str());
 		return;
 	}
 
 	// Bildeigenschaften bestimmen
-	GraphicEngine::COLOR_FORMATS colorFormat;
 	int pitch;
-	if (!ImageLoader::ExtractImageProperties(pFileData, fileSize, colorFormat, _width, _height)) {
+	if (!PNGLoader::imageProperties(pFileData, fileSize, _width, _height)) {
 		BS_LOG_ERRORLN("Could not read image properties.");
 		delete[] pFileData;
 		return;
 	}
 
 	// Das Bild dekomprimieren
-	if (!ImageLoader::LoadImage(pFileData, fileSize, GraphicEngine::CF_ARGB32, _data, _width, _height, pitch)) {
+	if (!PNGLoader::decodeImage(pFileData, fileSize, _data, _width, _height, pitch)) {
 		BS_LOG_ERRORLN("Could not decode image.");
 		delete[] pFileData;
 		return;
@@ -103,7 +103,7 @@ RenderedImage::RenderedImage(uint width, uint height, bool &result) :
 	_data = new byte[width * height * 4];
 	Common::set_to(_data, &_data[width * height * 4], 0);
 
-	_backSurface = Kernel::GetInstance()->GetGfx()->getSurface();
+	_backSurface = Kernel::getInstance()->getGfx()->getSurface();
 
 	_doCleanup = true;
 
@@ -112,7 +112,7 @@ RenderedImage::RenderedImage(uint width, uint height, bool &result) :
 }
 
 RenderedImage::RenderedImage() : _width(0), _height(0), _data(0) {
-	_backSurface = Kernel::GetInstance()->GetGfx()->getSurface();
+	_backSurface = Kernel::getInstance()->getGfx()->getSurface();
 
 	_doCleanup = false;
 

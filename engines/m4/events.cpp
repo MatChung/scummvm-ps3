@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/events.cpp $
- * $Id: events.cpp 50070 2010-06-20 07:04:58Z dreammaster $
+ * $Id: events.cpp 54047 2010-11-03 09:44:03Z dreammaster $
  *
  */
 
@@ -235,7 +235,7 @@ bool Mouse::init(const char *seriesName, RGB8 *palette) {
 	cursorPalette = _cursorSprites->getPalette();
 	_vm->_palette->setPalette(cursorPalette, 0, colorCount);
 
-	//printf("Cursor count: %d\n", _cursorSprites->getCount());
+	//debugCN(kDebugCore, "Cursor count: %d\n", _cursorSprites->getCount());
 
 	_vm->res()->toss(seriesName);
 

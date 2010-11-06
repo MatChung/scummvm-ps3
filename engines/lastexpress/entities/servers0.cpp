@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/servers0.cpp $
- * $Id: servers0.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: servers0.cpp 53629 2010-10-19 22:34:26Z jvprat $
  *
  */
 
@@ -950,7 +950,7 @@ IMPLEMENT_NULL_FUNCTION(38, Servers0)
 //////////////////////////////////////////////////////////////////////////
 // Private functions
 //////////////////////////////////////////////////////////////////////////
-void Servers0::handleServer(const SavePoint &savepoint, const char* name, EntityIndex entity, ActionIndex action, uint *parameter, const char* name2) {
+void Servers0::handleServer(const SavePoint &savepoint, const char *name, EntityIndex entity, ActionIndex action, uint *parameter, const char *name2) {
 	switch (savepoint.action) {
 	default:
 		break;
@@ -981,7 +981,7 @@ void Servers0::handleServer(const SavePoint &savepoint, const char* name, Entity
 }
 
 //////////////////////////////////////////////////////////////////////////
-void Servers0::serveTable(const SavePoint &savepoint, const char* seq1, EntityIndex entity, const char* seq2, const char* seq3, const char* seq4, uint *parameter, bool shouldUpdatePosition, bool pushSavepoint, Position position) {
+void Servers0::serveTable(const SavePoint &savepoint, const char *seq1, EntityIndex entity, const char *seq2, const char *seq3, const char *seq4, uint *parameter, bool shouldUpdatePosition, bool pushSavepoint, Position position) {
 	switch (savepoint.action) {
 	default:
 		break;

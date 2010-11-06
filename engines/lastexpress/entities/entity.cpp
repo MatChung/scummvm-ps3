@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/entity.cpp $
- * $Id: entity.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: entity.cpp 53845 2010-10-26 06:55:34Z littleboy $
  *
  */
 
@@ -41,6 +41,55 @@
 #include "lastexpress/lastexpress.h"
 
 namespace LastExpress {
+
+//////////////////////////////////////////////////////////////////////////
+// EntityData
+//////////////////////////////////////////////////////////////////////////
+
+void EntityData::EntityCallData::saveLoadWithSerializer(Common::Serializer &s) {
+	for (uint i = 0; i < ARRAYSIZE(callbacks); i++)
+		s.syncAsByte(callbacks[i]);
+
+	s.syncAsByte(currentCall);
+	s.syncAsUint16LE(entityPosition);
+	s.syncAsUint16LE(location);
+	s.syncAsUint16LE(car);
+	s.syncAsByte(field_497);
+	s.syncAsByte(entity);
+	s.syncAsByte(inventoryItem);
+	s.syncAsByte(direction);
+	s.syncAsUint16LE(field_49B);
+	s.syncAsUint16LE(currentFrame);
+	s.syncAsUint16LE(currentFrame2);
+	s.syncAsUint16LE(field_4A1);
+	s.syncAsUint16LE(field_4A3);
+	s.syncAsByte(clothes);
+	s.syncAsByte(position);
+	s.syncAsByte(car2);
+	s.syncAsByte(doProcessEntity);
+	s.syncAsByte(field_4A9);
+	s.syncAsByte(field_4AA);
+	s.syncAsByte(directionSwitch);
+
+	// Sync strings
+#define SYNC_STRING(varName, count) { \
+	char seqName[13]; \
+	memset(&seqName, 0, count); \
+	if (s.isSaving()) strcpy((char *)&seqName, varName.c_str()); \
+	s.syncBytes((byte *)&seqName, count); \
+	if (s.isLoading()) varName = seqName; \
+}
+
+	SYNC_STRING(sequenceName, 13);
+	SYNC_STRING(sequenceName2, 13);
+	SYNC_STRING(sequenceNamePrefix, 7);
+	SYNC_STRING(sequenceNameCopy, 13);
+
+#undef SYNC_STRING
+
+	// Skip pointers to frame & sequences
+	s.skip(5 * 4);
+}
 
 //////////////////////////////////////////////////////////////////////////
 // EntityData
@@ -82,8 +131,11 @@ void EntityData::updateParameters(uint32 index) const {
 		error("EntityData::updateParameters: invalid param index to update (was:%d, max:32)!", index);
 }
 
-void EntityData::saveLoadWithSerializer(Common::Serializer &) {
-	error("EntityData::saveLoadWithSerializer: not implemented!");
+void EntityData::saveLoadWithSerializer(Common::Serializer &s) {
+	for (uint i = 0; i < ARRAYSIZE(_parameters); i++)
+		_parameters[i].saveLoadWithSerializer(s);
+
+	_data.saveLoadWithSerializer(s);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -345,22 +397,22 @@ void Entity::callSavepoint(const SavePoint &savepoint, bool handleExcuseMe) {
 		break;
 
 	case kActionExitCompartment:
-		if (!CURRENT_PARAMS(1, 1))
+		if (!CURRENT_PARAM(1, 1))
 			getSavePoints()->call(_entityIndex, (EntityIndex)params->param4, (ActionIndex)params->param5, (char *)&params->seq2);
 		CALLBACK_ACTION();
 		break;
 
 	case kActionExcuseMeCath:
-		if (handleExcuseMe && !CURRENT_PARAMS(1, 2)) {
+		if (handleExcuseMe && !CURRENT_PARAM(1, 2)) {
 			getSound()->excuseMe(_entityIndex);
-			CURRENT_PARAMS(1, 2) = 1;
+			CURRENT_PARAM(1, 2) = 1;
 		}
 		break;
 
 	case kAction10:
-		if (!CURRENT_PARAMS(1, 1)) {
+		if (!CURRENT_PARAM(1, 1)) {
 			getSavePoints()->call(_entityIndex, (EntityIndex)params->param4, (ActionIndex)params->param5, (char *)&params->seq2);
-			CURRENT_PARAMS(1, 1) = 1;
+			CURRENT_PARAM(1, 1) = 1;
 		}
 		break;
 

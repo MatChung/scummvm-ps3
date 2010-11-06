@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/kfile.cpp $
- * $Id: kfile.cpp 52791 2010-09-18 10:55:16Z eriktorbjorn $
+ * $Id: kfile.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -422,7 +422,7 @@ static void listSavegames(Common::Array<SavegameDesc> &saves) {
 		Common::SeekableReadStream *in;
 		if ((in = saveFileMan->openForLoading(filename))) {
 			SavegameMetadata meta;
-			if (!get_savegame_metadata(in, &meta) || meta.savegame_name.empty()) {
+			if (!get_savegame_metadata(in, &meta) || meta.name.empty()) {
 				// invalid
 				delete in;
 				continue;
@@ -431,17 +431,17 @@ static void listSavegames(Common::Array<SavegameDesc> &saves) {
 
 			SavegameDesc desc;
 			desc.id = strtol(filename.end() - 3, NULL, 10);
-			desc.date = meta.savegame_date;
+			desc.date = meta.saveDate;
 			// We need to fix date in here, because we save DDMMYYYY instead of
 			// YYYYMMDD, so sorting wouldn't work
 			desc.date = ((desc.date & 0xFFFF) << 16) | ((desc.date & 0xFF0000) >> 8) | ((desc.date & 0xFF000000) >> 24);
-			desc.time = meta.savegame_time;
-			desc.version = meta.savegame_version;
+			desc.time = meta.saveTime;
+			desc.version = meta.version;
 
-			if (meta.savegame_name.lastChar() == '\n')
-				meta.savegame_name.deleteLastChar();
+			if (meta.name.lastChar() == '\n')
+				meta.name.deleteLastChar();
 
-			Common::strlcpy(desc.name, meta.savegame_name.c_str(), SCI_MAX_SAVENAME_LENGTH);
+			Common::strlcpy(desc.name, meta.name.c_str(), SCI_MAX_SAVENAME_LENGTH);
 
 			debug(3, "Savegame in file %s ok, id %d", filename.c_str(), desc.id);
 
@@ -584,7 +584,7 @@ reg_t kSaveGame(EngineState *s, int argc, reg_t *argv) {
 			g_system->getTimeAndDate(curTime);
 			curTime.tm_year += 1900; // fixup year
 			curTime.tm_mon++; // fixup month
-			game_description = Common::String::printf("%02d.%02d.%04d / %02d:%02d:%02d", curTime.tm_mday, curTime.tm_mon, curTime.tm_year, curTime.tm_hour, curTime.tm_min, curTime.tm_sec);
+			game_description = Common::String::format("%02d.%02d.%04d / %02d:%02d:%02d", curTime.tm_mday, curTime.tm_mon, curTime.tm_year, curTime.tm_hour, curTime.tm_min, curTime.tm_sec);
 		}
 		delete dialog;
 		g_sci->_soundCmd->pauseAll(false); // unpause music ( we can't have it paused during save)

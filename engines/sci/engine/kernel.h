@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/kernel.h $
- * $Id: kernel.h 52764 2010-09-17 15:19:18Z thebluegr $
+ * $Id: kernel.h 53646 2010-10-20 17:31:29Z thebluegr $
  *
  */
 
@@ -151,6 +151,7 @@ public:
 
 	uint getSelectorNamesSize() const;
 	const Common::String &getSelectorName(uint selector);
+	int findKernelFuncPos(Common::String kernelFuncName);
 
 	uint getKernelNamesSize() const;
 	const Common::String &getKernelName(uint number) const;

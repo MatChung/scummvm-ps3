@@ -19,10 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/fs/ps2/ps2-fs-factory.cpp $
- * $Id: ps2-fs-factory.cpp 48254 2010-03-13 21:55:49Z lordhoto $
+ * $Id: ps2-fs-factory.cpp 53977 2010-10-31 17:01:47Z fingolfin $
  */
 
 #if defined(__PLAYSTATION2__)
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
+
 #include "backends/fs/ps2/ps2-fs-factory.h"
 #include "backends/fs/ps2/ps2-fs.cpp"
 

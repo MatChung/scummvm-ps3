@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/renderobjectregistry.h $
- * $Id: renderobjectregistry.h 53431 2010-10-13 15:41:34Z fingolfin $
+ * $Id: renderobjectregistry.h 53625 2010-10-19 20:54:30Z sev $
  *
  */
 
@@ -35,10 +35,6 @@
 #ifndef SWORD25_RENDEROBJECTREGISTRY_H
 #define SWORD25_RENDEROBJECTREGISTRY_H
 
-// -----------------------------------------------------------------------------
-// Includes
-// -----------------------------------------------------------------------------
-
 #include "sword25/kernel/common.h"
 #include "sword25/kernel/objectregistry.h"
 
@@ -46,15 +42,7 @@
 
 namespace Sword25 {
 
-// -----------------------------------------------------------------------------
-// Forward Deklarationen
-// -----------------------------------------------------------------------------
-
 class RenderObject;
-
-// -----------------------------------------------------------------------------
-// Klassendeklaration
-// -----------------------------------------------------------------------------
 
 class RenderObjectRegistry :
 			public ObjectRegistry<RenderObject>,

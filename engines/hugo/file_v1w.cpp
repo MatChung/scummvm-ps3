@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/file_v1w.cpp $
- * $Id: file_v1w.cpp 53152 2010-10-11 21:41:31Z strangerke $
+ * $Id: file_v1w.cpp 54018 2010-11-01 20:20:21Z strangerke $
  *
  */
 
@@ -37,14 +37,16 @@
 #include "hugo/util.h"
 
 namespace Hugo {
-FileManager_v1w::FileManager_v1w(HugoEngine &vm) : FileManager_v2d(vm) {
+FileManager_v1w::FileManager_v1w(HugoEngine *vm) : FileManager_v2d(vm) {
 }
 
 FileManager_v1w::~FileManager_v1w() {
 }
 
+/**
+* Open and read in an overlay file, close file
+*/
 void FileManager_v1w::readOverlay(int screenNum, image_pt image, ovl_t overlayType) {
-// Open and read in an overlay file, close file
 	debugC(1, kDebugFile, "readOverlay(%d, ...)", screenNum);
 
 	image_pt tmpImage = image;                      // temp ptr to overlay file

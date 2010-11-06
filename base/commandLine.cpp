@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/base/commandLine.cpp $
- * $Id: commandLine.cpp 53183 2010-10-12 21:54:43Z lordhoto $
+ * $Id: commandLine.cpp 54090 2010-11-05 10:53:37Z thebluegr $
  *
  */
 
@@ -157,6 +157,7 @@ void registerDefaults() {
 	// Graphics
 	ConfMan.registerDefault("fullscreen", false);
 	ConfMan.registerDefault("aspect_ratio", false);
+	ConfMan.registerDefault("disable_dithering", false);
 	ConfMan.registerDefault("gfx_mode", "normal");
 	ConfMan.registerDefault("render_mode", "default");
 	ConfMan.registerDefault("desired_screen_aspect_ratio", "auto");
@@ -219,6 +220,14 @@ void registerDefaults() {
 	ConfMan.registerDefault("record_file_name", "record.bin");
 	ConfMan.registerDefault("record_temp_file_name", "record.tmp");
 	ConfMan.registerDefault("record_time_file_name", "record.time");
+
+#if 0
+	// NEW CODE TO HIDE CONSOLE FOR WIN32
+#ifdef WIN32
+	// console hiding for win32
+	ConfMan.registerDefault("show_console", false);
+#endif
+#endif
 }
 
 //
@@ -546,6 +555,15 @@ Common::String parseCommandLine(Common::StringMap &settings, int argc, const cha
 			END_OPTION
 #endif
 
+#if 0
+	// NEW CODE TO HIDE CONSOLE FOR WIN32
+#ifdef WIN32
+			// console hiding for win32
+			DO_LONG_OPTION_BOOL("show-console")
+			END_OPTION
+#endif
+#endif
+
 unknownOption:
 			// If we get till here, the option is unhandled and hence unknown.
 			usage("Unrecognized option '%s'", argv[i]);
@@ -596,7 +614,7 @@ static void listTargets() {
 				description = g.description();
 		}
 
-		targets.push_back(Common::String::printf("%-20s %s", name.c_str(), description.c_str()));
+		targets.push_back(Common::String::format("%-20s %s", name.c_str(), description.c_str()));
 	}
 
 	Common::sort(targets.begin(), targets.end());

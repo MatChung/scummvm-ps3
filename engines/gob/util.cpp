@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/util.cpp $
- * $Id: util.cpp 53398 2010-10-13 03:49:54Z tdhs $
+ * $Id: util.cpp 53774 2010-10-24 20:36:47Z strangerke $
  *
  */
 
@@ -150,7 +150,7 @@ void Util::processInput(bool scroll) {
 		// WORKAROUND:
 		// Force a check of the mouse in order to fix the sofa bug. This apply only for Gob3, and only
 		// in the impacted TOT file so that the second screen animation is not broken.
-		if ((_vm->getGameType() == kGameTypeGob3) && !strncmp(_vm->_game->_curTotFile, "EMAP1008.TOT", 12))
+		if ((_vm->getGameType() == kGameTypeGob3) && !scumm_stricmp(_vm->_game->_curTotFile, "EMAP1008.TOT"))
 			_vm->_game->evaluateScroll();
 	}
 }

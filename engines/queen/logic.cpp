@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/queen/logic.cpp $
- * $Id: logic.cpp 34700 2008-09-30 12:27:38Z fingolfin $
+ * $Id: logic.cpp 54031 2010-11-01 21:37:47Z fingolfin $
  *
  */
 
@@ -1550,7 +1550,7 @@ void Logic::asmEndGame() {
 	while (n--) {
 		_vm->update();
 	}
-//	printf("Game completed.");
+//	debug("Game completed.");
 	_vm->quitGame();
 }
 
@@ -2004,7 +2004,7 @@ void Logic::asmPanLeftToBomb() {
 }
 
 void Logic::asmEndDemo() {
-//	printf("Flight of the Amazon Queen, released January 95.");
+//	debug("Flight of the Amazon Queen, released January 95.");
 	_vm->quitGame();
 }
 
@@ -2049,7 +2049,7 @@ void Logic::asmInterviewIntro() {
 }
 
 void Logic::asmEndInterview() {
-//	printf("Interactive Interview copyright (c) 1995, IBI.");
+//	debug("Interactive Interview copyright (c) 1995, IBI.");
 	_vm->quitGame();
 }
 

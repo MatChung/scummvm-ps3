@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/saveload.cpp $
- * $Id: saveload.cpp 52758 2010-09-17 12:54:00Z lordhoto $
+ * $Id: saveload.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -154,7 +154,7 @@ void AGOSEngine::quickLoadOrSave() {
 		Subroutine *sub;
 		success = loadGame(genSaveName(_saveLoadSlot));
 		if (!success) {
-			buf = Common::String::printf(_("Failed to load game state from file:\n\n%s"), filename);
+			buf = Common::String::format(_("Failed to load game state from file:\n\n%s"), filename);
 		} else if (getGameType() == GType_SIMON1 || getGameType() == GType_SIMON2) {
 			drawIconArray(2, me(), 0, 0);
 			setBitFlag(97, true);
@@ -189,7 +189,7 @@ void AGOSEngine::quickLoadOrSave() {
 	} else {
 		success = saveGame(_saveLoadSlot, _saveLoadName);
 		if (!success)
-			buf = Common::String::printf(_("Failed to save game state to file:\n\n%s"), filename);
+			buf = Common::String::format(_("Failed to save game state to file:\n\n%s"), filename);
 	}
 
 	if (!success) {
@@ -197,7 +197,7 @@ void AGOSEngine::quickLoadOrSave() {
 		dialog.runModal();
 
 	} else if (_saveLoadType == 1) {
-		buf = Common::String::printf(_("Successfully saved game state in file:\n\n%s"), filename);
+		buf = Common::String::format(_("Successfully saved game state in file:\n\n%s"), filename);
 		GUI::TimedMessageDialog dialog(buf, 1500);
 		dialog.runModal();
 

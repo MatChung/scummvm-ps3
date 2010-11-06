@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/mouse.h $
- * $Id: mouse.h 52406 2010-08-27 09:48:53Z strangerke $
+ * $Id: mouse.h 53674 2010-10-21 17:09:57Z strangerke $
  *
  */
 
@@ -36,12 +36,12 @@ namespace Hugo {
 
 class MouseHandler {
 public:
-	MouseHandler(HugoEngine &vm);
+	MouseHandler(HugoEngine *vm);
 
 	void mouseHandler();
 
 private:
-	HugoEngine &_vm;
+	HugoEngine *_vm;
 
 	void  cursorText(char *buffer, int16 cx, int16 cy, uif_t fontId, int16 color);
 	int16 findExit(int16 cx, int16 cy);

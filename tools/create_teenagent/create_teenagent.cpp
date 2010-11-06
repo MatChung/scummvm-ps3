@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/tools/create_teenagent/create_teenagent.cpp $
- * $Id: create_teenagent.cpp 47541 2010-01-25 01:39:44Z lordhoto $
+ * $Id: create_teenagent.cpp 53965 2010-10-30 22:44:15Z fingolfin $
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include <stdio.h>
 #include <stdlib.h>

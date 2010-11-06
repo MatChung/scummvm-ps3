@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/iphone/osys_events.cpp $
- * $Id: osys_events.cpp 53160 2010-10-12 02:18:11Z jvprat $
+ * $Id: osys_events.cpp 53971 2010-10-31 00:04:24Z fingolfin $
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "gui/message.h"
 #include "common/translation.h"

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/image/pngloader.h $
- * $Id: pngloader.h 53378 2010-10-13 00:01:40Z sev $
+ * $Id: pngloader.h 53756 2010-10-24 01:32:52Z fingolfin $
  *
  */
 
@@ -32,46 +32,60 @@
  *
  */
 
-/*
-    BS_PNGLoader
-    ------------
-    BS_ImageLoader-Klasse zum Laden von PNG-Dateien
-
-    Autor: Malte Thiesen
-*/
-
 #ifndef SWORD25_PNGLOADER2_H
 #define SWORD25_PNGLOADER2_H
 
-// Includes
 #include "sword25/kernel/common.h"
-#include "sword25/gfx/image/imageloader.h"
+#include "sword25/gfx/graphicengine.h"
 
 namespace Sword25 {
 
-// Klassendefinition
-class PNGLoader : public ImageLoader {
-public:
-	static ImageLoader *CreateInstance() {
-		return (ImageLoader *) new PNGLoader();
-	}
-
-	// Alle virtuellen Methoden von BS_ImageLoader sind hier als static-Methode implementiert, damit sie von BS_B25SLoader aufgerufen werden können.
-	// Die virtuellen Methoden rufen diese Methoden auf.
-	static bool DoIsCorrectImageFormat(const byte *FileDataPtr, uint FileSize);
-	static bool DoDecodeImage(const byte *FileDataPtr, uint FileSize,  GraphicEngine::COLOR_FORMATS ColorFormat, byte *&UncompressedDataPtr,
-	                          int &Width, int &Height, int &Pitch);
-	static bool DoImageProperties(const byte *FileDataPtr, uint FileSize, GraphicEngine::COLOR_FORMATS &ColorFormat, int &Width, int &Height);
-
+/**
+ * Class for loading PNG files, and PNG data embedded into savegames.
+ *
+ * Originally written by Malte Thiesen.
+ */
+class PNGLoader {
 protected:
-	PNGLoader();
-	bool DecodeImage(const byte *pFileData, uint FileSize,
-	                 GraphicEngine::COLOR_FORMATS ColorFormat,
-	                 byte *&pUncompressedData,
-	                 int &Width, int &Height,
-	                 int &Pitch);
-	bool IsCorrectImageFormat(const byte *FileDataPtr, uint FileSize);
-	bool ImageProperties(const byte *FileDatePtr, uint FileSize, GraphicEngine::COLOR_FORMATS &ColorFormat, int &Width, int &Height);
+	PNGLoader() {}	// Protected constructor to prevent instances
+
+	static bool doDecodeImage(const byte *fileDataPtr, uint fileSize, byte *&uncompressedDataPtr, int &width, int &height, int &pitch);
+	static bool doImageProperties(const byte *fileDataPtr, uint fileSize, int &width, int &height);
+
+public:
+
+	/**
+	 * Decode an image.
+	 * @param[in] fileDatePtr	pointer to the image data
+	 * @param[in] fileSize		size of the image data in bytes
+	 * @param[out] pUncompressedData	if successful, this is set to a pointer containing the decoded image data
+	 * @param[out] width		if successful, this is set to the width of the image
+	 * @param[out] height		if successful, this is set to the height of the image
+	 * @param[out] pitch		if successful, this is set to the number of bytes per scanline in the image
+	 * @return false in case of an error
+	 *
+	 * @remark The size of the output data equals pitch * height.
+	 * @remark This function does not free the image buffer passed to it,
+	 *         it is the callers responsibility to do so.
+	 */
+	static bool decodeImage(const byte *pFileData, uint fileSize,
+	                        byte *&pUncompressedData,
+	                        int &width, int &height,
+	                        int &pitch);
+	/**
+	 * Extract the properties of an image.
+	 * @param[in] fileDatePtr	pointer to the image data
+	 * @param[in] fileSize		size of the image data in bytes
+	 * @param[out] width		if successful, this is set to the width of the image
+	 * @param[out] height		if successful, this is set to the height of the image
+	 * @return returns true if extraction of the properties was successful, false in case of an error
+	 *
+	 * @remark This function does not free the image buffer passed to it,
+	 *         it is the callers responsibility to do so.
+	 */
+	static bool imageProperties(const byte *fileDatePtr, uint fileSize,
+	                            int &width,
+	                            int &height);
 };
 
 } // End of namespace Sword25

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/detection.cpp $
- * $Id: detection.cpp 53549 2010-10-16 21:58:33Z sylvaintv $
+ * $Id: detection.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -159,7 +159,7 @@ bool ToonMetaEngine::hasFeature(MetaEngineFeature f) const {
 }
 
 void ToonMetaEngine::removeSaveState(const char *target, int slot) const {
-	Common::String fileName = Common::String::printf("%s.%03d", target, slot);
+	Common::String fileName = Common::String::format("%s.%03d", target, slot);
 	g_system->getSavefileManager()->removeSavefile(fileName);
 }
 
@@ -209,7 +209,7 @@ SaveStateList ToonMetaEngine::listSaves(const char *target) const {
 }
 
 SaveStateDescriptor ToonMetaEngine::querySaveMetaInfos(const char *target, int slot) const {
-	Common::String fileName = Common::String::printf("%s.%03d", target, slot);
+	Common::String fileName = Common::String::format("%s.%03d", target, slot);
 	Common::InSaveFile *file = g_system->getSavefileManager()->openForLoading(fileName);
 
 	if (file) {

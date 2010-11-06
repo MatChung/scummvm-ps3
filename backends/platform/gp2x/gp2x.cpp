@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/gp2x/gp2x.cpp $
- * $Id: gp2x.cpp 52791 2010-09-18 10:55:16Z eriktorbjorn $
+ * $Id: gp2x.cpp 53962 2010-10-30 21:49:20Z fingolfin $
  *
  */
 
@@ -27,6 +27,9 @@
  * GP2X: Main backend.
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "backends/platform/gp2x/gp2x-common.h"
 #include "backends/platform/gp2x/gp2x-hw.h"
@@ -115,7 +118,7 @@ void OSystem_GP2X::initBackend() {
 	char workDirName[PATH_MAX+1];
 
 	if (getcwd(workDirName, PATH_MAX) == NULL) {
-		error("Could not obtain current working directory");
+		error("Could not obtain current working directory.");
 	} else {
 		printf("Current working directory: %s\n", workDirName);
 	}
@@ -328,7 +331,7 @@ void OSystem_GP2X::addSysArchivesToSearchSet(Common::SearchSet &s, int priority)
 	char workDirName[PATH_MAX+1];
 
 	if (getcwd(workDirName, PATH_MAX) == NULL) {
-		error("Error: Could not obtain current working directory");
+		error("Error: Could not obtain current working directory.");
 	}
 
 	Common::FSNode workdirNode(workDirName);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/ptr.h $
- * $Id: ptr.h 51094 2010-07-21 18:17:51Z lordhoto $
+ * $Id: ptr.h 54057 2010-11-04 00:49:12Z fingolfin $
  */
 
 #ifndef COMMON_PTR_H
@@ -243,7 +243,7 @@ public:
 	operator bool() const { return _pointer != 0; }
 
 	~ScopedPtr() {
-		delete _pointer;
+		delete _pointer;		
 	}
 
 	/**
@@ -276,7 +276,6 @@ public:
 private:
 	PointerType _pointer;
 };
-
 
 } // End of namespace Common
 

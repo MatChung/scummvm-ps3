@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/animator_v2.cpp $
- * $Id: animator_v2.cpp 44634 2009-10-04 21:26:33Z fingolfin $
+ * $Id: animator_v2.cpp 53697 2010-10-22 02:10:22Z lordhoto $
  *
  */
 
@@ -141,7 +141,7 @@ void KyraEngine_v2::flagAnimObjsSpecialRefresh() {
 }
 
 void KyraEngine_v2::addItemToAnimList(int item) {
-	assert(item < _itemListSize);
+	assert(item >= 0 && item < _itemListSize);
 
 	restorePage3();
 

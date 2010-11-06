@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/entities.h $
- * $Id: entities.h 53579 2010-10-18 19:17:38Z sev $
+ * $Id: entities.h 53880 2010-10-27 19:19:22Z littleboy $
  *
  */
 
@@ -53,6 +53,8 @@ public:
 
 	// Serializable
 	void saveLoadWithSerializer(Common::Serializer &ser);
+	void savePositions(Common::Serializer &ser);
+	void saveCompartments(Common::Serializer &ser);
 
 	void setup(bool isFirstChapter, EntityIndex entity);
 	void setupChapter(ChapterIndex chapter);
@@ -72,7 +74,7 @@ public:
 	void updateCallbacks();
 
 	EntityIndex canInteractWith(const Common::Point &point) const;
-	bool compare(EntityIndex entity1, EntityIndex entity2);
+	bool compare(EntityIndex entity1, EntityIndex entity2) const;
 
 	/**
 	 * Update an entity current sequence frame (and related fields)
@@ -86,19 +88,19 @@ public:
 	void exitCompartment(EntityIndex entity, ObjectIndex compartment, bool useCompartment1 = false);
 
 	// Sequences
-	void drawSequenceLeft(EntityIndex index, const char* sequence) const;
-	void drawSequenceRight(EntityIndex index, const char* sequence) const;
+	void drawSequenceLeft(EntityIndex index, const char *sequence) const;
+	void drawSequenceRight(EntityIndex index, const char *sequence) const;
 	void clearSequences(EntityIndex index) const;
 
-	bool updateEntity(EntityIndex entity, CarIndex car, EntityPosition position);
+	bool updateEntity(EntityIndex entity, CarIndex car, EntityPosition position) const;
 	bool hasValidFrame(EntityIndex entity) const;
 
 	// Accessors
 	Entity *get(EntityIndex entity);
 	EntityData::EntityCallData *getData(EntityIndex entity) const;
-	int getPosition(CarIndex car, Position position);
-	int getCompartments(int index);
-	int getCompartments1(int index);
+	int getPosition(CarIndex car, Position position) const;
+	int getCompartments(int index) const;
+	int getCompartments1(int index) const;
 
 	// Scene
 	void loadSceneFromEntityPosition(CarIndex car, EntityPosition position, bool alternate = false) const;
@@ -347,11 +349,11 @@ private:
 	void executeCallbacks();
 	void processEntity(EntityIndex entity);
 
-	void drawSequence(EntityIndex entity, const char* sequence, EntityDirection direction) const;
+	void drawSequence(EntityIndex entity, const char *sequence, EntityDirection direction) const;
 	void drawSequences(EntityIndex entity, EntityDirection direction, bool loadSequence) const;
 	void loadSequence2(EntityIndex entity, Common::String sequenceName, Common::String sequenceName2, byte field30, bool loadSequence) const;
 
-	void clearEntitySequenceData(EntityData::EntityCallData * data, EntityDirection direction) const;
+	void clearEntitySequenceData(EntityData::EntityCallData *data, EntityDirection direction) const;
 	void computeCurrentFrame(EntityIndex entity) const;
 	int16 getCurrentFrame(EntityIndex entity, Sequence *sequence, EntityPosition position, bool doProcessing) const;
 	void processFrame(EntityIndex entity, bool keepPreviousFrame, bool dontPlaySound);
@@ -359,7 +361,7 @@ private:
 	void updateEntityPosition(EntityIndex entity) const;
 	void copySequenceData(EntityIndex entity) const;
 
-	bool changeCar(EntityData::EntityCallData * data, EntityIndex entity, CarIndex car, EntityPosition position, bool increment, EntityPosition newPosition, CarIndex newCar) const;
+	bool changeCar(EntityData::EntityCallData *data, EntityIndex entity, CarIndex car, EntityPosition position, bool increment, EntityPosition newPosition, CarIndex newCar) const;
 
 	void getSequenceName(EntityIndex entity, EntityDirection direction, Common::String &sequence1, Common::String &sequence2) const;
 

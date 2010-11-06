@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/testbed/sound.cpp $
- * $Id: sound.cpp 52973 2010-10-02 01:05:16Z sud03r $
+ * $Id: sound.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  */
 
 #include "sound/audiocd.h"
@@ -193,7 +193,7 @@ TestExitStatus SoundSubsystem::audiocdOutput() {
 		AudioCD.play(i, 1, 0, 0);
 		while (AudioCD.isPlaying()) {
 			g_system->delayMillis(500);
-			Testsuite::writeOnScreen(Common::String::printf("Playing Now: track%02d", i), pt);
+			Testsuite::writeOnScreen(Common::String::format("Playing Now: track%02d", i), pt);
 		}
 		g_system->delayMillis(500);
 	}
@@ -234,19 +234,19 @@ TestExitStatus SoundSubsystem::sampleRates() {
 	Common::Point pt(0, 100);
 
 	mixer->playStream(Audio::Mixer::kPlainSoundType, &handle, s1);
-	Testsuite::writeOnScreen(Common::String::printf("Playing at smaple rate: %d", s1->getRate()), pt);
+	Testsuite::writeOnScreen(Common::String::format("Playing at smaple rate: %d", s1->getRate()), pt);
 	g_system->delayMillis(1000);
 	mixer->stopHandle(handle);
 	g_system->delayMillis(1000);
 
 	mixer->playStream(Audio::Mixer::kSpeechSoundType, &handle, s2);
-	Testsuite::writeOnScreen(Common::String::printf("Playing at sample rate : %d", s2->getRate()), pt);
+	Testsuite::writeOnScreen(Common::String::format("Playing at sample rate : %d", s2->getRate()), pt);
 	g_system->delayMillis(1000);
 	mixer->stopHandle(handle);
 	g_system->delayMillis(1000);
 
 	mixer->playStream(Audio::Mixer::kSFXSoundType, &handle, s3);
-	Testsuite::writeOnScreen(Common::String::printf("Playing at sample rate : %d", s3->getRate()), pt);
+	Testsuite::writeOnScreen(Common::String::format("Playing at sample rate : %d", s3->getRate()), pt);
 	g_system->delayMillis(1000);
 	mixer->stopHandle(handle);
 	g_system->delayMillis(1000);

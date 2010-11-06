@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/logic.h $
- * $Id: logic.h 45284 2009-10-20 19:51:32Z fingolfin $
+ * $Id: logic.h 53997 2010-11-01 11:25:11Z eriktorbjorn $
  */
 
 // logic management
@@ -316,8 +316,6 @@ public:
 	void logicReplace(uint32 new_script);
 	void logicOne(uint32 new_script);
 	void resetKillList();
-
-	void pauseMovie(bool pause);
 
 	// Read location number from script vars
 	uint32 getLocationNum();

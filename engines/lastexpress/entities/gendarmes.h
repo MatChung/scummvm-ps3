@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/gendarmes.h $
- * $Id: gendarmes.h 53588 2010-10-18 21:03:28Z littleboy $
+ * $Id: gendarmes.h 53682 2010-10-21 23:40:14Z littleboy $
  *
  */
 
@@ -53,7 +53,7 @@ public:
 	DECLARE_FUNCTION_1(arrestDraw, const char *sequence)
 	DECLARE_FUNCTION_1(arrestPlaysound, const char *soundName)
 	DECLARE_FUNCTION_1(arrestPlaysound16, const char *soundName)
-	DECLARE_FUNCTION_1(arrestCallback, TimeValue timeValue)
+	DECLARE_FUNCTION_1(arrestCallback, uint32 timeValue)
 
 	/**
 	 * Saves the game

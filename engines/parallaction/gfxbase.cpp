@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/gfxbase.cpp $
- * $Id: gfxbase.cpp 49621 2010-06-13 06:56:13Z peres001 $
+ * $Id: gfxbase.cpp 53738 2010-10-23 15:46:50Z fingolfin $
  *
  */
 
@@ -322,7 +322,7 @@ void Gfx::bltMaskScale(const Common::Rect& r, byte *data, Graphics::Surface *sur
 	uint line = 0, col = 0;
 
 	uint xAccum = 0, yAccum = 0;
-    uint inc = width * (100 - scale);
+	uint inc = width * (100 - scale);
 	uint thr = width * 100;
 
 	for (uint16 i = 0; i < srcRect.height(); i++) {

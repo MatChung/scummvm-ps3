@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/he/script_v70he.cpp $
- * $Id: script_v70he.cpp 44029 2009-09-11 10:13:54Z Kirben $
+ * $Id: script_v70he.cpp 53739 2010-10-23 15:47:23Z fingolfin $
  *
  */
 
@@ -31,7 +31,6 @@
 #include "scumm/he/intern_he.h"
 #include "scumm/object.h"
 #include "scumm/resource.h"
-#include "scumm/he/resource_he.h"
 #include "scumm/scumm.h"
 #include "scumm/he/sound_he.h"
 #include "scumm/verbs.h"

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/kmath.cpp $
- * $Id: kmath.cpp 52560 2010-09-05 13:51:47Z m_kiewitz $
+ * $Id: kmath.cpp 54042 2010-11-02 16:07:22Z thebluegr $
  *
  */
 
@@ -126,14 +126,14 @@ reg_t kTimesSin(EngineState *s, int argc, reg_t *argv) {
 	int angle = argv[0].toSint16();
 	int factor = argv[1].toSint16();
 
-	return make_reg(0, (int)(factor * sin(angle * PI / 180.0)));
+	return make_reg(0, (int16)(factor * sin(angle * PI / 180.0)));
 }
 
 reg_t kTimesCos(EngineState *s, int argc, reg_t *argv) {
 	int angle = argv[0].toSint16();
 	int factor = argv[1].toSint16();
 
-	return make_reg(0, (int)(factor * cos(angle * PI / 180.0)));
+	return make_reg(0, (int16)(factor * cos(angle * PI / 180.0)));
 }
 
 reg_t kCosDiv(EngineState *s, int argc, reg_t *argv) {

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/m4.h $
- * $Id: m4.h 53484 2010-10-15 12:48:19Z fingolfin $
+ * $Id: m4.h 54035 2010-11-02 00:51:12Z dreammaster $
  *
  */
 
@@ -116,7 +116,9 @@ enum {
 enum {
 	kDebugScript = 1 << 0,
 	kDebugConversations = 1 << 1,
-	kDebugGraphics = 1 << 2
+	kDebugGraphics = 1 << 2,
+	kDebugSound = 1 << 3,
+	kDebugCore = 1 << 4
 };
 
 #define MESSAGE_BASIC 1
@@ -161,7 +163,6 @@ public:
 
 	const char *getGameFile(int fileType);
 	Common::EventManager *eventMan() { return _eventMan; }
-	OSystem *system() { return _system; }
 
 	const M4GameDescription *_gameDescription;
 

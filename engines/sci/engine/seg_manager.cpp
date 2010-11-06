@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/seg_manager.cpp $
- * $Id: seg_manager.cpp 52703 2010-09-13 13:47:56Z thebluegr $
+ * $Id: seg_manager.cpp 54037 2010-11-02 09:49:47Z fingolfin $
  *
  */
 
@@ -301,9 +301,9 @@ reg_t SegManager::findObjectByName(const Common::String &name, int index) {
 		return NULL_REG;
 
 	if (result.size() > 1 && index < 0) {
-		printf("Ambiguous:\n");
+		debug("findObjectByName(%s): multiple matches:", name.c_str());
 		for (i = 0; i < result.size(); i++)
-			printf("  %3x: [%04x:%04x] %s\n", i, PRINT_REG(result[i]), name.c_str());
+			debug("  %3x: [%04x:%04x]", i, PRINT_REG(result[i]));
 		return NULL_REG; // Ambiguous
 	}
 

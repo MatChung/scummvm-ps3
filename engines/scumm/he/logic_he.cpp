@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/he/logic_he.cpp $
- * $Id: logic_he.cpp 48957 2010-05-05 20:43:22Z fingolfin $
+ * $Id: logic_he.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -77,11 +77,11 @@ int32 LogicHE::dispatch(int op, int numArgs, int32 *args) {
 #if 1
 	Common::String str;
 
-	str = Common::String::printf("LogicHE::dispatch(%d, %d, [", op, numArgs);
+	str = Common::String::format("LogicHE::dispatch(%d, %d, [", op, numArgs);
 	if (numArgs > 0)
-		str += Common::String::printf("%d", args[0]);
+		str += Common::String::format("%d", args[0]);
 	for (int i = 1; i < numArgs; i++) {
-		str += Common::String::printf(", %d", args[i]);
+		str += Common::String::format(", %d", args[i]);
 	}
 	str += "])";
 
@@ -232,7 +232,7 @@ int32 LogicHErace::op_1101(int32 *args) {
 	int32 retval;
 	float temp;
 
-    temp = args[0] / _userData[532];
+	temp = args[0] / _userData[532];
 	if (_userData[519] != temp) {
 		_userData[519] = temp;
 		op_sub3(temp);
@@ -952,6 +952,30 @@ int LogicHEsoccer::op_1021(int32 *args) {
 	// TODO: Used during a match (ball movement?)
 
 	return 1;
+}
+
+/***********************
+ * Backyard Baseball 2001
+ *
+ */
+
+int LogicHEbaseball2001::versionID() {
+	return 1;
+}
+
+int32 LogicHEbaseball2001::dispatch(int op, int numArgs, int32 *args) {
+	int res = 0;
+
+	switch (op) {
+	case 3001:
+		// Check network status
+		break;
+
+	default:
+		LogicHE::dispatch(op, numArgs, args);
+	}
+
+	return res;
 }
 
 /***********************

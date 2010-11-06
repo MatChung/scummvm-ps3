@@ -19,9 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEkeys/EventsBuffer.cpp $
- * $Id: EventsBuffer.cpp 33839 2008-08-13 19:13:53Z knakos $
+ * $Id: EventsBuffer.cpp 53978 2010-10-31 17:10:45Z fingolfin $
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
+
+#include <SDL.h>
 
 #include "EventsBuffer.h"
 

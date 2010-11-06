@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/sound/drivers/midi.cpp $
- * $Id: midi.cpp 52726 2010-09-14 21:53:22Z lordhoto $
+ * $Id: midi.cpp 53906 2010-10-28 16:26:04Z thebluegr $
  *
  */
 
@@ -32,10 +32,13 @@
 #include "sound/softsynth/emumidi.h"
 
 #include "sci/resource.h"
+#include "sci/sound/drivers/gm_names.h"
 #include "sci/sound/drivers/mididriver.h"
 #include "sci/sound/drivers/map-mt32-to-gm.h"
 
 namespace Sci {
+
+Mt32ToGmMapList *Mt32dynamicMappings = NULL;
 
 class MidiPlayer_Midi : public MidiPlayer {
 public:
@@ -131,10 +134,21 @@ MidiPlayer_Midi::MidiPlayer_Midi(SciVersion version) : MidiPlayer(version), _pla
 	_sysExBuf[1] = 0x10;
 	_sysExBuf[2] = 0x16;
 	_sysExBuf[3] = 0x12;
+
+	Mt32dynamicMappings = new Mt32ToGmMapList();
 }
 
 MidiPlayer_Midi::~MidiPlayer_Midi() {
 	delete _driver;
+
+	const Mt32ToGmMapList::iterator end = Mt32dynamicMappings->end();
+	for (Mt32ToGmMapList::iterator it = Mt32dynamicMappings->begin(); it != end; ++it) {
+		delete[] (*it).name;
+		(*it).name = 0;
+	}
+
+	Mt32dynamicMappings->clear();
+	delete Mt32dynamicMappings;
 }
 
 void MidiPlayer_Midi::noteOn(int channel, int note, int velocity) {
@@ -615,22 +629,40 @@ void MidiPlayer_Midi::readMt32DrvData() {
 byte MidiPlayer_Midi::lookupGmInstrument(const char *iname) {
 	int i = 0;
 
+	if (Mt32dynamicMappings != NULL) {
+		const Mt32ToGmMapList::iterator end = Mt32dynamicMappings->end();
+		for (Mt32ToGmMapList::iterator it = Mt32dynamicMappings->begin(); it != end; ++it) {
+			if (scumm_strnicmp(iname, (*it).name, 10) == 0)
+				return getGmInstrument((*it));
+		}
+	}
+
 	while (Mt32MemoryTimbreMaps[i].name) {
 		if (scumm_strnicmp(iname, Mt32MemoryTimbreMaps[i].name, 10) == 0)
 			return getGmInstrument(Mt32MemoryTimbreMaps[i]);
 		i++;
 	}
+
 	return MIDI_UNMAPPED;
 }
 
 byte MidiPlayer_Midi::lookupGmRhythmKey(const char *iname) {
 	int i = 0;
 
+	if (Mt32dynamicMappings != NULL) {
+		const Mt32ToGmMapList::iterator end = Mt32dynamicMappings->end();
+		for (Mt32ToGmMapList::iterator it = Mt32dynamicMappings->begin(); it != end; ++it) {
+			if (scumm_strnicmp(iname, (*it).name, 10) == 0)
+				return (*it).gmRhythmKey;
+		}
+	}
+
 	while (Mt32MemoryTimbreMaps[i].name) {
 		if (scumm_strnicmp(iname, Mt32MemoryTimbreMaps[i].name, 10) == 0)
 			return Mt32MemoryTimbreMaps[i].gmRhythmKey;
 		i++;
 	}
+
 	return MIDI_UNMAPPED;
 }
 

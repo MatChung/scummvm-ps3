@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/hugo.h $
- * $Id: hugo.h 53484 2010-10-15 12:48:19Z fingolfin $
+ * $Id: hugo.h 54102 2010-11-06 13:21:18Z strangerke $
  *
  */
 
@@ -33,13 +33,11 @@
 #include "hugo/game.h"
 
 #define HUGO_DAT_VER_MAJ 0                          // 1 byte
-#define HUGO_DAT_VER_MIN 25                         // 1 byte
+#define HUGO_DAT_VER_MIN 27                         // 1 byte
 #define DATAALIGNMENT    4
 #define EDGE             10                         // Closest object can get to edge of screen
 #define EDGE2            (EDGE * 2)                 // Push object further back on edge collision
 #define SHIFT            8                          // Place hero this far inside bounding box
-#define MAX_OBJECTS      128                        // Used in Update_images()
-#define BOUND(X, Y)      ((_boundary[Y * XBYTES + X / 8] & (0x80 >> X % 8)) != 0)  // Boundary bit set
 
 namespace Common {
 class RandomSource;
@@ -74,14 +72,15 @@ enum GameVariant {
 };
 
 enum HugoDebugChannels {
-	kDebugSchedule   = 1 <<  0,
-	kDebugEngine     = 1 <<  1,
-	kDebugDisplay    = 1 <<  2,
-	kDebugMouse      = 1 <<  3,
-	kDebugParser     = 1 <<  4,
-	kDebugFile       = 1 <<  5,
-	kDebugRoute      = 1 <<  6,
-	kDebugInventory  = 1 <<  7
+	kDebugSchedule  = 1 <<  0,
+	kDebugEngine    = 1 <<  1,
+	kDebugDisplay   = 1 <<  2,
+	kDebugMouse     = 1 <<  3,
+	kDebugParser    = 1 <<  4,
+	kDebugFile      = 1 <<  5,
+	kDebugRoute     = 1 <<  6,
+	kDebugInventory = 1 <<  7,
+	kDebugObject    = 1 <<  8
 };
 
 enum HugoGameFeatures {
@@ -103,6 +102,7 @@ class Parser;
 class Route;
 class SoundHandler;
 class IntroHandler;
+class ObjectHandler;
 
 
 class HugoEngine : public Engine {
@@ -114,16 +114,15 @@ public:
 	byte   _gameVariant;
 	byte   _maxInvent;
 	byte   _numBonuses;
-	byte   _soundSilence;
-	byte   _soundTest;
-	byte   _tunesNbr;
+	int8   _soundSilence;
+	int8   _soundTest;
+	int8   _tunesNbr;
 	uint16 _numScreens;
 
 	object_t *_hero;
 	byte  *_screen_p;
 	byte  _heroImage;
 
-	byte  *_palette;
 	byte  *_introX;
 	byte  *_introY;
 	byte  *_screenStates;
@@ -144,19 +143,20 @@ public:
 	hotspot_t *_hotspots;
 	int16     *_invent;
 	uses_t    *_uses;
+	uint16     _usesSize;
 	background_t *_catchallList;
 	background_t **_backgroundObjects;
+	uint16    _backgroundObjectsSize;
 	point_t   *_points;
 	cmd       **_cmdList;
+	uint16    _cmdListSize;
 	uint16    **_screenActs;
-	object_t  *_objects;
-	act       **_actListArr;
+	uint16    _screenActsSize;
 	int16     *_defltTunes;
 	uint16    _look;
 	uint16    _take;
 	uint16    _drop;
 	uint16    _numObj;
-	uint16    _alNewscrIndex;
 
 	Common::RandomSource *_rnd;
 
@@ -181,34 +181,6 @@ public:
 		return *s_Engine;
 	}
 
-	FileManager &file() {
-		return *_fileManager;
-	}
-	Scheduler &scheduler() {
-		return *_scheduler;
-	}
-	Screen &screen() {
-		return *_screen;
-	}
-	MouseHandler &mouse() {
-		return *_mouseHandler;
-	}
-	InventoryHandler &inventory() {
-		return *_inventoryHandler;
-	}
-	Parser &parser() {
-		return *_parser;
-	}
-	Route &route() {
-		return *_route;
-	}
-	SoundHandler &sound() {
-		return *_soundHandler;
-	}
-	IntroHandler &intro() {
-		return *_introHandler;
-	}
-
 	void initGame(const HugoGameDescription *gd);
 	void initGamePart(const HugoGameDescription *gd);
 	bool loadHugoDat();
@@ -220,22 +192,21 @@ public:
 		return _mouseY;
 	}
 
-	void initStatus();
-	void readObjectImages();
-	void readUIFImages();
-	void updateImages();
-	void moveObjects();
-	void useObject(int16 objId);
-	bool findObjectSpace(object_t *obj, int16 *destx, int16 *desty);
-	int16 findObject(uint16 x, uint16 y);
-	void lookObject(object_t *obj);
-	void storeBoundary(int x1, int x2, int y);
+	void boundaryCollision(object_t *obj);
 	void clearBoundary(int x1, int x2, int y);
 	void endGame();
+	void initStatus();
+	void readObjectImages();
 	void readScreenFiles(int screen);
-	void setNewScreen(int screen);
 	void screenActions(int screen);
+	void setNewScreen(int screen);
 	void shutdown();
+	void storeBoundary(int x1, int x2, int y);
+
+	char *useBG(char *name);
+
+	int deltaX(int x1, int x2, int vx, int y);
+	int deltaY(int x1, int x2, int vy, int y);
 
 	overlay_t &getBoundaryOverlay() {
 		return _boundary;
@@ -271,6 +242,17 @@ public:
 		return _introXSize;
 	}
 
+	FileManager *_file;
+	Scheduler *_scheduler;
+	Screen *_screen;
+	MouseHandler *_mouse;
+	InventoryHandler *_inventory;
+	Parser *_parser;
+	Route *_route;
+	SoundHandler *_sound;
+	IntroHandler *_intro;
+	ObjectHandler *_object;
+
 protected:
 
 	// Engine APIs
@@ -279,7 +261,6 @@ protected:
 private:
 	int _mouseX;
 	int _mouseY;
-	byte _paletteSize;
 	byte _introXSize;
 	status_t _status;                               // Game status structure
 
@@ -292,27 +273,17 @@ private:
 // Vinterstum: These shouldn't be static, but we get weird pathfinding issues (and Valgrind warnings) without.
 // Needs more investigation. Alignment issues?
 
-	static overlay_t _boundary;                             // Boundary overlay file
-	static overlay_t _overlay;                              // First overlay file
-	static overlay_t _ovlBase;                              // First overlay base file
-	static overlay_t _objBound;                             // Boundary file marks object baselines
+	static overlay_t _boundary;                     // Boundary overlay file
+	static overlay_t _overlay;                      // First overlay file
+	static overlay_t _ovlBase;                      // First overlay base file
+	static overlay_t _objBound;                     // Boundary file marks object baselines
 
 	GameType _gameType;
 	Common::Platform _platform;
 	bool _packedFl;
 
-	FileManager *_fileManager;
-	Scheduler *_scheduler;
-	Screen *_screen;
-	MouseHandler *_mouseHandler;
-	InventoryHandler *_inventoryHandler;
-	Parser *_parser;
-	Route *_route;
-	SoundHandler *_soundHandler;
-	IntroHandler *_introHandler;
-
-	int _score;                         // Holds current score
-	int _maxscore;                      // Holds maximum score
+	int _score;                                     // Holds current score
+	int _maxscore;                                  // Holds maximum score
 
 	char **loadTextsVariante(Common::File &in, uint16 *arraySize);
 	char ***loadTextsArray(Common::File &in);
@@ -323,18 +294,9 @@ private:
 	void initPlaylist(bool playlist[MAX_TUNES]);
 	void initConfig(inst_t action);
 	void initialize();
-	int deltaX(int x1, int x2, int vx, int y);
-	int deltaY(int x1, int x2, int vy, int y);
-	void processMaze();
-	//int y2comp (const void *a, const void *b);
-	char *useBG(char *name);
-	void freeObjects();
-	void boundaryCollision(object_t *obj);
 	void calcMaxScore();
 	void initMachine();
 	void runMachine();
-
-	static int y2comp(const void *a, const void *b);
 
 };
 

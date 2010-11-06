@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/script/luascript.cpp $
- * $Id: luascript.cpp 53568 2010-10-18 17:12:00Z sev $
+ * $Id: luascript.cpp 53899 2010-10-28 00:26:25Z fingolfin $
  *
  */
 
@@ -62,10 +62,6 @@ LuaScriptEngine::~LuaScriptEngine() {
 	// Lua de-initialisation
 	if (_state)
 		lua_close(_state);
-}
-
-Service *LuaScriptEngine_CreateObject(Kernel *KernelPtr) {
-	return new LuaScriptEngine(KernelPtr);
 }
 
 namespace {
@@ -151,7 +147,7 @@ bool LuaScriptEngine::executeFile(const Common::String &fileName) {
 	debug(2, "LuaScriptEngine::executeFile(%s)", fileName.c_str());
 
 	// Get a pointer to the package manager
-	PackageManager *pPackage = Kernel::GetInstance()->GetPackage();
+	PackageManager *pPackage = Kernel::getInstance()->getPackage();
 	BS_ASSERT(pPackage);
 
 	// File read
@@ -423,7 +419,7 @@ bool LuaScriptEngine::persist(OutputPersistenceBlock &writer) {
 	pluto_persist(_state, chunkwriter, &chunkData);
 
 	// Persistenzdaten in den Writer schreiben.
-	writer.write(&chunkData[0], chunkData.size());
+	writer.writeByteArray(chunkData);
 
 	// Die beiden Tabellen vom Stack nehmen.
 	lua_pop(_state, 2);
@@ -520,7 +516,7 @@ bool LuaScriptEngine::unpersist(InputPersistenceBlock &reader) {
 
 	// Persisted Lua data
 	Common::Array<byte> chunkData;
-	reader.read(chunkData);
+	reader.readByteArray(chunkData);
 
 	// Chunk-Reader initialisation. It is used with pluto_unpersist to restore read data
 	ChunkreaderData cd;

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/mads_scene.h $
- * $Id: mads_scene.h 52365 2010-08-25 06:55:11Z dreammaster $
+ * $Id: mads_scene.h 54034 2010-11-02 00:15:18Z dreammaster $
  *
  */
 
@@ -108,7 +108,6 @@ public:
 	Common::Point _destPos;
 	int _destFacing;
 	Common::Point _customDest;
-	bool _animActive;
 public:
 	MadsScene(MadsEngine *vm);
 	virtual ~MadsScene();
@@ -191,6 +190,9 @@ public:
 	void onRefresh(RectList *rects, M4Surface *destSurface);
 	bool onEvent(M4EventType eventType, int32 param1, int x, int y, bool &captureEvents);
 };
+
+extern int getActiveAnimationBool();
+extern int getAnimationCurrentFrame();
 
 } // End of namespace M4
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/script/lua_extensions.cpp $
- * $Id: lua_extensions.cpp 53391 2010-10-13 00:08:28Z sev $
+ * $Id: lua_extensions.cpp 53626 2010-10-19 21:03:33Z sev $
  *
  */
 
@@ -47,7 +47,7 @@ static int warning(lua_State *L) {
 	lua_pushstring(L, "WARNING - ");
 	lua_pushvalue(L, 1);
 	lua_concat(L, 3);
-	BS_Log::Log("%s\n", luaL_checkstring(L, -1));
+	BS_Log::log("%s\n", luaL_checkstring(L, -1));
 	lua_pop(L, 1);
 
 #ifdef DEBUG

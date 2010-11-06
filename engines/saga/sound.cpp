@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/sound.cpp $
- * $Id: sound.cpp 49725 2010-06-15 10:25:34Z sev $
+ * $Id: sound.cpp 53773 2010-10-24 20:22:21Z h00ligan $
  *
  */
 
@@ -36,7 +36,7 @@
 namespace Saga {
 
 Sound::Sound(SagaEngine *vm, Audio::Mixer *mixer) :
-	_vm(vm), _mixer(mixer), _voxStream(0) {
+	_vm(vm), _mixer(mixer) {
 
 	for (int i = 0; i < SOUND_HANDLES; i++)
 		_handles[i].type = kFreeHandle;
@@ -45,7 +45,6 @@ Sound::Sound(SagaEngine *vm, Audio::Mixer *mixer) :
 }
 
 Sound::~Sound() {
-	delete _voxStream;
 }
 
 SndHandle *Sound::getHandle() {

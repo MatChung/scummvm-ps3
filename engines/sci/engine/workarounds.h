@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/workarounds.h $
- * $Id: workarounds.h 52213 2010-08-19 15:58:39Z thebluegr $
+ * $Id: workarounds.h 53993 2010-10-31 23:34:36Z thebluegr $
  *
  */
 
@@ -104,6 +104,7 @@ extern const SciWorkaroundEntry kSetCursor_workarounds[];
 extern const SciWorkaroundEntry kSetPort_workarounds[];
 extern const SciWorkaroundEntry kStrAt_workarounds[];
 extern const SciWorkaroundEntry kStrCat_workarounds[];
+extern const SciWorkaroundEntry kStrLen_workarounds[];
 extern const SciWorkaroundEntry kUnLoad_workarounds[];
 
 extern SciWorkaroundSolution trackOriginAndFindWorkaround(int index, const SciWorkaroundEntry *workaroundList, SciTrackOriginReply *trackOrigin);

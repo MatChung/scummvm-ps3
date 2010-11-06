@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/console.h $
- * $Id: console.h 53544 2010-10-16 17:25:08Z drmccoy $
+ * $Id: console.h 53985 2010-10-31 20:51:35Z drmccoy $
  *
  */
 
@@ -49,6 +49,8 @@ private:
 	bool cmd_var16(int argc, const char **argv);
 	bool cmd_var32(int argc, const char **argv);
 	bool cmd_varString(int argc, const char **argv);
+
+	bool cmd_listArchives(int argc, const char **argv);
 };
 
 } // End of namespace Mohawk

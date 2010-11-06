@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/he/palette_he.cpp $
- * $Id: palette_he.cpp 44048 2009-09-13 10:32:55Z eriktorbjorn $
+ * $Id: palette_he.cpp 53669 2010-10-21 08:51:10Z Kirben $
  *
  */
 
@@ -203,8 +203,8 @@ void ScummEngine_v90he::setHEPaletteFromImage(int palSlot, int resId, int state)
 	uint8 *data = getResourceAddress(rtImage, resId);
 	assert(data);
 	const uint8 *rgbs = findWrappedBlock(MKID_BE('RGBS'), data, state, 0);
-	assert(rgbs);
-	setHEPaletteFromPtr(palSlot, rgbs);
+	if (rgbs)
+		setHEPaletteFromPtr(palSlot, rgbs);
 }
 
 void ScummEngine_v90he::setHEPaletteFromRoom(int palSlot, int resId, int state) {

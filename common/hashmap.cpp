@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/hashmap.cpp $
- * $Id: hashmap.cpp 41496 2009-06-13 21:07:05Z wjpalenstijn $
+ * $Id: hashmap.cpp 54003 2010-11-01 16:00:53Z fingolfin $
  *
  */
 
@@ -89,7 +89,7 @@ void updateHashCollisionStats(int collisions, int dummyHits, int lookups, int ar
 	g_max_capacity = MAX(g_max_capacity, arrsize);
 	g_max_size = MAX(g_max_size, nele);
 
-	fprintf(stdout, "%d hashmaps: colls %.1f; dummies hit %.1f, lookups %.1f; ratio %.3f%%; size %f (max: %d); capacity %f (max: %d)\n",
+	debug("%d hashmaps: colls %.1f; dummies hit %.1f, lookups %.1f; ratio %.3f%%; size %f (max: %d); capacity %f (max: %d)",
 		g_totalHashmaps,
 		g_collisions / g_totalHashmaps,
 		g_dummyHits / g_totalHashmaps,
@@ -97,7 +97,7 @@ void updateHashCollisionStats(int collisions, int dummyHits, int lookups, int ar
 		100 * g_collPerLook / g_totalHashmaps,
 		g_size / g_totalHashmaps, g_max_size,
 		g_capacity / g_totalHashmaps, g_max_capacity);
-	fprintf(stdout, "  %d less than %d; %d less than %d; %d less than %d; %d less than %d\n",
+	debug("  %d less than %d; %d less than %d; %d less than %d; %d less than %d",
 			g_stats[0], 2*8/3,
 			g_stats[1],2*16/3,
 			g_stats[2],2*32/3,

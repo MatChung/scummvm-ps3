@@ -19,10 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lure/debugger.cpp $
- * $Id: debugger.cpp 50963 2010-07-17 18:38:42Z fingolfin $
+ * $Id: debugger.cpp 54011 2010-11-01 16:04:47Z fingolfin $
  *
  */
-
 
 #include "common/config-manager.h"
 #include "common/endian.h"
@@ -323,7 +322,7 @@ bool Debugger::cmd_hotspot(int argc, const char **argv) {
 
 		if (h != NULL) {
 			DebugPrintf("Frame Number = %d of %d\n", h->frameNumber(), h->numFrames());
-			DebugPrintf("Persistant = %s\n", h->persistant() ? "true" : "false");
+			DebugPrintf("Persistent = %s\n", h->persistant() ? "true" : "false");
 		}
 
 	} else if (strcmp(argv[2], "actions") == 0) {

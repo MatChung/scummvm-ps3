@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/bmv.cpp $
- * $Id: bmv.cpp 52932 2010-09-28 19:06:03Z fingolfin $
+ * $Id: bmv.cpp 53935 2010-10-30 00:34:21Z fingolfin $
  *
  * The movie player.
  */
@@ -514,7 +514,7 @@ void BMVPlayer::MovieText(CORO_PARAM, int stringId, int x, int y, int fontId, CO
 	LoadSubString(stringId, 0, TextBufferAddr(), TBUFSZ);
 
 	texts[index].dieFrame = currentFrame + duration;
-	texts[index].pText = ObjectTextOut(coroParam, GetPlayfieldList(FIELD_STATUS),
+	texts[index].pText = ObjectTextOut(GetPlayfieldList(FIELD_STATUS),
 						TextBufferAddr(),
 						0,
 						x, y,

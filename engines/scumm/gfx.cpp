@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/gfx.cpp $
- * $Id: gfx.cpp 53554 2010-10-17 13:08:00Z athrxx $
+ * $Id: gfx.cpp 54079 2010-11-05 00:36:23Z athrxx $
  *
  */
 
@@ -1025,7 +1025,7 @@ void ScummEngine::restoreBackground(Common::Rect rect, byte backColor) {
 
 #ifndef DISABLE_TOWNS_DUAL_LAYER_MODE
 	if (_game.platform == Common::kPlatformFMTowns && _game.id == GID_MONKEY && vs->number == kVerbVirtScreen && rect.bottom <= 154)
-		rect.right = 320;
+		rect.right = 319;
 #endif
 
 	markRectAsDirty(vs->number, rect, USAGE_BIT_RESTORED);
@@ -2457,7 +2457,7 @@ void ScummEngine::decodeNESBaseTiles() {
 }
 
 static const int v1MMNEScostTables[2][6] = {
-     /* desc lens offs data  gfx  pal */
+	/* desc lens offs data  gfx  pal */
 	{ 25,  27,  29,  31,  33,  35},
 	{ 26,  28,  30,  32,  34,  36}
 };
@@ -3737,6 +3737,10 @@ void ScummEngine::fadeOut(int effect) {
 			// Just blit screen 0 to the display (i.e. display will be black)
 			vs->setDirtyRange(0, vs->h);
 			updateDirtyScreen(kMainVirtScreen);
+#ifndef DISABLE_TOWNS_DUAL_LAYER_MODE
+			if (_townsScreen)
+				_townsScreen->update();
+#endif
 			break;
 		case 134:
 			dissolveEffect(1, 1);

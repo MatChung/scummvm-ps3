@@ -19,10 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/midi/coremidi.cpp $
- * $Id: coremidi.cpp 50128 2010-06-21 21:36:36Z fingolfin $
+ * $Id: coremidi.cpp 53961 2010-10-30 21:27:42Z fingolfin $
  */
 
 #ifdef MACOSX
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "common/config-manager.h"
 #include "common/util.h"

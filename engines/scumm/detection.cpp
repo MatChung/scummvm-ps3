@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/detection.cpp $
- * $Id: detection.cpp 52370 2010-08-25 07:40:13Z sev $
+ * $Id: detection.cpp 53923 2010-10-29 16:41:49Z lordhoto $
  *
  */
 
@@ -1198,12 +1198,7 @@ SaveStateDescriptor ScummMetaEngine::querySaveMetaInfos(const char *target, int 
 		int minutes = infos.time & 0xFF;
 
 		desc.setSaveTime(hour, minutes);
-
-		minutes = infos.playtime / 60;
-		hour = minutes / 60;
-		minutes %= 60;
-
-		desc.setPlayTime(hour, minutes);
+		desc.setPlayTime(infos.playtime * 1000);
 	}
 
 	return desc;

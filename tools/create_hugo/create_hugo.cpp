@@ -19,11 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/tools/create_hugo/create_hugo.cpp $
- * $Id: create_hugo.cpp 53160 2010-10-12 02:18:11Z jvprat $
+ * $Id: create_hugo.cpp 53983 2010-10-31 18:27:53Z strangerke $
  *
  * This is a utility for storing all the hardcoded data of Hugo in a separate
  * data file, used by the game engine
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 // HACK to allow building with the SDL backend on MinGW
 // see bug #1800764 "TOOLS: MinGW tools building broken"
@@ -52,6 +55,10 @@
 #include "staticfont.h"
 
 static void writeByte(FILE *fp, uint8 b) {
+	fwrite(&b, 1, 1, fp);
+}
+
+static void writeSByte(FILE *fp, int8 b) {
 	fwrite(&b, 1, 1, fp);
 }
 
@@ -700,29 +707,29 @@ int main(int argc, char *argv[]) {
 	nbrElem = sizeof(actListArr_3d) / sizeof(actList);
 	writeActListArray(outFile, actListArr_3d, nbrElem);
 
-	writeByte(outFile, NUM_TUNES_1w);
-	writeByte(outFile, SILENCE_1w);
-	writeByte(outFile, TEST_SOUND_1w);
+	writeSByte(outFile, NUM_TUNES_1w);
+	writeSByte(outFile, SILENCE_1w);
+	writeSByte(outFile, TEST_SOUND_1w);
 
-	writeByte(outFile, NUM_TUNES_2w);
-	writeByte(outFile, SILENCE_2w);
-	writeByte(outFile, TEST_SOUND_2w);
+	writeSByte(outFile, NUM_TUNES_2w);
+	writeSByte(outFile, SILENCE_2w);
+	writeSByte(outFile, TEST_SOUND_2w);
 
-	writeByte(outFile, NUM_TUNES_3w);
-	writeByte(outFile, SILENCE_3w);
-	writeByte(outFile, TEST_SOUND_3w);
+	writeSByte(outFile, NUM_TUNES_3w);
+	writeSByte(outFile, SILENCE_3w);
+	writeSByte(outFile, TEST_SOUND_3w);
 
-	writeByte(outFile, NUM_TUNES_1d);
-	writeByte(outFile, SILENCE_1d);
-	writeByte(outFile, TEST_SOUND_1d);
+	writeSByte(outFile, NUM_TUNES_1d);
+	writeSByte(outFile, SILENCE_1d);
+	writeSByte(outFile, TEST_SOUND_1d);
 
-	writeByte(outFile, NUM_TUNES_2d);
-	writeByte(outFile, SILENCE_2d);
-	writeByte(outFile, TEST_SOUND_2d);
+	writeSByte(outFile, NUM_TUNES_2d);
+	writeSByte(outFile, SILENCE_2d);
+	writeSByte(outFile, TEST_SOUND_2d);
 
-	writeByte(outFile, NUM_TUNES_3d);
-	writeByte(outFile, SILENCE_3d);
-	writeByte(outFile, TEST_SOUND_3d);
+	writeSByte(outFile, NUM_TUNES_3d);
+	writeSByte(outFile, SILENCE_3d);
+	writeSByte(outFile, TEST_SOUND_3d);
 
 	// def_tunes_1w
 	nbrElem = sizeof(def_tunes_1w) / sizeof(int16);

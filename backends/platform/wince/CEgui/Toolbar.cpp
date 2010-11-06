@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEgui/Toolbar.cpp $
- * $Id: Toolbar.cpp 28966 2007-09-19 08:40:12Z peres001 $
+ * $Id: Toolbar.cpp 53979 2010-10-31 17:11:43Z fingolfin $
  *
  */
 
@@ -27,12 +27,12 @@
 
 namespace CEGUI {
 
-	// Not to be drawn on game screen !
-	Toolbar::Toolbar() : GUIElement(0, 0, 320, 40)
-	{
-	}
-
-
-	Toolbar::~Toolbar() {
-	}
+// Not to be drawn on game screen !
+Toolbar::Toolbar() : GUIElement(0, 0, 320, 40) {
 }
+
+
+Toolbar::~Toolbar() {
+}
+
+} // End of namespace CEGUI

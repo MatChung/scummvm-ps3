@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/francois.cpp $
- * $Id: francois.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: francois.cpp 53880 2010-10-27 19:19:22Z littleboy $
  *
  */
 
@@ -109,7 +109,92 @@ IMPLEMENT_FUNCTION_II(7, Francois, savegame, SavegameType, uint32)
 
 //////////////////////////////////////////////////////////////////////////
 IMPLEMENT_FUNCTION_II(8, Francois, updateEntity, CarIndex, EntityPosition)
-	error("Francois: callback function 8 not implemented!");
+	switch (savepoint.action) {
+	default:
+		break;
+
+	case kActionNone:
+		if (getEntities()->updateEntity(_entityIndex, (CarIndex)params->param1, (EntityPosition)params->param2)) {
+			CALLBACK_ACTION();
+		} else {
+			if (!getEntities()->isDistanceBetweenEntities(kEntityFrancois, kEntityPlayer, 2000)
+			 || !getInventory()->hasItem(kItemFirebird)
+			 || getEvent(kEventFrancoisShowEgg)
+			 || getEvent(kEventFrancoisShowEggD)
+			 || getEvent(kEventFrancoisShowEggNight)
+			 || getEvent(kEventFrancoisShowEggNightD)) {
+				if (getEntities()->isDistanceBetweenEntities(kEntityFrancois, kEntityPlayer, 2000)
+				 && getInventory()->get(kItemBeetle)->location == kObjectLocation1
+				 && !getEvent(kEventFrancoisShowBeetle)
+				 && !getEvent(kEventFrancoisShowBeetleD))
+					getData()->inventoryItem = kItemMatchBox;
+			} else {
+				getData()->inventoryItem = kItemFirebird;
+			}
+
+			if (ENTITY_PARAM(0, 1)
+			 && getEntities()->isDistanceBetweenEntities(kEntityFrancois, kEntityPlayer, 1000)
+			 && !getEntities()->isInsideCompartments(kEntityPlayer)
+			 && !getEntities()->checkFields10(kEntityPlayer)) {
+				setCallback(1);
+				setup_savegame(kSavegameTypeEvent, kEventFrancoisTradeWhistle);
+			}
+		}
+		break;
+
+	case kAction1:
+		switch (savepoint.param.intValue) {
+		default:
+			break;
+
+		case 1:
+			setCallback(2);
+			setup_savegame(kSavegameTypeEvent, kEventFrancoisShowBeetle);
+			break;
+
+		case 18:
+			if (isNight())
+				getAction()->playAnimation(getData()->entityPosition < getEntityData(kEntityPlayer)->entityPosition ? kEventFrancoisShowEggNightD : kEventFrancoisShowEggNight);
+			else
+				getAction()->playAnimation(getData()->entityPosition < getEntityData(kEntityPlayer)->entityPosition ? kEventFrancoisShowEggD : kEventFrancoisShowEgg);
+
+			getEntities()->loadSceneFromEntityPosition(getData()->car, (EntityPosition)(getData()->entityPosition + (750 * (getData()->direction == kDirectionUp ? -1 : 1))), getData()->direction == kDirectionUp);
+			break;
+		}
+		break;
+
+	case kActionExcuseMeCath:
+	case kActionExcuseMe:
+		getSound()->excuseMe(_entityIndex);
+		break;
+
+	case kActionDefault:
+		if (getEntities()->updateEntity(_entityIndex, (CarIndex)params->param1, (EntityPosition)params->param2))
+			CALLBACK_ACTION();
+		break;
+
+	case kActionCallback:
+		switch (getCallback()) {
+		default:
+			break;
+
+		case 1:
+			getAction()->playAnimation(getData()->entityPosition < getEntityData(kEntityPlayer)->entityPosition ? kEventFrancoisTradeWhistleD : kEventFrancoisTradeWhistle);
+			getInventory()->addItem(kItemWhistle);
+			getInventory()->removeItem(kItemMatchBox);
+			getInventory()->get(kItemBeetle)->location = kObjectLocation2;
+			getEntities()->loadSceneFromEntityPosition(getData()->car, (EntityPosition)(getData()->entityPosition + (750 * (getData()->direction == kDirectionUp ? -1 : 1))), getData()->direction == kDirectionUp);
+			ENTITY_PARAM(0, 1) = 0;
+			break;
+
+		case 2:
+			getAction()->playAnimation(getData()->entityPosition < getEntityData(kEntityPlayer)->entityPosition ? kEventFrancoisShowBeetleD : kEventFrancoisShowBeetle);
+			getEntities()->loadSceneFromEntityPosition(getData()->car, (EntityPosition)(getData()->entityPosition + (750 * (getData()->direction == kDirectionUp ? -1 : 1))), getData()->direction == kDirectionUp);
+			getData()->inventoryItem = kItemNone;
+			break;
+		}
+		break;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -195,7 +280,7 @@ IMPLEMENT_FUNCTION_I(11, Francois, function11, TimeValue)
 	case kActionNone:
 		if (!getSound()->isBuffered(kEntityFrancois)) {
 
-			UPDATE_PARAM_PROC(CURRENT_PARAMS(1, 1), getState()->timeTicks, params->param6)
+			UPDATE_PARAM_PROC(CURRENT_PARAM(1, 1), getState()->timeTicks, params->param6)
 				switch (rnd(7)) {
 				default:
 					break;
@@ -227,7 +312,7 @@ IMPLEMENT_FUNCTION_I(11, Francois, function11, TimeValue)
 				}
 
 				params->param6 = 15 * rnd(7);
-				CURRENT_PARAMS(1, 1) = 0;
+				CURRENT_PARAM(1, 1) = 0;
 			UPDATE_PARAM_PROC_END
 		}
 
@@ -539,7 +624,96 @@ IMPLEMENT_FUNCTION(13, Francois, function13)
 
 //////////////////////////////////////////////////////////////////////////
 IMPLEMENT_FUNCTION_IIS(14, Francois, function14, ObjectIndex, EntityPosition)
-	error("Francois: callback function 14 not implemented!");
+	// Expose parameters as IISS and ignore the default exposed parameters
+	EntityData::EntityParametersIISS *parameters = (EntityData::EntityParametersIISS*)_data->getCurrentParameters();
+
+	switch (savepoint.action) {
+	default:
+		break;
+
+	case kActionDefault:
+		strcpy((char *)&parameters->seq2, "605H");
+		strcat((char *)&parameters->seq2, (char *)&parameters->seq1);
+
+		setCallback(1);
+		setup_function9();
+		break;
+
+	case kActionCallback:
+		switch (getCallback()) {
+		default:
+			break;
+
+		case 1:
+			setCallback(2);
+			setup_updateEntity(kCarRedSleeping, (EntityPosition)parameters->param2);
+			break;
+
+		case 2:
+			if (getInventory()->get(kItemBeetle)->location == kObjectLocation3) {
+				getEntities()->drawSequenceLeft(kEntityFrancois, (char *)&parameters->seq2);
+				getEntities()->enterCompartment(kEntityFrancois, (ObjectIndex)parameters->param1, true);
+
+				setCallback(3);
+				setup_playSound("Fra2005A");
+			} else {
+				if (parameters->param2 >= kPosition_5790) {
+					setCallback(10);
+					setup_updateEntity(kCarRedSleeping, kPosition_9460);
+				} else {
+					setCallback(9);
+					setup_updateEntity(kCarRedSleeping, kPosition_540);
+				}
+			}
+			break;
+
+		case 3:
+		case 5:
+			setCallback(getCallback() + 1);
+			setup_updateFromTime(rnd(450));
+			break;
+
+		case 4:
+		case 6:
+			setCallback(getCallback() + 1);
+			setup_playSound(rnd(2) ? "Fra2005B" : "Fra2005C");
+			break;
+
+		case 7:
+			setCallback(8);
+			setup_updateFromTime(rnd(150));
+			break;
+
+		case 8:
+			getEntities()->exitCompartment(kEntityFrancois, (ObjectIndex)parameters->param1);
+			// Fallback to next case
+
+		case 9:
+			setCallback(10);
+			setup_updateEntity(kCarRedSleeping, kPosition_9460);
+			break;
+
+		case 10:
+			setCallback(11);
+			setup_updateFromTime(900);
+			break;
+
+		case 11:
+			setCallback(12);
+			setup_updateEntity(kCarRedSleeping, kPosition_5790);
+			break;
+
+		case 12:
+			setCallback(13);
+			setup_function10();
+			break;
+
+		case 13:
+			CALLBACK_ACTION();
+			break;
+		}
+		break;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -676,7 +850,7 @@ IMPLEMENT_FUNCTION(17, Francois, chapter1)
 		break;
 
 	case kActionNone:
-		TIME_CHECK_CHAPTER1(setup_chapter1Handler);
+		TIME_CHECK(kTimeChapter1, params->param1, setup_chapter1Handler);
 		break;
 
 	case kActionDefault:
@@ -733,7 +907,7 @@ IMPLEMENT_FUNCTION(20, Francois, function20)
 }
 
 //////////////////////////////////////////////////////////////////////////
-IMPLEMENT_FUNCTION(21 ,Francois, chapter2)
+IMPLEMENT_FUNCTION(21, Francois, chapter2)
 	switch (savepoint.action) {
 	default:
 		break;
@@ -790,7 +964,85 @@ IMPLEMENT_FUNCTION(22, Francois, chapter2Handler)
 
 //////////////////////////////////////////////////////////////////////////
 IMPLEMENT_FUNCTION(23, Francois, function23)
-	error("Francois: callback function 23 not implemented!");
+	switch (savepoint.action) {
+	default:
+		break;
+
+	case kActionNone:
+		if (getEvent(kEventFrancoisShowBeetle) || getEvent(kEventFrancoisShowBeetleD))
+			if (!getEvent(kEventFrancoisTradeWhistle) && !getEvent(kEventFrancoisTradeWhistleD))
+				ENTITY_PARAM(0, 1) = 1;
+
+		if (ENTITY_PARAM(0, 1) && getEntities()->isPlayerInCar(kCarRedSleeping)) {
+			setCallback(1);
+			setup_function15();
+			break;
+		}
+
+label_callback_1:
+		TIME_CHECK_CALLBACK_1(kTime1764000, params->param1, 2, setup_playSound, "Fra2011");
+
+label_callback_2:
+		TIME_CHECK_CALLBACK(kTime1800000, params->param2, 3, setup_function13);
+
+label_callback_3:
+		if (!getInventory()->hasItem(kItemWhistle) && getInventory()->get(kItemWhistle)->location != kObjectLocation3) {
+			TIME_CHECK_CALLBACK_1(kTime1768500, params->param3, 4, setup_function11, kTime1773000);
+
+label_callback_4:
+			TIME_CHECK_CALLBACK_1(kTime1827000, params->param4, 5, setup_function11, kTime1831500);
+		}
+
+label_callback_5:
+		if (getInventory()->get(kItemWhistle)->location != kObjectLocation3) {
+			// TODO: do we also need to check if the whistle is in the inventory?
+			break;
+		}
+
+		if (params->param5 != kTimeInvalid) {
+			UPDATE_PARAM_PROC_TIME(kTimeEnd, !getEntities()->isDistanceBetweenEntities(kEntityFrancois, kEntityPlayer, 2000), params->param5, 75);
+				setCallback(6);
+				setup_playSound("Fra2010");
+				break;
+			UPDATE_PARAM_PROC_END
+		}
+
+label_callback_6:
+		TIME_CHECK_CALLBACK_3(kTime1782000, params->param6, 7, setup_function14, kObjectCompartmentC, kPosition_6470, "c");
+
+label_callback_7:
+		TIME_CHECK_CALLBACK_3(kTime1813500, params->param7, 8, setup_function14, kObjectCompartmentF, kPosition_4070, "f");
+		break;
+
+	case kActionCallback:
+		switch (getCallback()) {
+		default:
+			break;
+
+		case 1:
+			goto label_callback_1;
+
+		case 2:
+			goto label_callback_2;
+
+		case 3:
+			goto label_callback_3;
+
+		case 4:
+			goto label_callback_4;
+
+		case 5:
+			goto label_callback_5;
+
+		case 6:
+			getProgress().field_9C = 1;
+			goto label_callback_6;
+
+		case 7:
+			goto label_callback_7;
+		}
+		break;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -853,21 +1105,21 @@ label_callback_7:
 			TIME_CHECK_CALLBACK(kTime2182500, params->param8, 8, setup_function12);
 
 label_callback_8:
-			TIME_CHECK_CALLBACK(kTime2241000, CURRENT_PARAMS(1, 1), 9, setup_function12);
+			TIME_CHECK_CALLBACK(kTime2241000, CURRENT_PARAM(1, 1), 9, setup_function12);
 
 label_callback_9:
 			if (!getInventory()->hasItem(kItemWhistle) && getInventory()->get(kItemWhistle)->location != kObjectLocation3) {
-				TIME_CHECK_CALLBACK_1(kTime2011500, CURRENT_PARAMS(1, 2), 10, setup_function11, kTime2016000);
+				TIME_CHECK_CALLBACK_1(kTime2011500, CURRENT_PARAM(1, 2), 10, setup_function11, kTime2016000);
 
 label_callback_10:
-				TIME_CHECK_CALLBACK_1(kTime2115000, CURRENT_PARAMS(1, 3), 11, setup_function11, kTime2119500);
+				TIME_CHECK_CALLBACK_1(kTime2115000, CURRENT_PARAM(1, 3), 11, setup_function11, kTime2119500);
 			}
 
 label_callback_11:
 			if (getInventory()->get(kItemWhistle)->location == kObjectLocation3) {
 				if (getState()->time <= kTimeEnd)
 					if (!getEntities()->isDistanceBetweenEntities(kEntityFrancois, kEntityPlayer, 2000) || !params->param4)
-						params->param4 = getState()->time + 75;
+						params->param4 = (uint)(getState()->time + 75);
 
 				if (params->param4 < getState()->time || getState()->time > kTimeEnd) {
 					params->param4 = kTimeInvalid;
@@ -878,13 +1130,13 @@ label_callback_11:
 				}
 
 label_callback_12:
-				TIME_CHECK_CALLBACK_3(kTime2040300, CURRENT_PARAMS(1, 5), 13, setup_function14, kObjectCompartmentE, kPosition_4840, "e");
+				TIME_CHECK_CALLBACK_3(kTime2040300, CURRENT_PARAM(1, 5), 13, setup_function14, kObjectCompartmentE, kPosition_4840, "e");
 
 label_callback_13:
-				TIME_CHECK_CALLBACK_3(kTime2040300, CURRENT_PARAMS(1, 6), 14, setup_function14, kObjectCompartmentF, kPosition_4070, "f");
+				TIME_CHECK_CALLBACK_3(kTime2040300, CURRENT_PARAM(1, 6), 14, setup_function14, kObjectCompartmentF, kPosition_4070, "f");
 
 label_callback_14:
-				TIME_CHECK_CALLBACK_3(kTime2040300, CURRENT_PARAMS(1, 7), 15, setup_function14, kObjectCompartmentB, kPosition_7500, "b");
+				TIME_CHECK_CALLBACK_3(kTime2040300, CURRENT_PARAM(1, 7), 15, setup_function14, kObjectCompartmentB, kPosition_7500, "b");
 			}
 		}
 		break;

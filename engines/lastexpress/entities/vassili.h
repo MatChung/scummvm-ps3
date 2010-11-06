@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/vassili.h $
- * $Id: vassili.h 53588 2010-10-18 21:03:28Z littleboy $
+ * $Id: vassili.h 53629 2010-10-19 22:34:26Z jvprat $
  *
  */
 
@@ -48,7 +48,7 @@ public:
 	 *
 	 * @param sequence The sequence to draw
 	 */
-	DECLARE_FUNCTION_1(draw, const char* sequence)
+	DECLARE_FUNCTION_1(draw, const char *sequence)
 
 	/**
 	 * Saves the game

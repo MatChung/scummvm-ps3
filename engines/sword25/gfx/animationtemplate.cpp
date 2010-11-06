@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/animationtemplate.cpp $
- * $Id: animationtemplate.cpp 53430 2010-10-13 15:41:00Z fingolfin $
+ * $Id: animationtemplate.cpp 53899 2010-10-28 00:26:25Z fingolfin $
  *
  */
 
@@ -125,9 +125,9 @@ AnimationTemplate::AnimationTemplate(InputPersistenceBlock &reader, uint handle)
 }
 
 AnimationResource *AnimationTemplate::requestSourceAnimation(const Common::String &sourceAnimation) const {
-	ResourceManager *RMPtr = Kernel::GetInstance()->GetResourceManager();
+	ResourceManager *RMPtr = Kernel::getInstance()->getResourceManager();
 	Resource *resourcePtr;
-	if (NULL == (resourcePtr = RMPtr->RequestResource(sourceAnimation)) || resourcePtr->GetType() != Resource::TYPE_ANIMATION) {
+	if (NULL == (resourcePtr = RMPtr->requestResource(sourceAnimation)) || resourcePtr->getType() != Resource::TYPE_ANIMATION) {
 		BS_LOG_ERRORLN("The resource \"%s\" could not be requested or is has an invalid type. The animation template can't be created.", sourceAnimation.c_str());
 		return 0;
 	}
@@ -195,13 +195,13 @@ bool AnimationTemplate::persist(OutputPersistenceBlock &writer) {
 		writer.write(Iter->hotspotY);
 		writer.write(Iter->flipV);
 		writer.write(Iter->flipH);
-		writer.write(Iter->fileName);
-		writer.write(Iter->action);
+		writer.writeString(Iter->fileName);
+		writer.writeString(Iter->action);
 		++Iter;
 	}
 
 	// Restliche Member persistieren.
-	writer.write(_sourceAnimationPtr->getFileName());
+	writer.writeString(_sourceAnimationPtr->getFileName());
 	writer.write(_valid);
 
 	return Result;
@@ -224,15 +224,15 @@ bool AnimationTemplate::unpersist(InputPersistenceBlock &reader) {
 		reader.read(frame.hotspotY);
 		reader.read(frame.flipV);
 		reader.read(frame.flipH);
-		reader.read(frame.fileName);
-		reader.read(frame.action);
+		reader.readString(frame.fileName);
+		reader.readString(frame.action);
 
 		_frames.push_back(frame);
 	}
 
 	// Die Animations-Resource wird für die gesamte Lebensdauer des Objektes gelockt
 	Common::String sourceAnimation;
-	reader.read(sourceAnimation);
+	reader.readString(sourceAnimation);
 	_sourceAnimationPtr = requestSourceAnimation(sourceAnimation);
 
 	reader.read(_valid);

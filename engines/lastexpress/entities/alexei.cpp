@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/alexei.cpp $
- * $Id: alexei.cpp 53587 2010-10-18 20:39:54Z littleboy $
+ * $Id: alexei.cpp 53880 2010-10-27 19:19:22Z littleboy $
  *
  */
 
@@ -319,7 +319,7 @@ IMPLEMENT_FUNCTION_IS(16, Alexei, function16, TimeValue)
 		}
 
 		if (params->param5) {
-			UPDATE_PARAM(CURRENT_PARAMS(1, 1), getState()->timeTicks, 75);
+			UPDATE_PARAM(CURRENT_PARAM(1, 1), getState()->timeTicks, 75);
 
 			params->param5 = 0;
 			params->param6 = 1;
@@ -328,7 +328,7 @@ IMPLEMENT_FUNCTION_IS(16, Alexei, function16, TimeValue)
 			getObjects()->update(kObjectHandleInsideBathroom, kEntityAlexei, kObjectLocation1, kCursorNormal, kCursorNormal);
 		}
 
-		CURRENT_PARAMS(1, 1) = 0;
+		CURRENT_PARAM(1, 1) = 0;
 		break;
 
 	case kActionKnock:
@@ -450,7 +450,7 @@ IMPLEMENT_FUNCTION(17, Alexei, chapter1)
 		break;
 
 	case kActionNone:
-		TIME_CHECK_CHAPTER1(setup_chapter1Handler)
+		TIME_CHECK(kTimeChapter1, params->param1, setup_chapter1Handler)
 		break;
 
 	case kActionDefault:
@@ -545,7 +545,7 @@ IMPLEMENT_FUNCTION(18, Alexei, chapter1Handler)
 		break;
 
 	case kAction168627977:
-		getData()->inventoryItem = (InventoryItem)LOBYTE(params->param2);
+		getData()->inventoryItem = (InventoryItem)LOW_BYTE(params->param2);
 		break;
 
 	case kAction225182640:
@@ -555,7 +555,7 @@ IMPLEMENT_FUNCTION(18, Alexei, chapter1Handler)
 }
 
 //////////////////////////////////////////////////////////////////////////
-IMPLEMENT_FUNCTION(19 ,Alexei, function19)
+IMPLEMENT_FUNCTION(19, Alexei, function19)
 	switch (savepoint.action) {
 	default:
 		break;
@@ -771,7 +771,7 @@ IMPLEMENT_FUNCTION(22, Alexei, function22)
 			params->param3 = kTimeInvalid;
 		} else {
 			if (!getEntities()->isInSalon(kEntityPlayer) || getEntities()->isInSalon(kEntityPlayer) || !params->param3)
-				params->param3 = getState()->time;
+				params->param3 = (uint)getState()->time;
 
 			if (params->param3 >= getState()->time)
 				break;
@@ -1374,7 +1374,7 @@ label_callback_3:
 		case 4:
 			getData()->location = kLocationOutsideCompartment;
 
-			setCallback((byte)(getCallback() + 1));
+			setCallback(getCallback() + 1);
 			setup_updatePosition("124C", kCarRestaurant, 52);
 			break;
 
@@ -1521,15 +1521,15 @@ IMPLEMENT_FUNCTION(39, Alexei, function39)
 			break;
 
 		if (!params->param4) {
-			params->param3 = getState()->time + 4500;
-			params->param4 = getState()->time + 9000;
+			params->param3 = (uint)getState()->time + 4500;
+			params->param4 = (uint)getState()->time + 9000;
 		}
 
 		if (params->param5 != kTimeInvalid && params->param3 < getState()->time) {
 
 			if (params->param4 >= getState()->time) {
 				if (getEntities()->isInGreenCarEntrance(kEntityPlayer) || !params->param5)
-					params->param5 = getState()->time;
+					params->param5 = (uint)getState()->time;
 
 				if (params->param5 >= getState()->time)
 					break;
@@ -1727,7 +1727,7 @@ IMPLEMENT_FUNCTION(43, Alexei, function43)
 	case kActionNone:
 		if (getState()->time < kTime1806300 && params->param2 < getState()->time) {
 			if (!params->param2)
-				params->param2 = getState()->time + params->param1;
+				params->param2 = (uint)getState()->time + params->param1;
 
 			if (getEntities()->isSomebodyInsideRestaurantOrSalon()) {
 				setCallback(1);
@@ -1882,7 +1882,7 @@ IMPLEMENT_FUNCTION(46, Alexei, function46)
 		if (getState()->time <= kTime2493000) {
 
 			if (getEntities()->isInSalon(kEntityPlayer) || getEntities()->isInSalon(kEntityAugust) || !params->param1)
-				params->param1 = getState()->time;
+				params->param1 = (uint)getState()->time;
 
 			if (params->param1 >= getState()->time)
 				break;

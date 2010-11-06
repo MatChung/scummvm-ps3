@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/parallaction_br.cpp $
- * $Id: parallaction_br.cpp 50288 2010-06-25 20:51:57Z athrxx $
+ * $Id: parallaction_br.cpp 53702 2010-10-22 14:21:26Z peres001 $
  *
  */
 
@@ -154,7 +154,8 @@ Common::Error Parallaction_br::go() {
 	while (!shouldQuit()) {
 
 		if (getFeatures() & GF_DEMO) {
-			scheduleLocationSwitch("camalb.1");
+			scheduleLocationSwitch("camalb");
+			_nextPart = 1;
 			_input->_inputMode = Input::kInputModeGame;
 		} else {
 			startGui(splash);

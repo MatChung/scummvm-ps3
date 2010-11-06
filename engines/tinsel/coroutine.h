@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/coroutine.h $
- * $Id: coroutine.h 44634 2009-10-04 21:26:33Z fingolfin $
+ * $Id: coroutine.h 53992 2010-10-31 22:33:13Z salty-horse $
  *
  */
 
@@ -27,6 +27,7 @@
 #define TINSEL_COROUTINE_H
 
 #include "common/scummsys.h"
+#include "common/util.h"	// for SCUMMVM_CURRENT_FUNCTION
 
 namespace Tinsel {
 
@@ -58,6 +59,10 @@ namespace Tinsel {
  */
 //@{
 
+
+// Enable this macro to enable some debugging support in the coroutine code.
+//#define COROUTINE_DEBUG	1
+
 /**
  * The core of any coroutine context which captures the 'state' of a coroutine.
  * Private use only.
@@ -66,8 +71,11 @@ struct CoroBaseContext {
 	int _line;
 	int _sleep;
 	CoroBaseContext *_subctx;
-	CoroBaseContext() : _line(0), _sleep(0), _subctx(0) {}
-	~CoroBaseContext() { delete _subctx; }
+#if COROUTINE_DEBUG
+	const char *_funcName;
+#endif
+	CoroBaseContext(const char *func);
+	~CoroBaseContext();
 };
 
 typedef CoroBaseContext *CoroContext;
@@ -101,9 +109,7 @@ public:
 };
 
 
-#define CORO_PARAM     CoroContext &coroParam
-
-#define CORO_SUBCTX   coroParam->_subctx
+#define CORO_PARAM    CoroContext &coroParam
 
 
 /**
@@ -124,10 +130,13 @@ public:
  *
  * @see CORO_END_CONTEXT
  *
- * @note We always declare a variable 'DUMMY' to allow the user to specify
- * an 'empty' context.
+ * @note We declare a variable 'DUMMY' to allow the user to specify an 'empty'
+ * context, and so compilers won't complain about ";" following the macro.
  */
-#define CORO_BEGIN_CONTEXT  struct CoroContextTag : CoroBaseContext { int DUMMY
+#define CORO_BEGIN_CONTEXT  \
+	struct CoroContextTag : CoroBaseContext { \
+		CoroContextTag() : CoroBaseContext(SCUMMVM_CURRENT_FUNCTION) {} \
+		int DUMMY
 
 /**
  * End the declaration of a coroutine context.
@@ -152,7 +161,10 @@ public:
  * @see CORO_END_CODE
  */
 #define CORO_END_CODE \
-			if (&coroParam == &nullContext) nullContext = NULL; \
+			if (&coroParam == &nullContext) { \
+				delete nullContext; \
+				nullContext = NULL; \
+			} \
 		}
 
 /**
@@ -174,11 +186,28 @@ public:
 #define CORO_KILL_SELF() \
 		do { if (&coroParam != &nullContext) { coroParam->_sleep = -1; } return; } while (0)
 
+
+/**
+ * This macro is to be used in conjunction with CORO_INVOKE_ARGS and
+ * similar macros for calling coroutines-enabled subroutines.
+ */
+#define CORO_SUBCTX   coroParam->_subctx
+
 /**
  * Invoke another coroutine.
  *
  * What makes this tricky is that the coroutine we called my yield/sleep,
  * and we need to deal with this adequately.
+ *
+ * @param subCoro	name of the coroutine-enabled function to invoke
+ * @param ARGS		list of arguments to pass to subCoro
+ *
+ * @note ARGS must be surrounded by parentheses, and the first argument
+ *       in this list must always be CORO_SUBCTX. For example, the
+ *       regular function call
+ *          myFunc(a, b);
+ *       becomes the following:
+ *          CORO_INVOKE_ARGS(myFunc, (CORO_SUBCTX, a, b));
  */
 #define CORO_INVOKE_ARGS(subCoro, ARGS)  \
 		do {\

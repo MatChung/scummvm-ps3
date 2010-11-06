@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/resource.h $
- * $Id: resource.h 53579 2010-10-18 19:17:38Z sev $
+ * $Id: resource.h 53749 2010-10-23 22:02:52Z littleboy $
  *
  */
 
@@ -63,6 +63,8 @@ private:
 	void reset();
 
 	Common::Array<HPFArchive *> _archives;
+
+	friend class Debugger;
 };
 
 } // End of namespace LastExpress

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/cycle.cpp $
- * $Id: cycle.cpp 52369 2010-08-25 07:39:50Z sev $
+ * $Id: cycle.cpp 53868 2010-10-26 22:33:49Z fingolfin $
  *
  */
 
@@ -319,12 +319,12 @@ int AgiEngine::playGame() {
 
 	// We run AGIMOUSE always as a side effect
 	if (getFeatures() & GF_AGIMOUSE || true)
-		report("Using AGI Mouse 1.0 protocol\n");
+		debug(1, "Using AGI Mouse 1.0 protocol");
 
 	if (getFeatures() & GF_AGIPAL)
 		debug(1, "Running AGIPAL game");
 
-	report("Running AGI script.\n");
+	debug(0, "Running AGI script.\n");
 
 	setflag(fEnteredCli, false);
 	setflag(fSaidAcceptedInput, false);

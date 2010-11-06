@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/base/main.cpp $
- * $Id: main.cpp 52896 2010-09-25 22:47:00Z criezy $
+ * $Id: main.cpp 54097 2010-11-05 13:24:57Z bluddy $
  *
  */
 
@@ -105,7 +105,12 @@ static const EnginePlugin *detectPlugin() {
 	// Query the plugins and find one that will handle the specified gameid
 	printf("User picked target '%s' (gameid '%s')...\n", ConfMan.getActiveDomainName().c_str(), gameid.c_str());
 	printf("%s", "  Looking for a plugin supporting this gameid... ");
-	GameDescriptor game = EngineMan.findGame(gameid, &plugin);
+
+#if defined(ONE_PLUGIN_AT_A_TIME) && defined(DYNAMIC_MODULES)
+	GameDescriptor game = EngineMan.findGameOnePluginAtATime(gameid, &plugin);
+#else
+ 	GameDescriptor game = EngineMan.findGame(gameid, &plugin);
+#endif
 
 	if (plugin == 0) {
 		printf("failed\n");
@@ -211,6 +216,11 @@ static Common::Error runGame(const EnginePlugin *plugin, OSystem &system, const 
 	// Run the engine
 	Common::Error result = engine->run();
 
+#if defined(ONE_PLUGIN_AT_A_TIME) && defined(DYNAMIC_MODULES)
+	// do our best to prevent fragmentation by unloading as soon as we can
+	PluginManager::instance().unloadPluginsExcept(PLUGIN_TYPE_ENGINE, NULL, false);
+#endif	
+	
 	// Inform backend that the engine finished
 	system.engineDone();
 
@@ -310,7 +320,7 @@ extern "C" int scummvm_main(int argc, const char * const argv[]) {
 	Common::StringMap settings;
 	command = Base::parseCommandLine(settings, argc, argv);
 
-	// Load the config file (possibly overriden via command line):
+	// Load the config file (possibly overridden via command line):
 	if (settings.contains("config")) {
 		ConfMan.loadConfigFile(settings["config"]);
 		settings.erase("config");
@@ -336,8 +346,13 @@ extern "C" int scummvm_main(int argc, const char * const argv[]) {
 		settings.erase("debugflags");
 	}
 
-	// Load the plugins.
-	PluginManager::instance().loadPlugins();
+#if defined(ONE_PLUGIN_AT_A_TIME) && defined(DYNAMIC_MODULES)
+	// Only load non-engine plugins and first engine plugin initially in this case.
+	PluginManager::instance().loadNonEnginePluginsAndEnumerate();
+#else
+ 	// Load the plugins.
+ 	PluginManager::instance().loadPlugins();
+#endif
 
 	// If we received an invalid music parameter via command line we check this here.
 	// We can't check this before loading the music plugins.
@@ -353,6 +368,7 @@ extern "C" int scummvm_main(int argc, const char * const argv[]) {
 	// config file and the plugins have been loaded.
 	Common::Error res;
 
+	// TODO: deal with settings that require plugins to be loaded
 	if ((res = Base::processSettings(command, settings)) != Common::kArgumentNotProcessed)
 		return res;
 
@@ -420,11 +436,11 @@ extern "C" int scummvm_main(int argc, const char * const argv[]) {
 			ConfMan.setActiveDomain("");
 
 			// PluginManager::instance().unloadPlugins();
+
+#if !defined(ONE_PLUGIN_AT_A_TIME)
 			PluginManager::instance().loadPlugins();
+#endif
 		} else {
-			// A dialog would be nicer, but we don't have any
-			// screen to draw on yet.
-			warning("%s", _("Could not find any engine capable of running the selected game"));
 			GUI::displayErrorDialog(_("Could not find any engine capable of running the selected game"));
 		}
 
@@ -443,9 +459,10 @@ extern "C" int scummvm_main(int argc, const char * const argv[]) {
 	}
 	PluginManager::instance().unloadPlugins();
 	PluginManager::destroy();
+	GUI::GuiManager::destroy();
 	Common::ConfigManager::destroy();
 	Common::SearchManager::destroy();
-	GUI::GuiManager::destroy();
+	Common::TranslationManager::destroy();
 
 	return 0;
 }

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/str.h $
- * $Id: str.h 53586 2010-10-18 20:20:14Z sev $
+ * $Id: str.h 54004 2010-11-01 16:02:28Z fingolfin $
  */
 
 #ifndef COMMON_STRING_H
@@ -218,7 +218,7 @@ public:
 	/**
 	 * Printf-like function. Returns a formatted String.
 	 */
-	static Common::String printf(const char *fmt, ...) GCC_PRINTF(1,2);
+	static Common::String format(const char *fmt, ...) GCC_PRINTF(1,2);
 
 public:
 	typedef char *        iterator;

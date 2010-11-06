@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/boxes.cpp $
- * $Id: boxes.cpp 45438 2009-10-27 12:08:19Z Kirben $
+ * $Id: boxes.cpp 54031 2010-11-01 21:37:47Z fingolfin $
  *
  */
 
@@ -614,10 +614,8 @@ BoxCoords ScummEngine::getBoxCoordinates(int boxnum) {
 		box->lr.x = bp->c64.x2;
 		box->lr.y = bp->c64.y2;
 
-		if (bp->c64.mask & 0x88) {
+		if ((bp->c64.mask & 0x88) == 0x88) {
 			// walkbox for (right/left) corner
-			// TODO: ladders (incl. man-eating plant) have mask 0x8A,
-			// must those walkboxes be adjusted?
 			if (bp->c64.mask & 0x04)
 				box->ur = box->ul;
 			else
@@ -923,32 +921,32 @@ bool Actor::findPathTowards(byte box1nr, byte box2nr, byte box3nr, Common::Point
 static void printMatrix(byte *boxm, int num) {
 	int i;
 	for (i = 0; i < num; i++) {
-		printf("%d: ", i);
+		debugN("%d: ", i);
 		while (*boxm != 0xFF) {
-			printf("%d, ", *boxm);
+			debug("%d, ", *boxm);
 			boxm++;
 		}
 		boxm++;
-		printf("\n");
+		debug("\n");
 	}
 }
 
 static void printMatrix2(byte *matrix, int num) {
 	int i, j;
-	printf("    ");
+	debug("    ");
 	for (i = 0; i < num; i++)
-		printf("%2d ", i);
-	printf("\n");
+		debug("%2d ", i);
+	debug("\n");
 	for (i = 0; i < num; i++) {
-		printf("%2d: ", i);
+		debug("%2d: ", i);
 		for (j = 0; j < num; j++) {
 			int val = matrix[i * num + j];
 			if (val == Actor::kInvalidBox)
-				printf(" ? ");
+				debug(" ? ");
 			else
-				printf("%2d ", val);
+				debug("%2d ", val);
 		}
-		printf("\n");
+		debug("\n");
 	}
 }
 #endif
@@ -1055,9 +1053,9 @@ void ScummEngine::createBoxMatrix() {
 
 
 #if BOX_DEBUG
-	printf("Itinerary matrix:\n");
+	debug("Itinerary matrix:\n");
 	printMatrix2(itineraryMatrix, num);
-	printf("compressed matrix:\n");
+	debug("compressed matrix:\n");
 	printMatrix(getBoxMatrixBaseAddr(), num);
 #endif
 

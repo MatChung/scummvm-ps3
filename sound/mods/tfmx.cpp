@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/sound/mods/tfmx.cpp $
- * $Id: tfmx.cpp 52609 2010-09-06 21:04:33Z lordhoto $
+ * $Id: tfmx.cpp 53762 2010-10-24 13:04:33Z fingolfin $
  *
  */
 
@@ -281,7 +281,7 @@ void Tfmx::macroRun(ChannelContext &channel) {
 			continue;
 
 		case 0x04:	// Wait. Parameters: Ticks to wait(W).
-			// TODO: some unkown Parameter? (macroPtr[1] & 1)
+			// TODO: some unknown Parameter? (macroPtr[1] & 1)
 			channel.macroWait = READ_BE_UINT16(&macroPtr[2]);
 			break;
 
@@ -1154,7 +1154,7 @@ void displayMacroStep(const void * const vptr) {
 	if (macroData[0] < ARRAYSIZE(tableMacros))
 		debug("%s %02X%02X%02X", tableMacros[macroData[0]], macroData[1], macroData[2], macroData[3]);
 	else
-		debug("Unkown Macro #%02X %02X%02X%02X", macroData[0], macroData[1], macroData[2], macroData[3]);
+		debug("Unknown Macro #%02X %02X%02X%02X", macroData[0], macroData[1], macroData[2], macroData[3]);
 }
 
 void displayPatternstep(const void * const vptr) {

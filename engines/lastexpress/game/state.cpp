@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/state.cpp $
- * $Id: state.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: state.cpp 53715 2010-10-22 22:00:27Z littleboy $
  *
  */
 
@@ -56,6 +56,14 @@ bool State::isNightTime() const {
 	return (_state->progress.chapter == kChapter1
 		 || _state->progress.chapter == kChapter4
 		 || (_state->progress.chapter == kChapter5 && !_state->progress.isNightTime));
+}
+
+void State::getHourMinutes(uint32 time, uint8 *hours, uint8 *minutes) {
+	if (hours == NULL || minutes == NULL)
+		error("State::getHourMinutes: invalid parameters passed!");
+
+	*hours = (uint8)((time % 1296000) / 54000);
+	*minutes =  (uint8)((time % 54000) / 900);
 }
 
 uint32 State::getPowerOfTwo(uint32 x) {

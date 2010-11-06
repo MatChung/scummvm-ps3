@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/toon.cpp $
-* $Id: toon.cpp 53550 2010-10-16 22:07:09Z sylvaintv $
+* $Id: toon.cpp 54004 2010-11-01 16:02:28Z fingolfin $
 *
 */
 
@@ -161,7 +161,7 @@ void ToonEngine::waitForScriptStep() {
 	// Wait after a specified number of script steps when executing a script
 	// to lower CPU usage
 	if (++_scriptStep >= 40) {
-		g_system->delayMillis(10);
+		g_system->delayMillis(1);
 		_scriptStep = 0;
 	}
 }
@@ -359,6 +359,7 @@ void ToonEngine::update(int32 timeIncrement) {
 	updateTimer(timeIncrement);
 	updateTimers();
 	updateScrolling(false, timeIncrement);
+	_audioManager->updateAmbientSFX();
 	_animationManager->update(timeIncrement);
 	_cursorAnimationInstance->update(timeIncrement);
 
@@ -801,21 +802,24 @@ void ToonEngine::setPaletteEntries(uint8 *palette, int32 offset, int32 num) {
 	_system->setPalette(vmpalette, offset, num);
 }
 
-void ToonEngine::simpleUpdate() {
+void ToonEngine::simpleUpdate(bool waitCharacterToTalk) {
 	int32 elapsedTime = _system->getMillis() - _oldTimer2;
 	_oldTimer2 = _system->getMillis();
 	_oldTimer = _oldTimer2;
+
+	if (!_audioManager->voiceStillPlaying() && !waitCharacterToTalk) {
+		_currentTextLine = 0;
+		_currentTextLineId = -1;
+	}
 
 	updateCharacters(elapsedTime);
 	updateAnimationSceneScripts(elapsedTime);
 	updateTimer(elapsedTime);
 	_animationManager->update(elapsedTime);
+	_audioManager->updateAmbientSFX();
 	render();
 
-	if (!_audioManager->voiceStillPlaying()) {
-		_currentTextLine = 0;
-		_currentTextLineId = -1;
-	}
+	
 }
 
 void ToonEngine::fixPaletteEntries(uint8 *palette, int num) {
@@ -844,7 +848,7 @@ void ToonEngine::updateAnimationSceneScripts(int32 timeElapsed) {
 
 	do {
 		if (_sceneAnimationScripts[_lastProcessedSceneScript]._lastTimer <= _system->getMillis() &&
-		        !_sceneAnimationScripts[_lastProcessedSceneScript]._frozen) {
+		        !_sceneAnimationScripts[_lastProcessedSceneScript]._frozen && !_sceneAnimationScripts[_lastProcessedSceneScript]._frozenForConversation) {
 			_animationSceneScriptRunFlag = true;
 
 			while (_animationSceneScriptRunFlag && _sceneAnimationScripts[_lastProcessedSceneScript]._lastTimer <= _system->getMillis() && !_shouldQuit) {
@@ -853,7 +857,7 @@ void ToonEngine::updateAnimationSceneScripts(int32 timeElapsed) {
 
 				//waitForScriptStep();
 
-				if (_sceneAnimationScripts[_lastProcessedSceneScript]._frozen)
+				if (_sceneAnimationScripts[_lastProcessedSceneScript]._frozen || _sceneAnimationScripts[_lastProcessedSceneScript]._frozenForConversation)
 					break;
 			}
 
@@ -944,7 +948,7 @@ void ToonEngine::loadScene(int32 SceneId, bool forGameLoad) {
 
 
 	// load package
-	strcpy(temp, createRoomFilename(Common::String::printf("%s.pak", _gameState->_locations[_gameState->_currentScene]._name).c_str()).c_str());
+	strcpy(temp, createRoomFilename(Common::String::format("%s.pak", _gameState->_locations[_gameState->_currentScene]._name).c_str()).c_str());
 	resources()->openPackage(temp, true);
 
 	strcpy(temp, state()->_locations[SceneId]._name);
@@ -989,7 +993,7 @@ void ToonEngine::loadScene(int32 SceneId, bool forGameLoad) {
 
 	strcpy(temp, state()->_locations[SceneId]._name);
 	strcat(temp, ".svi");
-	strcpy(temp2, createRoomFilename(Common::String::printf("%s.svl", _gameState->_locations[_gameState->_currentScene]._name).c_str()).c_str());
+	strcpy(temp2, createRoomFilename(Common::String::format("%s.svl", _gameState->_locations[_gameState->_currentScene]._name).c_str()).c_str());
 	_audioManager->loadAudioPack(1, temp, temp2);
 	strcpy(temp, state()->_locations[SceneId]._name);
 	strcpy(temp2, state()->_locations[SceneId]._name);
@@ -1047,6 +1051,7 @@ void ToonEngine::loadScene(int32 SceneId, bool forGameLoad) {
 			_script->start(&_sceneAnimationScripts[i]._state, 9 + i);
 			_sceneAnimationScripts[i]._lastTimer = getSystem()->getMillis();
 			_sceneAnimationScripts[i]._frozen = false;
+			_sceneAnimationScripts[i]._frozenForConversation = false;
 		}
 	}
 
@@ -1067,7 +1072,7 @@ void ToonEngine::loadScene(int32 SceneId, bool forGameLoad) {
 	setupGeneralPalette();
 	createShadowLUT();
 
-
+	state()->_mouseHidden = false;
 
 	if (!forGameLoad) {
 
@@ -1086,7 +1091,7 @@ void ToonEngine::loadScene(int32 SceneId, bool forGameLoad) {
 			_gameState->_nextSpecialEnterX = -1;
 			_gameState->_nextSpecialEnterY = -1;
 		}
-
+	
 		_script->start(&_scriptState[0], 3);
 
 		while (_script->run(&_scriptState[0]))
@@ -1098,8 +1103,6 @@ void ToonEngine::loadScene(int32 SceneId, bool forGameLoad) {
 			waitForScriptStep();
 
 	}
-
-	state()->_mouseHidden = false;
 }
 
 void ToonEngine::setupGeneralPalette() {
@@ -1569,9 +1572,17 @@ void ToonEngine::exitScene() {
 		_gameState->_mouseState = -1;
 	}
 
+	_audioManager->killAllAmbientSFX();
+	_audioManager->stopAllSfxs();
+	_audioManager->stopCurrentVoice();
+	_currentTextLine = 0;
+	_currentTextLineId = -1;
+	_currentTextLineCharacterId = 0;
+
 	char temp[256];
-	strcpy(temp, createRoomFilename(Common::String::printf("%s.pak", _gameState->_locations[_gameState->_currentScene]._name).c_str()).c_str());
+	strcpy(temp, createRoomFilename(Common::String::format("%s.pak", _gameState->_locations[_gameState->_currentScene]._name).c_str()).c_str());
 	resources()->closePackage(temp);
+
 
 	_drew->stopWalk();
 	_flux->stopWalk();
@@ -1911,7 +1922,19 @@ int32 ToonEngine::characterTalk(int32 dialogid, bool blocking) {
 	_currentTextLineId = dialogid;
 
 	if (blocking) {
+		Character *character = getCharacterById(talkerId);
+		if (character)
+			character->setTalking(true);
+
 		playTalkAnimOnCharacter(talkerAnimId, talkerId, true);
+
+		// set once more the values, they may have been overwritten when the engine
+		// waits for the character to be ready.
+		_currentTextLine = myLine;
+		_currentTextLineCharacterId = talkerId;
+		_currentTextLineId = dialogid;
+
+
 	} else {
 		Character *character = getCharacterById(talkerId);
 		if (character)
@@ -1935,6 +1958,10 @@ int32 ToonEngine::characterTalk(int32 dialogid, bool blocking) {
 		while (_audioManager->voiceStillPlaying() && !_shouldQuit)
 			doFrame();
 		_gameState->_mouseHidden = oldMouseHidden && _gameState->_mouseHidden;
+
+		Character *character = getCharacterById(talkerId);
+		if (character)
+			character->setTalking(false);
 	}
 
 
@@ -2648,6 +2675,7 @@ void ToonEngine::newGame() {
 	}
 }
 
+
 void ToonEngine::playSFX(int32 id, int32 volume) {
 	if (id < 0)
 		_audioManager->playSFX(-id + 1, volume, true);
@@ -2780,7 +2808,7 @@ bool ToonEngine::canLoadGameStateCurrently() {
 }
 
 Common::String ToonEngine::getSavegameName(int nr) {
-	return _targetName + Common::String::printf(".%03d", nr);
+	return _targetName + Common::String::format(".%03d", nr);
 }
 
 bool ToonEngine::saveGame(int32 slot, Common::String saveGameDesc) {
@@ -2800,7 +2828,7 @@ bool ToonEngine::saveGame(int32 slot, Common::String saveGameDesc) {
 		if (!saveGameDesc.empty()) {
 			savegameDescription = saveGameDesc;
 		} else {
-			savegameDescription = Common::String::printf("Quick save #%d", slot);
+			savegameDescription = Common::String::format("Quick save #%d", slot);
 		}
 	}
 
@@ -2940,6 +2968,7 @@ bool ToonEngine::loadGame(int32 slot) {
 	for (int32 i = 0; i < state()->_locations[_gameState->_currentScene]._numSceneAnimations; i++) {
 		_sceneAnimationScripts[i]._active = loadFile->readByte();
 		_sceneAnimationScripts[i]._frozen = loadFile->readByte();
+		_sceneAnimationScripts[i]._frozenForConversation = false;
 		int32 oldTimer = loadFile->readSint32BE();
 		_sceneAnimationScripts[i]._lastTimer = MAX<int32>(0,oldTimer + timerDiff);
 		_script->loadState(&_sceneAnimationScripts[i]._state, loadFile);
@@ -4300,7 +4329,7 @@ int32 ToonEngine::pauseSceneAnimationScript(int32 animScriptId, int32 tickToWait
 }
 
 Common::String ToonEngine::createRoomFilename(Common::String name) {
-	Common::String file = Common::String::printf("ACT%d/%s/%s", _gameState->_currentChapter, _gameState->_locations[_gameState->_currentScene]._name, name.c_str());
+	Common::String file = Common::String::format("ACT%d/%s/%s", _gameState->_currentChapter, _gameState->_locations[_gameState->_currentScene]._name, name.c_str());
 	return file;
 }
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/totfile.cpp $
- * $Id: totfile.cpp 51875 2010-08-08 00:46:34Z drmccoy $
+ * $Id: totfile.cpp 53984 2010-10-31 20:07:14Z drmccoy $
  *
  */
 
@@ -45,11 +45,11 @@ TOTFile::~TOTFile() {
 
 bool TOTFile::load(const Common::String &fileName) {
 	// Trying to open normally
-	_stream = _vm->_dataIO->getDataStream(fileName.c_str());
+	_stream = _vm->_dataIO->getFile(fileName);
 
 	if (!_stream)
 		// Trying to open from video
-		_stream = _vm->_vidPlayer->getEmbeddedFile(fileName.c_str());
+		_stream = _vm->_vidPlayer->getEmbeddedFile(fileName);
 
 	if (!_stream)
 		return false;

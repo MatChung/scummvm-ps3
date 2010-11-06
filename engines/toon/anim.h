@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/anim.h $
- * $Id: anim.h 53098 2010-10-09 11:11:26Z lordhoto $
+ * $Id: anim.h 53865 2010-10-26 22:18:14Z sylvaintv $
  *
  */
 
@@ -102,7 +102,7 @@ public:
 	void forceFrame(int32 position);
 	void setPosition(int32 x, int32 y, int32 z, bool relative = false);
 	Animation *getAnimation() const { return _animation; }
-	void setScale(int32 scale);
+	void setScale(int32 scale, bool align = false);
 	void setVisible(bool visible);
 	bool getVisible() const { return _visible; }
 	void setUseMask(bool useMask);
@@ -150,6 +150,7 @@ protected:
 	bool _playing;
 	bool _looping;
 	bool _visible;
+	bool _alignBottom;
 
 	ToonEngine *_vm;
 };
@@ -186,6 +187,7 @@ public:
 	EMCState _state;
 	uint32 _lastTimer;
 	bool _frozen;
+	bool _frozenForConversation;
 	bool _active;
 };
 

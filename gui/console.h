@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/console.h $
- * $Id: console.h 48101 2010-02-21 04:04:13Z bluddy $
+ * $Id: console.h 54006 2010-11-01 16:03:02Z fingolfin $
  */
 
 #ifndef CONSOLE_DIALOG_H
@@ -143,10 +143,10 @@ public:
 	void handleKeyDown(Common::KeyState state);
 	void handleCommand(CommandSender *sender, uint32 cmd, uint32 data);
 
-	int printf(const char *format, ...) GCC_PRINTF(2, 3);
-	int vprintf(const char *format, va_list argptr);
-#undef putchar
-	void putchar(int c);
+	int printFormat(int dummy, const char *format, ...) GCC_PRINTF(3, 4);
+	int vprintFormat(int dummy, const char *format, va_list argptr);
+
+	void printChar(int c);
 
 	void setInputCallback(InputCallbackProc proc, void *refCon) {
 		_callbackProc = proc;
@@ -172,7 +172,7 @@ protected:
 
 	void drawLine(int line, bool restoreBg = true);
 	void drawCaret(bool erase);
-	void putcharIntern(int c);
+	void printCharIntern(int c);
 	void insertIntoPrompt(const char *str);
 	void print(const char *str);
 	void updateScrollBuffer();

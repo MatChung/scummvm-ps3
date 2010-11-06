@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/saveload.cpp $
- * $Id: saveload.cpp 49447 2010-06-06 01:12:41Z dreammaster $
+ * $Id: saveload.cpp 53991 2010-10-31 21:50:48Z fingolfin $
  *
  * Save and restore scene and game.
  */
@@ -105,6 +105,18 @@ enum {
 };
 
 #define SAVEGAME_ID (TinselV2 ? (uint32)DW2_SAVEGAME_ID : (uint32)DW1_SAVEGAME_ID)
+
+enum {
+	// FIXME: Save file names in ScummVM can be longer than 8.3, overflowing the
+	// name field in savedFiles. Raising it to 256 as a preliminary fix.
+	FNAMELEN	= 256 // 8.3
+};
+
+struct SFILES {
+	char	name[FNAMELEN];
+	char	desc[SG_DESC_LEN + 2];
+	TimeDate dateTime;
+};
 
 //----------------- LOCAL GLOBAL DATA --------------------
 
@@ -318,9 +330,9 @@ static int cmpTimeDate(const TimeDate &a, const TimeDate &b) {
 }
 
 /**
- * Interrogate the current DOS directory for saved game files.
+ * Compute a list of all available saved game files.
  * Store the file details, ordered by time, in savedFiles[] and return
- * the number of files found).
+ * the number of files found.
  */
 int getList(Common::SaveFileManager *saveFileMan, const Common::String &target) {
 	// No change since last call?

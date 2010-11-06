@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/he/logic_he.h $
- * $Id: logic_he.h 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: logic_he.h 53731 2010-10-23 13:39:04Z Kirben $
  *
  */
 
@@ -131,6 +131,14 @@ private:
 	int op_1014(int32 *args);
 	int op_1019(int32 *args);
 	int op_1021(int32 *args);
+};
+
+class LogicHEbaseball2001 : public LogicHE {
+public:
+	LogicHEbaseball2001(ScummEngine_v90he *vm) : LogicHE(vm) {}
+
+	int versionID();
+	int32 dispatch(int op, int numArgs, int32 *args);
 };
 
 class LogicHEbasketball : public LogicHE {

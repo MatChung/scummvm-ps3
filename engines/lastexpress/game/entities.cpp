@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/entities.cpp $
- * $Id: entities.cpp 53588 2010-10-18 21:03:28Z littleboy $
+ * $Id: entities.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -215,10 +215,10 @@ EntityData::EntityCallData *Entities::getData(EntityIndex entity) const {
 	return _entities[entity]->getData();
 }
 
-int Entities::getPosition(CarIndex car, Position position) {
+int Entities::getPosition(CarIndex car, Position position) const {
 	int index = 100 * car + position;
 
-	if (car < 0 || car > 10)
+	if (car > 10)
 		error("Entities::getPosition: trying to access an invalid car (was: %d, valid:0-9)", car);
 
 	if (position > 100)
@@ -227,14 +227,14 @@ int Entities::getPosition(CarIndex car, Position position) {
 	return _positions[index];
 }
 
-int Entities::getCompartments(int index) {
+int Entities::getCompartments(int index) const {
 	if (index >= _compartmentsCount)
 		error("Entities::getCompartments: trying to access an invalid compartment (was: %d, valid:0-15)", index);
 
 	return _compartments[index];
 }
 
-int Entities::getCompartments1(int index) {
+int Entities::getCompartments1(int index) const {
 	if (index >= _compartmentsCount)
 		error("Entities::getCompartments: trying to access an invalid compartment (was: %d, valid:0-15)", index);
 
@@ -244,10 +244,23 @@ int Entities::getCompartments1(int index) {
 //////////////////////////////////////////////////////////////////////////
 // Savegame
 //////////////////////////////////////////////////////////////////////////
-void Entities::saveLoadWithSerializer(Common::Serializer &ser) {
-	_header->saveLoadWithSerializer(ser);
+void Entities::saveLoadWithSerializer(Common::Serializer &s) {
+	_header->saveLoadWithSerializer(s);
 	for (uint i = 1; i < _entities.size(); i++)
-		_entities[i]->saveLoadWithSerializer(ser);
+		_entities[i]->saveLoadWithSerializer(s);
+}
+
+void Entities::savePositions(Common::Serializer &s) {
+	for (uint i = 0; i < (uint)_positionsCount; i++)
+		s.syncAsUint32LE(_positions[i]);
+}
+
+void Entities::saveCompartments(Common::Serializer &s) {
+	for (uint i = 0; i < (uint)_compartmentsCount; i++)
+		s.syncAsUint32LE(_compartments[i]);
+
+	for (uint i = 0; i < (uint)_compartmentsCount; i++)
+		s.syncAsUint32LE(_compartments1[i]);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1280,11 +1293,11 @@ void Entities::copySequenceData(EntityIndex entityIndex) const {
 //////////////////////////////////////////////////////////////////////////
 // Drawing
 //////////////////////////////////////////////////////////////////////////
-void Entities::drawSequenceLeft(EntityIndex index, const char* sequence) const {
+void Entities::drawSequenceLeft(EntityIndex index, const char *sequence) const {
 	drawSequence(index, sequence, kDirectionLeft);
 }
 
-void Entities::drawSequenceRight(EntityIndex index, const char* sequence) const {
+void Entities::drawSequenceRight(EntityIndex index, const char *sequence) const {
 	drawSequence(index, sequence, kDirectionRight);
 }
 
@@ -1315,7 +1328,7 @@ void Entities::clearSequences(EntityIndex entityIndex) const {
 	data->doProcessEntity = true;
 }
 
-void Entities::drawSequence(EntityIndex index, const char* sequence, EntityDirection direction) const {
+void Entities::drawSequence(EntityIndex index, const char *sequence, EntityDirection direction) const {
 	debugC(8, kLastExpressDebugLogic, "Drawing sequence %s for entity %s with direction %s", sequence, ENTITY_NAME(index), DIRECTION_NAME(direction));
 
 	// Copy sequence name
@@ -1519,7 +1532,7 @@ void Entities::getSequenceName(EntityIndex index, EntityDirection direction, Com
 
 		case 1:
 			if (data->entityPosition < kPosition_2587)
-				sequence1 = Common::String::printf("%02d%01d-01u.seq", index, data->clothes);
+				sequence1 = Common::String::format("%02d%01d-01u.seq", index, data->clothes);
 			break;
 
 		case 2:
@@ -1541,22 +1554,22 @@ void Entities::getSequenceName(EntityIndex index, EntityDirection direction, Com
 				break;
 
 			if (data->entityPosition >= kPosition_8513) {
-				sequence1 = Common::String::printf("%02d%01d-%02deu.seq", index, data->clothes, position);
+				sequence1 = Common::String::format("%02d%01d-%02deu.seq", index, data->clothes, position);
 			} else {
-				sequence1 = Common::String::printf("%02d%01d-03u.seq", index, data->clothes);
-				sequence2 = Common::String::printf("%02d%01d-%02deu.seq", index, data->clothes, position);
+				sequence1 = Common::String::format("%02d%01d-03u.seq", index, data->clothes);
+				sequence2 = Common::String::format("%02d%01d-%02deu.seq", index, data->clothes, position);
 				data->field_4A9 = true;
 			}
 			break;
 
 		case 18:
 			if (data->entityPosition < kPosition_9270)
-				sequence1 = Common::String::printf("%02d%01d-18u.seq", index, data->clothes);
+				sequence1 = Common::String::format("%02d%01d-18u.seq", index, data->clothes);
 			break;
 
 		case 22:
 			if (getData(kEntityPlayer)->entityPosition > data->entityPosition)
-				sequence1 = Common::String::printf("%02d%01d-22u.seq", index, data->clothes);
+				sequence1 = Common::String::format("%02d%01d-22u.seq", index, data->clothes);
 			break;
 
 		case 23:
@@ -1579,18 +1592,18 @@ void Entities::getSequenceName(EntityIndex index, EntityDirection direction, Com
 				break;
 
 			if (data->entityPosition >= kPosition_2087) {
-				sequence1 = Common::String::printf("%02d%01d-38u.seq", index, data->clothes);
+				sequence1 = Common::String::format("%02d%01d-38u.seq", index, data->clothes);
 				data->field_4A9 = true;
 			} else {
-				sequence1 = Common::String::printf("%02d%01d-%02deu.seq", index, data->clothes, position);
-				sequence2 = Common::String::printf("%02d%01d-38u.seq", index, data->clothes);
+				sequence1 = Common::String::format("%02d%01d-%02deu.seq", index, data->clothes, position);
+				sequence2 = Common::String::format("%02d%01d-38u.seq", index, data->clothes);
 				data->field_4AA = true;
 			}
 			break;
 
 		case 40:
 			if (getData(kEntityPlayer)->entityPosition > data->entityPosition)
-				sequence1 = Common::String::printf("%02d%01d-40u.seq", index, data->clothes);
+				sequence1 = Common::String::format("%02d%01d-40u.seq", index, data->clothes);
 			break;
 		}
 		break;
@@ -1602,7 +1615,7 @@ void Entities::getSequenceName(EntityIndex index, EntityDirection direction, Com
 
 		case 1:
 			if (getData(kEntityPlayer)->entityPosition < data->entityPosition)
-				sequence1 = Common::String::printf("%02d%01d-01d.seq", index, data->clothes);
+				sequence1 = Common::String::format("%02d%01d-01d.seq", index, data->clothes);
 			break;
 
 		case 2:
@@ -1624,23 +1637,23 @@ void Entities::getSequenceName(EntityIndex index, EntityDirection direction, Com
 				break;
 
 			if (data->entityPosition <= kPosition_8513) {
-				sequence1 = Common::String::printf("%02d%01d-03d.seq", index, data->clothes);
+				sequence1 = Common::String::format("%02d%01d-03d.seq", index, data->clothes);
 				data->field_4A9 = true;
 			} else {
-				sequence1 = Common::String::printf("%02d%01d-%02ded.seq", index, data->clothes, position);
-				sequence2 = Common::String::printf("%02d%01d-03d.seq", index, data->clothes);
+				sequence1 = Common::String::format("%02d%01d-%02ded.seq", index, data->clothes, position);
+				sequence2 = Common::String::format("%02d%01d-03d.seq", index, data->clothes);
 				data->field_4AA = true;
 			}
 			break;
 
 		case 18:
 			if (getData(kEntityPlayer)->entityPosition < data->entityPosition)
-				sequence1 = Common::String::printf("%02d%01d-18d.seq", index, data->clothes);
+				sequence1 = Common::String::format("%02d%01d-18d.seq", index, data->clothes);
 			break;
 
 		case 22:
 			if (data->entityPosition > kPosition_850)
-				sequence1 = Common::String::printf("%02d%01d-22d.seq", index, data->clothes);
+				sequence1 = Common::String::format("%02d%01d-22d.seq", index, data->clothes);
 			break;
 
 		case 23:
@@ -1663,17 +1676,17 @@ void Entities::getSequenceName(EntityIndex index, EntityDirection direction, Com
 				break;
 
 			if (data->entityPosition <= kPosition_2087) {
-				sequence1 = Common::String::printf("%02d%01d-%02ded.seq", index, data->clothes, position);
+				sequence1 = Common::String::format("%02d%01d-%02ded.seq", index, data->clothes, position);
 			} else {
-				sequence1 = Common::String::printf("%02d%01d-38d.seq", index, data->clothes);
-				sequence2 = Common::String::printf("%02d%01d-%02ded.seq", index, data->clothes, position);
+				sequence1 = Common::String::format("%02d%01d-38d.seq", index, data->clothes);
+				sequence2 = Common::String::format("%02d%01d-%02ded.seq", index, data->clothes, position);
 				data->field_4A9 = true;
 			}
 			break;
 
 		case 40:
 			if (getData(kEntityPlayer)->entityPosition > kPosition_8013)
-				sequence1 = Common::String::printf("%02d%01d-40d.seq", index, data->clothes);
+				sequence1 = Common::String::format("%02d%01d-40d.seq", index, data->clothes);
 			break;
 		}
 		break;
@@ -1681,7 +1694,7 @@ void Entities::getSequenceName(EntityIndex index, EntityDirection direction, Com
 	// First part of sequence is already set
 	case kDirectionLeft:
 	case kDirectionRight:
-		sequence1 = Common::String::printf("%s%02d.seq", data->sequenceNamePrefix.c_str(), position);
+		sequence1 = Common::String::format("%s%02d.seq", data->sequenceNamePrefix.c_str(), position);
 		break;
 	}
 }
@@ -1980,7 +1993,7 @@ bool Entities::hasValidFrame(EntityIndex entity) const {
 	return (getData(entity)->frame && (getData(entity)->frame->getInfo()->subType != kFrameType3));
 }
 
-bool Entities::compare(EntityIndex entity1, EntityIndex entity2) {
+bool Entities::compare(EntityIndex entity1, EntityIndex entity2) const {
 	EntityData::EntityCallData *data1 = getData(entity1);
 	EntityData::EntityCallData *data2 = getData(entity2);
 
@@ -2038,7 +2051,7 @@ bool Entities::compare(EntityIndex entity1, EntityIndex entity2) {
 	return false;
 }
 
-bool Entities::updateEntity(EntityIndex entity, CarIndex car, EntityPosition position) {
+bool Entities::updateEntity(EntityIndex entity, CarIndex car, EntityPosition position) const {
 	EntityData::EntityCallData *data = getData(entity);
 	EntityDirection direction = kDirectionNone;
 	int delta = 0;
@@ -2329,7 +2342,7 @@ label_process_entity:
 	return true;
 }
 
-bool Entities::changeCar(EntityData::EntityCallData * data, EntityIndex entity, CarIndex car, EntityPosition position, bool increment, EntityPosition newPosition, CarIndex newCar) const {
+bool Entities::changeCar(EntityData::EntityCallData *data, EntityIndex entity, CarIndex car, EntityPosition position, bool increment, EntityPosition newPosition, CarIndex newCar) const {
 	if (getData(kEntityPlayer)->car == data->car) {
 		getSound()->playSoundEvent(entity, 36);
 		getSound()->playSoundEvent(entity, 37, 30);

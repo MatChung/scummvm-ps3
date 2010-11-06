@@ -2,7 +2,7 @@
 # a list of common object files etc.
 #
 # $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/Makefile.common $
-# $Id: Makefile.common 53115 2010-10-10 11:40:16Z Kirben $
+# $Id: Makefile.common 54052 2010-11-03 22:57:42Z wjpalenstijn $
 
 ######################################################################
 # The default build target: just build the scummvm executable
@@ -53,6 +53,10 @@ DEPFILES =
 # changed, it causes version.cpp to be recompiled. This in turn ensures that
 # the build date in gScummVMBuildDate is correct.
 base/version.o: $(filter-out base/libbase.a,$(OBJS))
+
+ifdef USE_ELF_LOADER
+backends/plugins/elf/version.o: $(filter-out base/libbase.a,$(filter-out backends/libbackends.a,$(OBJS)))
+endif
 
 # Replace regular output with quiet messages
 ifneq ($(findstring $(MAKEFLAGS),s),s)
