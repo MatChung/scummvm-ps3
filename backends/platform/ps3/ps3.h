@@ -3,6 +3,7 @@
 
 
 #include "backends/base-backend.h"
+#include "sound/mixer_intern.h"
 
 class OSystem_PS3 : public BaseBackend
 {
@@ -71,6 +72,28 @@ public:
 	virtual void getTimeAndDate(TimeDate &t) const;
 	virtual Common::TimerManager *getTimerManager();
 	FilesystemFactory *getFilesystemFactory();
+
+protected:
+	Common::SaveFileManager *_savefile;
+	Audio::MixerImpl *_mixer;
+	Common::TimerManager *_timer;
+	FilesystemFactory *_fsFactory;
+
+	int _shake_offset;
+	bool _show_overlay;
+	Common::Point _mouse_hotspot;
+	Common::Point _mouse_pos;
+	int _mouse_targetscale;
+	int _mouse_keycolor;
+	bool _show_mouse;
+	bool _use_mouse_palette;
+	bool _mouse_is_palette;
+
+	Graphics::PixelFormat _currentScreenFormat;
+	int _current_graphics_mode;
+	bool _stretch_to_full;
+	bool _aspectRatioCorrection;
+
 };
 
 

@@ -23,12 +23,15 @@ void OSystem_PS3::copyRectToOverlay(const OverlayColor *buf, int pitch, int x, i
 
 int16 OSystem_PS3::getOverlayHeight()
 {
+	return 320;
 }
 
 int16 OSystem_PS3::getOverlayWidth()
 {
+	return 200;
 }
 
 Graphics::PixelFormat OSystem_PS3::getOverlayFormat() const
 {
+	return Graphics::PixelFormat::createFormatCLUT8();
 }

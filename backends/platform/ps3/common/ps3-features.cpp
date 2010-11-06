@@ -8,11 +8,11 @@ bool OSystem_PS3::hasFeature(Feature f)
 	case kFeatureFullscreenMode:
 		return false;
 	case kFeatureAspectRatioCorrection:
-		return false;
+		return true;
 	case kFeatureVirtualKeyboard:
 		return false;
 	case kFeatureCursorHasPalette:
-		return false;
+		return true;
 	case kFeatureOverlaySupportsAlpha:
 		return false;
 	case kFeatureIconifyWindow:
@@ -25,9 +25,9 @@ bool OSystem_PS3::hasFeature(Feature f)
 
 void OSystem_PS3::setFeatureState(Feature f, bool enable)
 {
-	/*if(f==kFeatureAspectRatioCorrection)
+	if(f==kFeatureAspectRatioCorrection)
 		_aspectRatioCorrection=enable;
-	if(f==kFeatureVirtualKeyboard)
+	/*if(f==kFeatureVirtualKeyboard)
 	{
 		_virtkeybd_on=enable;
 		showVirtualKeyboard(enable);
@@ -36,9 +36,9 @@ void OSystem_PS3::setFeatureState(Feature f, bool enable)
 
 bool OSystem_PS3::getFeatureState(Feature f)
 {
-/*	if(f==kFeatureAspectRatioCorrection)
+	if(f==kFeatureAspectRatioCorrection)
 		return _aspectRatioCorrection;
-	if(f==kFeatureVirtualKeyboard)
+/*	if(f==kFeatureVirtualKeyboard)
 		return _virtkeybd_on;
 */
 	return false;

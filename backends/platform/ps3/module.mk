@@ -10,6 +10,9 @@ MODULE_OBJS := \
 	common/ps3-mouse.o \
 	common/ps3-overlay.o \
 	common/ps3-system.o \
+	filesystem/ps3-fs-factory.o \
+	filesystem/ps3-fs-node.o \
+	graphics/fb/fb.o \
 	
 	
 # We don't use rules.mk but rather manually update OBJS and MODULE_DIRS.

@@ -1106,9 +1106,15 @@ ps3)
 	_host_cpu=ppu
 	_host_alias=ppu
 	_backend=ps3
+	_timidity=no
+	_seq_midi=no
 	if test "$_release_build" = auto; then
 		#Enable release build by default.
 		_release_build=yes
+	fi
+	if test "$_debug_build" = auto; then
+		# If you want to debug on the OP use '--disable-release --enable-debug'
+		_debug_build=no
 	fi
 	CFLAGS="$CFLAGS -D__PPU__"
 	;;
@@ -1581,7 +1587,7 @@ case $_host_os in
 		DEFINES="$DEFINES -D_EE -D__PLAYSTATION2__"
 		;;
 	ps3)
-		_unix=no
+		#_unix=yes
 		;;
 	psp)
 		CXXFLAGS="$CXXFLAGS -O3 -I$PSPSDK/include -D_PSP_FW_VERSION=150"
@@ -1938,6 +1944,9 @@ if test -n "$_host"; then
 				# If not building for debug mode, strip binaries.
 				CXXFLAGS="$CXXFLAGS -s"
 			fi
+			;;
+		ps3)
+			_debug=no
 			;;
 		psp)
 			_need_memalign=yes
@@ -2851,8 +2860,18 @@ case $_backend in
 		LIBS="$LIBS -lmc -lpad -lmouse -lhdd -lpoweroff -lsjpcm -lm -lc -lfileXio -lkernel -lstdc++ "
 		;;
 	ps3)
-		static_libs=''
-		system_libs=''
+		INCLUDES="$INCLUDES -I$PSL1GHT/include"
+		LDFLAGS="$LDFLAGS -L$PSL1GHT/lib"
+		LIBS="$LIBS -laudio -lgcm_sys -lc-glue-ppu -lio -llv2 -lpsl1ght -lreality -lsysutil -lm -lc -lstdc++ "
+		
+		add_line_to_config_mk  ''
+		add_line_to_config_mk  'pkg: all'
+		add_line_to_config_mk  '	$(PSL1GHT)/bin/fself.py --npdrm $(EXECUTABLE) EBOOT.BIN'
+		add_line_to_config_mk  ''
+		add_line_to_config_mk  'run: all'
+		add_line_to_config_mk  '	$(PSL1GHT)/bin/fself.py $(EXECUTABLE) $(EXECUTABLE).fself'
+		add_line_to_config_mk  '	$(PSL1GHT)/bin/ps3load $(EXECUTABLE).fself'
+		add_line_to_config_mk  ''
 		;;
 	psp)
 		DEFINES="$DEFINES -D__PSP__ -DDISABLE_TEXT_CONSOLE -DDISABLE_COMMAND_LINE -DDISABLE_DOSBOX_OPL"
