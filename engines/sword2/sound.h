@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/sound.h $
- * $Id: sound.h 48458 2010-04-01 16:11:29Z eriktorbjorn $
+ * $Id: sound.h 53997 2010-11-01 11:25:11Z eriktorbjorn $
  */
 
 /*****************************************************************************
@@ -261,9 +261,6 @@ public:
 
 	void pauseMusic();
 	void unpauseMusic();
-
-	void pauseAllSound();
-	void unpauseAllSound();
 
 	void playMovieSound(int32 res, int type);
 	void stopMovieSounds();

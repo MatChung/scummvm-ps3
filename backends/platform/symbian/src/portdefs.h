@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/symbian/src/portdefs.h $
- * $Id: portdefs.h 48201 2010-03-08 21:33:23Z anotherguest $
+ * $Id: portdefs.h 54005 2010-11-01 16:02:47Z fingolfin $
  */
 #ifndef SYMBIAN_PORTDEFS_H
 #define SYMBIAN_PORTDEFS_H
@@ -44,6 +44,13 @@
 // hack in some tricks to work around not having these fcns for Symbian
 // and we _really_ don't wanna link with any other windows LIBC library!
 #if defined(__GCC32__)
+
+	FIXME: If the following macros are ever used, then this will lead
+	to serious errors, e.g. an almost guaranteed buffer overflow
+	in Common::String::format(). Do *NOT* re-#define vsnprintf to
+	vsprintf, it will lead to disaster!
+	This shouldn't be necessary anyway, since we have
+	backends/platform/symbian/src/vsnprintf.h
 
 	#define snprintf(buf,len,args...)	sprintf(buf,args)
 	#define vsnprintf(buf,len,format,valist)	vsprintf(buf,format,valist)

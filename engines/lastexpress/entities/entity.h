@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/entity.h $
- * $Id: entity.h 53599 2010-10-19 01:42:00Z littleboy $
+ * $Id: entity.h 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -44,11 +44,13 @@ struct SavePoint;
 class EntityData : Common::Serializable {
 public:
 
-	struct EntityParameters {
+	struct EntityParameters : Common::Serializable{
 		virtual ~EntityParameters() {}
 		virtual Common::String toString() = 0;
 
 		virtual void update(uint32 index) = 0;
+
+		virtual void saveLoadWithSerializer(Common::Serializer &s) = 0;
 	};
 
 	struct EntityParametersIIII : EntityParameters {
@@ -77,7 +79,7 @@ public:
 		}
 
 		Common::String toString() {
-			return Common::String::printf("IIII: %d %d %d %d %d %d %d %d\n", param1, param2, param3, param4, param5, param6, param7, param8);
+			return Common::String::format("IIII: %d %d %d %d %d %d %d %d\n", param1, param2, param3, param4, param5, param6, param7, param8);
 		}
 
 		void update(uint32 index) {
@@ -94,6 +96,17 @@ public:
 			case 6: param7 = 1; break;
 			case 7: param8 = 1; break;
 			}
+		}
+
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			s.syncAsUint32LE(param1);
+			s.syncAsUint32LE(param2);
+			s.syncAsUint32LE(param3);
+			s.syncAsUint32LE(param4);
+			s.syncAsUint32LE(param5);
+			s.syncAsUint32LE(param6);
+			s.syncAsUint32LE(param7);
+			s.syncAsUint32LE(param8);
 		}
 	};
 
@@ -115,7 +128,7 @@ public:
 		}
 
 		Common::String toString() {
-			return Common::String::printf("SIII: %s %d %d %d %d %d\n", seq, param4, param5, param6, param7, param8);
+			return Common::String::format("SIII: %s %d %d %d %d %d\n", seq, param4, param5, param6, param7, param8);
 		}
 
 		void update(uint32 index) {
@@ -129,6 +142,15 @@ public:
 			case 6: param7 = 1; break;
 			case 7: param8 = 1; break;
 			}
+		}
+
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			s.syncBytes((byte *)&seq, 12);
+			s.syncAsUint32LE(param4);
+			s.syncAsUint32LE(param5);
+			s.syncAsUint32LE(param6);
+			s.syncAsUint32LE(param7);
+			s.syncAsUint32LE(param8);
 		}
 	};
 
@@ -146,7 +168,7 @@ public:
 		}
 
 		Common::String toString() {
-			return Common::String::printf("SIIS: %s %d %d %s\n", seq1, param4, param5, seq2);
+			return Common::String::format("SIIS: %s %d %d %s\n", seq1, param4, param5, seq2);
 		}
 
 		void update(uint32 index) {
@@ -157,6 +179,13 @@ public:
 			case 3: param4 = 1; break;
 			case 4: param5 = 1; break;
 			}
+		}
+
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			s.syncBytes((byte *)&seq1, 12);
+			s.syncAsUint32LE(param4);
+			s.syncAsUint32LE(param5);
+			s.syncBytes((byte *)&seq2, 12);
 		}
 	};
 
@@ -174,7 +203,7 @@ public:
 		}
 
 		Common::String toString() {
-			return Common::String::printf("ISSI: %d %s %s %d\n", param1, seq1, seq2, param8);
+			return Common::String::format("ISSI: %d %s %s %d\n", param1, seq1, seq2, param8);
 		}
 
 		void update(uint32 index) {
@@ -185,6 +214,13 @@ public:
 			case 0: param1 = 1; break;
 			case 7: param8 = 1; break;
 			}
+		}
+
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			s.syncAsUint32LE(param1);
+			s.syncBytes((byte *)&seq1, 12);
+			s.syncBytes((byte *)&seq2, 12);
+			s.syncAsUint32LE(param8);
 		}
 	};
 
@@ -206,7 +242,7 @@ public:
 		}
 
 		Common::String toString() {
-			return Common::String::printf("ISII: %d %s %d %d %d %d\n", param1, seq, param5, param6, param7, param8);
+			return Common::String::format("ISII: %d %s %d %d %d %d\n", param1, seq, param5, param6, param7, param8);
 		}
 
 		void update(uint32 index) {
@@ -220,6 +256,15 @@ public:
 			case 6: param7 = 1; break;
 			case 7: param8 = 1; break;
 			}
+		}
+
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			s.syncAsUint32LE(param1);
+			s.syncBytes((byte *)&seq, 12);
+			s.syncAsUint32LE(param5);
+			s.syncAsUint32LE(param6);
+			s.syncAsUint32LE(param7);
+			s.syncAsUint32LE(param8);
 		}
 	};
 
@@ -237,7 +282,7 @@ public:
 		}
 
 		Common::String toString() {
-			return Common::String::printf("SSII: %s %s %d %d\n", seq1, seq2, param7, param8);
+			return Common::String::format("SSII: %s %s %d %d\n", seq1, seq2, param7, param8);
 		}
 
 		void update(uint32 index) {
@@ -248,6 +293,39 @@ public:
 			case 6: param7 = 1; break;
 			case 7: param8 = 1; break;
 			}
+		}
+
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			s.syncBytes((byte *)&seq1, 12);
+			s.syncBytes((byte *)&seq2, 12);
+			s.syncAsUint32LE(param7);
+			s.syncAsUint32LE(param8);
+		}
+	};
+
+	struct EntityParametersSSS : EntityParameters {
+		char seq1[12];
+		char seq2[12];
+		char seq3[8];
+
+		EntityParametersSSS() {
+			memset(&seq1, 0, 12);
+			memset(&seq2, 0, 12);
+			memset(&seq3, 0, 8);
+		}
+
+		Common::String toString() {
+			return Common::String::format("SSS: %s %s %s\n", seq1, seq2, seq3);
+		}
+
+		void update(uint32) {
+			error("EntityParametersSSS::update: cannot update this type of parameters");
+		}
+
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			s.syncBytes((byte *)&seq1, 12);
+			s.syncBytes((byte *)&seq2, 12);
+			s.syncBytes((byte *)&seq3, 8);
 		}
 	};
 
@@ -265,7 +343,7 @@ public:
 		}
 
 		Common::String toString() {
-			return Common::String::printf("IISS: %d %d %s %s\n", param1, param2, seq1, seq2);
+			return Common::String::format("IISS: %d %d %s %s\n", param1, param2, seq1, seq2);
 		}
 
 		void update(uint32 index) {
@@ -276,6 +354,13 @@ public:
 			case 0: param1 = 1; break;
 			case 1: param2 = 1; break;
 			}
+		}
+
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			s.syncAsUint32LE(param1);
+			s.syncAsUint32LE(param2);
+			s.syncBytes((byte *)&seq1, 12);
+			s.syncBytes((byte *)&seq2, 12);
 		}
 	};
 
@@ -297,7 +382,7 @@ public:
 		}
 
 		Common::String toString() {
-			return Common::String::printf("IISI: %d %d %s %d %d %d\n", param1, param2, seq, param6, param7, param8);
+			return Common::String::format("IISI: %d %d %s %d %d %d\n", param1, param2, seq, param6, param7, param8);
 		}
 
 		void update(uint32 index) {
@@ -311,6 +396,15 @@ public:
 			case 6: param7 = 1; break;
 			case 7: param8 = 1; break;
 			}
+		}
+
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			s.syncAsUint32LE(param1);
+			s.syncAsUint32LE(param2);
+			s.syncBytes((byte *)&seq, 12);
+			s.syncAsUint32LE(param6);
+			s.syncAsUint32LE(param7);
+			s.syncAsUint32LE(param8);
 		}
 	};
 
@@ -332,7 +426,7 @@ public:
 		}
 
 		Common::String toString() {
-			return Common::String::printf("IIIS: %d %d %d %s %d %d\n", param1, param2, param3, seq, param7, param8);
+			return Common::String::format("IIIS: %d %d %d %s %d %d\n", param1, param2, param3, seq, param7, param8);
 		}
 
 		void update(uint32 index) {
@@ -346,6 +440,15 @@ public:
 			case 6: param7 = 1; break;
 			case 7: param8 = 1; break;
 			}
+		}
+
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			s.syncAsUint32LE(param1);
+			s.syncAsUint32LE(param2);
+			s.syncAsUint32LE(param3);
+			s.syncBytes((byte *)&seq, 12);
+			s.syncAsUint32LE(param7);
+			s.syncAsUint32LE(param8);
 		}
 	};
 
@@ -365,9 +468,18 @@ public:
 			param5 = 0;
 			memset(&seq, 0, 12);
 		}
+
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			s.syncAsUint32LE(param1);
+			s.syncAsUint32LE(param2);
+			s.syncAsUint32LE(param3);
+			s.syncAsUint32LE(param4);
+			s.syncAsUint32LE(param5);
+			s.syncBytes((byte *)&seq, 12);
+		}
 	};
 
-	struct EntityCallParameters {
+	struct EntityCallParameters : Common::Serializable {
 		EntityParameters *parameters[4];
 
 		EntityCallParameters() {
@@ -387,9 +499,15 @@ public:
 				parameters[i] = NULL;
 			}
 		}
+
+		// Serializable
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			for (uint i = 0; i < ARRAYSIZE(parameters); i++)
+				parameters[i]->saveLoadWithSerializer(s);
+		}
 	};
 
-	struct EntityCallData {
+	struct EntityCallData : Common::Serializable {
 		byte callbacks[16];
 		byte currentCall;
 		EntityPosition entityPosition;      // word
@@ -461,23 +579,26 @@ public:
 		Common::String toString() {
 			Common::String str = "";
 
-			str += Common::String::printf("Entity position: %d    - Location: %d       - Car: %d\n", entityPosition, location, car);
-			str += Common::String::printf("Entity: %d             - Item: %d          - Direction: %d\n", entity, inventoryItem, direction);
-			str += Common::String::printf("Clothes: %d            - Position: %d      - Direction switch: %d\n", clothes, position, directionSwitch);
+			str += Common::String::format("Entity position: %d    - Location: %d       - Car: %d\n", entityPosition, location, car);
+			str += Common::String::format("Entity: %d             - Item: %d          - Direction: %d\n", entity, inventoryItem, direction);
+			str += Common::String::format("Clothes: %d            - Position: %d      - Direction switch: %d\n", clothes, position, directionSwitch);
 			str += "\n";
-			str += Common::String::printf("field_497: %02d        - field_49B: %i     - field_4A1: %i\n", field_497, field_49B, field_4A1);
-			str += Common::String::printf("field_4A9: %02d        - field_4AA: %i     - Car 2: %d\n", field_4A9, field_4AA, car2);
+			str += Common::String::format("field_497: %02d        - field_49B: %i     - field_4A1: %i\n", field_497, field_49B, field_4A1);
+			str += Common::String::format("field_4A9: %02d        - field_4AA: %i     - Car 2: %d\n", field_4A9, field_4AA, car2);
 			str += "\n";
 			str += "Sequence: " + sequenceName + "                 - Sequence 2: " + sequenceName2 + "\n";
 			str += "Sequence prefix: " + sequenceNamePrefix + "    - Sequence copy: " + sequenceNameCopy + "\n";
-			str += Common::String::printf("Current frame: %i    - Current frame 2: %i       - Process entity: %d\n", currentFrame, currentFrame2, doProcessEntity);
+			str += Common::String::format("Current frame: %i    - Current frame 2: %i       - Process entity: %d\n", currentFrame, currentFrame2, doProcessEntity);
 			str += "\n";
-			str += Common::String::printf("Current call: %d\n", currentCall);
-			str += Common::String::printf("Functions: %d %d %d %d %d %d %d %d\n", callbacks[0], callbacks[1], callbacks[2], callbacks[3], callbacks[4], callbacks[5], callbacks[6], callbacks[7]);
-			str += Common::String::printf("Callbacks: %d %d %d %d %d %d %d %d\n", callbacks[8], callbacks[9], callbacks[10], callbacks[11], callbacks[12], callbacks[13], callbacks[14], callbacks[15]);
+			str += Common::String::format("Current call: %d\n", currentCall);
+			str += Common::String::format("Functions: %d %d %d %d %d %d %d %d\n", callbacks[0], callbacks[1], callbacks[2], callbacks[3], callbacks[4], callbacks[5], callbacks[6], callbacks[7]);
+			str += Common::String::format("Callbacks: %d %d %d %d %d %d %d %d\n", callbacks[8], callbacks[9], callbacks[10], callbacks[11], callbacks[12], callbacks[13], callbacks[14], callbacks[15]);
 
 			return str;
 		}
+
+		// Serializable
+		void saveLoadWithSerializer(Common::Serializer &s);
 	};
 
 	EntityData() {}
@@ -525,7 +646,7 @@ public:
 	EntityData::EntityCallData *getData() { return _data->getCallData(); }
 
 	// Callbacks
-	int getCallback() { return _data->getCallback(_data->getCallData()->currentCall + 8); }
+	byte getCallback() { return _data->getCallback(_data->getCallData()->currentCall + 8); }
 	void setCallback(byte index) { _data->setCallback(_data->getCallData()->currentCall + 8, index); getData()->currentCall++; }
 
 	// Setup

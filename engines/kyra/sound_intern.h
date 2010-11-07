@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/sound_intern.h $
- * $Id: sound_intern.h 51695 2010-08-03 14:58:01Z athrxx $
+ * $Id: sound_intern.h 53911 2010-10-28 23:56:36Z lordhoto $
  *
  */
 
@@ -68,7 +68,7 @@ public:
 
 	void playTrack(uint8 track);
 	void haltTrack();
-	bool isPlaying();
+	bool isPlaying() const;
 
 	void playSoundEffect(uint8 track);
 	void stopAllSoundEffects();

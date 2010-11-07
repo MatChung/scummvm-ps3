@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/frameout.cpp $
- * $Id: frameout.cpp 52804 2010-09-19 14:50:28Z thebluegr $
+ * $Id: frameout.cpp 53974 2010-10-31 01:45:24Z thebluegr $
  *
  */
 
@@ -43,6 +43,8 @@
 #include "sci/graphics/frameout.h"
 
 namespace Sci {
+
+// TODO/FIXME: This is all guesswork
 
 GfxFrameout::GfxFrameout(SegManager *segMan, ResourceManager *resMan, GfxCoordAdjuster *coordAdjuster, GfxCache *cache, GfxScreen *screen, GfxPalette *palette, GfxPaint32 *paint32)
 	: _segMan(segMan), _resMan(resMan), _cache(cache), _screen(screen), _palette(palette), _paint32(paint32) {
@@ -130,6 +132,15 @@ void GfxFrameout::kernelUpdatePlane(reg_t object) {
 			it->planeBack = readSelectorValue(_segMan, object, SELECTOR(back));
 
 			sortPlanes();
+
+			// Update the items in the plane
+			for (FrameoutList::iterator listIterator = _screenItems.begin(); listIterator != _screenItems.end(); listIterator++) {
+				reg_t itemPlane = readSelector(_segMan, (*listIterator)->object, SELECTOR(plane));
+				if (object == itemPlane) {
+					kernelUpdateScreenItem((*listIterator)->object);
+				}
+			}
+
 			return;
 		}
 	}
@@ -186,17 +197,50 @@ void GfxFrameout::deletePlanePictures(reg_t object) {
 }
 
 void GfxFrameout::kernelAddScreenItem(reg_t object) {
-	_screenItems.push_back(object);
+	// Ignore invalid items
+	if (!_segMan->isObject(object))
+		return;
+
+	FrameoutEntry *itemEntry = new FrameoutEntry();
+	itemEntry->object = object;
+	itemEntry->givenOrderNr = _screenItems.size();
+	_screenItems.push_back(itemEntry);
+
+	kernelUpdateScreenItem(object);
 }
 
 void GfxFrameout::kernelUpdateScreenItem(reg_t object) {
-	// TODO
+	// Ignore invalid items
+	if (!_segMan->isObject(object))
+		return;
+
+	for (FrameoutList::iterator listIterator = _screenItems.begin(); listIterator != _screenItems.end(); listIterator++) {
+		FrameoutEntry *itemEntry = *listIterator;
+
+		if (itemEntry->object == object) {
+			itemEntry->viewId = readSelectorValue(_segMan, object, SELECTOR(view));
+			itemEntry->loopNo = readSelectorValue(_segMan, object, SELECTOR(loop));
+			itemEntry->celNo = readSelectorValue(_segMan, object, SELECTOR(cel));
+			itemEntry->x = readSelectorValue(_segMan, object, SELECTOR(x));
+			itemEntry->y = readSelectorValue(_segMan, object, SELECTOR(y));
+			itemEntry->z = readSelectorValue(_segMan, object, SELECTOR(z));
+			itemEntry->priority = readSelectorValue(_segMan, object, SELECTOR(priority));
+			if (readSelectorValue(_segMan, object, SELECTOR(fixPriority)) == 0)
+				itemEntry->priority = itemEntry->y;
+
+			itemEntry->signal = readSelectorValue(_segMan, object, SELECTOR(signal));
+			itemEntry->scaleX = readSelectorValue(_segMan, object, SELECTOR(scaleX));
+			itemEntry->scaleY = readSelectorValue(_segMan, object, SELECTOR(scaleY));
+			return;
+		}
+	}
 }
 
 void GfxFrameout::kernelDeleteScreenItem(reg_t object) {
-	for (uint32 itemNr = 0; itemNr < _screenItems.size(); itemNr++) {
-		if (_screenItems[itemNr] == object) {
-			_screenItems.remove_at(itemNr);
+	for (FrameoutList::iterator listIterator = _screenItems.begin(); listIterator != _screenItems.end(); listIterator++) {
+		FrameoutEntry *itemEntry = *listIterator;
+		if (itemEntry->object == object) {
+			_screenItems.remove(itemEntry);
 			return;
 		}
 	}
@@ -207,7 +251,7 @@ int16 GfxFrameout::kernelGetHighPlanePri() {
 	return readSelectorValue(g_sci->getEngineState()->_segMan, _planes.back().object, SELECTOR(priority));
 }
 
-// No idea yet how to implement this
+// TODO: No idea yet how to implement this
 void GfxFrameout::kernelAddPicAt(reg_t planeObj, int16 forWidth, GuiResourceId pictureId) {
 	addPlanePicture(planeObj, pictureId, forWidth);
 }
@@ -252,11 +296,6 @@ void GfxFrameout::sortPlanes() {
 void GfxFrameout::kernelFrameout() {
 	_palette->palVaryUpdate();
 
-	// Allocate enough space for all screen items
-	// TODO: Modify _screenItems to hold FrameoutEntry entries instead.
-	// Creating and destroying this in kernelFrameout() is overkill!
-	FrameoutEntry *itemData = new FrameoutEntry[_screenItems.size()];
-
 	for (PlaneList::iterator it = _planes.begin(); it != _planes.end(); it++) {
 		reg_t planeObject = it->object;
 		uint16 planeLastPriority = it->lastPriority;
@@ -280,43 +319,14 @@ void GfxFrameout::kernelFrameout() {
 		_coordAdjuster->pictureSetDisplayArea(it->planeRect);
 		_palette->drewPicture(planeMainPictureId);
 
-		// Fill our itemlist for this plane
-		int16 itemCount = 0;
-		FrameoutEntry *itemEntry = itemData;
 		FrameoutList itemList;
 
-		for (uint32 itemNr = 0; itemNr < _screenItems.size(); itemNr++) {
-			reg_t itemObject = _screenItems[itemNr];
-
-			// Remove any invalid items
-			if (!_segMan->isObject(itemObject)) {
-				_screenItems.remove_at(itemNr);
-				itemNr--;
-				continue;
-			}
-
-			reg_t itemPlane = readSelector(_segMan, itemObject, SELECTOR(plane));
+		// Copy screen items of the current frame to the list of items to be drawn
+		for (FrameoutList::iterator listIterator = _screenItems.begin(); listIterator != _screenItems.end(); listIterator++) {
+			reg_t itemPlane = readSelector(_segMan, (*listIterator)->object, SELECTOR(plane));
 			if (planeObject == itemPlane) {
-				// Found an item on current plane
-				itemEntry->viewId = readSelectorValue(_segMan, itemObject, SELECTOR(view));
-				itemEntry->loopNo = readSelectorValue(_segMan, itemObject, SELECTOR(loop));
-				itemEntry->celNo = readSelectorValue(_segMan, itemObject, SELECTOR(cel));
-				itemEntry->x = readSelectorValue(_segMan, itemObject, SELECTOR(x));
-				itemEntry->y = readSelectorValue(_segMan, itemObject, SELECTOR(y));
-				itemEntry->z = readSelectorValue(_segMan, itemObject, SELECTOR(z));
-				itemEntry->priority = readSelectorValue(_segMan, itemObject, SELECTOR(priority));
-				if (readSelectorValue(_segMan, itemObject, SELECTOR(fixPriority)) == 0)
-					itemEntry->priority = itemEntry->y;
-
-				itemEntry->signal = readSelectorValue(_segMan, itemObject, SELECTOR(signal));
-				itemEntry->scaleX = readSelectorValue(_segMan, itemObject, SELECTOR(scaleX));
-				itemEntry->scaleY = readSelectorValue(_segMan, itemObject, SELECTOR(scaleY));
-				itemEntry->object = itemObject;
-				itemEntry->givenOrderNr = itemNr;
-
-				itemList.push_back(itemEntry);
-				itemEntry++;
-				itemCount++;
+				kernelUpdateScreenItem((*listIterator)->object);	// TODO: Why is this necessary?
+				itemList.push_back(*listIterator);
 			}
 		}
 
@@ -348,13 +358,10 @@ void GfxFrameout::kernelFrameout() {
 		// Now sort our itemlist
 		Common::sort(itemList.begin(), itemList.end(), sortHelper);
 
-		// Now display itemlist
-		itemEntry = itemData;
-
 //		warning("Plane %s", _segMan->getObjectName(planeObject));
 
 		for (FrameoutList::iterator listIterator = itemList.begin(); listIterator != itemList.end(); listIterator++) {
-			itemEntry = *listIterator;
+			FrameoutEntry *itemEntry = *listIterator;
 
 			if (itemEntry->object.isNull()) {
 				// Picture cel data
@@ -530,7 +537,6 @@ void GfxFrameout::kernelFrameout() {
 		}
 	}
 
-	delete[] itemData;
 	_screen->copyToScreen();
 
 	g_sci->getEngineState()->_throttleTrigger = true;

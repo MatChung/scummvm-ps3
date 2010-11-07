@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/kernel/filesystemutil.h $
- * $Id: filesystemutil.h 53446 2010-10-13 20:04:50Z lordhoto $
+ * $Id: filesystemutil.h 53838 2010-10-25 23:19:39Z fingolfin $
  *
  */
 
@@ -61,8 +61,6 @@ namespace Sword25 {
 
 class FileSystemUtil {
 public:
-	static FileSystemUtil &GetInstance();
-	virtual ~FileSystemUtil() {}
 
 	/**
 	 * This function returns the name of the directory in which all user data is to be stored.
@@ -70,42 +68,32 @@ public:
 	 * These are for example Screenshots, game saves, configuration files, log files, ...
 	 * @return              Returns the name of the directory for user data.
 	 */
-	virtual Common::String GetUserdataDirectory() = 0;
+	static Common::String getUserdataDirectory();
+
 	/**
 	 * @return              Returns the path seperator
 	 */
-	virtual Common::String  GetPathSeparator() = 0;
+	static Common::String  getPathSeparator();
+
 	/**
 	 * @param Filename      The path to a file.
 	 * @return              Returns the size of the specified file. If the size could not be
 	 * determined, or the file does not exist, returns -1
 	 */
-	virtual int32 GetFileSize(const Common::String &Filename) = 0;
-	/**
-	 * @param Filename      The path to a file.
-	 * @return              Returns the timestamp of the specified file.
-	 */
-	virtual TimeDate GetFileTime(const Common::String &Filename) = 0;
+	static int32 getFileSize(const Common::String &filename);
+
 	/**
 	 * @param Filename      The path to a file.
 	 * @return              Returns true if the file exists.
 	 */
-	virtual bool FileExists(const Common::String &Filename) = 0;
-	/**
-	 * This function creates a directory
-	 *
-	 * If the parameter is "\b\c\d\e" is passed, and "\b\c" already exists, then folder 'd'
-	 * will be created, and subdirectory 'e' under it.
-	 * @param DirectoryName The name of the directory to be created
-	 * @return              Returns true if the folder(s) could be created, otherwise false.
-	 */
-	virtual bool CreateDirectory(const Common::String &DirectoryName) = 0;
+	static bool fileExists(const Common::String &filename);
+
 	/**
 	 * Gets the filename from a path and filename
 	 * @param Filename		The full path and filename
 	 * @return				Returns just the filename
 	 */
-	virtual Common::String GetPathFilename(const Common::String &Path) = 0;
+	static Common::String getPathFilename(const Common::String &path);
 };
 
 } // End of namespace Sword25

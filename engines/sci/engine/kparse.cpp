@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/kparse.cpp $
- * $Id: kparse.cpp 52989 2010-10-03 10:49:42Z wjpalenstijn $
+ * $Id: kparse.cpp 54037 2010-11-02 09:49:47Z fingolfin $
  *
  */
 
@@ -62,7 +62,7 @@ reg_t kSaid(EngineState *s, int argc, reg_t *argv) {
 	}
 
 #ifdef DEBUG_PARSER
-		printf("Said block: ");
+		debugN("Said block: ");
 		g_sci->getVocabulary()->debugDecipherSaidBlock(said_block);
 #endif
 
@@ -74,7 +74,7 @@ reg_t kSaid(EngineState *s, int argc, reg_t *argv) {
 	if (new_lastmatch  != SAID_NO_MATCH) { /* Build and possibly display a parse tree */
 
 #ifdef DEBUG_PARSER
-		printf("kSaid: Match.\n");
+		debugN("kSaid: Match.\n");
 #endif
 
 		s->r_acc = make_reg(0, 1);

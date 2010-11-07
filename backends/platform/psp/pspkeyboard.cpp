@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/psp/pspkeyboard.cpp $
- * $Id: pspkeyboard.cpp 53160 2010-10-12 02:18:11Z jvprat $
+ * $Id: pspkeyboard.cpp 53970 2010-10-31 00:01:00Z fingolfin $
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 //#define PSP_KB_SHELL	/* Need a hack to properly load the keyboard from the PSP shell */
 
@@ -78,9 +81,9 @@ short PSPKeyboard::_modeChar[MODE_COUNT][5][6] = {
 	},
 	{	//numbers
 		{ K('1'),  K('2'), K('3'), K('4'), K(0),   K(0)   },
-		{ C(F5),   C(F8),  C(F7),  C(F6),  C(F9),  C(F10) },
+		{ C(F5),   C(F6),  C(F7),  C(F8),  C(F9),  C(F10) },
 		{ K('5'),  K('6'), K('7'), K('8'), K(0),   K(0)   },
-		{ C(F1),   C(F4),  C(F3),  C(F2),  K(0),   K(0)   },
+		{ C(F1),   C(F2),  C(F3),  C(F4),  K(0),   K(0)   },
 		{ K('\b'), K('0'), K(' '), K('9'), K(0),   K(0)   }
 	},
 	{	//symbols

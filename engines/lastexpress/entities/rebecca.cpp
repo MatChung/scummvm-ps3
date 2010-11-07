@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/rebecca.cpp $
- * $Id: rebecca.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: rebecca.cpp 53880 2010-10-27 19:19:22Z littleboy $
  *
  */
 
@@ -515,7 +515,7 @@ IMPLEMENT_FUNCTION_I(20, Rebecca, function20, TimeValue)
 			if (params->param7 != kTimeInvalid && getState()->time > kTime1174500) {
 				if (getState()->time <= kTime1183500) {
 					if (!getEntities()->isDistanceBetweenEntities(kEntityRebecca, kEntityPlayer, 2000) || getSound()->isBuffered("CON1210") || !params->param7)
-						params->param7 = getState()->time;
+						params->param7 = (uint)(getState()->time);
 
 					if (params->param7 >= getState()->time)
 						goto label_callback;
@@ -537,7 +537,7 @@ IMPLEMENT_FUNCTION_I(20, Rebecca, function20, TimeValue)
 		if (getProgress().chapter == kChapter3 && !ENTITY_PARAM(0, 4) && params->param8 != kTimeInvalid && getState()->time > kTime2097000) {
 			if (getState()->time <= kTime2106000) {
 				if (!getEntities()->isDistanceBetweenEntities(kEntityRebecca, kEntityPlayer, 1000) || !params->param8)
-					params->param8 = getState()->time;
+					params->param8 = (uint)getState()->time;
 
 				if (params->param8 >= getState()->time)
 					goto label_callback;
@@ -658,7 +658,7 @@ IMPLEMENT_FUNCTION(21, Rebecca, chapter1)
 		break;
 
 	case kActionNone:
-		TIME_CHECK_CHAPTER1(setup_chapter1Handler);
+		TIME_CHECK(kTimeChapter1, params->param1, setup_chapter1Handler);
 		break;
 
 	case kActionDefault:
@@ -686,7 +686,7 @@ IMPLEMENT_FUNCTION(22, Rebecca, chapter1Handler)
 		break;
 
 	case kActionNone:
-		TIME_CHECK_PLAYSOUND(kTime1084500, params->param3, 1, "REB1015");
+		TIME_CHECK_CALLBACK_1(kTime1084500, params->param3, 1, setup_playSound, "REB1015");
 
 		if (params->param4 == kTimeInvalid)
 			goto label_callback_4;
@@ -695,7 +695,7 @@ IMPLEMENT_FUNCTION(22, Rebecca, chapter1Handler)
 			goto label_playConversation;
 
 		if (!getEntities()->isInSalon(kEntityPlayer) || !params->param4)
-			params->param4 = getState()->time + 150;
+			params->param4 = (uint)(getState()->time + 150);
 
 		if (params->param4 >= getState()->time) {
 label_callback_4:
@@ -854,7 +854,7 @@ IMPLEMENT_FUNCTION(24, Rebecca, function24)
 		if (params->param4 != kTimeInvalid) {
 			if (getState()->time <= kTime1161000) {
 				if (!getEntities()->isInRestaurant(kEntityPlayer) || !params->param4)
-					params->param4 = getState()->time + 150;
+					params->param4 = (uint)getState()->time + 150;
 
 				if (params->param4 >= getState()->time)
 					break;
@@ -1085,7 +1085,7 @@ IMPLEMENT_FUNCTION(30, Rebecca, function30)
 
 			if (getState()->time <= kTimeEnd)
 				if (!getEntities()->isInSalon(kEntityPlayer) || !params->param4)
-					params->param4 = getState()->time + 450;
+					params->param4 = (uint)getState()->time + 450;
 
 			if (params->param4 < getState()->time || getState()->time > kTimeEnd) {
 				params->param4 = kTimeInvalid;
@@ -1100,7 +1100,7 @@ IMPLEMENT_FUNCTION(30, Rebecca, function30)
 
 			if (getState()->time <= kTime10881000) {
 				if (!getEntities()->isInSalon(kEntityPlayer) || !params->param5)
-					params->param5 = getState()->time + 450;
+					params->param5 = (uint)getState()->time + 450;
 
 				if (params->param5 >= getState()->time)
 					break;
@@ -1221,7 +1221,7 @@ IMPLEMENT_FUNCTION(34, Rebecca, function34)
 		if (params->param2 == kTimeInvalid) {
 			if (getState()->time <= kTime1386000) {
 				if (!getEntities()->isInRestaurant(kEntityPlayer) || !params->param2)
-					params->param2 = getState()->time;
+					params->param2 = (uint)getState()->time;
 
 				if (params->param2 >= getState()->time) {
 					TIME_CHECK_CALLBACK(kTime2052000, params->param3, 1, setup_function19);
@@ -1304,7 +1304,113 @@ IMPLEMENT_FUNCTION(35, Rebecca, function35)
 
 //////////////////////////////////////////////////////////////////////////
 IMPLEMENT_FUNCTION(36, Rebecca, function36)
-	error("Rebecca: callback function 36 not implemented!");
+	switch (savepoint.action) {
+	default:
+		break;
+
+	case kActionNone:
+		if (!params->param2)
+			params->param2 = (uint)getState()->time + 1800;
+
+		if (params->param4 != kTimeInvalid && params->param2 < getState()->time) {
+
+			if (getState()->time <= kTime2083500) {
+				if (!getEntities()->isInSalon(kEntityPlayer) || !params->param4)
+					params->param4 = (uint)getState()->time + 300;
+			}
+
+			if (params->param4 < getState()->time || getState()->time > kTime2083500) {
+				params->param4 = kTimeInvalid;
+				getSound()->playSound(kEntityRebecca, "Reb3007");
+
+				setCallback(2);
+				setup_updatePosition("118E", kCarRedSleeping, 52);
+				break;
+			}
+		}
+
+		// TODO rewrite using proper if/else blocks instead of goto
+label_callback_2:
+		if (!params->param1)
+			goto label_callback_3;
+
+		if (!params->param3)
+			params->param3 = (uint)getState()->time + 9000;
+
+		if (params->param5 == kTimeInvalid || params->param3 >= getState()->time)
+			goto label_callback_3;
+
+		if (getState()->time <= kTime2092500) {
+			if (!getEntities()->isInSalon(kEntityPlayer) || !params->param5)
+				params->param5 = (uint)getState()->time + 300;
+
+			if (params->param5 >= getState()->time) {
+label_callback_3:
+				if (getState()->time > kTime2097000 && !params->param6) {
+					params->param6 = 1;
+					getData()->inventoryItem = kItemNone;
+
+					setCallback(4);
+					setup_updatePosition("118H", kCarRestaurant, 52);
+				}
+				break;
+			}
+		}
+
+		params->param5 = kTimeInvalid;
+
+		getData()->inventoryItem = kItemNone;
+		getSound()->playSound(kEntityRebecca, "Reb3008", SoundManager::kFlagInvalid, 60);
+		getEntities()->updatePositionEnter(kEntityRebecca, kCarRestaurant, 52);
+
+		setCallback(3);
+		setup_draw2("118G1", "118G2", kEntitySophie);
+		break;
+
+	case kAction1:
+		getData()->inventoryItem = kItemNone;
+
+		setCallback(6);
+		setup_playSound("SOP3008");
+		break;
+
+	case kActionDefault:
+		setCallback(1);
+		setup_function17(true);
+		break;
+
+	case kActionCallback:
+		switch (getCallback()) {
+		default:
+			break;
+
+		case 1:
+			getEntities()->drawSequenceLeft(kEntityRebecca, "118D");
+			break;
+
+		case 2:
+			params->param1 = 1;
+			getData()->inventoryItem = kItemInvalid;
+			getEntities()->drawSequenceLeft(kEntityRebecca, "118F");
+			goto label_callback_2;
+
+		case 3:
+			getEntities()->clearSequences(kEntitySophie);
+			getEntities()->updatePositionExit(kEntityRebecca, kCarRestaurant, 52);
+			getEntities()->drawSequenceLeft(kEntityRebecca, "118D");
+			goto label_callback_3;
+
+		case 4:
+			setCallback(5);
+			setup_function18();
+			break;
+
+		case 5:
+			setup_function37();
+			break;
+		}
+		break;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1345,7 +1451,7 @@ IMPLEMENT_FUNCTION(38, Rebecca, function38)
 
 		case 1:
 			getObjects()->update(kObjectCompartmentE, kEntityPlayer, kObjectLocationNone, kCursorHandKnock, kCursorHand);
-            getSavePoints()->push(kEntityRebecca, kEntitySophie, kAction259921280);
+			getSavePoints()->push(kEntityRebecca, kEntitySophie, kAction259921280);
 
 			setCallback(2);
 			setup_updateEntity(kCarKronos, kPosition_9270);
@@ -1497,7 +1603,7 @@ IMPLEMENT_FUNCTION(44, Rebecca, function44)
 		if (params->param3 != kTimeInvalid) {
 			if (getState()->time <= kTime2412000) {
 				if (!getEntities()->isInRestaurant(kEntityPlayer) || !params->param3)
-					params->param3 = getState()->time;
+					params->param3 = (uint)getState()->time;
 
 				if (params->param3 >= getState()->time)
 					goto label_next;
@@ -1512,7 +1618,7 @@ label_next:
 		if (params->param1 && params->param4 != kTimeInvalid) {
 			if (getState()->time <= kTime2430000) {
 				if (!getEntities()->isInRestaurant(kEntityPlayer) || !params->param4)
-					params->param4 = getState()->time + 150;
+					params->param4 = (uint)getState()->time + 150;
 
 				if (params->param4 >= getState()->time)
 					goto label_callback_2;

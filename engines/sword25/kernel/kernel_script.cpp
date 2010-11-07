@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/kernel/kernel_script.cpp $
- * $Id: kernel_script.cpp 53512 2010-10-15 20:01:13Z eriktorbjorn $
+ * $Id: kernel_script.cpp 53838 2010-10-25 23:19:39Z fingolfin $
  *
  */
 
@@ -32,14 +32,9 @@
  *
  */
 
-// -----------------------------------------------------------------------------
-// Includes
-// -----------------------------------------------------------------------------
-
 #include "sword25/kernel/common.h"
 #include "sword25/kernel/kernel.h"
 #include "sword25/kernel/filesystemutil.h"
-#include "sword25/kernel/window.h"
 #include "sword25/kernel/resmanager.h"
 #include "sword25/kernel/persistenceservice.h"
 #include "sword25/script/script.h"
@@ -47,131 +42,92 @@
 
 namespace Sword25 {
 
-// -----------------------------------------------------------------------------
-
-static int DisconnectService(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-
-	lua_pushboolean(L, pKernel->DisconnectService(luaL_checkstring(L, 1)));
+static int disconnectService(lua_State *L) {
+	// This function apparently is not used by the game scripts
+	lua_pushboolean(L, true);
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetActiveServiceIdentifier(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-
-	lua_pushstring(L, pKernel->GetActiveServiceIdentifier(luaL_checkstring(L, 1)).c_str());
+static int getActiveServiceIdentifier(lua_State *L) {
+	// This function apparently is not used by the game scripts
+	lua_pushstring(L, "QUUX");
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetSuperclassCount(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-
-	lua_pushnumber(L, pKernel->GetSuperclassCount());
+static int getSuperclassCount(lua_State *L) {
+	// This function is only used by a single function in system/kernel.lua which is never called.
+	lua_pushnumber(L, 0);
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetSuperclassIdentifier(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-
-	lua_pushstring(L, pKernel->GetSuperclassIdentifier(
-	                   static_cast<uint>(luaL_checknumber(L, 1))).c_str());
+static int getSuperclassIdentifier(lua_State *L) {
+	// This function is only used by a single function in system/kernel.lua which is never called.
+	lua_pushstring(L, "FOO");
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetServiceCount(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-
-	lua_pushnumber(L, pKernel->GetServiceCount(luaL_checkstring(L, 1)));
+static int getServiceCount(lua_State *L) {
+	// This function is only used by a single function in system/kernel.lua which is never called.
+	lua_pushnumber(L, 0);
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetServiceIdentifier(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-
-	lua_pushstring(L, pKernel->GetServiceIdentifier(luaL_checkstring(L, 1),
-	               static_cast<uint>(luaL_checknumber(L, 2))).c_str());
+static int getServiceIdentifier(lua_State *L) {
+	// This function is only used by a single function in system/kernel.lua which is never called.
+	lua_pushstring(L, "BAR");
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetMilliTicks(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
+static int getMilliTicks(lua_State *L) {
+	Kernel *pKernel = Kernel::getInstance();
 	BS_ASSERT(pKernel);
 
-	lua_pushnumber(L, pKernel->GetMilliTicks());
+	lua_pushnumber(L, pKernel->getMilliTicks());
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetTimer(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
+static int getTimer(lua_State *L) {
+	Kernel *pKernel = Kernel::getInstance();
 	BS_ASSERT(pKernel);
 
-	lua_pushnumber(L, static_cast<lua_Number>(pKernel->GetMilliTicks()) / 1000.0);
+	lua_pushnumber(L, static_cast<lua_Number>(pKernel->getMilliTicks()) / 1000.0);
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int StartService(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-
-	lua_pushbooleancpp(L, pKernel->NewService(luaL_checkstring(L, 1), luaL_checkstring(L, 2)) != NULL);
+static int startService(lua_State *L) {
+	// This function is used by system/boot.lua to init all services.
+	// However, we do nothing here, as we just hard code the init sequence.
+	lua_pushbooleancpp(L, true);
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int Sleep(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
+static int sleep(lua_State *L) {
+	Kernel *pKernel = Kernel::getInstance();
 	BS_ASSERT(pKernel);
-	pKernel->Sleep(static_cast<uint>(luaL_checknumber(L, 1) * 1000));
+	pKernel->sleep(static_cast<uint>(luaL_checknumber(L, 1) * 1000));
 	return 0;
 }
 
-// -----------------------------------------------------------------------------
-
-static int Crash(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
+static int crash(lua_State *L) {
+	Kernel *pKernel = Kernel::getInstance();
 	BS_ASSERT(pKernel);
-	pKernel->Crash();
+	pKernel->crash();
 	return 0;
 }
 
-// -----------------------------------------------------------------------------
-
-static int ExecuteFile(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
+static int executeFile(lua_State *L) {
+	Kernel *pKernel = Kernel::getInstance();
 	BS_ASSERT(pKernel);
-	ScriptEngine *pSE = pKernel->GetScript();
+	ScriptEngine *pSE = pKernel->getScript();
 	BS_ASSERT(pSE);
 
 	lua_pushbooleancpp(L, pSE->executeFile(luaL_checkstring(L, 1)));
@@ -179,551 +135,406 @@ static int ExecuteFile(lua_State *L) {
 	return 0;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetUserdataDirectory(lua_State *L) {
-	lua_pushstring(L, FileSystemUtil::GetInstance().GetUserdataDirectory().c_str());
+static int getUserdataDirectory(lua_State *L) {
+	lua_pushstring(L, FileSystemUtil::getUserdataDirectory().c_str());
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetPathSeparator(lua_State *L) {
-	lua_pushstring(L, FileSystemUtil::GetInstance().GetPathSeparator().c_str());
+static int getPathSeparator(lua_State *L) {
+	lua_pushstring(L, FileSystemUtil::getPathSeparator().c_str());
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int FileExists(lua_State *L) {
-	lua_pushbooleancpp(L, FileSystemUtil::GetInstance().FileExists(luaL_checkstring(L, 1)));
+static int fileExists(lua_State *L) {
+	lua_pushbooleancpp(L, FileSystemUtil::fileExists(luaL_checkstring(L, 1)));
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int CreateDirectory(lua_State *L) {
-	lua_pushbooleancpp(L, FileSystemUtil::GetInstance().CreateDirectory(luaL_checkstring(L, 1)));
+static int createDirectory(lua_State *L) {
+	// ScummVM engines cannot create directories, so we do nothing here.
+	lua_pushbooleancpp(L, false);
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetWinCode(lua_State *L) {
+static int getWinCode(lua_State *L) {
 	lua_pushstring(L, "ScummVM");
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetSubversionRevision(lua_State *L) {
+static int getSubversionRevision(lua_State *L) {
 	// ScummVM is 1337
 	lua_pushnumber(L, 1337);
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetUsedMemory(lua_State *L) {
-	lua_pushnumber(L, Kernel::GetInstance()->GetUsedMemory());
+static int getUsedMemory(lua_State *L) {
+	lua_pushnumber(L, Kernel::getInstance()->getUsedMemory());
 	return 1;
 }
-
-// -----------------------------------------------------------------------------
 
 static const char *KERNEL_LIBRARY_NAME = "Kernel";
 
 static const luaL_reg KERNEL_FUNCTIONS[] = {
-	{"DisconnectService", DisconnectService},
-	{"GetActiveServiceIdentifier", GetActiveServiceIdentifier},
-	{"GetSuperclassCount", GetSuperclassCount},
-	{"GetSuperclassIdentifier", GetSuperclassIdentifier},
-	{"GetServiceCount", GetServiceCount},
-	{"GetServiceIdentifier", GetServiceIdentifier},
-	{"GetMilliTicks", GetMilliTicks},
-	{"GetTimer", GetTimer},
-	{"StartService", StartService},
-	{"Sleep", Sleep},
-	{"Crash", Crash},
-	{"ExecuteFile", ExecuteFile},
-	{"GetUserdataDirectory", GetUserdataDirectory},
-	{"GetPathSeparator", GetPathSeparator},
-	{"FileExists", FileExists},
-	{"CreateDirectory", CreateDirectory},
-	{"GetWinCode", GetWinCode},
-	{"GetSubversionRevision", GetSubversionRevision},
-	{"GetUsedMemory", GetUsedMemory},
+	{"DisconnectService", disconnectService},
+	{"GetActiveServiceIdentifier", getActiveServiceIdentifier},
+	{"GetSuperclassCount", getSuperclassCount},
+	{"GetSuperclassIdentifier", getSuperclassIdentifier},
+	{"GetServiceCount", getServiceCount},
+	{"GetServiceIdentifier", getServiceIdentifier},
+	{"GetMilliTicks", getMilliTicks},
+	{"GetTimer", getTimer},
+	{"StartService", startService},
+	{"Sleep", sleep},
+	{"Crash", crash},
+	{"ExecuteFile", executeFile},
+	{"GetUserdataDirectory", getUserdataDirectory},
+	{"GetPathSeparator", getPathSeparator},
+	{"FileExists", fileExists},
+	{"CreateDirectory", createDirectory},
+	{"GetWinCode", getWinCode},
+	{"GetSubversionRevision", getSubversionRevision},
+	{"GetUsedMemory", getUsedMemory},
 	{0, 0}
 };
 
-// -----------------------------------------------------------------------------
-
-static int IsVisible(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	lua_pushbooleancpp(L, pWindow->IsVisible());
+static int isVisible(lua_State *L) {
+	// This function apparently is not used by the game scripts
+	lua_pushbooleancpp(L, true);
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int SetVisible(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	pWindow->SetVisible(lua_tobooleancpp(L, 1));
+static int setVisible(lua_State *L) {
+	// This function apparently is not used by the game scripts
+//	pWindow->setVisible(lua_tobooleancpp(L, 1));
 
 	return 0;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetX(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	lua_pushnumber(L, pWindow->GetX());
+static int getX(lua_State *L) {
+	// This function apparently is not used by the game scripts
+	lua_pushnumber(L, 0);
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetY(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	lua_pushnumber(L, pWindow->GetY());
+static int getY(lua_State *L) {
+	// This function apparently is not used by the game scripts
+	lua_pushnumber(L, 0);
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int SetX(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	pWindow->SetX(static_cast<int>(luaL_checknumber(L, 1)));
+static int setX(lua_State *L) {
+	// This is called by system/boot.lua with -1 as value.
+//	pWindow->setX(static_cast<int>(luaL_checknumber(L, 1)));
 
 	return 0;
 }
 
-// -----------------------------------------------------------------------------
-
-static int SetY(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	pWindow->SetY(static_cast<int>(luaL_checknumber(L, 1)));
+static int setY(lua_State *L) {
+	// This is called by system/boot.lua with -1 as value.
+//	pWindow->setY(static_cast<int>(luaL_checknumber(L, 1)));
 
 	return 0;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetClientX(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	lua_pushnumber(L, pWindow->GetClientX());
+static int getClientX(lua_State *L) {
+	// This function apparently is not used by the game scripts
+	lua_pushnumber(L, 0);
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetClientY(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	lua_pushnumber(L, pWindow->GetClientY());
+static int getClientY(lua_State *L) {
+	// This function apparently is not used by the game scripts
+	lua_pushnumber(L, 0);
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetWidth(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	lua_pushnumber(L, pWindow->GetWidth());
+static int getWidth(lua_State *L) {
+	// This function apparently is not used by the game scripts
+	lua_pushnumber(L, 800);
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetHeight(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	lua_pushnumber(L, pWindow->GetHeight());
+static int getHeight(lua_State *L) {
+	// This function apparently is not used by the game scripts
+	lua_pushnumber(L, 600);
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int SetWidth(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	pWindow->SetWidth(static_cast<int>(luaL_checknumber(L, 1)));
+static int setWidth(lua_State *L) {
+	// This is called by system/boot.lua with 800 as value.
+//	pWindow->setWidth(static_cast<int>(luaL_checknumber(L, 1)));
 
 	return 0;
 }
 
-// -----------------------------------------------------------------------------
-
-static int SetHeight(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	pWindow->SetHeight(static_cast<int>(luaL_checknumber(L, 1)));
+static int setHeight(lua_State *L) {
+	// This is called by system/boot.lua with 600 as value.
+//	pWindow->setHeight(static_cast<int>(luaL_checknumber(L, 1)));
 
 	return 0;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetTitle(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	lua_pushstring(L, pWindow->GetTitle().c_str());
+static int getTitle(lua_State *L) {
+	// This function apparently is not used by the game scripts
+	lua_pushstring(L, "");
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int SetTitle(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	pWindow->SetTitle(luaL_checkstring(L, 1));
+static int setTitle(lua_State *L) {
+	// This is called by system/boot.lua and system/menu.lua, to
+	// set the window title to the (localized) game name.
+	// FIXME: Should we call OSystem::setWindowCaption() here?
+//	pWindow->setTitle(luaL_checkstring(L, 1));
 
 	return 0;
 }
 
-// -----------------------------------------------------------------------------
+static int processMessages(lua_State *L) {
+	// This is called by the main loop in system/boot.lua,
+	// and the game keeps running as true is returned here.
+	// It terminates if we return false.
 
-static int ProcessMessages(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
+	// TODO: We could do more stuff here if desired...
 
-	lua_pushbooleancpp(L, pWindow->ProcessMessages());
+	// TODO: We could always return true here, and leave quit handling
+	// to the closeWanted() opcode; see also the TODO comment in there.
 
-	return 1;
-}
-
-// -----------------------------------------------------------------------------
-
-static int CloseWanted(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	lua_pushbooleancpp(L, pWindow->CloseWanted());
+	lua_pushbooleancpp(L, !Engine::shouldQuit());
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
+static int closeWanted(lua_State *L) {
+	// This is called by system/interface.lua to determine whether the
+	// user requested the game to close (e.g. by clicking the 'close' widget
+	// of the game window). As a consequence (i.e. this function returns true),
+	// a quit confirmation dialog is shown.
 
-static int WaitForFocus(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	lua_pushbooleancpp(L, pWindow->WaitForFocus());
-
-	return 1;
-}
-
-// -----------------------------------------------------------------------------
-
-static int HasFocus(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
-	BS_ASSERT(pKernel);
-	Window *pWindow = pKernel->GetWindow();
-	BS_ASSERT(pWindow);
-
-	lua_pushbooleancpp(L, pWindow->HasFocus());
+	// TODO: ScummVM currently has a bug / misfeature where some engines provide
+	// quit confirmation dialogs, some don't; in addition, we have a global confirmation
+	// dialog (but the user has to explicitly activate that in the config).
+	// Anyway, this can lead to *two* confirmation dialogs being shown.
+	// If it wasn't for that, we could simply check for Engine::shouldQuit() here,
+	// and then invoke EventMan::resetQuit. But currently this would result in
+	// the user seeing two confirmation dialogs. Bad.
+	lua_pushbooleancpp(L, false);
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
+static int waitForFocus(lua_State *L) {
+	// This function apparently is not used by the game scripts
+	lua_pushbooleancpp(L, true);
+
+	return 1;
+}
+
+static int hasFocus(lua_State *L) {
+	// This function apparently is not used by the game scripts
+	lua_pushbooleancpp(L, true);
+
+	return 1;
+}
 
 static const char *WINDOW_LIBRARY_NAME = "Window";
 
 static const luaL_reg WINDOW_FUNCTIONS[] = {
-	{"IsVisible", IsVisible},
-	{"SetVisible", SetVisible},
-	{"GetX", GetX},
-	{"SetX", SetX},
-	{"GetY", GetY},
-	{"SetY", SetY},
-	{"GetClientX", GetClientX},
-	{"GetClientY", GetClientY},
-	{"GetWidth", GetWidth},
-	{"GetHeight", GetHeight},
-	{"SetWidth", SetWidth},
-	{"SetHeight", SetHeight},
-	{"GetTitle", GetTitle},
-	{"SetTitle", SetTitle},
-	{"ProcessMessages", ProcessMessages},
-	{"CloseWanted", CloseWanted},
-	{"WaitForFocus", WaitForFocus},
-	{"HasFocus", HasFocus},
+	{"IsVisible", isVisible},
+	{"SetVisible", setVisible},
+	{"GetX", getX},
+	{"SetX", setX},
+	{"GetY", getY},
+	{"SetY", setY},
+	{"GetClientX", getClientX},
+	{"GetClientY", getClientY},
+	{"GetWidth", getWidth},
+	{"GetHeight", getHeight},
+	{"SetWidth", setWidth},
+	{"SetHeight", setHeight},
+	{"GetTitle", getTitle},
+	{"SetTitle", setTitle},
+	{"ProcessMessages", processMessages},
+	{"CloseWanted", closeWanted},
+	{"WaitForFocus", waitForFocus},
+	{"HasFocus", hasFocus},
 	{0, 0}
 };
 
-// -----------------------------------------------------------------------------
-
-static int PrecacheResource(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
+static int precacheResource(lua_State *L) {
+	Kernel *pKernel = Kernel::getInstance();
 	BS_ASSERT(pKernel);
-	ResourceManager *pResource = pKernel->GetResourceManager();
+	ResourceManager *pResource = pKernel->getResourceManager();
 	BS_ASSERT(pResource);
 
-	lua_pushbooleancpp(L, pResource->PrecacheResource(luaL_checkstring(L, 1)));
+	lua_pushbooleancpp(L, pResource->precacheResource(luaL_checkstring(L, 1)));
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int ForcePrecacheResource(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
+static int forcePrecacheResource(lua_State *L) {
+	Kernel *pKernel = Kernel::getInstance();
 	BS_ASSERT(pKernel);
-	ResourceManager *pResource = pKernel->GetResourceManager();
+	ResourceManager *pResource = pKernel->getResourceManager();
 	BS_ASSERT(pResource);
 
-	lua_pushbooleancpp(L, pResource->PrecacheResource(luaL_checkstring(L, 1), true));
+	lua_pushbooleancpp(L, pResource->precacheResource(luaL_checkstring(L, 1), true));
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetMaxMemoryUsage(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
+static int getMaxMemoryUsage(lua_State *L) {
+	Kernel *pKernel = Kernel::getInstance();
 	BS_ASSERT(pKernel);
-	ResourceManager *pResource = pKernel->GetResourceManager();
+	ResourceManager *pResource = pKernel->getResourceManager();
 	BS_ASSERT(pResource);
 
-	lua_pushnumber(L, pResource->GetMaxMemoryUsage());
+	lua_pushnumber(L, pResource->getMaxMemoryUsage());
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int SetMaxMemoryUsage(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
+static int setMaxMemoryUsage(lua_State *L) {
+	Kernel *pKernel = Kernel::getInstance();
 	BS_ASSERT(pKernel);
-	ResourceManager *pResource = pKernel->GetResourceManager();
+	ResourceManager *pResource = pKernel->getResourceManager();
 	BS_ASSERT(pResource);
 
-	pResource->SetMaxMemoryUsage(static_cast<uint>(lua_tonumber(L, 1)));
+	pResource->setMaxMemoryUsage(static_cast<uint>(lua_tonumber(L, 1)));
 
 	return 0;
 }
 
-// -----------------------------------------------------------------------------
-
-static int EmptyCache(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
+static int emptyCache(lua_State *L) {
+	Kernel *pKernel = Kernel::getInstance();
 	BS_ASSERT(pKernel);
-	ResourceManager *pResource = pKernel->GetResourceManager();
+	ResourceManager *pResource = pKernel->getResourceManager();
 	BS_ASSERT(pResource);
 
-	pResource->EmptyCache();
+	pResource->emptyCache();
 
 	return 0;
 }
 
-// -----------------------------------------------------------------------------
-
-static int IsLogCacheMiss(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
+static int isLogCacheMiss(lua_State *L) {
+	Kernel *pKernel = Kernel::getInstance();
 	BS_ASSERT(pKernel);
-	ResourceManager *pResource = pKernel->GetResourceManager();
+	ResourceManager *pResource = pKernel->getResourceManager();
 	BS_ASSERT(pResource);
 
-	lua_pushbooleancpp(L, pResource->IsLogCacheMiss());
+	lua_pushbooleancpp(L, pResource->isLogCacheMiss());
 
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int SetLogCacheMiss(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
+static int setLogCacheMiss(lua_State *L) {
+	Kernel *pKernel = Kernel::getInstance();
 	BS_ASSERT(pKernel);
-	ResourceManager *pResource = pKernel->GetResourceManager();
+	ResourceManager *pResource = pKernel->getResourceManager();
 	BS_ASSERT(pResource);
 
-	pResource->SetLogCacheMiss(lua_tobooleancpp(L, 1));
+	pResource->setLogCacheMiss(lua_tobooleancpp(L, 1));
 
 	return 0;
 }
 
-// -----------------------------------------------------------------------------
-
-static int DumpLockedResources(lua_State *L) {
-	Kernel *pKernel = Kernel::GetInstance();
+static int dumpLockedResources(lua_State *L) {
+	Kernel *pKernel = Kernel::getInstance();
 	BS_ASSERT(pKernel);
-	ResourceManager *pResource = pKernel->GetResourceManager();
+	ResourceManager *pResource = pKernel->getResourceManager();
 	BS_ASSERT(pResource);
 
-	pResource->DumpLockedResources();
+	pResource->dumpLockedResources();
 
 	return 0;
 }
-
-// -----------------------------------------------------------------------------
 
 static const char *RESOURCE_LIBRARY_NAME = "Resource";
 
 static const luaL_reg RESOURCE_FUNCTIONS[] = {
-	{"PrecacheResource", PrecacheResource},
-	{"ForcePrecacheResource", ForcePrecacheResource},
-	{"GetMaxMemoryUsage", GetMaxMemoryUsage},
-	{"SetMaxMemoryUsage", SetMaxMemoryUsage},
-	{"EmptyCache", EmptyCache},
-	{"IsLogCacheMiss", IsLogCacheMiss},
-	{"SetLogCacheMiss", SetLogCacheMiss},
-	{"DumpLockedResources", DumpLockedResources},
+	{"PrecacheResource", precacheResource},
+	{"ForcePrecacheResource", forcePrecacheResource},
+	{"GetMaxMemoryUsage", getMaxMemoryUsage},
+	{"SetMaxMemoryUsage", setMaxMemoryUsage},
+	{"EmptyCache", emptyCache},
+	{"IsLogCacheMiss", isLogCacheMiss},
+	{"SetLogCacheMiss", setLogCacheMiss},
+	{"DumpLockedResources", dumpLockedResources},
 	{0, 0}
 };
 
-// -----------------------------------------------------------------------------
-
-static int ReloadSlots(lua_State *L) {
-	PersistenceService::GetInstance().ReloadSlots();
+static int reloadSlots(lua_State *L) {
+	PersistenceService::getInstance().reloadSlots();
 	lua_pushnil(L);
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetSlotCount(lua_State *L) {
-	lua_pushnumber(L, PersistenceService::GetInstance().GetSlotCount());
+static int getSlotCount(lua_State *L) {
+	lua_pushnumber(L, PersistenceService::getInstance().getSlotCount());
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
+static int isSlotOccupied(lua_State *L) {
+	lua_pushbooleancpp(L, PersistenceService::getInstance().isSlotOccupied(static_cast<uint>(luaL_checknumber(L, 1)) - 1));
+	return 1;
+}
 
-static int IsSlotOccupied(lua_State *L) {
-	lua_pushbooleancpp(L, PersistenceService::GetInstance().IsSlotOccupied(
+static int getSavegameDirectory(lua_State *L) {
+	lua_pushstring(L, PersistenceService::getInstance().getSavegameDirectory().c_str());
+	return 1;
+}
+
+static int isSavegameCompatible(lua_State *L) {
+	lua_pushbooleancpp(L, PersistenceService::getInstance().isSavegameCompatible(
 	                       static_cast<uint>(luaL_checknumber(L, 1)) - 1));
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetSavegameDirectory(lua_State *L) {
-	lua_pushstring(L, PersistenceService::GetInstance().GetSavegameDirectory().c_str());
-	return 1;
-}
-
-// -----------------------------------------------------------------------------
-
-static int IsSavegameCompatible(lua_State *L) {
-	lua_pushbooleancpp(L, PersistenceService::GetInstance().IsSavegameCompatible(
-	                       static_cast<uint>(luaL_checknumber(L, 1)) - 1));
-	return 1;
-}
-
-// -----------------------------------------------------------------------------
-
-static int GetSavegameDescription(lua_State *L) {
-	lua_pushstring(L, PersistenceService::GetInstance().GetSavegameDescription(
+static int getSavegameDescription(lua_State *L) {
+	lua_pushstring(L, PersistenceService::getInstance().getSavegameDescription(
 	                   static_cast<uint>(luaL_checknumber(L, 1)) - 1).c_str());
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int GetSavegameFilename(lua_State *L) {
-	lua_pushstring(L, PersistenceService::GetInstance().GetSavegameFilename(static_cast<uint>(luaL_checknumber(L, 1)) - 1).c_str());
+static int getSavegameFilename(lua_State *L) {
+	lua_pushstring(L, PersistenceService::getInstance().getSavegameFilename(static_cast<uint>(luaL_checknumber(L, 1)) - 1).c_str());
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int LoadGame(lua_State *L) {
-	lua_pushbooleancpp(L, PersistenceService::GetInstance().LoadGame(static_cast<uint>(luaL_checknumber(L, 1)) - 1));
+static int loadGame(lua_State *L) {
+	lua_pushbooleancpp(L, PersistenceService::getInstance().loadGame(static_cast<uint>(luaL_checknumber(L, 1)) - 1));
 	return 1;
 }
 
-// -----------------------------------------------------------------------------
-
-static int SaveGame(lua_State *L) {
-	lua_pushbooleancpp(L, PersistenceService::GetInstance().SaveGame(static_cast<uint>(luaL_checknumber(L, 1)) - 1, luaL_checkstring(L, 2)));
+static int saveGame(lua_State *L) {
+	lua_pushbooleancpp(L, PersistenceService::getInstance().saveGame(static_cast<uint>(luaL_checknumber(L, 1)) - 1, luaL_checkstring(L, 2)));
 	return 1;
 }
-
-// -----------------------------------------------------------------------------
 
 static const char *PERSISTENCE_LIBRARY_NAME = "Persistence";
 
 static const luaL_reg PERSISTENCE_FUNCTIONS[] = {
-	{"ReloadSlots", ReloadSlots},
-	{"GetSlotCount", GetSlotCount},
-	{"IsSlotOccupied", IsSlotOccupied},
-	{"GetSavegameDirectory", GetSavegameDirectory},
-	{"IsSavegameCompatible", IsSavegameCompatible},
-	{"GetSavegameDescription", GetSavegameDescription},
-	{"GetSavegameFilename", GetSavegameFilename},
-	{"LoadGame", LoadGame},
-	{"SaveGame", SaveGame},
+	{"ReloadSlots", reloadSlots},
+	{"GetSlotCount", getSlotCount},
+	{"IsSlotOccupied", isSlotOccupied},
+	{"GetSavegameDirectory", getSavegameDirectory},
+	{"IsSavegameCompatible", isSavegameCompatible},
+	{"GetSavegameDescription", getSavegameDescription},
+	{"GetSavegameFilename", getSavegameFilename},
+	{"LoadGame", loadGame},
+	{"SaveGame", saveGame},
 	{0, 0}
 };
 
-// -----------------------------------------------------------------------------
-
-bool Kernel::_RegisterScriptBindings() {
-	ScriptEngine *pScript = GetScript();
+bool Kernel::registerScriptBindings() {
+	ScriptEngine *pScript = getScript();
 	BS_ASSERT(pScript);
 	lua_State *L = static_cast<lua_State *>(pScript->getScriptObject());
 	BS_ASSERT(L);

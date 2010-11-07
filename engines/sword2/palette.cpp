@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/palette.cpp $
- * $Id: palette.cpp 44495 2009-09-30 16:16:53Z fingolfin $
+ * $Id: palette.cpp 53997 2010-11-01 11:25:11Z eriktorbjorn $
  */
 
 
@@ -171,6 +171,9 @@ void Screen::setPalette(int16 startEntry, int16 noEntries, byte *colourTable, ui
 }
 
 void Screen::dimPalette(bool dim) {
+	if (getFadeStatus() != RDFADE_NONE)
+		return;
+
 	if (dim != _dimPalette) {
 		_dimPalette = dim;
 		setSystemPalette(_palette, 0, 256);

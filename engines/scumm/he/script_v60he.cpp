@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/he/script_v60he.cpp $
- * $Id: script_v60he.cpp 43879 2009-09-01 13:01:59Z fingolfin $
+ * $Id: script_v60he.cpp 53726 2010-10-23 02:18:08Z Kirben $
  *
  */
 
@@ -283,15 +283,14 @@ void ScummEngine_v60he::o60_roomOps() {
 		break;
 	case 221:
 		byte buffer[100];
-		int len, r;
+		int len;
 
 		convertMessageToString(_scriptPointer, buffer, sizeof(buffer));
 		len = resStrLen(_scriptPointer);
 		_scriptPointer += len + 1;
 
-		r = convertFilePath(buffer, sizeof(buffer));
-		memcpy(_saveLoadFileName, buffer + r, sizeof(buffer) - r);
-		debug(1, "o60_roomOps: case 221: filename %s", _saveLoadFileName);
+		_saveLoadFileName = (char *)buffer + convertFilePath(buffer, sizeof(buffer));
+		debug(1, "o60_roomOps: case 221: filename %s", _saveLoadFileName.c_str());
 
 		_saveLoadFlag = pop();
 		_saveLoadSlot = 255;

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/console.cpp $
- * $Id: console.cpp 53500 2010-10-15 15:05:23Z thebluegr $
+ * $Id: console.cpp 54007 2010-11-01 16:03:35Z fingolfin $
  *
  */
 
@@ -123,7 +123,7 @@ bool Console::cmdPlaySound(int argc, const char **argv) {
 bool Console::cmdPlayDSRSound(int argc, const char **argv) {
 	if (argc != 2 && argc != 3) {
 		DebugPrintf("Usage: %s <sound index> <DSR file>\n", argv[0]);
-		DebugPrintf("The DSR file parameter is optional, and specifies which DSR to load\n", argv[0]);
+		DebugPrintf("The DSR file parameter is optional, and specifies which DSR to load\n");
 	} else {
 		if (argc == 3)
 			_vm->_sound->loadDSRFile(argv[2]);
@@ -321,17 +321,25 @@ bool MadsConsole::cmdMessage(int argc, const char **argv) {
 		DebugPrintf("message 'objnum'\n");
 	} else if (!strcmp(argv[1], "list_quotes")) {
 		// Dump the quotes list
+#if 0
+		// FIXME: The following code is not portable and hence has been disabled.
+		// Try replacing FILE by Common::DumpFile.
 		FILE *destFile = fopen("mads_quotes.txt", "wb");
 		for (uint i = 0; i < _vm->globals()->getQuotesSize(); ++i)
 			fprintf(destFile, "%.3d - %s\n", i, _vm->globals()->getQuote(i));
 		fclose(destFile);
+#endif
 
 	} else if (!strcmp(argv[1], "list_vocab")) {
 		// Dump the vocab list
+#if 0
+		// FIXME: The following code is not portable and hence has been disabled.
+		// Try replacing FILE by Common::DumpFile.
 		FILE *destFile = fopen("mads_vocab.txt", "wb");
 		for (uint i = 1; i <= _vm->globals()->getVocabSize(); ++i)
 			fprintf(destFile, "%.3d/%.3x - %s\n", i, i, _vm->globals()->getVocab(i));
 		fclose(destFile);
+#endif
 
 	} else {
 		int messageIdx = strToInt(argv[1]);

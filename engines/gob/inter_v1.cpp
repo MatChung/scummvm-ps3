@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/inter_v1.cpp $
- * $Id: inter_v1.cpp 53491 2010-10-15 13:55:18Z drmccoy $
+ * $Id: inter_v1.cpp 54061 2010-11-04 06:28:51Z tdhs $
  *
  */
 
@@ -812,12 +812,12 @@ bool Inter_v1::o1_if(OpFuncParams &params) {
 	byte cmd;
 	bool boolRes;
 
-	// WORKAROUND: Windows Gob1 OUTODDV reload goblin stuck bug present in original
-	if ((_vm->getGameType() == kGameTypeGob1) && (_vm->_game->_script->pos() == 11294) &&
-			!scumm_stricmp(_vm->_game->_curTotFile, "avt00.tot") && VAR(59) == 1) {
-		warning("Workaround for Win Gob1 OUTODDV Reload Goblin Stuck Bug...");
+	// WORKAROUND: Gob1 goblin stuck on reload bugs present in original - bugs #3018918 and 3065914
+	if ((_vm->getGameType() == kGameTypeGob1) && (_vm->_game->_script->pos() == 2933) &&
+			!scumm_stricmp(_vm->_game->_curTotFile, "inter.tot") && VAR(285) != 0) {
+		warning("Workaround for Gob1 Goblin Stuck On Reload Bug applied...");
+		// VAR(59) actually locks goblin movement, but these variables trigger this in the script.
 		WRITE_VAR(285, 0);
-		WRITE_VAR(59, 0);
 	}
 
 	boolRes = _vm->_game->_script->evalBoolResult();
@@ -1630,18 +1630,17 @@ bool Inter_v1::o1_getFreeMem(OpFuncParams &params) {
 }
 
 bool Inter_v1::o1_checkData(OpFuncParams &params) {
-	int16 handle;
 	int16 varOff;
 
 	_vm->_game->_script->evalExpr(0);
 	varOff = _vm->_game->_script->readVarIndex();
-	handle = _vm->_dataIO->openData(_vm->_game->_script->getResultStr());
 
-	WRITE_VAR_OFFSET(varOff, handle);
-	if (handle >= 0)
-		_vm->_dataIO->closeData(handle);
-	else
+	if (!_vm->_dataIO->hasFile(_vm->_game->_script->getResultStr())) {
 		warning("File \"%s\" not found", _vm->_game->_script->getResultStr());
+		WRITE_VAR_OFFSET(varOff, (uint32) -1);
+	} else
+		WRITE_VAR_OFFSET(varOff, 50); // "handle" between 50 and 128 = in archive
+
 	return false;
 }
 
@@ -1767,7 +1766,6 @@ bool Inter_v1::o1_readData(OpFuncParams &params) {
 	int16 size;
 	int16 dataVar;
 	int16 offset;
-	int16 handle;
 
 	_vm->_game->_script->evalExpr(0);
 	dataVar = _vm->_game->_script->readVarIndex();
@@ -1776,26 +1774,26 @@ bool Inter_v1::o1_readData(OpFuncParams &params) {
 	retSize = 0;
 
 	WRITE_VAR(1, 1);
-	handle = _vm->_dataIO->openData(_vm->_game->_script->getResultStr());
-	if (handle >= 0) {
-		DataStream *stream = _vm->_dataIO->openAsStream(handle, true);
 
-		_vm->_draw->animateCursor(4);
-		if (offset < 0)
-			stream->seek(offset + 1, SEEK_END);
-		else
-			stream->seek(offset);
+	Common::SeekableReadStream *stream = _vm->_dataIO->getFile(_vm->_game->_script->getResultStr());
+	if (!stream)
+		return false;
 
-		if (((dataVar >> 2) == 59) && (size == 4))
-			WRITE_VAR(59, stream->readUint32LE());
-		else
-			retSize = stream->read((byte *)_variables->getAddressOff8(dataVar), size);
+	_vm->_draw->animateCursor(4);
+	if (offset < 0)
+		stream->seek(offset + 1, SEEK_END);
+	else
+		stream->seek(offset);
 
-		if (retSize == size)
-			WRITE_VAR(1, 0);
+	if (((dataVar >> 2) == 59) && (size == 4))
+		WRITE_VAR(59, stream->readUint32LE());
+	else
+		retSize = stream->read((byte *)_variables->getAddressOff8(dataVar), size);
 
-		delete stream;
-	}
+	if (retSize == size)
+		WRITE_VAR(1, 0);
+
+	delete stream;
 
 	return false;
 }
@@ -1824,9 +1822,9 @@ bool Inter_v1::o1_manageDataFile(OpFuncParams &params) {
 	_vm->_game->_script->evalExpr(0);
 
 	if (_vm->_game->_script->getResultStr()[0] != 0)
-		_vm->_dataIO->openDataFile(_vm->_game->_script->getResultStr());
+		_vm->_dataIO->openArchive(_vm->_game->_script->getResultStr(), true);
 	else
-		_vm->_dataIO->closeDataFile();
+		_vm->_dataIO->closeArchive(true);
 	return false;
 }
 
@@ -2562,8 +2560,8 @@ void Inter_v1::animPalette() {
 }
 
 void Inter_v1::manipulateMap(int16 xPos, int16 yPos, int16 item) {
-	for (int y = 0; y < _vm->_map->_mapHeight; y++) {
-		for (int x = 0; x < _vm->_map->_mapWidth; x++) {
+	for (int y = 0; y < _vm->_map->getMapHeight(); y++) {
+		for (int x = 0; x < _vm->_map->getMapWidth(); x++) {
 			if ((_vm->_map->getItem(x, y) & 0xFF) == item)
 				_vm->_map->setItem(x, y, _vm->_map->getItem(x, y) & 0xFF00);
 			else if (((_vm->_map->getItem(x, y) & 0xFF00) >> 8) == item)
@@ -2571,7 +2569,7 @@ void Inter_v1::manipulateMap(int16 xPos, int16 yPos, int16 item) {
 		}
 	}
 
-	if (xPos < _vm->_map->_mapWidth - 1) {
+	if (xPos < _vm->_map->getMapWidth() - 1) {
 		if (yPos > 0) {
 			if (((_vm->_map->getItem(xPos, yPos) & 0xFF00) != 0) ||
 					((_vm->_map->getItem(xPos, yPos - 1) & 0xFF00) != 0) ||
@@ -2660,7 +2658,7 @@ void Inter_v1::manipulateMap(int16 xPos, int16 yPos, int16 item) {
 		return;
 	}
 
-	if ((xPos < _vm->_map->_mapWidth - 2) &&
+	if ((xPos < _vm->_map->getMapWidth() - 2) &&
 			(_vm->_map->getPass(xPos + 2, yPos) == 1)) {
 		_vm->_map->_itemPoses[item].x = xPos + 2;
 		_vm->_map->_itemPoses[item].y = yPos;
@@ -2668,7 +2666,7 @@ void Inter_v1::manipulateMap(int16 xPos, int16 yPos, int16 item) {
 		return;
 	}
 
-	if ((xPos < _vm->_map->_mapWidth - 1) &&
+	if ((xPos < _vm->_map->getMapWidth() - 1) &&
 			(_vm->_map->getPass(xPos + 1, yPos) == 1)) {
 		_vm->_map->_itemPoses[item].x = xPos + 1;
 		_vm->_map->_itemPoses[item].y = yPos;

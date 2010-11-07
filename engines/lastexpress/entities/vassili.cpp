@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/vassili.cpp $
- * $Id: vassili.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: vassili.cpp 53880 2010-10-27 19:19:22Z littleboy $
  *
  */
 
@@ -86,7 +86,7 @@ IMPLEMENT_FUNCTION(4, Vassili, chapter1)
 		break;
 
 	case kActionNone:
-		TIME_CHECK_CHAPTER1(setup_chapter1Handler);
+		TIME_CHECK(kTimeChapter1, params->param1, setup_chapter1Handler);
 		break;
 
 	case kActionDefault:
@@ -110,7 +110,7 @@ IMPLEMENT_FUNCTION(5, Vassili, chapter1Handler)
 			if (params->param3 && params->param3 >= getState()->time) {
 				break;
 			}else {
-				params->param3 = getState()->time + 450;
+				params->param3 = (uint)getState()->time + 450;
 				if (params->param3 == 0)
 					break;
 			}
@@ -166,7 +166,7 @@ label_function7:
 
 				if (getEntities()->isInsideCompartment(kEntityPlayer, kCarRedSleeping, kPosition_8200) || !params->param4) {
 
-					params->param4 = getState()->time;
+					params->param4 = (uint)getState()->time;
 					if (!params->param4) {
 						setup_function7();
 						break;
@@ -218,7 +218,7 @@ IMPLEMENT_FUNCTION(7, Vassili, function7)
 
 			 if (getState()->time <= kTime1512000) {
 				 if (getEntities()->isPlayerInCar(kCarRedSleeping) || !params->param1) {
-					 params->param1 = getState()->time + 150;
+					 params->param1 = (uint)getState()->time + 150;
 					 if (params->param1) {
 						 setup_function8();
 						 break;
@@ -350,16 +350,16 @@ IMPLEMENT_FUNCTION(10, Vassili, seizure)
 		getData()->location = kLocationInsideCompartment;
 		getAction()->playAnimation(kEventVassiliSeizure);
 
-        getObjects()->update(kObjectCompartmentA, kEntityPlayer, kObjectLocationNone, kCursorHandKnock, kCursorHand);
-        getObjects()->update(kObjectCompartment1, kEntityPlayer, kObjectLocationNone, kCursorHandKnock, kCursorHand);
-        getProgress().field_18 = 2;
+		getObjects()->update(kObjectCompartmentA, kEntityPlayer, kObjectLocationNone, kCursorHandKnock, kCursorHand);
+		getObjects()->update(kObjectCompartment1, kEntityPlayer, kObjectLocationNone, kCursorHandKnock, kCursorHand);
+		getProgress().field_18 = 2;
 
-        getSavePoints()->push(kEntityVassili, kEntityAnna, kAction191477936);
-        getSavePoints()->push(kEntityVassili, kEntityVerges, kAction191477936);
-        getSavePoints()->push(kEntityVassili, kEntityCoudert, kAction191477936);
-        getScenes()->loadSceneFromObject(kObjectCompartmentA);
+		getSavePoints()->push(kEntityVassili, kEntityAnna, kAction191477936);
+		getSavePoints()->push(kEntityVassili, kEntityVerges, kAction191477936);
+		getSavePoints()->push(kEntityVassili, kEntityCoudert, kAction191477936);
+		getScenes()->loadSceneFromObject(kObjectCompartmentA);
 
-        setup_drawInBed();
+		setup_drawInBed();
 		break;
 	}
 }

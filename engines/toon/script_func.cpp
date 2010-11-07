@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/script_func.cpp $
-* $Id: script_func.cpp 53543 2010-10-16 17:06:10Z sylvaintv $
+* $Id: script_func.cpp 54031 2010-11-01 21:37:47Z fingolfin $
 *
 */
 
@@ -473,6 +473,14 @@ int32 ScriptFunc::sys_Cmd_Empty_Inventory(EMCState *state) {
 }
 
 int32 ScriptFunc::sys_Cmd_Set_Anim_Scale_Size(EMCState *state) {
+	int32 animID = stackPos(0);
+	int32 scale = stackPos(1);
+	
+	SceneAnimation *sceneAnim = _vm->getSceneAnimation(animID);
+	if (sceneAnim) {
+		sceneAnim->_animInstance->setUseMask(true);
+		sceneAnim->_animInstance->setScale(scale,true);
+	}
 	return 0;
 }
 int32 ScriptFunc::sys_Cmd_Delete_Item_From_Inventory(EMCState *state) {
@@ -540,7 +548,11 @@ int32 ScriptFunc::sys_Cmd_Exit_Conversation(EMCState *state) {
 }
 
 int32 ScriptFunc::sys_Cmd_Set_Mouse_Pos(EMCState *state) {
-	_vm->getSystem()->warpMouse(stackPos(0) - _vm->state()->_currentScrollValue, stackPos(1));
+	if (_vm->state()->_inCloseUp) {
+		_vm->getSystem()->warpMouse(stackPos(0), stackPos(1));
+	} else {
+		_vm->getSystem()->warpMouse(stackPos(0) - _vm->state()->_currentScrollValue, stackPos(1));
+	}
 	return 0;
 }
 
@@ -618,7 +630,10 @@ int32 ScriptFunc::sys_Cmd_In_Conversation(EMCState *state) {
 
 int32 ScriptFunc::sys_Cmd_Character_Talking(EMCState *state) {
 	int32 characterId = stackPos(0);
-	return (_vm->getCurrentCharacterTalking() == characterId);
+	Character *character = _vm->getCharacterById(characterId);
+	if (character)
+		return character->isTalking();
+	return 0;
 }
 
 int32 ScriptFunc::sys_Cmd_Set_Flux_Facing_Point(EMCState *state) {
@@ -698,7 +713,7 @@ int32 ScriptFunc::sys_Cmd_Place_Scene_Anim(EMCState *state) {
 	int32 frame = stackPos(5);
 
 	SceneAnimation *sceneAnim = _vm->getSceneAnimation(sceneId);
-	sceneAnim->_animInstance->setPosition(x, y, 0, false);
+	sceneAnim->_animInstance->setPosition(x, y, sceneAnim->_animInstance->getZ(), false);
 	sceneAnim->_animInstance->forceFrame(frame);
 	_vm->setSceneAnimationScriptUpdate(false);
 	return 0;
@@ -912,10 +927,14 @@ int32 ScriptFunc::sys_Cmd_Init_Scene_Anim(EMCState *state) {
 
 	int32 dx = stackPos(4);
 	int32 dy = stackPos(5);
+	int32 x = stackPos(2);
 	int32 layerZ = stackPos(3);
 
 	if (dx == -2)
 		sceneAnim->_animInstance->moveRelative(640, 0, 0);
+	else if (dx < 0) {
+		dx = sceneAnim->_animation->_x1;
+	}
 	else if (dx >= 0)
 		sceneAnim->_animInstance->setX(dx);
 
@@ -924,8 +943,10 @@ int32 ScriptFunc::sys_Cmd_Init_Scene_Anim(EMCState *state) {
 	else
 		dy = sceneAnim->_animation->_y1;
 
-	if (flags & 0x20)
-		sceneAnim->_animInstance->setZ(_vm->getLayerAtPoint(dx, dy));
+	if (flags & 0x20) {
+		sceneAnim->_animInstance->setZ(_vm->getLayerAtPoint(x, layerZ));
+		sceneAnim->_animInstance->setUseMask(true);
+	}
 
 	if (layerZ >= 0) {
 		sceneAnim->_animInstance->setLayerZ(layerZ);
@@ -963,6 +984,7 @@ int32 ScriptFunc::sys_Cmd_Draw_Scene_Anim_WSA_Frame(EMCState *state) {
 	SceneAnimation *sceneAnim = _vm->getSceneAnimation(animId);
 
 	if (sceneAnim->_active) {
+		sceneAnim->_animInstance->setAnimation(sceneAnim->_animation);
 		sceneAnim->_animInstance->setFrame(frame);
 		sceneAnim->_animInstance->setAnimationRange(frame, frame);
 		sceneAnim->_animInstance->stopAnimation();
@@ -1050,18 +1072,26 @@ int32 ScriptFunc::sys_Cmd_Play_Sfx(EMCState *state) {
 }
 
 int32 ScriptFunc::sys_Cmd_Set_Ambient_Sfx(EMCState *state) {
+	//debug("Ambient Sfx : %d %d %d %d", stackPos(0), stackPos(1), stackPos(2), stackPos(3));
+	_vm->getAudioManager()->startAmbientSFX(stackPos(0), stackPos(1), stackPos(2), stackPos(3));
 	return 0;
 }
 
 int32 ScriptFunc::sys_Cmd_Kill_Ambient_Sfx(EMCState *state) {
+	//debug("Kill Sfx : %d", stackPos(0));
+	_vm->getAudioManager()->killAmbientSFX(stackPos(0));
 	return 0;
 }
 
 int32 ScriptFunc::sys_Cmd_Set_Ambient_Sfx_Plus(EMCState *state) {
+	//debug("Ambient Sfx Plus: %d %d %d %d %d %d %d %d", stackPos(0), stackPos(1), stackPos(2), stackPos(3), stackPos(4), stackPos(5), stackPos(6), stackPos(7));
+	_vm->getAudioManager()->startAmbientSFX(stackPos(0), stackPos(1), stackPos(2), stackPos(3));
 	return 0;
 }
 
 int32 ScriptFunc::sys_Cmd_Set_Ambient_Volume(EMCState *state) {
+	//debug("Ambient Volume : %d %d", stackPos(0), stackPos(1));
+	_vm->getAudioManager()->setAmbientSFXVolume(stackPos(0), stackPos(1));
 	return 0;
 }
 

@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/palette.cpp $
- * $Id: palette.cpp 53567 2010-10-18 16:00:07Z fingolfin $
+ * $Id: palette.cpp 53785 2010-10-25 03:21:49Z Kirben $
  *
  */
 
@@ -71,7 +71,7 @@ void ScummEngine::resetPalette() {
 		// Use 17 color table for v1 games to allow correct color for inventory and
 		// sentence line. Original games used some kind of dynamic color table
 		// remapping between rooms.
-		0xFF, 0x55, 0xFF
+		0x7F, 0x3B, 0xA6
 	};
 
 	static const byte tableNESPalette[] = {

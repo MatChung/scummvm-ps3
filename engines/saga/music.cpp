@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/music.cpp $
- * $Id: music.cpp 52922 2010-09-28 04:53:38Z eriktorbjorn $
+ * $Id: music.cpp 53779 2010-10-24 22:17:44Z h00ligan $
  *
  */
 
@@ -117,6 +117,7 @@ void MusicDriver::send(uint32 b) {
 
 Music::Music(SagaEngine *vm, Audio::Mixer *mixer) : _vm(vm), _mixer(mixer) {
 	_currentVolume = 0;
+	_currentMusicBuffer = NULL;
 	_driver = new MusicDriver();
 
 	_digitalMusicContext = _vm->_resource->getContext(GAME_DIGITALMUSICFILE);
@@ -162,11 +163,13 @@ Music::Music(SagaEngine *vm, Audio::Mixer *mixer) : _vm(vm), _mixer(mixer) {
 		// Just set an XMIDI parser for Mac IHNM for now
 		_parser = MidiParser::createParser_XMIDI();
 	} else {
-		byte *resourceData;
-		size_t resourceSize;
+		ByteArray resourceData;
 		int resourceId = (_vm->getGameId() == GID_ITE ? 9 : 0);
-		_vm->_resource->loadResource(_musicContext, resourceId, resourceData, resourceSize);
-		if (!memcmp(resourceData, "FORM", 4)) {
+		_vm->_resource->loadResource(_musicContext, resourceId, resourceData);
+		if (resourceData.size() < 4) {
+			error("Music::Music Unable to load midi resource data");
+		}
+		if (!memcmp(resourceData.getBuffer(), "FORM", 4)) {
 			_parser = MidiParser::createParser_XMIDI();
 			// ITE had MT32 mapped instruments
 			_driver->setGM(_vm->getGameId() != GID_ITE);
@@ -175,17 +178,12 @@ Music::Music(SagaEngine *vm, Audio::Mixer *mixer) : _vm(vm), _mixer(mixer) {
 			// ITE with standalone MIDI files is General MIDI
 			_driver->setGM(_vm->getGameId() == GID_ITE);
 		}
-		free(resourceData);
 	}
-
+	
 	_parser->setMidiDriver(_driver);
 	_parser->setTimerRate(_driver->getBaseTempo());
 	_parser->property(MidiParser::mpCenterPitchWheelOnUnload, 1);
 
-	_songTableLen = 0;
-	_songTable = 0;
-
-	_midiMusicData = NULL;
 	_digitalMusic = false;
 }
 
@@ -196,9 +194,6 @@ Music::~Music() {
 	delete _driver;
 	_parser->setMidiDriver(NULL);
 	delete _parser;
-
-	free(_songTable);
-	free(_midiMusicData);
 }
 
 void Music::musicVolumeGaugeCallback(void *refCon) {
@@ -258,9 +253,7 @@ bool Music::isPlaying() {
 
 void Music::play(uint32 resourceId, MusicFlags flags) {
 	Audio::SeekableAudioStream *audioStream = NULL;
-	byte *resourceData;
-	size_t resourceSize;
-	uint32 loopStart;
+	uint32 loopStart = 0;
 
 	debug(2, "Music::play %d, %d", resourceId, flags);
 
@@ -392,14 +385,19 @@ void Music::play(uint32 resourceId, MusicFlags flags) {
 #endif
 		return;
 	} else {
-		_vm->_resource->loadResource(_musicContext, resourceId, resourceData, resourceSize);
+		if (_currentMusicBuffer == &_musicBuffer[1]) {
+			_currentMusicBuffer = &_musicBuffer[0];
+		} else {
+			_currentMusicBuffer = &_musicBuffer[1];
+		}
+		_vm->_resource->loadResource(_musicContext, resourceId, *_currentMusicBuffer);
 	}
 
-	if (resourceSize < 4) {
+	if (_currentMusicBuffer->size() < 4) {
 		error("Music::play() wrong music resource size");
 	}
 
-	if (!_parser->loadMusic(resourceData, resourceSize))
+	if (!_parser->loadMusic(_currentMusicBuffer->getBuffer(), _currentMusicBuffer->size()))
 		error("Music::play() wrong music resource");
 
 	_parser->setTrack(0);
@@ -409,9 +407,6 @@ void Music::play(uint32 resourceId, MusicFlags flags) {
 
 	// Handle music looping
 	_parser->property(MidiParser::mpAutoLoop, (flags & MUSIC_LOOP) ? 1 : 0);
-
-	free(_midiMusicData);
-	_midiMusicData = resourceData;
 }
 
 void Music::pause() {

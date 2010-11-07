@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/saveload_lok.cpp $
- * $Id: saveload_lok.cpp 44634 2009-10-04 21:26:33Z fingolfin $
+ * $Id: saveload_lok.cpp 53912 2010-10-28 23:57:24Z lordhoto $
  *
  */
 
@@ -80,7 +80,7 @@ Common::Error KyraEngine_LoK::loadGameState(int slot) {
 	}
 
 	_marbleVaseItem = in->readSint16BE();
-	_itemInHand = in->readByte();
+	_itemInHand = (int8)in->readByte();
 
 	for (int i = 0; i < 4; ++i)
 		_birthstoneGemTable[i] = in->readByte();
@@ -109,7 +109,7 @@ Common::Error KyraEngine_LoK::loadGameState(int slot) {
 
 	for (int i = 0; i < _roomTableSize; ++i) {
 		for (int item = 0; item < 12; ++item) {
-			_roomTable[i].itemsTable[item] = 0xFF;
+			_roomTable[i].itemsTable[item] = kItemNone;
 			_roomTable[i].itemsXPos[item] = 0xFFFF;
 			_roomTable[i].itemsYPos[item] = 0xFF;
 			_roomTable[i].needInit[item] = 0;
@@ -241,7 +241,7 @@ Common::Error KyraEngine_LoK::loadGameState(int slot) {
 	return Common::kNoError;
 }
 
-Common::Error KyraEngine_LoK::saveGameState(int slot, const char *saveName, const Graphics::Surface *thumb) {
+Common::Error KyraEngine_LoK::saveGameStateIntern(int slot, const char *saveName, const Graphics::Surface *thumb) {
 	const char *fileName = getSavegameFilename(slot);
 
 	if (shouldQuit())

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEgui/PanelItem.cpp $
- * $Id: PanelItem.cpp 28966 2007-09-19 08:40:12Z peres001 $
+ * $Id: PanelItem.cpp 53979 2010-10-31 17:11:43Z fingolfin $
  *
  */
 
@@ -27,21 +27,21 @@
 
 namespace CEGUI {
 
-	PanelItem::PanelItem(WORD reference) : GUIElement() {
-		setBackground(reference);
-		_panel = NULL;
-	}
-
-
-	PanelItem::~PanelItem() {
-	}
-
-	bool PanelItem::action(int x, int y, bool pushed) {
-		return false;
-	}
-
-	void PanelItem::setPanel(Panel *panel) {
-		_panel = panel;
-	}
+PanelItem::PanelItem(WORD reference) : GUIElement() {
+	setBackground(reference);
+	_panel = NULL;
 }
 
+
+PanelItem::~PanelItem() {
+}
+
+bool PanelItem::action(int x, int y, bool pushed) {
+	return false;
+}
+
+void PanelItem::setPanel(Panel *panel) {
+	_panel = panel;
+}
+
+} // End of namespace CEGUI

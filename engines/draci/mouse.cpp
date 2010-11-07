@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/draci/mouse.cpp $
- * $Id: mouse.cpp 47118 2010-01-07 15:07:36Z marcus_c $
+ * $Id: mouse.cpp 53738 2010-10-23 15:46:50Z fingolfin $
  *
  */
 
@@ -54,10 +54,10 @@ void Mouse::handleEvent(Common::Event event) {
 
 	case Common::EVENT_LBUTTONUP:
 		debugC(6, kDraciGeneralDebugLevel, "Left button up (x: %u y: %u)", _x, _y);
-                // Don't set _lButton to false, because some touchpads generate
-                // down and up at such a quick succession, that they will
-                // cancel each other in the same call of handleEvents().  Let
-                // the game clear this flag by calling lButtonSet() instead.
+		// Don't set _lButton to false, because some touchpads generate
+		// down and up at such a quick succession, that they will
+		// cancel each other in the same call of handleEvents().  Let
+		// the game clear this flag by calling lButtonSet() instead.
 		break;
 
 	case Common::EVENT_RBUTTONDOWN:

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/menu.h $
- * $Id: menu.h 53579 2010-10-18 19:17:38Z sev $
+ * $Id: menu.h 53883 2010-10-27 19:20:20Z littleboy $
  *
  */
 
@@ -107,14 +107,14 @@ private:
 	LastExpressEngine *_engine;
 
 	// Sequences
-	Sequence* _seqTooltips;
-	Sequence* _seqEggButtons;
-	Sequence* _seqButtons;
-	Sequence* _seqAcorn;
-	Sequence* _seqCity1;
-	Sequence* _seqCity2;
-	Sequence* _seqCity3;
-	Sequence* _seqCredits;
+	Sequence *_seqTooltips;
+	Sequence *_seqEggButtons;
+	Sequence *_seqButtons;
+	Sequence *_seqAcorn;
+	Sequence *_seqCity1;
+	Sequence *_seqCity2;
+	Sequence *_seqCity3;
+	Sequence *_seqCredits;
 
 	GameId _gameId;
 
@@ -145,7 +145,6 @@ private:
 	// Game-related
 	void startGame();
 	void switchGame();
-	bool isGameFinished() const;
 
 	//////////////////////////////////////////////////////////////////////////
 	// Overlays & elements
@@ -153,11 +152,11 @@ private:
 	TrainLine *_trainLine;
 
 	struct MenuOverlays_EqualTo {
-		bool operator()(const StartMenuOverlay& x, const StartMenuOverlay& y) const { return x == y; }
+		bool operator()(const StartMenuOverlay &x, const StartMenuOverlay &y) const { return x == y; }
 	};
 
 	struct MenuOverlays_Hash {
-		uint operator()(const StartMenuOverlay& x) const { return x; }
+		uint operator()(const StartMenuOverlay &x) const { return x; }
 	};
 
 	typedef Common::HashMap<StartMenuOverlay, SequenceFrame *, MenuOverlays_Hash, MenuOverlays_EqualTo> MenuFrames;
@@ -178,17 +177,17 @@ private:
 
 	//////////////////////////////////////////////////////////////////////////
 	// Time
-	uint32 _currentIndex; // current savegame entry
 	uint32 _currentTime;  // current game time
 	uint32 _lowerTime;    // lower time value
-
-	uint32 _index;
-	uint32 _index2;
 	uint32 _time;
+
+	uint32 _currentIndex; // current savegame entry
+	uint32 _index;
+	uint32 _lastIndex;
 	uint32 _delta;
 	bool _handleTimeDelta;
 
-	void initTime(SavegameType type, uint32 time);
+	void initTime(SavegameType type, uint32 val);
 	void updateTime(uint32 time);
 	void adjustTime();
 	void adjustIndex(uint32 time1, uint32 time2, bool searchEntry);

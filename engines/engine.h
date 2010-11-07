@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/engine.h $
- * $Id: engine.h 48934 2010-05-04 11:58:12Z fingolfin $
+ * $Id: engine.h 53895 2010-10-27 22:52:02Z lordhoto $
  */
 
 #ifndef ENGINES_ENGINE_H
@@ -73,6 +73,17 @@ private:
 	 * to nest code which pauses the engine.
 	 */
 	int _pauseLevel;
+
+	/**
+	 * The time when the pause was started.
+	 */
+	uint32 _pauseStartTime;
+
+	/**
+	 * The time when the engine was started. This value is used to calculate
+	 * the current play time of the game running.
+	 */
+	int32 _engineStartTime;
 
 public:
 
@@ -233,6 +244,24 @@ public:
 	 * Run the Global Main Menu Dialog
 	 */
 	void openMainMenuDialog();
+
+	/**
+	 * Get the total play time.
+	 *
+	 * @return How long the player has been playing in ms.
+	 */
+	uint32 getTotalPlayTime() const;
+
+	/**
+	 * Set the game time counter to the specified time.
+	 *
+	 * This can be used to set the play time counter after loading a savegame
+	 * for example. Another use case is in case the engine wants to exclude
+	 * time from the counter the user spent in original engine dialogs.
+	 *
+	 * @param time Play time to set up in ms.
+	 */
+	void setTotalPlayTime(uint32 time = 0);
 
 	inline Common::TimerManager *getTimerManager() { return _timer; }
 	inline Common::EventManager *getEventManager() { return _eventMan; }

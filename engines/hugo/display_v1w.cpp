@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/display_v1w.cpp $
- * $Id: display_v1w.cpp 53152 2010-10-11 21:41:31Z strangerke $
+ * $Id: display_v1w.cpp 54018 2010-11-01 20:20:21Z strangerke $
  *
  */
 
@@ -41,13 +41,15 @@
 
 namespace Hugo {
 
-Screen_v1w::Screen_v1w(HugoEngine &vm) : Screen(vm) {
+Screen_v1w::Screen_v1w(HugoEngine *vm) : Screen(vm) {
 }
 
 Screen_v1w::~Screen_v1w() {
 }
 
-// Load font file, construct font ptrs and reverse data bytes
+/**
+* Load font file, construct font ptrs and reverse data bytes
+*/
 void Screen_v1w::loadFont(int16 fontId) {
 	debugC(2, kDebugDisplay, "loadFont(%d)", fontId);
 
@@ -59,7 +61,7 @@ void Screen_v1w::loadFont(int16 fontId) {
 		return;
 
 	fontLoadedFl[_fnt] = true;
-	_vm.file().readUIFItem(fontId, _fontdata[_fnt]);
+	_vm->_file->readUIFItem(fontId, _fontdata[_fnt]);
 
 	// Compile font ptrs.  Note: First ptr points to height,width of font
 	_font[_fnt][0] = _fontdata[_fnt];               // Store height,width of fonts

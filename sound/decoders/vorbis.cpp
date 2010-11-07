@@ -19,9 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/sound/decoders/vorbis.cpp $
- * $Id: vorbis.cpp 50666 2010-07-05 01:03:52Z anguslees $
+ * $Id: vorbis.cpp 53961 2010-10-30 21:27:42Z fingolfin $
  *
  */
+
+// Disable symbol overrides for FILE and fseek as those are used in the
+// Vorbis headers.
+#define FORBIDDEN_SYMBOL_EXCEPTION_FILE
+#define FORBIDDEN_SYMBOL_EXCEPTION_fseek
 
 #include "sound/decoders/vorbis.h"
 

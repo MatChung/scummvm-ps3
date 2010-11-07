@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/gob.cpp $
- * $Id: gob.cpp 53398 2010-10-13 03:49:54Z tdhs $
+ * $Id: gob.cpp 53984 2010-10-31 20:07:14Z drmccoy $
  *
  */
 
@@ -370,7 +370,7 @@ bool GobEngine::initGameParts() {
 
 	_global    = new Global(this);
 	_util      = new Util(this);
-	_dataIO    = new DataIO(this);
+	_dataIO    = new DataIO();
 	_palAnim   = new PalAnim(this);
 	_vidPlayer = new VideoPlayer(this);
 	_sound     = new Sound(this);

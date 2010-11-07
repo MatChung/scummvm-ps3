@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/sound.cpp $
- * $Id: sound.cpp 53605 2010-10-19 09:43:08Z fingolfin $
+ * $Id: sound.cpp 53883 2010-10-27 19:20:20Z littleboy $
  *
  */
 
@@ -187,10 +187,10 @@ void SoundManager::clearQueue() {
 	for (Common::List<SoundEntry *>::iterator i = _cache.begin(); i != _cache.end(); ++i) {
 		SoundEntry *entry = (*i);
 
-		removeEntry(entry);
-
 		// Delete entry
-		SAFE_DELETE(entry);
+		removeEntry(entry);
+		delete entry;
+
 		i = _cache.reverse_erase(i);
 	}
 
@@ -312,7 +312,7 @@ void SoundManager::setEntryStatus(SoundEntry *entry, FlagType flag) const {
 }
 
 bool SoundManager::setupCache(SoundEntry *entry) {
-	warning("Sound::updateCache: not implemented!");
+	warning("Sound::setupCache: not implemented!");
 	return true;
 }
 
@@ -337,7 +337,7 @@ void SoundManager::loadSoundData(SoundEntry *entry, Common::String name) {
 	}
 }
 
-void SoundManager::resetEntry(SoundEntry * entry) const {
+void SoundManager::resetEntry(SoundEntry *entry) const {
 	entry->status.status |= kSoundStatusRemoved;
 	entry->entity = kEntityPlayer;
 
@@ -450,6 +450,15 @@ void SoundManager::processEntries() {
 	processEntry(kSoundType2);
 }
 
+uint32 SoundManager::getEntryTime(EntityIndex index) {
+	SoundEntry *entry = getEntry(index);
+
+	if (!entry)
+		return 0;
+
+	return entry->time;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Misc
 //////////////////////////////////////////////////////////////////////////
@@ -494,8 +503,56 @@ SoundManager::SoundEntry *SoundManager::getEntry(SoundType type) {
 //////////////////////////////////////////////////////////////////////////
 // Savegame
 //////////////////////////////////////////////////////////////////////////
-void SoundManager::saveLoadWithSerializer(Common::Serializer &ser) {
-	error("Sound::saveLoadWithSerializer: not implemented!");
+void SoundManager::saveLoadWithSerializer(Common::Serializer &s) {
+	s.syncAsUint32LE(_state);
+	s.syncAsUint32LE(_currentType);
+
+	// Compute the number of entries to save
+	uint32 numEntries = count();
+	s.syncAsUint32LE(numEntries);
+
+	// Save or load each entry data
+	if (s.isSaving()) {
+		for (Common::List<SoundEntry *>::iterator i = _cache.begin(); i != _cache.end(); ++i) {
+			SoundEntry *entry = *i;
+			if (entry->name2.matchString("NISSND?") && (entry->status.status & kFlagType7) != kFlag3) {
+				s.syncAsUint32LE(entry->status.status); // status;
+				s.syncAsUint32LE(entry->type); // type;
+				s.syncAsUint32LE(entry->field_1C); // field_8;
+				s.syncAsUint32LE(entry->time); // time;
+				s.syncAsUint32LE(entry->field_34); // field_10;
+				s.syncAsUint32LE(entry->field_38); // field_14;
+				s.syncAsUint32LE(entry->entity); // entity;
+
+				uint32 field_1C = (uint32)entry->field_48 - _data2;
+				if (field_1C > kFlag8)
+					field_1C = 0;
+				s.syncAsUint32LE(field_1C); // field_1C;
+
+				s.syncAsUint32LE(entry->field_4C); // field_20;
+
+				char name1[16];
+				strcpy((char *)&name1, entry->name1.c_str());
+				s.syncBytes((byte *)&name1, 16);
+
+				char name2[16];
+				strcpy((char *)&name2, entry->name2.c_str());
+				s.syncBytes((byte *)&name2, 16);
+			}
+		}
+	} else {
+		warning("Sound::saveLoadWithSerializer: not implemented!");
+		s.skip(numEntries * 64);
+	}
+}
+
+uint32 SoundManager::count() {
+	uint32 numEntries = 0;
+	for (Common::List<SoundEntry *>::iterator i = _cache.begin(); i != _cache.end(); ++i)
+		if ((*i)->name2.matchString("NISSND?"))
+			++numEntries;
+
+	return numEntries;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -517,7 +574,7 @@ void SoundManager::playSound(EntityIndex entity, Common::String filename, FlagTy
 }
 
 SoundManager::SoundType SoundManager::playSoundWithSubtitles(Common::String filename, FlagType flag, EntityIndex entity, byte a4) {
-	SoundEntry* entry = new SoundEntry();
+	SoundEntry *entry = new SoundEntry();
 	setupEntry(entry, filename, flag, 30);
 	entry->entity = entity;
 
@@ -884,7 +941,7 @@ const char *SoundManager::getDialogName(EntityIndex entity) const {
 		break;
 
 	case kEntityMilos:
-		if (getEvent(kEventLocomotiveMilos) || getEvent(kEventLocomotiveMilosNight))
+		if (getEvent(kEventLocomotiveMilosDay) || getEvent(kEventLocomotiveMilosNight))
 			return "XMIL5";
 
 		if (getEvent(kEventMilosCompartmentVisitTyler) && (getProgress().chapter == kChapter3 || getProgress().chapter == kChapter4))
@@ -1051,7 +1108,7 @@ void SoundManager::readText(int id){
 		error("Sound::readText - attempting to use invalid id. Valid values [1;8] - [50;64], was %d", id);
 
 	// Get proper message file (names are stored in sequence in the array but id is [1;8] - [50;64])
-	const char* text = messages[id <= 8 ? id : id - 41];
+	const char *text = messages[id <= 8 ? id : id - 41];
 
 	// Check if file is in cache for id [1;8]
 	if (id <= 8)

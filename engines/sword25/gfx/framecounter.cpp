@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/framecounter.cpp $
- * $Id: framecounter.cpp 53405 2010-10-13 10:51:20Z fingolfin $
+ * $Id: framecounter.cpp 53621 2010-10-19 20:51:21Z sev $
  *
  */
 
@@ -37,30 +37,30 @@
 
 namespace Sword25 {
 
-Framecounter::Framecounter(int UpdateFrequency) :
-	m_FPS(0),
-	m_FPSCount(0),
-	m_LastUpdateTime(-1) {
-	SetUpdateFrequency(UpdateFrequency);
+Framecounter::Framecounter(int updateFrequency) :
+	_FPS(0),
+	_FPSCount(0),
+	_lastUpdateTime(-1) {
+	setUpdateFrequency(updateFrequency);
 }
 
-void Framecounter::Update() {
+void Framecounter::update() {
 	// Aktuellen Systemtimerstand auslesen
-	uint64 Timer = g_system->getMillis() * 1000;
+	uint64 timer = g_system->getMillis() * 1000;
 
 	// Falls m_LastUpdateTime == -1 ist, wird der Frame-Counter zum ersten Mal aufgerufen und der aktuelle Systemtimer als erster
 	// Messzeitpunkt genommen.
-	if (m_LastUpdateTime == -1)
-		m_LastUpdateTime = Timer;
+	if (_lastUpdateTime == -1)
+		_lastUpdateTime = timer;
 	else {
 		// Die Anzahl der Frames im aktuellen Messzeitraum wird erhöht.
-		m_FPSCount++;
+		_FPSCount++;
 
 		// Falls der Messzeitraum verstrichen ist, wird die durchschnittliche Framerate berechnet und ein neuer Messzeitraum begonnen.
-		if (Timer - m_LastUpdateTime >= m_UpdateDelay) {
-			m_FPS = static_cast<int>((1000000 * (uint64)m_FPSCount) / (Timer - m_LastUpdateTime));
-			m_LastUpdateTime = Timer;
-			m_FPSCount = 0;
+		if (timer - _lastUpdateTime >= _updateDelay) {
+			_FPS = static_cast<int>((1000000 * (uint64)_FPSCount) / (timer - _lastUpdateTime));
+			_lastUpdateTime = timer;
+			_FPSCount = 0;
 		}
 	}
 }

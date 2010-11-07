@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/config-manager.cpp $
- * $Id: config-manager.cpp 52296 2010-08-23 10:00:40Z fingolfin $
+ * $Id: config-manager.cpp 54009 2010-11-01 16:04:04Z fingolfin $
  *
  */
 
@@ -69,7 +69,7 @@ void ConfigManager::loadDefaultConfigFile() {
 
 	} else {
 		// No config file -> create new one!
-		printf("Default configuration file missing, creating a new one\n");
+		debug("Default configuration file missing, creating a new one");
 
 		flushToDisk();
 	}
@@ -81,9 +81,9 @@ void ConfigManager::loadConfigFile(const String &filename) {
 	FSNode node(filename);
 	File cfg_file;
 	if (!cfg_file.open(node)) {
-		printf("Creating configuration file: %s\n", filename.c_str());
+		debug("Creating configuration file: %s\n", filename.c_str());
 	} else {
-		printf("Using configuration file: %s\n", _filename.c_str());
+		debug("Using configuration file: %s\n", _filename.c_str());
 		loadFromStream(cfg_file);
 	}
 }
@@ -508,9 +508,7 @@ void ConfigManager::set(const String &key, const String &value, const String &do
 }
 
 void ConfigManager::setInt(const String &key, int value, const String &domName) {
-	char tmp[128];
-	snprintf(tmp, sizeof(tmp), "%i", value);
-	set(key, String(tmp), domName);
+	set(key, String::format("%i", value), domName);
 }
 
 void ConfigManager::setBool(const String &key, bool value, const String &domName) {
@@ -530,9 +528,7 @@ void ConfigManager::registerDefault(const String &key, const char *value) {
 }
 
 void ConfigManager::registerDefault(const String &key, int value) {
-	char tmp[128];
-	snprintf(tmp, sizeof(tmp), "%i", value);
-	registerDefault(key, tmp);
+	registerDefault(key, String::format("%i", value));
 }
 
 void ConfigManager::registerDefault(const String &key, bool value) {

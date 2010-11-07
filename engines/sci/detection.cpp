@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/detection.cpp $
- * $Id: detection.cpp 52791 2010-09-18 10:55:16Z eriktorbjorn $
+ * $Id: detection.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -624,7 +624,8 @@ bool SciMetaEngine::hasFeature(MetaEngineFeature f) const {
 		(f == kSupportsDeleteSave) ||
 		(f == kSavesSupportMetaInfo) ||
 		(f == kSavesSupportThumbnail) ||
-		(f == kSavesSupportCreationDate);
+		(f == kSavesSupportCreationDate) ||
+		(f == kSavesSupportPlayTime);
 }
 
 bool SciEngine::hasFeature(EngineFeature f) const {
@@ -665,7 +666,7 @@ SaveStateList SciMetaEngine::listSaves(const char *target) const {
 					delete in;
 					continue;
 				}
-				saveList.push_back(SaveStateDescriptor(slotNum, meta.savegame_name));
+				saveList.push_back(SaveStateDescriptor(slotNum, meta.name));
 				delete in;
 			}
 		}
@@ -675,7 +676,7 @@ SaveStateList SciMetaEngine::listSaves(const char *target) const {
 }
 
 SaveStateDescriptor SciMetaEngine::querySaveMetaInfos(const char *target, int slot) const {
-	Common::String fileName = Common::String::printf("%s.%03d", target, slot);
+	Common::String fileName = Common::String::format("%s.%03d", target, slot);
 	Common::InSaveFile *in = g_system->getSavefileManager()->openForLoading(fileName);
 
 	if (in) {
@@ -688,7 +689,7 @@ SaveStateDescriptor SciMetaEngine::querySaveMetaInfos(const char *target, int sl
 			return desc;
 		}
 
-		SaveStateDescriptor desc(slot, meta.savegame_name);
+		SaveStateDescriptor desc(slot, meta.name);
 
 		Graphics::Surface *thumbnail = new Graphics::Surface();
 		assert(thumbnail);
@@ -702,18 +703,18 @@ SaveStateDescriptor SciMetaEngine::querySaveMetaInfos(const char *target, int sl
 		desc.setDeletableFlag(true);
 		desc.setWriteProtectedFlag(false);
 
-		int day = (meta.savegame_date >> 24) & 0xFF;
-		int month = (meta.savegame_date >> 16) & 0xFF;
-		int year = meta.savegame_date & 0xFFFF;
+		int day = (meta.saveDate >> 24) & 0xFF;
+		int month = (meta.saveDate >> 16) & 0xFF;
+		int year = meta.saveDate & 0xFFFF;
 
 		desc.setSaveDate(year, month, day);
 
-		int hour = (meta.savegame_time >> 16) & 0xFF;
-		int minutes = (meta.savegame_time >> 8) & 0xFF;
+		int hour = (meta.saveTime >> 16) & 0xFF;
+		int minutes = (meta.saveTime >> 8) & 0xFF;
 
 		desc.setSaveTime(hour, minutes);
 
-		// TODO: played time
+		desc.setPlayTime(meta.playTime * 1000);
 
 		delete in;
 
@@ -726,12 +727,12 @@ SaveStateDescriptor SciMetaEngine::querySaveMetaInfos(const char *target, int sl
 int SciMetaEngine::getMaximumSaveSlot() const { return 99; }
 
 void SciMetaEngine::removeSaveState(const char *target, int slot) const {
-	Common::String fileName = Common::String::printf("%s.%03d", target, slot);
+	Common::String fileName = Common::String::format("%s.%03d", target, slot);
 	g_system->getSavefileManager()->removeSavefile(fileName);
 }
 
 Common::Error SciEngine::loadGameState(int slot) {
-	Common::String fileName = Common::String::printf("%s.%03d", _targetName.c_str(), slot);
+	Common::String fileName = Common::String::format("%s.%03d", _targetName.c_str(), slot);
 	Common::SaveFileManager *saveFileMan = g_engine->getSaveFileManager();
 	Common::SeekableReadStream *in = saveFileMan->openForLoading(fileName);
 
@@ -750,7 +751,7 @@ Common::Error SciEngine::loadGameState(int slot) {
 }
 
 Common::Error SciEngine::saveGameState(int slot, const char *desc) {
-	Common::String fileName = Common::String::printf("%s.%03d", _targetName.c_str(), slot);
+	Common::String fileName = Common::String::format("%s.%03d", _targetName.c_str(), slot);
 	Common::SaveFileManager *saveFileMan = g_engine->getSaveFileManager();
 	Common::OutSaveFile *out = saveFileMan->openForSaving(fileName);
 	const char *version = "";

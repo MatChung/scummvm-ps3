@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/util.h $
- * $Id: util.h 51997 2010-08-11 19:32:07Z sev $
+ * $Id: util.h 53931 2010-10-30 00:32:45Z fingolfin $
  */
 
 #ifndef COMMON_UTIL_H
@@ -62,6 +62,20 @@ template<typename T> inline void SWAP(T &a, T &b) { T tmp = a; a = b; b = tmp; }
  */
 #define ARRAYSIZE(x) ((int)(sizeof(x) / sizeof(x[0])))
 
+
+/**
+ * @def SCUMMVM_CURRENT_FUNCTION
+ * This macro evaluates to the current function's name on compilers supporting this.
+ */
+#if defined(__GNUC__)
+# define SCUMMVM_CURRENT_FUNCTION __PRETTY_FUNCTION__
+#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901)
+#  define SCUMMVM_CURRENT_FUNCTION	__func__
+#elif defined(_MSC_VER) && _MSC_VER >= 1300
+#  define SCUMMVM_CURRENT_FUNCTION __FUNCTION__
+#else
+#  define SCUMMVM_CURRENT_FUNCTION "<unknown>"
+#endif
 
 namespace Common {
 

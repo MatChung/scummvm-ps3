@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/sound/cdrom.cpp $
- * $Id: cdrom.cpp 53491 2010-10-15 13:55:18Z drmccoy $
+ * $Id: cdrom.cpp 53984 2010-10-31 20:07:14Z drmccoy $
  *
  */
 
@@ -49,7 +49,7 @@ CDROM::~CDROM() {
 	stop();
 }
 
-void CDROM::readLIC(DataStream &stream) {
+void CDROM::readLIC(Common::SeekableReadStream &stream) {
 	uint16 version, startChunk, pos;
 
 	freeLICBuffer();

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/tools/create_kyradat/extract.h $
- * $Id: extract.h 47476 2010-01-23 15:00:11Z strangerke $
+ * $Id: extract.h 53761 2010-10-24 13:00:47Z athrxx $
  *
  */
 
@@ -35,6 +35,7 @@ enum kExtractType {
 	kTypeRoomList,
 	kTypeShapeList,
 	kTypeRawData,
+	kTypeForestSeqData,
 	kTypeAmigaSfxTable,
 	kTypeTownsWDSfxTable,
 

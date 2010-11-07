@@ -19,9 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/sdl/main.cpp $
- * $Id: main.cpp 52599 2010-09-06 17:28:17Z djwillis $
+ * $Id: main.cpp 53961 2010-10-30 21:27:42Z fingolfin $
  *
  */
+
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 // Fix for bug #2895217 "MSVC compilation broken with r47595":
 // We need to keep this on top of the "common/scummsys.h" include,
@@ -38,7 +40,7 @@
 
 // Several SDL based ports use a custom main, and hence do not want to compile
 // of this file. The following "#if" ensures that.
-#if !defined(__MAEMO__) && !defined(_WIN32_WCE) && !defined(CAANOO) && !defined(GP2XWIZ) && !defined(LINUXMOTO) && !defined(OPENPANDORA) && !defined(__SYMBIAN32__) && !defined(DINGUX)
+#if !defined(__MAEMO__) && !defined(__SYMBIAN32__) && !defined(_WIN32_WCE) && !defined(DINGUX) && !defined(GPH_DEVICE) && !defined(LINUXMOTO) && !defined(OPENPANDORA)
 
 
 #include "backends/platform/sdl/sdl.h"

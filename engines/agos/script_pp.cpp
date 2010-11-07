@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/script_pp.cpp $
- * $Id: script_pp.cpp 44285 2009-09-24 03:41:45Z Kirben $
+ * $Id: script_pp.cpp 54084 2010-11-05 03:30:45Z Kirben $
  *
  */
 
@@ -336,13 +336,12 @@ void AGOSEngine_PuzzlePack::opp_loadMouseImage() {
 
 void AGOSEngine_PuzzlePack::opp_message() {
 	// 63: show string nl
-
+	const byte *stringPtr = getStringPtrByID(getNextStringID());
 	if (getBitFlag(105)) {
 		// Swampy adventures
-		getStringPtrByID(getNextStringID());
-//		printInfoText(getStringPtrByID(getNextStringID()));
+		printInfoText((const char *)stringPtr);
 	} else {
-		showMessageFormat("%s\n", getStringPtrByID(getNextStringID()));
+		showMessageFormat("%s\n", stringPtr);
 	}
 }
 

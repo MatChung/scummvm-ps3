@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/he/script_v100he.cpp $
- * $Id: script_v100he.cpp 49079 2010-05-18 14:17:24Z mthreepwood $
+ * $Id: script_v100he.cpp 53739 2010-10-23 15:47:23Z fingolfin $
  *
  */
 
@@ -34,7 +34,6 @@
 #include "scumm/he/intern_he.h"
 #include "scumm/object.h"
 #include "scumm/resource.h"
-#include "scumm/he/resource_he.h"
 #include "scumm/scumm.h"
 #include "scumm/he/sound_he.h"
 #include "scumm/he/sprite_he.h"
@@ -1623,13 +1622,11 @@ void ScummEngine_v100he::o100_roomOps() {
 
 	case 137:
 		byte buffer[256];
-		int r;
 
 		copyScriptString((byte *)buffer, sizeof(buffer));
 
-		r = convertFilePath(buffer, sizeof(buffer));
-		memcpy(_saveLoadFileName, buffer + r, sizeof(buffer) - r);
-		debug(1, "o100_roomOps: case 137: filename %s", _saveLoadFileName);
+		_saveLoadFileName = (char *)buffer + convertFilePath(buffer, sizeof(buffer));
+		debug(1, "o100_roomOps: case 137: filename %s", _saveLoadFileName.c_str());
 
 		_saveLoadFlag = pop();
 		_saveLoadSlot = 255;

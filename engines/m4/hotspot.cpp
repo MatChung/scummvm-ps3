@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/hotspot.cpp $
- * $Id: hotspot.cpp 51462 2010-07-29 11:41:51Z dreammaster $
+ * $Id: hotspot.cpp 54047 2010-11-03 09:44:03Z dreammaster $
  *
  */
 
@@ -227,7 +227,7 @@ void HotSpotList::loadHotSpots(Common::SeekableReadStream* hotspotStream, int ho
 			// This looks to be some sort of bitmask. Perhaps it signifies
 			// the valid verbs for this hotspot
 			index = hotspotStream->readUint16LE();		// unknown
-			//printf("%i ", index);
+			//debugC(kDebugCore, "%i ", index);
 		}
 
 		if (_vm->isM4())

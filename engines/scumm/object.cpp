@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/object.cpp $
- * $Id: object.cpp 53567 2010-10-18 16:00:07Z fingolfin $
+ * $Id: object.cpp 53806 2010-10-25 08:03:55Z Kirben $
  *
  */
 
@@ -315,6 +315,10 @@ int ScummEngine::getObjectIndex(int object) const {
 		return -1;
 
 	for (i = (_numLocalObjects-1); i > 0; i--) {
+		if (_game.version == 0 )
+			if( _objs[i].flags != _v0ObjectFlag )
+				continue;
+
 		if (_objs[i].obj_nr == object)
 			return i;
 	}
@@ -526,6 +530,9 @@ int ScummEngine::findObject(int x, int y) {
 #endif
 				if (_objs[i].x_pos <= x && _objs[i].width + _objs[i].x_pos > x &&
 				    _objs[i].y_pos <= y && _objs[i].height + _objs[i].y_pos > y) {
+					// MMC64: Set the object search flag
+					if (_game.version == 0)
+						_v0ObjectFlag = _objs[i].flags;
 					if (_game.version == 0 && _v0ObjectIndex)
 						return i;
 					else

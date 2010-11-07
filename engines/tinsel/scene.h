@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/scene.h $
- * $Id: scene.h 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: scene.h 53708 2010-10-22 21:08:27Z dreammaster $
  *
  * Scene parsing defines
  */
@@ -78,9 +78,9 @@ enum REEL {
 typedef enum { TRANS_DEF, TRANS_CUT, TRANS_FADE } TRANSITS;
 
 // amount to shift scene handles by
-#define	SCNHANDLE_SHIFT (TinselV2 ? 25 : 23)
-#define	OFFSETMASK (TinselV2 ? 0x01ffffffL : 0x007fffffL)
-#define HANDLEMASK (TinselV2 ? 0xFE000000L : 0xFF800000L)
+#define	SCNHANDLE_SHIFT ((TinselV2 && !IsDemo) ? 25 : 23)
+#define	OFFSETMASK ((TinselV2 && !IsDemo) ? 0x01ffffffL : 0x007fffffL)
+#define HANDLEMASK ((TinselV2 && !IsDemo) ? 0xFE000000L : 0xFF800000L)
 
 void DoHailScene(SCNHANDLE scene);
 

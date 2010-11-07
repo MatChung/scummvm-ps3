@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/gp2x/gp2x-mem.cpp $
- * $Id: gp2x-mem.cpp 43167 2009-08-09 12:12:24Z djwillis $
+ * $Id: gp2x-mem.cpp 53982 2010-10-31 17:24:27Z fingolfin $
  *
  */
 
@@ -27,6 +27,9 @@
  * GP2X: Memory tweaking stuff.
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include <stdio.h>
 #include <signal.h>
@@ -39,8 +42,11 @@
 
 #include "backends/platform/gp2x/gp2x-mem.h"
 
-void SetClock (unsigned c)
-{
+extern "C" {
+static volatile unsigned short *gp2x_memregs;
+}
+
+void SetClock (unsigned c) {
 	unsigned v;
 	unsigned mdiv,pdiv=3,scale=0;
 
@@ -54,8 +60,7 @@ void SetClock (unsigned c)
     gp2x_memregs[0x910>>1] = v;
 }
 
-void patchMMU (void)
-{
+void patchMMU (void) {
 	//volatile unsigned int *secbuf = (unsigned int *)malloc (204800);
 
 	printf ("Reconfiguring cached memory regions...\n");
@@ -68,19 +73,15 @@ void patchMMU (void)
 
 	int mmufd = open("/dev/mmuhack", O_RDWR);
 
-	if(mmufd < 0)
-	{
+	if(mmufd < 0) {
 		printf ("Upper memory uncached (attempt failed, access to upper memory will be slower)...\n");
-	}
-	else
-	{
+	} else {
 		printf ("Upper memory cached...\n");
 		close(mmufd);
 	}
 }
 
-void unpatchMMU (void)
-{
+void unpatchMMU (void) {
 	printf ("Restoreing cached memory regions...\n");
 	system("/sbin/rmmod mmuhack");
 }

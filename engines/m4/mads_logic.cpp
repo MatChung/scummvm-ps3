@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/mads_logic.cpp $
- * $Id: mads_logic.cpp 53505 2010-10-15 15:51:59Z thebluegr $
+ * $Id: mads_logic.cpp 54034 2010-11-02 00:15:18Z dreammaster $
  *
  */
 
@@ -182,7 +182,9 @@ void MadsSceneLogic::initialiseDataMap() {
 	MAP_DATA(&_madsVm->_player._playerPos.y);
 	MAP_DATA(&_madsVm->_player._direction);
 	MAP_DATA(&_madsVm->_player._visible);
-	MAP_DATA(&_madsVm->scene()->_animActive);
+	MAP_DATA(&getActiveAnimationBool);
+	MAP_DATA(&getAnimationCurrentFrame);
+
 }
 
 DataMap &MadsSceneLogic::dataMap() {

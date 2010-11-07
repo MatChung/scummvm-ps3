@@ -19,10 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/parser_ns.cpp $
- * $Id: parser_ns.cpp 49428 2010-06-04 13:48:09Z peres001 $
+ * $Id: parser_ns.cpp 54031 2010-11-01 21:37:47Z fingolfin $
  *
  */
-
 
 #include "parallaction/parallaction.h"
 #include "parallaction/parser.h"
@@ -1284,7 +1283,7 @@ DECLARE_ZONE_PARSER(commands)  {
 DECLARE_ZONE_PARSER(label)  {
 	debugC(7, kDebugParser, "ZONE_PARSER(label) ");
 
-//			printf("label: %s", _tokens[1]);
+//			debug("label: %s", _tokens[1]);
 	ctxt.z->_label = _vm->_gfx->renderFloatingLabel(_vm->_labelFont, _tokens[1]);
 	ctxt.z->_flags &= ~kFlagsNoName;
 }

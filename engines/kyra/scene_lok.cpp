@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/scene_lok.cpp $
- * $Id: scene_lok.cpp 44634 2009-10-04 21:26:33Z fingolfin $
+ * $Id: scene_lok.cpp 53696 2010-10-22 02:09:16Z lordhoto $
  *
  */
 
@@ -824,13 +824,14 @@ void KyraEngine_LoK::initSceneScreen(int brandonAlive) {
 		_emc->run(&_scriptClick);
 
 	setTextFadeTimerCountdown(-1);
+
 	if (_currentCharacter->sceneId == 210) {
-		if (_itemInHand != -1)
+		if (_itemInHand != kItemNone)
 			magicOutMouseItem(2, -1);
 
 		_screen->hideMouse();
 		for (int i = 0; i < 10; ++i) {
-			if (_currentCharacter->inventoryItems[i] != 0xFF)
+			if (_currentCharacter->inventoryItems[i] != kItemNone)
 				magicOutMouseItem(2, i);
 		}
 		_screen->showMouse();

@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/tools/create_kyradat/search.cpp $
- * $Id: search.cpp 47476 2010-01-23 15:00:11Z strangerke $
+ * $Id: search.cpp 53965 2010-10-30 22:44:15Z fingolfin $
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "search.h"
 #include "md5.h"

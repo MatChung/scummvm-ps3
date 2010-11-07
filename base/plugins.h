@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/base/plugins.h $
- * $Id: plugins.h 48282 2010-03-18 15:09:24Z fingolfin $
+ * $Id: plugins.h 54097 2010-11-05 13:24:57Z bluddy $
  *
  */
 
@@ -30,6 +30,7 @@
 #include "common/error.h"
 #include "common/singleton.h"
 #include "common/util.h"
+#include "backends/plugins/elf/version.h"
 
 namespace Common {
 	class FSList;
@@ -90,6 +91,21 @@ extern int pluginTypeVersions[PLUGIN_TYPE_MAX];
 #define PLUGIN_ENABLED_DYNAMIC(ID) \
 	(ENABLE_##ID && (ENABLE_##ID == DYNAMIC_PLUGIN) && DYNAMIC_MODULES)
 
+// see comments in backends/plugins/elf/elf-provider.cpp
+#if defined(USE_ELF_LOADER) && defined(ELF_LOADER_CXA_ATEXIT)
+#define PLUGIN_DYNAMIC_DSO_HANDLE \
+	uint32 __dso_handle __attribute__((visibility("hidden"))) = 0;
+#else
+#define PLUGIN_DYNAMIC_DSO_HANDLE
+#endif
+
+#ifdef USE_ELF_LOADER
+#define PLUGIN_DYNAMIC_BUILD_DATE \
+	PLUGIN_EXPORT const char *PLUGIN_getBuildDate() { return gScummVMPluginBuildDate; }
+#else
+#define PLUGIN_DYNAMIC_BUILD_DATE
+#endif
+
 /**
  * REGISTER_PLUGIN_STATIC is a convenience macro which is used to declare
  * the plugin interface for static plugins. Code (such as game engines)
@@ -119,6 +135,8 @@ extern int pluginTypeVersions[PLUGIN_TYPE_MAX];
  */
 #define REGISTER_PLUGIN_DYNAMIC(ID,TYPE,PLUGINCLASS) \
 	extern "C" { \
+		PLUGIN_DYNAMIC_DSO_HANDLE \
+		PLUGIN_DYNAMIC_BUILD_DATE \
 		PLUGIN_EXPORT int32 PLUGIN_getVersion() { return PLUGIN_VERSION; } \
 		PLUGIN_EXPORT int32 PLUGIN_getType() { return TYPE; } \
 		PLUGIN_EXPORT int32 PLUGIN_getTypeVersion() { return TYPE##_VERSION; } \
@@ -212,6 +230,11 @@ public:
 	 * @return a list of Plugin instances
 	 */
 	virtual PluginList getPlugins() = 0;
+
+	/**
+	 * @return whether or not object is a FilePluginProvider.
+	 */
+	virtual bool isFilePluginProvider() { return false; }
 };
 
 #ifdef DYNAMIC_MODULES
@@ -233,6 +256,11 @@ public:
 	 * @return a list of Plugin instances
 	 */
 	virtual PluginList getPlugins();
+
+	/**
+	 * @return whether or not object is a FilePluginProvider.
+	 */
+	bool isFilePluginProvider() { return true; }
 
 protected:
 	/**
@@ -273,11 +301,15 @@ protected:
 class PluginManager : public Common::Singleton<PluginManager> {
 	typedef Common::Array<PluginProvider *> ProviderList;
 private:
-	PluginList _plugins[PLUGIN_TYPE_MAX];
+	PluginList _pluginsInMem[PLUGIN_TYPE_MAX];
 	ProviderList _providers;
 
-	bool tryLoadPlugin(Plugin *plugin);
+	PluginList _allEnginePlugins;
+	PluginList::iterator _currentPlugin;
 
+	bool tryLoadPlugin(Plugin *plugin);
+	void addToPluginsInMemList(Plugin *plugin);
+	
 	friend class Common::Singleton<SingletonBaseType>;
 	PluginManager();
 
@@ -286,11 +318,15 @@ public:
 
 	void addPluginProvider(PluginProvider *pp);
 
+	void loadNonEnginePluginsAndEnumerate();	
+	void loadFirstPlugin();
+	bool loadNextPlugin();
+	
 	void loadPlugins();
 	void unloadPlugins();
-	void unloadPluginsExcept(PluginType type, const Plugin *plugin);
+	void unloadPluginsExcept(PluginType type, const Plugin *plugin, bool deletePlugin = true);
 
-	const PluginList &getPlugins(PluginType t) { return _plugins[t]; }
+	const PluginList &getPlugins(PluginType t) { return _pluginsInMem[t]; }
 };
 
 #endif

@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/toon.h $
-* $Id: toon.h 53549 2010-10-16 21:58:33Z sylvaintv $
+* $Id: toon.h 53706 2010-10-22 20:53:25Z sylvaintv $
 *
 */
 
@@ -144,7 +144,7 @@ public:
 	int32 runConversationCommand(int16 **command);
 	void prepareConversations();
 	void drawConversationIcons();
-	void simpleUpdate();
+	void simpleUpdate(bool waitCharacterToTalk = false);
 	int32 waitTicks(int32 numTicks, bool breakOnMouseClick);
 	void copyToVirtualScreen(bool updateScreen = true);
 	void getMouseEvent();

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/cooks.h $
- * $Id: cooks.h 53588 2010-10-18 21:03:28Z littleboy $
+ * $Id: cooks.h 53629 2010-10-19 22:34:26Z jvprat $
  *
  */
 
@@ -43,14 +43,14 @@ public:
 	 *
 	 * @param sequence The sequence to draw
 	 */
-	DECLARE_FUNCTION_1(draw, const char* sequence)
+	DECLARE_FUNCTION_1(draw, const char *sequence)
 
 	/**
 	 * Plays sound
 	 *
 	 * @param filename The sound filename
 	 */
-	DECLARE_FUNCTION_1(playSound, const char* filename)
+	DECLARE_FUNCTION_1(playSound, const char *filename)
 
 	DECLARE_FUNCTION(function3)
 

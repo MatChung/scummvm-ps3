@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/package/packagemanager_script.cpp $
- * $Id: packagemanager_script.cpp 53568 2010-10-18 17:12:00Z sev $
+ * $Id: packagemanager_script.cpp 53838 2010-10-25 23:19:39Z fingolfin $
  *
  */
 
@@ -42,9 +42,9 @@
 namespace Sword25 {
 
 static PackageManager *getPM() {
-	Kernel *pKernel = Kernel::GetInstance();
+	Kernel *pKernel = Kernel::getInstance();
 	BS_ASSERT(pKernel);
-	PackageManager *pPM = pKernel->GetPackage();
+	PackageManager *pPM = pKernel->getPackage();
 	BS_ASSERT(pPM);
 	return pPM;
 }
@@ -90,17 +90,15 @@ static int getAbsolutePath(lua_State *L) {
 }
 
 static int getFileSize(lua_State *L) {
-	PackageManager *pPM = getPM();
-
-	lua_pushnumber(L, pPM->getFileSize(luaL_checkstring(L, 1)));
+	// This function apparently is not used by the game scripts
+	lua_pushnumber(L, 0);
 
 	return 1;
 }
 
 static int getFileType(lua_State *L) {
-	PackageManager *pPM = getPM();
-
-	lua_pushnumber(L, pPM->getFileType(luaL_checkstring(L, 1)));
+	// This function apparently is not used by the game scripts
+	lua_pushnumber(L, 0);
 
 	return 1;
 }
@@ -197,9 +195,9 @@ static const luaL_reg PACKAGE_FUNCTIONS[] = {
 };
 
 bool PackageManager::registerScriptBindings() {
-	Kernel *pKernel = Kernel::GetInstance();
+	Kernel *pKernel = Kernel::getInstance();
 	BS_ASSERT(pKernel);
-	ScriptEngine *pScript = pKernel->GetScript();
+	ScriptEngine *pScript = pKernel->getScript();
 	BS_ASSERT(pScript);
 	lua_State *L = static_cast<lua_State *>(pScript->getScriptObject());
 	BS_ASSERT(L);

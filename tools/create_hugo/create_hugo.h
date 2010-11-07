@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/tools/create_hugo/create_hugo.h $
- * $Id: create_hugo.h 53109 2010-10-10 09:47:19Z strangerke $
+ * $Id: create_hugo.h 54085 2010-11-05 07:59:55Z strangerke $
  *
  */
 
@@ -31,7 +31,7 @@
 #define DATAALIGNMENT 4
 
 #define HUGO_DAT_VER_MAJ 0  // 1 byte
-#define HUGO_DAT_VER_MIN 25 // 1 byte
+#define HUGO_DAT_VER_MIN 27 // 1 byte
 
 typedef unsigned char  uint8;
 typedef unsigned char  byte;

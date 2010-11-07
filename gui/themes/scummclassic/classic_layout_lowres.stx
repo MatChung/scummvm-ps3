@@ -20,7 +20,7 @@
  - Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  -
  - $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/themes/scummclassic/classic_layout_lowres.stx $
- - $Id: classic_layout_lowres.stx 51756 2010-08-05 14:40:22Z lordhoto $
+ - $Id: classic_layout_lowres.stx 54090 2010-11-05 10:53:37Z thebluegr $
  -
  -->
 <layout_info resolution = "320xY, 256x240, Xx272, Xx350">
@@ -214,6 +214,9 @@
 					type = 'Checkbox'
 			/>
 			<widget name = 'grFullscreenCheckbox'
+					type = 'Checkbox'
+			/>
+			<widget name = 'grDisableDitheringCheckbox'
 					type = 'Checkbox'
 			/>
 		</layout>

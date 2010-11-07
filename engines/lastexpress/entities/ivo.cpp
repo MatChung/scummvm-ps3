@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/ivo.cpp $
- * $Id: ivo.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: ivo.cpp 53844 2010-10-26 06:55:17Z littleboy $
  *
  */
 
@@ -250,7 +250,7 @@ IMPLEMENT_FUNCTION(14, Ivo, chapter1)
 		break;
 
 	case kActionNone:
-		TIME_CHECK_CHAPTER1(setup_chapter1Handler);
+		TIME_CHECK(kTimeChapter1, params->param1, setup_chapter1Handler);
 		break;
 
 	case kActionDefault:
@@ -802,7 +802,7 @@ IMPLEMENT_FUNCTION(33, Ivo, function33)
 		break;
 
 	case kActionDefault:
-		getState()->time += 1800;
+		getState()->time = (TimeValue)(getState()->time + 1800);
 
 		setCallback(1);
 		setup_savegame(kSavegameTypeTime, kTimeNone);

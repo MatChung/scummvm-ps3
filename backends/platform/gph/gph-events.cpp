@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/gph/gph-events.cpp $
- * $Id: gph-events.cpp 52648 2010-09-09 09:48:32Z djwillis $
+ * $Id: gph-events.cpp 53639 2010-10-20 13:00:58Z djwillis $
  *
  */
 
@@ -253,7 +253,6 @@ bool OSystem_GPH::handleMouseButtonUp(SDL_Event &ev, Common::Event &event) {
 			event.type = Common::EVENT_MOUSEMOVE;
 		else
 			event.type = Common::EVENT_LBUTTONUP; /* For normal mice etc. */
-
 	}
 	else if (ev.button.button == SDL_BUTTON_RIGHT)
 		event.type = Common::EVENT_RBUTTONUP;

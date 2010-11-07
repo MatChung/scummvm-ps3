@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/ds/arm9/source/dsmain.cpp $
- * $Id: dsmain.cpp 52533 2010-09-04 22:19:20Z dhewg $
+ * $Id: dsmain.cpp 54052 2010-11-03 22:57:42Z wjpalenstijn $
  *
  */
 
@@ -105,6 +105,7 @@
 #endif
 #include "engine.h"
 
+#include "backends/plugins/ds/ds-provider.h"
 #include "backends/fs/ds/ds-fs.h"
 #include "base/version.h"
 #include "common/util.h"
@@ -3213,6 +3214,9 @@ int main(void) {
 	const char *argv[] = {"/scummvmds"};
 #endif
 
+#ifdef DYNAMIC_MODULES
+	PluginManager::instance().addPluginProvider(new DSPluginProvider());
+#endif
 
 	while (1) {
 		scummvm_main(ARRAYSIZE(argv), (char **) &argv);

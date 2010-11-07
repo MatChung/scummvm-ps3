@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/display_v1d.cpp $
- * $Id: display_v1d.cpp 53152 2010-10-11 21:41:31Z strangerke $
+ * $Id: display_v1d.cpp 54018 2010-11-01 20:20:21Z strangerke $
  *
  */
 
@@ -40,15 +40,17 @@
 
 namespace Hugo {
 
-Screen_v1d::Screen_v1d(HugoEngine &vm) : Screen(vm) {
+Screen_v1d::Screen_v1d(HugoEngine *vm) : Screen(vm) {
 }
 
 Screen_v1d::~Screen_v1d() {
 }
 
-// Load font file, construct font ptrs and reverse data bytes
-// TODO: This uses hardcoded fonts in hugo.dat, it should be replaced
-//       by a proper implementation of .FON files
+/**
+* Load font file, construct font ptrs and reverse data bytes
+* TODO: This uses hardcoded fonts in hugo.dat, it should be replaced
+*       by a proper implementation of .FON files
+*/
 void Screen_v1d::loadFont(int16 fontId) {
 	debugC(2, kDebugDisplay, "loadFont(%d)", fontId);
 
@@ -61,7 +63,7 @@ void Screen_v1d::loadFont(int16 fontId) {
 
 	fontLoadedFl[_fnt] = true;
 
-	memcpy(_fontdata[_fnt], _vm._arrayFont[_fnt], _vm._arrayFontSize[_fnt]);
+	memcpy(_fontdata[_fnt], _vm->_arrayFont[_fnt], _vm->_arrayFontSize[_fnt]);
 	_font[_fnt][0] = _fontdata[_fnt];               // Store height,width of fonts
 
 	int16 offset = 2;                                       // Start at fontdata[2] ([0],[1] used for height,width)

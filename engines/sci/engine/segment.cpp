@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/segment.cpp $
- * $Id: segment.cpp 51789 2010-08-06 15:30:23Z m_kiewitz $
+ * $Id: segment.cpp 54011 2010-11-01 16:04:47Z fingolfin $
  *
  */
 
@@ -318,10 +318,8 @@ reg_t DataStack::findCanonicAddress(SegManager *segMan, reg_t addr) const {
 
 Common::Array<reg_t> DataStack::listAllOutgoingReferences(reg_t object) const {
 	Common::Array<reg_t> tmp;
-	fprintf(stderr, "Emitting %d stack entries\n", _capacity);
 	for (int i = 0; i < _capacity; i++)
 		tmp.push_back(_entries[i]);
-	fprintf(stderr, "DONE");
 
 	return tmp;
 }

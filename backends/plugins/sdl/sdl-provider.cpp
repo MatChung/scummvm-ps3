@@ -19,11 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/plugins/sdl/sdl-provider.cpp $
- * $Id: sdl-provider.cpp 34716 2008-10-02 16:58:59Z fingolfin $
+ * $Id: sdl-provider.cpp 53968 2010-10-30 23:53:30Z fingolfin $
  *
  */
 
 #if defined(DYNAMIC_MODULES) && defined(SDL_BACKEND)
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "backends/plugins/sdl/sdl-provider.h"
 #include "backends/plugins/dynamic-plugin.h"

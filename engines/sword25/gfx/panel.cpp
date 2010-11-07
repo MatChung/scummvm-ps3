@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/panel.cpp $
- * $Id: panel.cpp 53477 2010-10-15 12:18:19Z fingolfin $
+ * $Id: panel.cpp 53626 2010-10-19 21:03:33Z sev $
  *
  */
 
@@ -32,10 +32,6 @@
  *
  */
 
-// -----------------------------------------------------------------------------
-// Includes
-// -----------------------------------------------------------------------------
-
 #include "sword25/gfx/panel.h"
 
 #include "sword25/kernel/inputpersistenceblock.h"
@@ -45,13 +41,7 @@
 
 namespace Sword25 {
 
-// -----------------------------------------------------------------------------
-
 #define BS_LOG_PREFIX "PANEL"
-
-// -----------------------------------------------------------------------------
-// Construction/Destruction
-// -----------------------------------------------------------------------------
 
 Panel::Panel(RenderObjectPtr<RenderObject> parentPtr, int width, int height, uint color) :
 	RenderObject(parentPtr, RenderObject::TYPE_PANEL),
@@ -74,36 +64,24 @@ Panel::Panel(RenderObjectPtr<RenderObject> parentPtr, int width, int height, uin
 	_initSuccess = true;
 }
 
-// -----------------------------------------------------------------------------
-
 Panel::Panel(InputPersistenceBlock &reader, RenderObjectPtr<RenderObject> parentPtr, uint handle) :
 	RenderObject(parentPtr, RenderObject::TYPE_PANEL, handle) {
 	_initSuccess = unpersist(reader);
 }
 
-// -----------------------------------------------------------------------------
-
 Panel::~Panel() {
 }
-
-// -----------------------------------------------------------------------------
-// Rendern
-// -----------------------------------------------------------------------------
 
 bool Panel::doRender() {
 	// Falls der Alphawert 0 ist, ist das Panel komplett durchsichtig und es muss nichts gezeichnet werden.
 	if (_color >> 24 == 0)
 		return true;
 
-	GraphicEngine *gfxPtr = Kernel::GetInstance()->GetGfx();
+	GraphicEngine *gfxPtr = Kernel::getInstance()->getGfx();
 	BS_ASSERT(gfxPtr);
 
 	return gfxPtr->fill(&_bbox, _color);
 }
-
-// -----------------------------------------------------------------------------
-// Persistenz
-// -----------------------------------------------------------------------------
 
 bool Panel::persist(OutputPersistenceBlock &writer) {
 	bool result = true;
@@ -115,8 +93,6 @@ bool Panel::persist(OutputPersistenceBlock &writer) {
 
 	return result;
 }
-
-// -----------------------------------------------------------------------------
 
 bool Panel::unpersist(InputPersistenceBlock &reader) {
 	bool result = true;

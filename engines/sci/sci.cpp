@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/sci.cpp $
- * $Id: sci.cpp 53397 2010-10-13 03:28:59Z mthreepwood $
+ * $Id: sci.cpp 54090 2010-11-05 10:53:37Z thebluegr $
  *
  */
 
@@ -180,7 +180,6 @@ Common::Error SciEngine::run() {
 	g_eventRec.registerRandomSource(_rng, "sci");
 
 	// Assign default values to the config manager, in case settings are missing
-	ConfMan.registerDefault("sci_undither", "true");
 	ConfMan.registerDefault("sci_originalsaveload", "false");
 	ConfMan.registerDefault("native_fb01", "false");
 
@@ -210,7 +209,7 @@ Common::Error SciEngine::run() {
 
 	// Initialize the game screen
 	_gfxScreen = new GfxScreen(_resMan);
-	_gfxScreen->debugUnditherSetState(ConfMan.getBool("sci_undither"));
+	_gfxScreen->debugUnditherSetState(ConfMan.getBool("disable_dithering"));
 
 	// Create debugger console. It requires GFX to be initialized
 	_console = new Console(this);
@@ -303,10 +302,10 @@ Common::Error SciEngine::run() {
 
 		if (buggyScript && (buggyScript->size == 12354 || buggyScript->size == 12362)) {
 			showScummVMDialog("A known buggy game script has been detected, which could "
-							  "prevent you from progressing later on in the game, during "
-							  "the sequence with the Green Man's riddles. Please, apply "
-							  "the latest patch for this game by Sierra to avoid possible "
-							  "problems");
+			                  "prevent you from progressing later on in the game, during "
+			                  "the sequence with the Green Man's riddles. Please, apply "
+			                  "the latest patch for this game by Sierra to avoid possible "
+			                  "problems");
 		}
 	}
 
@@ -325,16 +324,16 @@ Common::Error SciEngine::run() {
 			case GID_SQ4:
 			case GID_FAIRYTALES:
 				showScummVMDialog("You have selected General MIDI as a sound device. Sierra "
-								  "has provided after-market support for General MIDI for this "
-								  "game in their \"General MIDI Utility\". Please, apply this "
-								  "patch in order to enjoy MIDI music with this game. Once you "
-								  "have obtained it, you can unpack all of the included *.PAT "
-								  "files in your ScummVM extras folder and ScummVM will add the "
-								  "appropriate patch automatically. Alternatively, you can follow "
-								  "the instructions in the READ.ME file included in the patch and "
-								  "rename the associated *.PAT file to 4.PAT and place it in the "
-								  "game folder. Without this patch, General MIDI music for this "
-								  "game will sound badly distorted.");
+				                  "has provided after-market support for General MIDI for this "
+				                  "game in their \"General MIDI Utility\". Please, apply this "
+				                  "patch in order to enjoy MIDI music with this game. Once you "
+				                  "have obtained it, you can unpack all of the included *.PAT "
+				                  "files in your ScummVM extras folder and ScummVM will add the "
+				                  "appropriate patch automatically. Alternatively, you can follow "
+				                  "the instructions in the READ.ME file included in the patch and "
+				                  "rename the associated *.PAT file to 4.PAT and place it in the "
+				                  "game folder. Without this patch, General MIDI music for this "
+				                  "game will sound badly distorted.");
 				break;
 			default:
 				break;
@@ -342,12 +341,82 @@ Common::Error SciEngine::run() {
 		}
 	}
 
+	if (gameHasFanMadePatch()) {
+		showScummVMDialog("Your game is patched with a fan made script patch. Such patches have "
+		                  "been reported to cause issues, as they modify game scripts extensively. "
+		                  "The issues that these patches fix do not occur in ScummVM, so you are "
+		                  "advised to remove this patch from your game folder in order to avoid "
+		                  "having unexpected errors and/or issues later on.");
+	}
 
 	runGame();
 
 	ConfMan.flushToDisk();
 
 	return Common::kNoError;
+}
+
+bool SciEngine::gameHasFanMadePatch() {
+	struct FanMadePatchInfo {
+		SciGameId gameID;
+		uint16 targetScript;
+		uint16 targetSize;
+		uint16 patchedByteOffset;
+		byte patchedByte;
+	};
+
+	const FanMadePatchInfo patchInfo[] = {
+		// game        script    size  offset   byte
+		// ** NRS Patches **************************
+		{ GID_HOYLE3,     994,   2580,    656,  0x78 },
+		{ GID_KQ1,         85,   5156,    631,  0x02 },
+		{ GID_LAURABOW2,  994,   4382,      0,  0x00 },
+		{ GID_LONGBOW,    994,   4950,   1455,  0x78 },	// English
+		{ GID_LONGBOW,    994,   5020,   1469,  0x78 },	// German
+		{ GID_LSL1,       803,    592,    342,  0x01 },
+		{ GID_LSL3,       380,   6148,    195,  0x35 },
+		{ GID_LSL5,       994,   4810,   1342,  0x78 },	// English
+		{ GID_LSL5,       994,   4942,   1392,  0x76 },	// German
+		{ GID_PQ1,        994,   4332,   1473,  0x78 },
+		{ GID_PQ2,        200,  10614,      0,  0x00 },
+		{ GID_PQ3,        994,   4686,   1291,  0x78 },	// English
+		{ GID_PQ3,        994,   4734,   1283,  0x78 },	// German
+		{ GID_QFG1VGA,    994,   4388,      0,  0x00 },
+		{ GID_QFG3,       994,   4714,      0,  0x00 },
+		// TODO: Disabled, as it fixes a whole lot of bugs which can't be tested till SCI2.1 support is finished
+		//{ GID_QFG4,       710,  11477,      0,  0x00 },
+		{ GID_SQ1,        994,   4740,      0,  0x00 },
+		{ GID_SQ5,        994,   4142,   1496,  0x78 },	// English/German/French
+		// TODO: Disabled, till we can test the Italian version
+		//{ GID_SQ5,        994,   4148,      0,  0x00 },	// Italian - patched file is the same size as the original
+		// TODO: The bugs in SQ6 can't be tested till SCI2.1 support is finished
+		//{ GID_SQ6,        380,  16308,  15042,  0x0C },	// English
+		//{ GID_SQ6,        380,  11652,      0,  0x00 },	// German - patched file is the same size as the original
+		// ** End marker ***************************
+		{ GID_FANMADE,      0,      0,      0,  0x00 }
+	};
+
+	int curEntry = 0;
+
+	while (true) {
+		if (patchInfo[curEntry].targetSize == 0)
+			break;
+
+		if (patchInfo[curEntry].gameID == getGameId()) {
+			Resource *targetScript = _resMan->findResource(ResourceId(kResourceTypeScript, patchInfo[curEntry].targetScript), 0);
+
+			if (targetScript && targetScript->size + 2 == patchInfo[curEntry].targetSize) {
+				if (patchInfo[curEntry].patchedByteOffset == 0)
+					return true;
+				else if (targetScript->data[patchInfo[curEntry].patchedByteOffset - 2] == patchInfo[curEntry].patchedByte)
+					return true;
+			}
+		}
+
+		curEntry++;
+	}
+
+	return false;
 }
 
 static byte patchGameRestoreSave[] = {
@@ -484,7 +553,7 @@ bool SciEngine::initGame() {
 		_vocabulary->reset();
 	}
 
-	_gamestate->gameStartTime = _gamestate->lastWaitTime = _gamestate->_screenUpdateTime = g_system->getMillis();
+	_gamestate->lastWaitTime = _gamestate->_screenUpdateTime = g_system->getMillis();
 
 	// Load game language into printLang property of game object
 	setSciLanguage();
@@ -580,6 +649,8 @@ void SciEngine::initStackBaseWithSelector(Selector selector) {
 }
 
 void SciEngine::runGame() {
+	setTotalPlayTime(0);
+
 	initStackBaseWithSelector(SELECTOR(play)); // Call the play selector
 
 	// Attach the debug console on game startup, if requested
@@ -633,8 +704,10 @@ void SciEngine::exitGame() {
 GUI::Debugger *SciEngine::getDebugger() {
 	if (_gamestate) {
 		ExecStack *xs = &(_gamestate->_executionStack.back());
-		xs->addr.pc.offset = _debugState.old_pc_offset;
-		xs->sp = _debugState.old_sp;
+		if (xs) {
+			xs->addr.pc.offset = _debugState.old_pc_offset;
+			xs->sp = _debugState.old_sp;
+		}
 	}
 
 	_debugState.runningStep = 0; // Stop multiple execution
@@ -669,7 +742,7 @@ bool SciEngine::hasMacIconBar() const {
 }
 
 Common::String SciEngine::getSavegameName(int nr) const {
-	return _targetName + Common::String::printf(".%03d", nr);
+	return _targetName + Common::String::format(".%03d", nr);
 }
 
 Common::String SciEngine::getSavegamePattern() const {
@@ -706,6 +779,8 @@ int SciEngine::inQfGImportRoom() const {
 
 void SciEngine::pauseEngineIntern(bool pause) {
 	_mixer->pauseAll(pause);
+	if (_soundCmd)
+		_soundCmd->pauseAll(pause);
 }
 
 void SciEngine::syncSoundSettings() {

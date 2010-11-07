@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/savegame.h $
- * $Id: savegame.h 52875 2010-09-24 09:56:50Z m_kiewitz $
+ * $Id: savegame.h 54014 2010-11-01 16:42:54Z m_kiewitz $
  *
  */
 
@@ -36,19 +36,20 @@ namespace Sci {
 struct EngineState;
 
 enum {
-	CURRENT_SAVEGAME_VERSION = 25,
+	CURRENT_SAVEGAME_VERSION = 27,
 	MINIMUM_SAVEGAME_VERSION = 14
 };
 
 // Savegame metadata
 struct SavegameMetadata {
-	Common::String savegame_name;
-	int savegame_version;
-	Common::String game_version;
-	int savegame_date;
-	int savegame_time;
-	uint16 game_object_offset;
-	uint16 script0_size;
+	Common::String name;
+	int version;
+	Common::String gameVersion;
+	int saveDate;
+	int saveTime;
+	uint32 playTime;
+	uint16 gameObjectOffset;
+	uint16 script0Size;
 };
 
 

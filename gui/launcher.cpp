@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/launcher.cpp $
- * $Id: launcher.cpp 53160 2010-10-12 02:18:11Z jvprat $
+ * $Id: launcher.cpp 54097 2010-11-05 13:24:57Z bluddy $
  */
 
 #include "base/version.h"
@@ -341,7 +341,8 @@ void EditGameDialog::open() {
 	e = ConfMan.hasKey("gfx_mode", _domain) ||
 		ConfMan.hasKey("render_mode", _domain) ||
 		ConfMan.hasKey("fullscreen", _domain) ||
-		ConfMan.hasKey("aspect_ratio", _domain);
+		ConfMan.hasKey("aspect_ratio", _domain) ||
+		ConfMan.hasKey("disable_dithering", _domain);
 	_globalGraphicsOverride->setState(e);
 
 	e = ConfMan.hasKey("music_driver", _domain) ||
@@ -922,7 +923,12 @@ void LauncherDialog::loadGame(int item) {
 		gameId = _domains[item];
 
 	const EnginePlugin *plugin = 0;
+	
+#if defined(ONE_PLUGIN_AT_A_TIME) && defined(DYNAMIC_MODULES)
+	EngineMan.findGameOnePluginAtATime(gameId, &plugin);
+#else
 	EngineMan.findGame(gameId, &plugin);
+#endif
 
 	String target = _domains[item];
 	target.toLowercase();

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/detection.cpp $
- * $Id: detection.cpp 49788 2010-06-15 10:59:23Z sev $
+ * $Id: detection.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -325,7 +325,7 @@ int ParallactionMetaEngine::getMaximumSaveSlot() const { return 99; }
 
 void ParallactionMetaEngine::removeSaveState(const char *target, int slot) const {
 	Common::String filename = ConfMan.getDomain(target)->getVal("gameid");
-	filename += Common::String::printf(".0%02d", slot);
+	filename += Common::String::format(".0%02d", slot);
 
 	g_system->getSavefileManager()->removeSavefile(filename);
 }

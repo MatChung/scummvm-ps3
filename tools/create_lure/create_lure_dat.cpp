@@ -19,13 +19,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/tools/create_lure/create_lure_dat.cpp $
- * $Id: create_lure_dat.cpp 47541 2010-01-25 01:39:44Z lordhoto $
+ * $Id: create_lure_dat.cpp 53965 2010-10-30 22:44:15Z fingolfin $
  *
  * This is a utility for extracting needed resource data from different language
  * version of the Lure of the Temptress lure.exe executable files into a new file
  * lure.dat - this file is required for the ScummVM  Lure of the Temptress module
  * to work properly
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 // HACK to allow building with the SDL backend on MinGW
 // see bug #1800764 "TOOLS: MinGW tools building broken"

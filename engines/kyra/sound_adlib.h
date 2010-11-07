@@ -35,7 +35,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/sound_adlib.h $
- * $Id: sound_adlib.h 47279 2010-01-12 21:07:56Z lordhoto $
+ * $Id: sound_adlib.h 53911 2010-10-28 23:56:36Z lordhoto $
  *
  */
 
@@ -76,7 +76,7 @@ public:
 
 	void playTrack(uint8 track);
 	void haltTrack();
-	bool isPlaying();
+	bool isPlaying() const;
 
 	void playSoundEffect(uint8 track);
 

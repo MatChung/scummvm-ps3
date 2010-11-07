@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/video.cpp $
- * $Id: video.cpp 52957 2010-09-30 15:31:31Z strangerke $
+ * $Id: video.cpp 53984 2010-10-31 20:07:14Z drmccoy $
  *
  */
 
@@ -331,9 +331,9 @@ void Video::drawPackedSprite(byte *sprBuf, int16 width, int16 height,
 }
 
 void Video::drawPackedSprite(const char *path, Surface &dest, int width) {
-	byte *data;
+	int32 size;
+	byte *data = _vm->_dataIO->getFile(path, size);
 
-	data = _vm->_dataIO->getData(path);
 	drawPackedSprite(data, width, dest.getHeight(), 0, 0, 0, dest);
 	delete[] data;
 }

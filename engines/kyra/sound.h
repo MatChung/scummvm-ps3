@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/sound.h $
- * $Id: sound.h 47541 2010-01-25 01:39:44Z lordhoto $
+ * $Id: sound.h 53911 2010-10-28 23:56:36Z lordhoto $
  *
  */
 
@@ -94,7 +94,7 @@ public:
 	 * @param track track number
 	 * @return true if available, false otherwise
 	 */
-	virtual bool hasSoundFile(uint file) { return (fileListEntry(file) != 0); }
+	virtual bool hasSoundFile(uint file) const { return (fileListEntry(file) != 0); }
 
 	/**
 	 * Load a specifc sound file for use of

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/kernel/resservice.h $
- * $Id: resservice.h 53390 2010-10-13 00:07:27Z sev $
+ * $Id: resservice.h 53626 2010-10-19 21:03:33Z sev $
  *
  */
 
@@ -35,7 +35,6 @@
 #ifndef SWORD25_RESOURCESERVICE_H
 #define SWORD25_RESOURCESERVICE_H
 
-// Includes
 #include "sword25/kernel/common.h"
 #include "sword25/kernel/service.h"
 #include "sword25/kernel/kernel.h"
@@ -48,8 +47,8 @@ class Resource;
 class ResourceService : public Service {
 public:
 	ResourceService(Kernel *pKernel) : Service(pKernel) {
-		ResourceManager *pResource = pKernel->GetResourceManager();
-		pResource->RegisterResourceService(this);
+		ResourceManager *pResource = pKernel->getResourceManager();
+		pResource->registerResourceService(this);
 	}
 
 	virtual ~ResourceService() {}

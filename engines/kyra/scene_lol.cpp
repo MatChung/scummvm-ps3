@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/scene_lol.cpp $
- * $Id: scene_lol.cpp 51704 2010-08-03 16:22:12Z lordhoto $
+ * $Id: scene_lol.cpp 53738 2010-10-23 15:46:50Z fingolfin $
  *
  */
 
@@ -1618,7 +1618,7 @@ void LoLEngine::generateBlockDrawingBuffer() {
 	_sceneDrawVarLeft = _dscBlockMap[_currentDirection + 8];
 
 	/*******************************************
-    *             _visibleBlocks map           *
+	*             _visibleBlocks map           *
 	*                                          *
 	*     |     |     |     |     |     |      *
 	*  00 |  01 |  02 |  03 |  04 |  05 |  06  *

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/saveload.cpp $
- * $Id: saveload.cpp 49047 2010-05-16 10:36:21Z thebluegr $
+ * $Id: saveload.cpp 53737 2010-10-23 15:45:22Z fingolfin $
  *
  */
 
@@ -82,7 +82,7 @@ bool SagaEngine::locateSaveFile(char *saveName, uint &titleNumber) {
 	return false;
 }
 
-uint SagaEngine::getNewSaveSlotNumber() {
+uint SagaEngine::getNewSaveSlotNumber() const {
 	uint i, j;
 	bool found;
 	for (i = 0; i < MAX_SAVES; i++) {
@@ -240,9 +240,9 @@ void SagaEngine::save(const char *fileName, const char *saveName) {
 
 	_actor->saveState(out);
 
-	out->writeSint16LE(_script->_commonBufferSize);
+	out->writeSint16LE(_script->_commonBuffer.size());
 
-	out->write(_script->_commonBuffer, _script->_commonBufferSize);
+	out->write(_script->_commonBuffer.getBuffer(), _script->_commonBuffer.size());
 
 	// ISO map x, y coordinates for ITE
 	if (getGameId() == GID_ITE) {
@@ -282,7 +282,7 @@ void SagaEngine::load(const char *fileName) {
 		_saveHeader.version = SWAP_BYTES_32(_saveHeader.version);
 	}
 
-	debug(2, "Save version: %x", _saveHeader.version);
+	debug(2, "Save version: 0x%X", _saveHeader.version);
 
 	if (_saveHeader.version < 4)
 		warning("This savegame is not endian-safe. There may be problems");
@@ -351,7 +351,8 @@ void SagaEngine::load(const char *fileName) {
 	_actor->loadState(in);
 
 	commonBufferSize = in->readSint16LE();
-	in->read(_script->_commonBuffer, commonBufferSize);
+	_script->_commonBuffer.resize(commonBufferSize);
+	in->read(_script->_commonBuffer.getBuffer(), commonBufferSize);
 
 	if (getGameId() == GID_ITE) {
 		mapx = in->readSint16LE();

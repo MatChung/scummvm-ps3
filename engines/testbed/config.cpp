@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/testbed/config.cpp $
- * $Id: config.cpp 52973 2010-10-02 01:05:16Z sud03r $
+ * $Id: config.cpp 53738 2010-10-23 15:46:50Z fingolfin $
  */
 
 #include "common/stream.h"
@@ -246,11 +246,11 @@ void TestbedConfigManager::parseConfigFile() {
 int TestbedConfigManager::getNumSuitesEnabled() {
 	int count = 0;
 	for (uint i = 0; i < _testsuiteList.size(); i++) {
-        if (_testsuiteList[i]->isEnabled()) {
-        	count++;
+		if (_testsuiteList[i]->isEnabled()) {
+			count++;
 		}
-    }
-    return count;
+	}
+	return count;
 }
 
 Testsuite *TestbedConfigManager::getTestsuiteByName(const Common::String &name) {

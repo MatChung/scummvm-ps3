@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/verges.cpp $
- * $Id: verges.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: verges.cpp 53880 2010-10-27 19:19:22Z littleboy $
  *
  */
 
@@ -336,7 +336,7 @@ IMPLEMENT_FUNCTION(11, Verges, function11)
 			getData()->entityPosition = kPosition_5000;
 
 			getObjects()->update(kObject104, kEntityVerges, kObjectLocationNone, kCursorNormal, kCursorHand);
-            getObjects()->update(kObject105, kEntityVerges, kObjectLocationNone, kCursorNormal, kCursorHand);
+			getObjects()->update(kObject105, kEntityVerges, kObjectLocationNone, kCursorNormal, kCursorHand);
 
 			CALLBACK_ACTION();
 			break;
@@ -494,7 +494,7 @@ IMPLEMENT_FUNCTION_ISS(16, Verges, function16, EntityIndex)
 		break;
 
 	case kActionNone:
-		if (CURRENT_PARAMS(1, 1) && params->param8) {
+		if (CURRENT_PARAM(1, 1) && params->param8) {
 			getSavePoints()->push(kEntityVerges, (EntityIndex)params->param1, kAction125499160);
 
 			if (!getEntities()->isPlayerPosition(kCarGreenSleeping, 2) && !getEntities()->isPlayerPosition(kCarRedSleeping, 2))
@@ -505,9 +505,9 @@ IMPLEMENT_FUNCTION_ISS(16, Verges, function16, EntityIndex)
 		break;
 
 	case kActionEndSound:
-		CURRENT_PARAMS(1, 1)++;
+		CURRENT_PARAM(1, 1)++;
 
-		if (CURRENT_PARAMS(1, 1) == 1)
+		if (CURRENT_PARAM(1, 1) == 1)
 			getSound()->playSound(kEntityVerges, (char *)&params->seq2);
 		break;
 
@@ -574,7 +574,7 @@ IMPLEMENT_FUNCTION(18, Verges, chapter1)
 		break;
 
 	case kActionNone:
-		TIME_CHECK_CHAPTER1(setup_chapter1Handler);
+		TIME_CHECK(kTimeChapter1, params->param1, setup_chapter1Handler);
 		break;
 
 	case kActionDefault:
@@ -923,16 +923,16 @@ label_callback4:
 		}
 
 label_callback8:
-		TIME_CHECK_CALLBACK_1(kTime1107000, CURRENT_PARAMS(1, 1), 9, setup_function9, "TRA1001A");
+		TIME_CHECK_CALLBACK_1(kTime1107000, CURRENT_PARAM(1, 1), 9, setup_function9, "TRA1001A");
 
 label_callback9:
-		TIME_CHECK_CALLBACK_1(kTime1134000, CURRENT_PARAMS(1, 2), 10, setup_function9, "TRA1002");
+		TIME_CHECK_CALLBACK_1(kTime1134000, CURRENT_PARAM(1, 2), 10, setup_function9, "TRA1002");
 
 label_callback10:
-		TIME_CHECK_CALLBACK_1(kTime1165500, CURRENT_PARAMS(1, 3), 11, setup_function9, "TRA1003");
+		TIME_CHECK_CALLBACK_1(kTime1165500, CURRENT_PARAM(1, 3), 11, setup_function9, "TRA1003");
 
 label_callback11:
-		TIME_CHECK_CALLBACK_1(kTime1225800, CURRENT_PARAMS(1, 4), 12, setup_function9, "TRA1004");
+		TIME_CHECK_CALLBACK_1(kTime1225800, CURRENT_PARAM(1, 4), 12, setup_function9, "TRA1004");
 
 label_callback12:
 		if (ENTITY_PARAM(0, 5) && !params->param2) {
@@ -1098,7 +1098,7 @@ label_callback_2:
 		}
 
 		if (!getEntities()->isPlayerInCar(kCarRedSleeping) || !params->param2) {
-			params->param2 = getState()->time;
+			params->param2 = (uint)getState()->time;
 
 			if (!params->param2) {
 				setCallback(3);

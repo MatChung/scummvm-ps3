@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/inventory.h $
- * $Id: inventory.h 52406 2010-08-27 09:48:53Z strangerke $
+ * $Id: inventory.h 53674 2010-10-21 17:09:57Z strangerke $
  *
  */
 
@@ -40,13 +40,13 @@ namespace Hugo {
 
 class InventoryHandler {
 public:
-	InventoryHandler(HugoEngine &vm);
+	InventoryHandler(HugoEngine *vm);
 
 	int16 processInventory(invact_t action, ...);
 	void runInventory();
 
 private:
-	HugoEngine &_vm;
+	HugoEngine *_vm;
 
 	void constructInventory(int16 imageTotNumb, int displayNumb, bool scrollFl, int16 firstObjId);
 };

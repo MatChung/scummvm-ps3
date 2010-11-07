@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/script.h $
- * $Id: script.h 48359 2010-03-22 20:28:08Z fingolfin $
+ * $Id: script.h 54047 2010-11-03 09:44:03Z dreammaster $
  *
  */
 
@@ -305,7 +305,7 @@ public:
 	// Is this ok?
 	template<class T>
 	const T& toData(const ScriptValue &value) {
-		printf("ScriptInterpreter::toData() index = %d; type = %d; max = %d\n", value.value, _data[value.value]->type, _data.size());
+		debugCN(kDebugScript, "ScriptInterpreter::toData() index = %d; type = %d; max = %d\n", value.value, _data[value.value]->type, _data.size());
 		assert((uint32)value.value < _data.size());
 		T *result = 0;
 		_dataCache->load(_scriptFile, _data[value.value]->offset, result);

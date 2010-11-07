@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword1/sword1.cpp $
- * $Id: sword1.cpp 52827 2010-09-20 20:37:34Z sev $
+ * $Id: sword1.cpp 53924 2010-10-29 16:53:46Z lordhoto $
  *
  */
 
@@ -563,7 +563,7 @@ void SwordEngine::checkCdFiles() { // check if we're running from cd, hdd or wha
 
 Common::Error SwordEngine::go() {
 	_control->checkForOldSaveGames();
-	SwordEngine::_systemVars.engineStartTime = _system->getMillis() / 1000;
+	setTotalPlayTime(0);
 
 	uint16 startPos = ConfMan.getInt("boot_param");
 	_control->readSavegameDescriptions();

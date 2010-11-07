@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/actors.cpp $
- * $Id: actors.cpp 50924 2010-07-16 03:14:03Z eriktorbjorn $
+ * $Id: actors.cpp 54030 2010-11-01 21:36:39Z fingolfin $
  *
  * Handles things to do with actors, delegates much moving actor stuff.
  */
@@ -199,6 +199,10 @@ void RegisterActors(int num) {
 void FreeActors() {
 	free(actorInfo);
 	actorInfo = NULL;
+	if (TinselV2) {
+		free(zFactors);
+		zFactors = NULL;
+	}
 }
 
 /**
@@ -625,7 +629,7 @@ int NextTaggedActor() {
 	PMOVER	pActor;
 	bool	hid;
 
-	do {
+	while (ti < NumActors) {
 		if (actorInfo[ti].tagged) {
 			pActor = GetMover(ti+1);
 			if (pActor)
@@ -637,7 +641,8 @@ int NextTaggedActor() {
 				return ++ti;
 			}
 		}
-	} while (++ti < NumActors);
+		++ti;
+	}
 
 	return 0;
 }

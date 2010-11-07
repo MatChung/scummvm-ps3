@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/words.cpp $
- * $Id: words.cpp 50928 2010-07-16 03:34:25Z eriktorbjorn $
+ * $Id: words.cpp 53868 2010-10-26 22:33:49Z fingolfin $
  *
  */
 
@@ -52,10 +52,10 @@ int AgiEngine::loadWords(const char *fname) {
 	words = NULL;
 
 	if (!fp.open(fname)) {
-		report("Warning: can't open %s\n", fname);
+		warning("loadWords: can't open %s", fname);
 		return errOK; // err_BadFileOpen
 	}
-	report("Loading dictionary: %s\n", fname);
+	debug(0, "Loading dictionary: %s", fname);
 
 	fp.seek(0, SEEK_END);
 	flen = fp.pos();

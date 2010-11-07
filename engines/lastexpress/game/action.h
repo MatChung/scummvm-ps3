@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/action.h $
- * $Id: action.h 53579 2010-10-18 19:17:38Z sev $
+ * $Id: action.h 53629 2010-10-19 22:34:26Z jvprat $
  *
  */
 
@@ -67,7 +67,7 @@ public:
 private:
 	typedef Common::Functor1<const SceneHotspot &, SceneIndex> ActionFunctor;
 
-	LastExpressEngine* _engine;
+	LastExpressEngine *_engine;
 	Common::Array<ActionFunctor *> _actions;
 
 	// Each action is of the form action_<name>(SceneHotspot *hotspot)

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/font.cpp $
- * $Id: font.cpp 50488 2010-06-29 10:40:24Z dreammaster $
+ * $Id: font.cpp 54047 2010-11-03 09:44:03Z dreammaster $
  *
  */
 
@@ -82,7 +82,7 @@ void Font::setFontM4(const char *filename) {
 	Common::SeekableReadStream *fontFile = _vm->res()->openFile(filename);
 
 	if (fontFile->readUint32LE() != MKID_BE('FONT')) {
-		printf("Font::Font: FONT tag expected\n");
+		debugCN(kDebugGraphics, "Font::Font: FONT tag expected\n");
 		return;
 	}
 
@@ -90,10 +90,10 @@ void Font::setFontM4(const char *filename) {
 	_maxWidth = fontFile->readByte();
 	uint32 fontSize = fontFile->readUint32LE();
 
-	//printf("Font::Font: _maxWidth = %d, _maxHeight = %d, fontSize = %d\n", _maxWidth, _maxHeight, fontSize);
+	//debugCN(kDebugGraphics, "Font::Font: _maxWidth = %d, _maxHeight = %d, fontSize = %d\n", _maxWidth, _maxHeight, fontSize);
 
 	if (fontFile->readUint32LE() != MKID_BE('WIDT')) {
-		printf("Font::Font: WIDT tag expected\n");
+		debugCN(kDebugGraphics, "Font::Font: WIDT tag expected\n");
 		return;
 	}
 
@@ -101,7 +101,7 @@ void Font::setFontM4(const char *filename) {
 	fontFile->read(_charWidths, 256);
 
 	if (fontFile->readUint32LE() != MKID_BE('OFFS')) {
-		printf("Font::Font: OFFS tag expected\n");
+		debugCN(kDebugGraphics, "Font::Font: OFFS tag expected\n");
 		return;
 	}
 
@@ -111,7 +111,7 @@ void Font::setFontM4(const char *filename) {
 		_charOffs[i] = fontFile->readUint16LE();
 
 	if (fontFile->readUint32LE() != MKID_BE('PIXS')) {
-		printf("Font::Font: PIXS tag expected\n");
+		debugCN(kDebugGraphics, "Font::Font: PIXS tag expected\n");
 		return;
 	}
 

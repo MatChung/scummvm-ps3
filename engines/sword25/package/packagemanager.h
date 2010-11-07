@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/package/packagemanager.h $
- * $Id: packagemanager.h 53380 2010-10-13 00:02:51Z sev $
+ * $Id: packagemanager.h 53838 2010-10-25 23:19:39Z fingolfin $
  *
  */
 
@@ -188,23 +188,6 @@ public:
 	 * @remark              Do not forget to delete the object after use.
 	*/
 	int doSearch(Common::ArchiveMemberList &list, const Common::String &filter, const Common::String &path, uint typeFilter = FT_DIRECTORY | FT_FILE);
-
-	/**
-	 * Returns a file's size
-	 * @param FileName      The filename
-	 * @return              The file size. If an error occurs, then 0xffffffff is returned.
-	 * @remarks             For files in packages, then uncompressed size is returned.
-	 **/
-	uint getFileSize(const Common::String &fileName);
-
-	/**
-	 * Returns the type of a file.
-	 * @param FileName      The filename
-	 * @return              Returns the file type, either (BS_PackageManager::FT_DIRECTORY
-	 * or BS_PackageManager::FT_FILE).
-	 * If the file was not found, then 0 is returned.
-	 */
-	uint getFileType(const Common::String &fileName);
 
 	/**
 	 * Determines whether a file exists

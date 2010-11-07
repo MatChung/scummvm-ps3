@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/file_nes.cpp $
- * $Id: file_nes.cpp 48990 2010-05-09 20:52:20Z sev $
+ * $Id: file_nes.cpp 54001 2010-11-01 16:00:17Z fingolfin $
  *
  */
 
@@ -27,8 +27,6 @@
 #include "common/debug.h"
 #include "common/endian.h"
 #include "common/md5.h"
-
-using Common::File;
 
 namespace Scumm {
 
@@ -1077,7 +1075,7 @@ uint16 ScummNESFile::extractResource(Common::WriteStream *output, const Resource
 
 	case NES_PREPLIST:
 		len = res->length;
-                reslen += write_word(output, 0x002A);
+		reslen += write_word(output, 0x002A);
 
 		reslen += write_byte(output, ' ');
 		for (i = 1; i < 8; i++)

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/animation.h $
- * $Id: animation.h 53393 2010-10-13 00:10:18Z sev $
+ * $Id: animation.h 53898 2010-10-28 00:25:33Z fingolfin $
  *
  */
 
@@ -151,9 +151,7 @@ public:
 
 	typedef bool (*ANIMATION_CALLBACK)(uint);
 
-	void registerLoopPointCallback(ANIMATION_CALLBACK callback, uint data = 0);
-	void registerActionCallback(ANIMATION_CALLBACK callback, uint data = 0);
-	void registerDeleteCallback(ANIMATION_CALLBACK Callback, uint Data = 0);
+	void setCallbacks();
 
 protected:
 	virtual bool doRender();
@@ -178,13 +176,9 @@ private:
 	uint _animationTemplateHandle;
 	bool _framesLocked;
 
-	struct ANIMATION_CALLBACK_DATA {
-		ANIMATION_CALLBACK  Callback;
-		uint        Data;
-	};
-	Common::Array<ANIMATION_CALLBACK_DATA> _loopPointCallbacks;
-	Common::Array<ANIMATION_CALLBACK_DATA> _actionCallbacks;
-	Common::Array<ANIMATION_CALLBACK_DATA> _deleteCallbacks;
+	ANIMATION_CALLBACK _loopPointCallback;
+	ANIMATION_CALLBACK _actionCallback;
+	ANIMATION_CALLBACK _deleteCallback;
 
 	/**
 	    @brief Lockt alle Frames.
@@ -216,8 +210,6 @@ private:
 	int computeYModifier() const;
 
 	void initMembers();
-	void persistCallbackVector(OutputPersistenceBlock &writer, const Common::Array<ANIMATION_CALLBACK_DATA> &vector);
-	void unpersistCallbackVector(InputPersistenceBlock &reader, Common::Array<ANIMATION_CALLBACK_DATA> &vector);
 	AnimationDescription *getAnimationDescription() const;
 	void initializeAnimationResource(const Common::String &fileName);
 };

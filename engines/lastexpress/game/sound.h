@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/sound.h $
- * $Id: sound.h 53588 2010-10-18 21:03:28Z littleboy $
+ * $Id: sound.h 53881 2010-10-27 19:19:38Z littleboy $
  *
  */
 
@@ -161,6 +161,7 @@ public:
 	void processEntries();
 	void removeFromQueue(Common::String filename);
 	void removeFromQueue(EntityIndex entity);
+	uint32 getEntryTime(EntityIndex index);
 
 	// Misc
 	void unknownFunction4();
@@ -195,9 +196,10 @@ public:
 
 	// Serializable
 	void saveLoadWithSerializer(Common::Serializer &ser);
+	uint32 count();
 
 private:
-	typedef int32* SoundBuffer;
+	typedef int32 *SoundBuffer;
 
 	enum SoundStatus {
 		kSoundStatus_20       = 0x20,
@@ -241,14 +243,14 @@ private:
 		//int field_10;
 		//int fileData;
 		//int field_18;
-		//int field_1C;
-		//int field_20;
+		int field_1C;
+		uint32 time;
 		//int field_24;
 		//int field_28;
 		Common::SeekableReadStream *stream;	// int
 		//int field_30;
-		//int field_34;
-		//int field_38;
+		int field_34;
+		int field_38;
 		int field_3C;
 		int field_40;
 		EntityIndex entity;
@@ -262,8 +264,16 @@ private:
 		bool isStreamed; // TEMPORARY
 
 		SoundEntry() {
+			status.status = 0;
 			type = kSoundTypeNone;
+
+			field_1C = 0;
+			time = 0;
+
 			stream = NULL;
+
+			field_34 = 0;
+			field_38 = 0;
 			field_3C = 0;
 			field_40 = 0;
 			entity = kEntityPlayer;
@@ -277,7 +287,7 @@ private:
 	};
 
 	// Engine
-	LastExpressEngine* _engine;
+	LastExpressEngine *_engine;
 
 	// State flag
 	int _state;

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/vga_ff.cpp $
- * $Id: vga_ff.cpp 48365 2010-03-23 00:42:42Z Kirben $
+ * $Id: vga_ff.cpp 54031 2010-11-01 21:37:47Z fingolfin $
  *
  */
 
@@ -405,9 +405,9 @@ void AGOSEngine_PuzzlePack::vc63_fastFadeIn() {
 	if (getBitFlag(100)) {
 		startOverlayAnims();
 	} else if (getBitFlag(103)) {
-		printf("NameAndTime\n");
+		debug("vc63_fastFadeIn: NameAndTime");
 	} else if (getBitFlag(104)) {
-		printf("HiScoreTable\n");
+		debug("vc63_fastFadeIn: HiScoreTable");
 	}
 }
 

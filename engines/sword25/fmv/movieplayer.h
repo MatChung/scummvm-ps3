@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/fmv/movieplayer.h $
- * $Id: movieplayer.h 53459 2010-10-14 20:44:44Z sev $
+ * $Id: movieplayer.h 53622 2010-10-19 20:52:06Z sev $
  *
  */
 
@@ -37,11 +37,13 @@
 
 #include "common/scummsys.h"	// for USE_THEORADEC
 
-#ifdef USE_THEORADEC
 #include "sword25/kernel/common.h"
 #include "sword25/kernel/service.h"
-#include "sword25/fmv/theora_decoder.h"
 #include "sword25/gfx/bitmap.h"
+
+#ifdef USE_THEORADEC
+#include "sword25/fmv/theora_decoder.h"
+#endif
 
 namespace Sword25 {
 
@@ -138,16 +140,17 @@ public:
 private:
 	bool registerScriptBindings();
 
+
+#ifdef USE_THEORADEC
 	TheoraDecoder _decoder;
 
 	Graphics::Surface *_backSurface;
 	int _outX, _outY;
 
 	RenderObjectPtr<Bitmap>	_outputBitmap;
+#endif
 };
 
 } // End of namespace Sword25
-
-#endif
 
 #endif

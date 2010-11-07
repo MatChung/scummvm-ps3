@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/character.h $
-* $Id: character.h 53549 2010-10-16 21:58:33Z sylvaintv $
+* $Id: character.h 53710 2010-10-22 21:21:57Z sylvaintv $
 *
 */
 
@@ -96,6 +96,8 @@ public:
 	virtual void updateIdle();
 	virtual int32 getRandomIdleAnim() { return 0; }
 	virtual void updateTimers(int32 relativeAdd);
+	virtual void setTalking(bool talking) { _isTalking = talking; }
+	virtual bool isTalking() { return _isTalking; }
 
 	int32 getFacingFromDirection(int32 dx, int32 dy);
 	static const SpecialCharacterAnimation *getSpecialAnimation(int32 characterId, int32 animationId);
@@ -126,6 +128,7 @@ protected:
 	int32 _speed;
 	int32 _lastWalkTime;
 	int32 _numPixelToWalk;
+	bool _isTalking;
 
 	AnimationInstance *_animationInstance;
 	AnimationInstance *_shadowAnimationInstance;

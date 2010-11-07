@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/loader_v3.cpp $
- * $Id: loader_v3.cpp 50606 2010-07-02 22:55:56Z thebluegr $
+ * $Id: loader_v3.cpp 54031 2010-11-01 21:37:47Z fingolfin $
  *
  */
 
@@ -121,7 +121,7 @@ int AgiLoader_v3::init() {
 	}
 
 	if (!fp.open(path)) {
-		printf("Failed to open \"%s\"\n", path.c_str());
+		warning("Failed to open '%s'", path.c_str());
 		return errBadFileOpen;
 	}
 	// build offset table for v3 directory format

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/dialogs.cpp $
- * $Id: dialogs.cpp 52715 2010-09-13 23:35:55Z lordhoto $
+ * $Id: dialogs.cpp 54001 2010-11-01 16:00:17Z fingolfin $
  */
 
 #include "common/config-manager.h"
@@ -45,7 +45,6 @@
 #include "scumm/scumm.h"
 #include "scumm/imuse/imuse.h"
 #include "scumm/imuse_digi/dimuse.h"
-#include "scumm/player_v2.h"
 #include "scumm/verbs.h"
 #include "sound/mididrv.h"
 #include "sound/mixer.h"
@@ -58,8 +57,6 @@
 #include "gui/KeysDialog.h"
 #endif
 
-using GUI::CommandSender;
-using GUI::StaticTextWidget;
 using Graphics::kTextAlignCenter;
 using Graphics::kTextAlignLeft;
 using GUI::WIDGET_ENABLED;
@@ -258,7 +255,7 @@ ScummMenuDialog::~ScummMenuDialog() {
 	delete _helpDialog;
 }
 
-void ScummMenuDialog::handleCommand(CommandSender *sender, uint32 cmd, uint32 data) {
+void ScummMenuDialog::handleCommand(GUI::CommandSender *sender, uint32 cmd, uint32 data) {
 	switch (cmd) {
 	case kHelpCmd:
 		_helpDialog->runModal();
@@ -277,7 +274,7 @@ enum {
 
 HelpDialog::HelpDialog(const GameSettings &game)
 	: ScummDialog("ScummHelp"), _game(game) {
-	_title = new StaticTextWidget(this, "ScummHelp.Title", "");
+	_title = new GUI::StaticTextWidget(this, "ScummHelp.Title", "");
 
 	_page = 1;
 	_backgroundType = GUI::ThemeEngine::kDialogBackgroundDefault;
@@ -293,8 +290,8 @@ HelpDialog::HelpDialog(const GameSettings &game)
 
 	// Dummy entries
 	for (int i = 0; i < HELP_NUM_LINES; i++) {
-		_key[i] = new StaticTextWidget(this, 0, 0, 10, 10, "", Graphics::kTextAlignRight);
-		_dsc[i] = new StaticTextWidget(this, 0, 0, 10, 10, "", Graphics::kTextAlignLeft);
+		_key[i] = new GUI::StaticTextWidget(this, 0, 0, 10, 10, "", Graphics::kTextAlignRight);
+		_dsc[i] = new GUI::StaticTextWidget(this, 0, 0, 10, 10, "", Graphics::kTextAlignLeft);
 	}
 
 }
@@ -346,7 +343,7 @@ void HelpDialog::displayKeyBindings() {
 	delete[] dscStr;
 }
 
-void HelpDialog::handleCommand(CommandSender *sender, uint32 cmd, uint32 data) {
+void HelpDialog::handleCommand(GUI::CommandSender *sender, uint32 cmd, uint32 data) {
 
 	switch (cmd) {
 	case kNextCmd:
@@ -386,7 +383,7 @@ InfoDialog::InfoDialog(ScummEngine *scumm, int res)
 	_message = queryResString(res);
 
 	// Width and height are dummy
-	_text = new StaticTextWidget(this, 0, 0, 10, 10, _message, kTextAlignCenter);
+	_text = new GUI::StaticTextWidget(this, 0, 0, 10, 10, _message, kTextAlignCenter);
 }
 
 InfoDialog::InfoDialog(ScummEngine *scumm, const String& message)
@@ -395,7 +392,7 @@ InfoDialog::InfoDialog(ScummEngine *scumm, const String& message)
 	_message = message;
 
 	// Width and height are dummy
-	_text = new StaticTextWidget(this, 0, 0, 10, 10, _message, kTextAlignCenter);
+	_text = new GUI::StaticTextWidget(this, 0, 0, 10, 10, _message, kTextAlignCenter);
 }
 
 void InfoDialog::setInfoText(const String& message) {

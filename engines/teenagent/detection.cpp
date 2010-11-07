@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/teenagent/detection.cpp $
- * $Id: detection.cpp 49788 2010-06-15 10:59:23Z sev $
+ * $Id: detection.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  */
 
 #include "common/system.h"
@@ -137,7 +137,7 @@ public:
 //	}
 
 	static Common::String generateGameStateFileName(const char *target, int slot) {
-		return Common::String::printf("%s.%02d", target, slot);
+		return Common::String::format("%s.%02d", target, slot);
 	}
 
 	virtual SaveStateList listSaves(const char *target) const {

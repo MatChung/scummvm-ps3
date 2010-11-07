@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/sched.cpp $
- * $Id: sched.cpp 48534 2010-04-05 07:22:34Z lordhoto $
+ * $Id: sched.cpp 54029 2010-11-01 21:06:04Z fingolfin $
  *
  * Process scheduler.
  */
@@ -44,8 +44,6 @@ struct PROCESS_STRUC {
 } PACKED_STRUCT;
 
 #include "common/pack-end.h"	// END STRUCT PACKING
-
-CoroContext nullContext = NULL;
 
 //----------------- LOCAL GLOBAL DATA --------------------
 
@@ -77,6 +75,14 @@ Scheduler::Scheduler() {
 }
 
 Scheduler::~Scheduler() {
+	// Kill all running processes (i.e. free memory allocated for their state).
+	PROCESS *pProc = active->pNext;
+	while (pProc != NULL) {
+		delete pProc->state;
+		pProc->state = 0;
+		pProc = pProc->pNext;
+	}
+
 	free(processList);
 	processList = NULL;
 
@@ -126,7 +132,7 @@ void Scheduler::reset() {
  * Shows the maximum number of process used at once.
  */
 void Scheduler::printStats() {
-	printf("%i process of %i used.\n", maxProcs, NUM_PROCESS);
+	debug("%i process of %i used", maxProcs, NUM_PROCESS);
 }
 #endif
 
@@ -392,6 +398,7 @@ void Scheduler::killProcess(PROCESS *pKillProc) {
 		(pRCfunction)(pKillProc);
 
 	delete pKillProc->state;
+	pKillProc->state = 0;
 
 	// Take the process out of the active chain list
 	pKillProc->pPrevious->pNext = pKillProc->pNext;
@@ -458,6 +465,7 @@ int Scheduler::killMatchingProcess(int pidKill, int pidMask) {
 					(pRCfunction)(pProc);
 
 				delete pProc->state;
+				pProc->state = 0;
 
 				// make prev point to next to unlink pProc
 				pPrev->pNext = pProc->pNext;
@@ -752,6 +760,7 @@ void GlobalProcesses(uint32 numProcess, byte *pProcess) {
  */
 void FreeGlobalProcesses() {
 	delete[] pGlobalProcess;
+	pGlobalProcess = 0;
 	numGlobalProcess = 0;
 }
 

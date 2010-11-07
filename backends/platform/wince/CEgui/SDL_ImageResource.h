@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEgui/SDL_ImageResource.h $
- * $Id: SDL_ImageResource.h 52935 2010-09-28 20:30:50Z fingolfin $
+ * $Id: SDL_ImageResource.h 53979 2010-10-31 17:11:43Z fingolfin $
  *
  */
 
@@ -29,20 +29,22 @@
 #include "common/scummsys.h"
 #include "common/system.h"
 
-#include "SDL.h"
+struct SDL_Surface;
 
 namespace CEGUI {
-	class SDL_ImageResource {
-	public:
-		SDL_ImageResource();
-		SDL_Surface* load(WORD resourceID);
-		SDL_Surface* get();
-		int height();
-		int width();
-		virtual ~SDL_ImageResource();
-	private:
-		SDL_Surface *_surface;
-	};
-}
+
+class SDL_ImageResource {
+public:
+	SDL_ImageResource();
+	SDL_Surface* load(WORD resourceID);
+	SDL_Surface* get();
+	int height();
+	int width();
+	virtual ~SDL_ImageResource();
+private:
+	SDL_Surface *_surface;
+};
+
+} // End of namespace CEGUI
 
 #endif

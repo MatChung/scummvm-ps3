@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/draci/detection.cpp $
- * $Id: detection.cpp 51707 2010-08-03 17:09:27Z spalek $
+ * $Id: detection.cpp 53925 2010-10-29 16:54:10Z lordhoto $
  *
  */
 
@@ -202,10 +202,7 @@ SaveStateDescriptor DraciMetaEngine::querySaveMetaInfos(const char *target, int 
 	int minutes = header.time & 0xFF;
 	desc.setSaveTime(hour, minutes);
 
-	minutes = header.playtime / 60;
-	hour = minutes / 60;
-	minutes %= 60;
-	desc.setPlayTime(hour, minutes);
+	desc.setPlayTime(header.playtime * 1000);
 
 	return desc;
 }

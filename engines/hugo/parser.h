@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/parser.h $
- * $Id: parser.h 53170 2010-10-12 21:12:54Z strangerke $
+ * $Id: parser.h 53825 2010-10-25 13:31:01Z strangerke $
  *
  */
 
@@ -44,7 +44,7 @@ enum seqTextParser {
 
 class Parser {
 public:
-	Parser(HugoEngine &vm);
+	Parser(HugoEngine *vm);
 	virtual ~Parser();
 
 	bool  isWordPresent(char **wordArr);
@@ -55,15 +55,11 @@ public:
 	virtual void lineHandler() = 0;
 
 protected:
-	HugoEngine &_vm;
+	HugoEngine *_vm;
 
 protected:
-	bool  isCarrying(uint16 wordIndex);
-
 	char *findNoun();
 	char *findVerb();
-
-	void  showTakeables();
 
 private:
 	char   _ringBuffer[32];                         // Ring buffer
@@ -76,7 +72,7 @@ private:
 
 class Parser_v1w : public Parser {
 public:
-	Parser_v1w(HugoEngine &vm);
+	Parser_v1w(HugoEngine *vm);
 	~Parser_v1w();
 
 	virtual void  lineHandler();
@@ -95,7 +91,7 @@ private:
 
 class Parser_v1d : public Parser {
 public:
-	Parser_v1d(HugoEngine &vm);
+	Parser_v1d(HugoEngine *vm);
 	~Parser_v1d();
 
 	virtual void lineHandler();
@@ -113,15 +109,15 @@ protected:
 
 class Parser_v2d : public Parser_v1d {
 public:
-	Parser_v2d(HugoEngine &vm);
+	Parser_v2d(HugoEngine *vm);
 	~Parser_v2d();
 
 	void lineHandler();
 };
-	
+
 class Parser_v3d : public Parser_v1w {
 public:
-	Parser_v3d(HugoEngine &vm);
+	Parser_v3d(HugoEngine *vm);
 	~Parser_v3d();
 
 	void lineHandler();

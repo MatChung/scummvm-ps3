@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/sound_midi.cpp $
- * $Id: sound_midi.cpp 52737 2010-09-15 22:00:43Z lordhoto $
+ * $Id: sound_midi.cpp 53911 2010-10-28 23:56:36Z lordhoto $
  *
  */
 
@@ -683,7 +683,7 @@ void SoundMidiPC::haltTrack() {
 	_output->deinitSource(0);
 }
 
-bool SoundMidiPC::isPlaying() {
+bool SoundMidiPC::isPlaying() const {
 	Common::StackLock lock(_mutex);
 
 	return _music->isPlaying();

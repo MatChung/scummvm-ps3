@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/sound.cpp $
- * $Id: sound.cpp 49036 2010-05-15 08:38:19Z eriktorbjorn $
+ * $Id: sound.cpp 53997 2010-11-01 11:25:11Z eriktorbjorn $
  */
 
 // ---------------------------------------------------------------------------
@@ -391,18 +391,6 @@ int32 Sound::stopFx(int32 i) {
 	_vm->_resman->closeResource(_fxQueue[i].resource);
 	_fxQueue[i].resource = 0;
 	return RD_OK;
-}
-
-void Sound::pauseAllSound() {
-	pauseMusic();
-	pauseSpeech();
-	pauseFx();
-}
-
-void Sound::unpauseAllSound() {
-	unpauseMusic();
-	unpauseSpeech();
-	unpauseFx();
 }
 
 void Sound::printFxQueue() {

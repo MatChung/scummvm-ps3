@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/detection_tables.h $
- * $Id: detection_tables.h 52597 2010-09-06 16:50:20Z athrxx $
+ * $Id: detection_tables.h 53954 2010-10-30 18:37:15Z athrxx $
  */
 
 namespace {
@@ -1131,6 +1131,23 @@ const KYRAGameDescription adGameDescs[] = {
 			{
 				{ "GENERAL.PAK", 0, "0f1fabc1f67b772a30d8e05ece720ac5", -1 },
 				{ "CHAPTER7.PAK", 0, "482308aba1c40ee32449b91b0c63b990", -1 },
+				{ 0, 0, 0, 0 }
+			},
+			Common::EN_ANY,
+			Common::kPlatformPC,
+			ADGF_NO_FLAGS,
+			Common::GUIO_NOSPEECH | Common::GUIO_MIDIADLIB | Common::GUIO_MIDIMT32 | Common::GUIO_MIDIGM | Common::GUIO_MIDIPCSPK
+		},
+		LOL_FLOPPY_FLAGS
+	},
+
+	{
+		{
+			"lol",
+			"Extracted",
+			{
+				{ "GENERAL.PAK", 0, "d119e3b57f8e5edcbb90980ca6f4215a", -1 },
+				{ "CHAPTER7.PAK", 0, "71a3d3cb1554294646a389e5c345cf28", -1 },
 				{ 0, 0, 0, 0 }
 			},
 			Common::EN_ANY,

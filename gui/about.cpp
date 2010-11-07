@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/about.cpp $
- * $Id: about.cpp 50324 2010-06-26 15:48:03Z jvprat $
+ * $Id: about.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  */
 
 #include "engines/metaengine.h"
@@ -93,7 +93,7 @@ AboutDialog::AboutDialog()
 	version += gScummVMVersion;
 	_lines.push_back(version);
 
-	Common::String date = Common::String::printf(_("(built on %s)"), gScummVMBuildDate);
+	Common::String date = Common::String::format(_("(built on %s)"), gScummVMBuildDate);
 	_lines.push_back("C2" + date);
 
 	for (i = 0; i < ARRAYSIZE(copyright_text); i++)

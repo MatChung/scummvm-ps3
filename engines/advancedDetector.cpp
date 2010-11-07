@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/advancedDetector.cpp $
- * $Id: advancedDetector.cpp 53160 2010-10-12 02:18:11Z jvprat $
+ * $Id: advancedDetector.cpp 53762 2010-10-24 13:04:33Z fingolfin $
  *
  */
 
@@ -622,7 +622,7 @@ static ADGameDescList detectGameFilebased(const FileMap &allFiles, const ADParam
 				matchedDesc = agdesc;
 				maxNumMatchedFiles = numMatchedFiles;
 
-				debug(4, "and overriden");
+				debug(4, "and overridden");
 			}
 		}
 	}

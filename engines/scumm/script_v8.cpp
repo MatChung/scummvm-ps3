@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/script_v8.cpp $
- * $Id: script_v8.cpp 39957 2009-04-16 09:27:02Z fingolfin $
+ * $Id: script_v8.cpp 54031 2010-11-01 21:37:47Z fingolfin $
  *
  */
 
@@ -766,7 +766,6 @@ void ScummEngine_v8::o8_actorOps() {
 
 	if (subOp == 0x7A) {
 		_curActor = pop();
-		//printf("Setting current actor to %d\n", _curActor);
 		return;
 	}
 
@@ -937,7 +936,6 @@ void ScummEngine_v8::o8_verbOps() {
 		_curVerb = pop();
 		_curVerbSlot = getVerbSlot(_curVerb, 0);
 		assertRange(0, _curVerbSlot, _numVerbs - 1, "new verb slot");
-		//printf("Setting current actor to %d\n", _curActor);
 		return;
 	}
 

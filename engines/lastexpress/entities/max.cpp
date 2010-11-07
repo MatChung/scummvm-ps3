@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/max.cpp $
- * $Id: max.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: max.cpp 53880 2010-10-27 19:19:22Z littleboy $
  *
  */
 
@@ -283,7 +283,7 @@ IMPLEMENT_FUNCTION(9, Max, function9)
 		if (params->param1 >= getState()->time) {
 			if (!getEntities()->hasValidFrame(kEntityMax) || !params->param2) {
 
-				params->param2 = getState()->time;
+				params->param2 = (uint)getState()->time;
 				if (!params->param2)
 					goto setup_functions;
 			}
@@ -312,7 +312,7 @@ setup_functions:
 		getEntities()->drawSequenceLeft(kEntityMax, "630Af");
 		getEntities()->enterCompartment(kEntityMax, kObjectCompartmentF, true);
 
-		params->param1 = getState()->time + 2700;
+		params->param1 = (uint)(getState()->time + 2700);
 		break;
 	}
 }
@@ -324,7 +324,7 @@ IMPLEMENT_FUNCTION(10, Max, chapter1)
 		break;
 
 	case kActionNone:
-		TIME_CHECK_CHAPTER1(setup_chapter12_handler);
+		TIME_CHECK(kTimeChapter1, params->param1, setup_chapter12_handler);
 		break;
 
 	case kActionDefault:

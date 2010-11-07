@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/music.h $
- * $Id: music.h 52736 2010-09-15 22:00:20Z lordhoto $
+ * $Id: music.h 53779 2010-10-24 22:17:44Z h00ligan $
  *
  */
 
@@ -106,8 +106,7 @@ public:
 	void setVolume(int volume, int time = 1);
 	int getVolume() { return _currentVolume; }
 
-	int32 *_songTable;
-	int _songTableLen;
+	Common::Array<int32> _songTable;
 
 private:
 	SagaEngine *_vm;
@@ -126,11 +125,12 @@ private:
 	ResourceContext *_digitalMusicContext;
 	MidiParser *_parser;
 
-	byte *_midiMusicData;
 
 	static void musicVolumeGaugeCallback(void *refCon);
 	static void onTimer(void *refCon);
 	void musicVolumeGauge();
+	ByteArray *_currentMusicBuffer;
+	ByteArray _musicBuffer[2];
 };
 
 } // End of namespace Saga

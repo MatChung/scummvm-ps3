@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEgui/ItemAction.h $
- * $Id: ItemAction.h 52935 2010-09-28 20:30:50Z fingolfin $
+ * $Id: ItemAction.h 53979 2010-10-31 17:11:43Z fingolfin $
  *
  */
 
@@ -31,16 +31,18 @@
 
 #include "gui/Actions.h"
 #include "CEgui/PanelItem.h"
+
 namespace CEGUI {
 
-	class ItemAction : public PanelItem {
-	public:
-		ItemAction(WORD reference, GUI::ActionType action);
-		virtual ~ItemAction();
-		virtual bool action(int x, int y, bool pushed);
-	private:
-		GUI::ActionType _action;
-	};
-}
+class ItemAction : public PanelItem {
+public:
+	ItemAction(WORD reference, GUI::ActionType action);
+	virtual ~ItemAction();
+	virtual bool action(int x, int y, bool pushed);
+private:
+	GUI::ActionType _action;
+};
+
+} // End of namespace CEGUI
 
 #endif

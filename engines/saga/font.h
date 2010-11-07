@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/font.h $
- * $Id: font.h 52791 2010-09-18 10:55:16Z eriktorbjorn $
+ * $Id: font.h 53719 2010-10-22 23:13:17Z h00ligan $
  *
  */
 
@@ -120,7 +120,7 @@ struct FontCharEntry {
 struct FontStyle {
 	FontHeader header;
 	FontCharEntry fontCharEntry[256];
-	byte *font;
+	ByteArray font;
 };
 
 struct FontData {
@@ -170,14 +170,14 @@ class Font {
 	 void textDrawRect(FontId fontId, const char *text, const Common::Rect &rect, int color, int effectColor, FontEffectFlags flags);
 	 void textDraw(FontId fontId, const char *string, const Common::Point &point, int color, int effectColor, FontEffectFlags flags);
 
-	 void loadFont(uint32 fontResourceId);
+	 void loadFont(FontData *font, uint32 fontResourceId);
 	 void createOutline(FontData *font);
 	 void draw(FontId fontId, const char *text, size_t count, const Common::Point &point, int color, int effectColor, FontEffectFlags flags);
 	 void outFont(const FontStyle &drawFont, const char *text, size_t count, const Common::Point &point, int color, FontEffectFlags flags);
 
 	 FontData *getFont(FontId fontId) {
 		 validate(fontId);
-		 return _fonts[fontId];
+		 return &_fonts[fontId];
 	 }
 
 	int getHeight(FontId fontId) {
@@ -190,7 +190,7 @@ class Font {
 		 }
 	 }
 	 bool valid(FontId fontId) {
-		 return (fontId < _loadedFonts);
+		 return (uint(fontId) < _fonts.size());
 	 }
 	 int getByteLen(int numBits) const {
 		 int byteLength = numBits / 8;
@@ -207,8 +207,7 @@ class Font {
 
 	int _fontMapping;
 
-	int _loadedFonts;
-	FontData **_fonts;
+	Common::Array<FontData> _fonts;
 };
 
 } // End of namespace Saga

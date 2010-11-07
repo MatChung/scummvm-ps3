@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/screen_v2.cpp $
- * $Id: screen_v2.cpp 53102 2010-10-09 14:55:33Z athrxx $
+ * $Id: screen_v2.cpp 53973 2010-10-31 00:20:30Z athrxx $
  *
  */
 
@@ -187,16 +187,22 @@ uint8 *Screen_v2::getPtrToShape(uint8 *shpFile, int shape) {
 }
 
 int Screen_v2::getShapeScaledWidth(const uint8 *shpFile, int scale) {
+	if (!shpFile)
+		return 0;
 	int width = READ_LE_UINT16(shpFile+3);
 	return (width * scale) >> 8;
 }
 
 int Screen_v2::getShapeScaledHeight(const uint8 *shpFile, int scale) {
+	if (!shpFile)
+		return 0;
 	int height = shpFile[2];
 	return (height * scale) >> 8;
 }
 
 uint16 Screen_v2::getShapeSize(const uint8 *shp) {
+	if (!shp)
+		return 0;
 	return READ_LE_UINT16(shp+6);
 }
 

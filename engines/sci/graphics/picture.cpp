@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/picture.cpp $
- * $Id: picture.cpp 52614 2010-09-07 07:41:28Z thebluegr $
+ * $Id: picture.cpp 54078 2010-11-05 00:10:26Z lordhoto $
  *
  */
 
@@ -754,6 +754,19 @@ void GfxPicture::drawVectorData(byte *data, int dataSize) {
 			// Dithering EGA pictures
 			if (isEGA) {
 				_screen->dither(_addToFlag);
+				switch (g_sci->getGameId()) {
+				case GID_SQ3:
+					switch (_resourceId) {
+					case 154: // SQ3: intro, ship gets sucked in
+						_screen->ditherForceMemorial(0xD0);
+						break;
+					default:
+						break;
+					}
+					break;
+				default:
+					break;
+				}
 			}
 			return;
 		default:

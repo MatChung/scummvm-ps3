@@ -19,15 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/file.cpp $
- * $Id: file.cpp 48981 2010-05-09 18:05:00Z sev $
+ * $Id: file.cpp 54001 2010-11-01 16:00:17Z fingolfin $
  *
  */
 
 #include "scumm/file.h"
 
 #include "scumm/scumm.h"
-
-using Common::File;
 
 namespace Scumm {
 

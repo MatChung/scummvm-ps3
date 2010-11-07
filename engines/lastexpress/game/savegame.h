@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/savegame.h $
- * $Id: savegame.h 53579 2010-10-18 19:17:38Z sev $
+ * $Id: savegame.h 53883 2010-10-27 19:20:20Z littleboy $
  *
  */
 
@@ -77,95 +77,210 @@
 #include "lastexpress/shared.h"
 
 #include "common/savefile.h"
+#include "common/serializer.h"
 
 namespace LastExpress {
+
+// Savegame signatures
+#define SAVEGAME_SIGNATURE       0x12001200
+#define SAVEGAME_ENTRY_SIGNATURE 0xE660E660
 
 class LastExpressEngine;
 
 class SaveLoad {
 public:
-	enum HeaderType {
-		kHeaderTypeNone = 0,
-		kHeaderType1 = 1,
-		kHeaderType2 = 2,
-		kHeaderType3 = 3,
-		kHeaderType4 = 4,
-		kHeaderType5 = 5
-	};
-
-	struct SavegameMainHeader {
-		uint32 signature;
-		uint32 index;
-		uint32 time;
-		uint32 field_C;
-		uint32 field_10;
-		int32 brightness;
-		int32 volume;
-		uint32 field_1C;
-	};
-
-	struct SavegameEntryHeader {
-		uint32 signature;
-		HeaderType type;
-		uint32 time;
-		int field_C;
-		ChapterIndex chapter;
-		EventIndex event;
-		int field_18;
-		int field_1C;
-
-		SavegameEntryHeader() {
-			signature = 0;
-			type = kHeaderTypeNone;
-			time = 0;
-			field_C = 0;
-			chapter = kChapterAll;
-			event = kEventNone;
-			field_18 = 0;
-			field_1C = 0;
-		}
-	};
-
 	SaveLoad(LastExpressEngine *engine);
 	~SaveLoad();
 
+	// Init
+	void create(GameId id);
+	void clear(bool clearStream = false);
+	uint32 init(GameId id, bool resetHeaders);
+
 	// Save & Load
-	bool loadGame(GameId id);
+	void loadGame(GameId id);
+	void loadGame(GameId id, uint32 index);
 	void saveGame(SavegameType type, EntityIndex entity, uint32 value);
 
+	void loadVolumeBrightness();
 	void saveVolumeBrightness();
-
-	// Init
-	void initSavegame(GameId id, bool resetHeaders);
-	static void writeMainHeader(GameId id);
 
 	// Getting information
 	static bool isSavegamePresent(GameId id);
 	static bool isSavegameValid(GameId id);
 
-	// Opening save files
-	static Common::InSaveFile *openForLoading(GameId id);
-	static Common::OutSaveFile *openForSaving(GameId id);
+	bool isGameFinished(uint32 menuIndex, uint32 savegameIndex);
 
-	// Headers
-	static bool loadMainHeader(GameId id, SavegameMainHeader* header);
-	SavegameEntryHeader *getEntry(uint32 index);
-	void clearEntries();
-
-	uint32 getLastSavegameTicks() const { return _gameTicksLastSavegame; }
+	// Accessors
+ 	uint32       getTime(uint32 index) { return getEntry(index)->time; }
+	ChapterIndex getChapter(uint32 index) { return getEntry(index)->chapter; }
+	uint32       getValue(uint32 index) { return getEntry(index)->value; }
+	uint32       getLastSavegameTicks() const { return _gameTicksLastSavegame; }
 
 private:
+	class SavegameStream : public Common::MemoryWriteStreamDynamic, public Common::SeekableReadStream {
+	public:
+		SavegameStream() : MemoryWriteStreamDynamic(DisposeAfterUse::YES),
+		 _eos(false) {}
+
+		int32 pos() const { return MemoryWriteStreamDynamic::pos(); }
+		int32 size() const { return MemoryWriteStreamDynamic::size(); }
+		bool seek(int32 offset, int whence = SEEK_SET) { return MemoryWriteStreamDynamic::seek(offset, whence); }
+		bool eos() const { return _eos; }
+		uint32 read(void *dataPtr, uint32 dataSize) {
+			if ((int32)dataSize > size() - pos()) {
+				dataSize = size() - pos();
+				_eos = true;
+			}
+			memcpy(dataPtr, getData() + pos(), dataSize);
+
+			seek(dataSize, SEEK_CUR);
+
+			return dataSize;
+		}
+	private:
+		bool _eos;
+	};
+
 	LastExpressEngine *_engine;
 
-	uint32 _gameTicksLastSavegame;
+	struct SavegameMainHeader : Common::Serializable {
+		uint32 signature;
+		uint32 count;
+		uint32 offset;
+		uint32 offsetEntry;
+		uint32 keepIndex;
+		int32 brightness;
+		int32 volume;
+		uint32 field_1C;
+
+		SavegameMainHeader() {
+			signature = SAVEGAME_SIGNATURE;
+			count = 0;
+			offset = 32;
+			offsetEntry = 32;
+			keepIndex = 0;
+			brightness = 3;
+			volume = 7;
+			field_1C = 9;
+		}
+
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			s.syncAsUint32LE(signature);
+			s.syncAsUint32LE(count);
+			s.syncAsUint32LE(offset);
+			s.syncAsUint32LE(offsetEntry);
+			s.syncAsUint32LE(keepIndex);
+			s.syncAsUint32LE(brightness);
+			s.syncAsUint32LE(volume);
+			s.syncAsUint32LE(field_1C);
+		}
+
+		bool isValid() {
+			if (signature != SAVEGAME_SIGNATURE)
+				return false;
+
+			/* Check not needed as it can never be < 0
+			if (header.chapter < 0)
+				return false;*/
+
+			if (offset < 32)
+				return false;
+
+			if (offsetEntry < 32)
+				return false;
+
+			if (keepIndex != 1 && keepIndex != 0)
+				return false;
+
+			if (brightness < 0 || brightness > 6)
+				return false;
+
+			if (volume < 0 || volume > 7)
+				return false;
+
+			if (field_1C != 9)
+				return false;
+
+			return true;
+		}
+	};
+
+	struct SavegameEntryHeader : Common::Serializable {
+		uint32 signature;
+		SavegameType type;
+		uint32 time;
+		int offset;
+		ChapterIndex chapter;
+		uint32 value;
+		int field_18;
+		int field_1C;
+
+		SavegameEntryHeader() {
+			signature = SAVEGAME_ENTRY_SIGNATURE;
+			type = kSavegameTypeIndex;
+			time = kTimeNone;
+			offset = 0;
+			chapter = kChapterAll;
+			value = 0;
+			field_18 = 0;
+			field_1C = 0;
+		}
+
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			s.syncAsUint32LE(signature);
+			s.syncAsUint32LE(type);
+			s.syncAsUint32LE(time);
+			s.syncAsUint32LE(offset);
+			s.syncAsUint32LE(chapter);
+			s.syncAsUint32LE(value);
+			s.syncAsUint32LE(field_18);
+			s.syncAsUint32LE(field_1C);
+		}
+
+		bool isValid() {
+			if (signature != SAVEGAME_ENTRY_SIGNATURE)
+				return false;
+
+			if (type < kSavegameTypeTime || type > kSavegameTypeTickInterval)
+				return false;
+
+			if (time < kTimeStartGame || time > kTimeCityConstantinople)
+				return false;
+
+			if (offset <= 0 || offset & 15)
+				return false;
+
+			/* No check for < 0, as it cannot happen normaly */
+			if (chapter == 0)
+				return false;
+
+			return true;
+		}
+	};
+
+	SavegameStream *_savegame;
 	Common::Array<SavegameEntryHeader *> _gameHeaders;
+	uint32 _gameTicksLastSavegame;
 
-	static Common::String getSavegameName(GameId id);
+	// Headers
+	static bool loadMainHeader(Common::InSaveFile *stream, SavegameMainHeader *header);
 
-	static void loadEntryHeader(Common::InSaveFile *save, SavegameEntryHeader* header);
+	// Entries
+	void writeEntry(SavegameType type, EntityIndex entity, uint32 val);
+	void readEntry(SavegameType *type, EntityIndex *entity, uint32 *val, bool keepIndex);
 
-	static bool validateMainHeader(const SavegameMainHeader &header);
-	static bool validateEntryHeader(const SavegameEntryHeader &header);
+	SavegameEntryHeader *getEntry(uint32 index);
+
+	// Opening save files
+	static Common::String getFilename(GameId id);
+	static Common::InSaveFile  *openForLoading(GameId id);
+	static Common::OutSaveFile *openForSaving(GameId id);
+
+	// Savegame stream
+	void initStream();
+	void loadStream(GameId id);
+	void flushStream(GameId id);
 };
 
 } // End of namespace LastExpress

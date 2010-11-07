@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/panel.h $
- * $Id: panel.h 53310 2010-10-12 23:32:32Z sev $
+ * $Id: panel.h 53625 2010-10-19 20:54:30Z sev $
  *
  */
 
@@ -35,18 +35,10 @@
 #ifndef SWORD25_PANEL_H
 #define SWORD25_PANEL_H
 
-// -----------------------------------------------------------------------------
-// Includes
-// -----------------------------------------------------------------------------
-
 #include "sword25/kernel/common.h"
 #include "sword25/gfx/renderobject.h"
 
 namespace Sword25 {
-
-// -----------------------------------------------------------------------------
-// Class Definition
-// -----------------------------------------------------------------------------
 
 class Panel : public RenderObject {
 	friend class RenderObject;
@@ -58,10 +50,10 @@ private:
 public:
 	virtual ~Panel();
 
-	uint    getColor() const {
+	uint getColor() const {
 		return _color;
 	}
-	void            setColor(uint color) {
+	void setColor(uint color) {
 		_color = color;
 		forceRefresh();
 	}

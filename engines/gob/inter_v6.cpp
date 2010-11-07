@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/inter_v6.cpp $
- * $Id: inter_v6.cpp 53491 2010-10-15 13:55:18Z drmccoy $
+ * $Id: inter_v6.cpp 53984 2010-10-31 20:07:14Z drmccoy $
  *
  */
 
@@ -191,16 +191,16 @@ void Inter_v6::o6_openItk() {
 	if (!strchr(fileName, '.'))
 		strcat(fileName, ".ITK");
 
-	_vm->_dataIO->openDataFile(fileName, true);
+	_vm->_dataIO->openArchive(fileName, false);
 
 	// WORKAROUND: The CD number detection in Urban Runner is quite daft
 	// (it checks CD1.ITK - CD4.ITK and the first that's found determines
 	// the CD number), while its NO_CD modus wants everything in CD1.ITK.
 	// So we just open the other ITKs, too.
 	if (_vm->_global->_noCd && !scumm_stricmp(fileName, "CD1.ITK")) {
-		_vm->_dataIO->openDataFile("CD2.ITK", true);
-		_vm->_dataIO->openDataFile("CD3.ITK", true);
-		_vm->_dataIO->openDataFile("CD4.ITK", true);
+		_vm->_dataIO->openArchive("CD2.ITK", false);
+		_vm->_dataIO->openArchive("CD3.ITK", false);
+		_vm->_dataIO->openArchive("CD4.ITK", false);
 	}
 }
 
@@ -439,7 +439,7 @@ void Inter_v6::probe16bitMusic(char *fileName) {
 
 	fileName[len - 1] = 'V';
 
-	if (_vm->_dataIO->existData(fileName))
+	if (_vm->_dataIO->hasFile(fileName))
 		return;
 
 	fileName[len - 1] = '8';

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/savegame.cpp $
- * $Id: savegame.cpp 52875 2010-09-24 09:56:50Z m_kiewitz $
+ * $Id: savegame.cpp 54017 2010-11-01 20:08:42Z m_kiewitz $
  *
  */
 
@@ -40,6 +40,7 @@
 #include "sci/engine/selector.h"
 #include "sci/engine/vm_types.h"
 #include "sci/engine/script.h"	// for SCI_OBJ_EXPORTS and SCI_OBJ_SYNONYMS
+#include "sci/graphics/helpers.h"
 #include "sci/graphics/palette.h"
 #include "sci/graphics/ports.h"
 #include "sci/sound/audio.h"
@@ -175,27 +176,34 @@ void syncWithSerializer(Common::Serializer &s, Class &obj) {
 }
 
 static void sync_SavegameMetadata(Common::Serializer &s, SavegameMetadata &obj) {
-	// TODO: It would be a good idea to store a magic number & a header size here,
-	// so that we can implement backward compatibility if the savegame format changes.
-
-	s.syncString(obj.savegame_name);
+	s.syncString(obj.name);
 	s.syncVersion(CURRENT_SAVEGAME_VERSION);
-	obj.savegame_version = s.getVersion();
-	s.syncString(obj.game_version);
-	s.syncAsSint32LE(obj.savegame_date);
-	s.syncAsSint32LE(obj.savegame_time);
+	obj.version = s.getVersion();
+	s.syncString(obj.gameVersion);
+	s.syncAsSint32LE(obj.saveDate);
+	s.syncAsSint32LE(obj.saveTime);
 	if (s.getVersion() < 22) {
-		obj.game_object_offset = 0;
-		obj.script0_size = 0;
+		obj.gameObjectOffset = 0;
+		obj.script0Size = 0;
 	} else {
-		s.syncAsUint16LE(obj.game_object_offset);
-		s.syncAsUint16LE(obj.script0_size);
+		s.syncAsUint16LE(obj.gameObjectOffset);
+		s.syncAsUint16LE(obj.script0Size);
+	}
+
+	// Playtime
+	obj.playTime = 0;
+	if (s.isLoading()) {
+		if (s.getVersion() >= 26)
+			s.syncAsUint32LE(obj.playTime);
+	} else {
+		obj.playTime = g_engine->getTotalPlayTime() / 1000;
+		s.syncAsUint32LE(obj.playTime);
 	}
 }
 
 void EngineState::saveLoadWithSerializer(Common::Serializer &s) {
 	Common::String tmp;
-	s.syncString(tmp, VER(14), VER(23));			// OBSOLETE: Used to be game_version
+	s.syncString(tmp, VER(14), VER(23));			// OBSOLETE: Used to be gameVersion
 
 	if (getSciVersion() <= SCI_VERSION_1_1) {
 		// Save/Load picPort as well for SCI0-SCI1.1. Necessary for Castle of Dr. Brain,
@@ -520,7 +528,7 @@ void SoundCommandParser::syncPlayList(Common::Serializer &s) {
 	_music->saveLoadWithSerializer(s);
 }
 
-void SoundCommandParser::reconstructPlayList(int savegame_version) {
+void SoundCommandParser::reconstructPlayList() {
 	Common::StackLock lock(_music->_mutex);
 
 	const MusicList::iterator end = _music->getPlayListEnd();
@@ -591,6 +599,64 @@ void GfxPalette::saveLoadWithSerializer(Common::Serializer &s) {
 		if (s.isLoading() && _palVaryResourceId != -1) {
 			_palVarySignal = 0;
 			palVaryInstallTimer();
+		}
+	}
+}
+
+void GfxPorts::saveLoadWithSerializer(Common::Serializer &s) {
+	if (s.isLoading())
+		reset();	// remove all script generated windows
+
+	if (s.getVersion() >= 27) {
+		uint windowCount = 0;
+		uint id = PORTS_FIRSTSCRIPTWINDOWID;
+		if (s.isSaving()) {
+			while (id < _windowsById.size()) {
+				if (_windowsById[id])
+					windowCount++;
+				id++;
+			}
+		}
+		// Save/Restore window count
+		s.syncAsUint32LE(windowCount);
+
+		if (s.isSaving()) {
+			id = PORTS_FIRSTSCRIPTWINDOWID;
+			while (id < _windowsById.size()) {
+				if (_windowsById[id]) {
+					Window *window = (Window *)_windowsById[id];
+					window->saveLoadWithSerializer(s);
+				}
+				id++;
+			}
+		} else {
+			id = PORTS_FIRSTSCRIPTWINDOWID;
+			while (windowCount) {
+				Window *window = new Window(0);
+				window->saveLoadWithSerializer(s);
+
+				// add enough entries inside _windowsById as needed
+				while (id <= window->id) {
+					_windowsById.push_back(0);
+					id++;
+				}
+				_windowsById[window->id] = window;
+				// _windowList may not be 100% correct using that way of restoring
+				//  saving/restoring ports won't work perfectly anyway, because the contents
+				//  of the window can only get repainted by the scripts and they dont do that
+				//  so we will get empty, transparent windows instead. So perfect window order
+				//  shouldn't really matter
+				if (window->counterTillFree) {
+					_freeCounter++;
+				} else {
+					if (window->wndStyle & SCI_WINDOWMGR_STYLE_TOPMOST)
+						_windowList.push_front(window);
+					else
+						_windowList.push_back(window);
+				}
+
+				windowCount--;
+			}
 		}
 	}
 }
@@ -681,15 +747,15 @@ bool gamestate_save(EngineState *s, Common::WriteStream *fh, const char* savenam
 	g_system->getTimeAndDate(curTime);
 
 	SavegameMetadata meta;
-	meta.savegame_version = CURRENT_SAVEGAME_VERSION;
-	meta.savegame_name = savename;
-	meta.game_version = version;
-	meta.savegame_date = ((curTime.tm_mday & 0xFF) << 24) | (((curTime.tm_mon + 1) & 0xFF) << 16) | ((curTime.tm_year + 1900) & 0xFFFF);
-	meta.savegame_time = ((curTime.tm_hour & 0xFF) << 16) | (((curTime.tm_min) & 0xFF) << 8) | ((curTime.tm_sec) & 0xFF);
+	meta.version = CURRENT_SAVEGAME_VERSION;
+	meta.name = savename;
+	meta.gameVersion = version;
+	meta.saveDate = ((curTime.tm_mday & 0xFF) << 24) | (((curTime.tm_mon + 1) & 0xFF) << 16) | ((curTime.tm_year + 1900) & 0xFFFF);
+	meta.saveTime = ((curTime.tm_hour & 0xFF) << 16) | (((curTime.tm_min) & 0xFF) << 8) | ((curTime.tm_sec) & 0xFF);
 
 	Resource *script0 = g_sci->getResMan()->findResource(ResourceId(kResourceTypeScript, 0), false);
-	meta.script0_size = script0->size;
-	meta.game_object_offset = g_sci->getGameObject().offset;
+	meta.script0Size = script0->size;
+	meta.gameObjectOffset = g_sci->getGameObject().offset;
 
 	// Checking here again
 	if (s->executionStackBase) {
@@ -701,6 +767,8 @@ bool gamestate_save(EngineState *s, Common::WriteStream *fh, const char* savenam
 	sync_SavegameMetadata(ser, meta);
 	Graphics::saveThumbnail(*fh);
 	s->saveLoadWithSerializer(ser);		// FIXME: Error handling?
+	if (g_sci->_gfxPorts)
+		g_sci->_gfxPorts->saveLoadWithSerializer(ser);
 
 	return true;
 }
@@ -718,13 +786,13 @@ void gamestate_restore(EngineState *s, Common::SeekableReadStream *fh) {
 		return;
 	}
 
-	if ((meta.savegame_version < MINIMUM_SAVEGAME_VERSION) ||
-	    (meta.savegame_version > CURRENT_SAVEGAME_VERSION)) {
+	if ((meta.version < MINIMUM_SAVEGAME_VERSION) ||
+	    (meta.version > CURRENT_SAVEGAME_VERSION)) {
 		/*
-		if (meta.savegame_version < MINIMUM_SAVEGAME_VERSION)
+		if (meta.version < MINIMUM_SAVEGAME_VERSION)
 			warning("Old savegame version detected, unable to load it");
 		else
-			warning("Savegame version is %d, maximum supported is %0d", meta.savegame_version, CURRENT_SAVEGAME_VERSION);
+			warning("Savegame version is %d, maximum supported is %0d", meta.version, CURRENT_SAVEGAME_VERSION);
 		*/
 
 		showScummVMDialog("The format of this saved game is obsolete, unable to load it");
@@ -733,9 +801,9 @@ void gamestate_restore(EngineState *s, Common::SeekableReadStream *fh) {
 		return;
 	}
 
-	if (meta.game_object_offset > 0 && meta.script0_size > 0) {
+	if (meta.gameObjectOffset > 0 && meta.script0Size > 0) {
 		Resource *script0 = g_sci->getResMan()->findResource(ResourceId(kResourceTypeScript, 0), false);
-		if (script0->size != meta.script0_size || g_sci->getGameObject().offset != meta.game_object_offset) {
+		if (script0->size != meta.script0Size || g_sci->getGameObject().offset != meta.gameObjectOffset) {
 			//warning("This saved game was created with a different version of the game, unable to load it");
 
 			showScummVMDialog("This saved game was created with a different version of the game, unable to load it");
@@ -751,6 +819,7 @@ void gamestate_restore(EngineState *s, Common::SeekableReadStream *fh) {
 	s->reset(true);
 	s->saveLoadWithSerializer(ser);	// FIXME: Error handling?
 
+
 	// Now copy all current state information
 
 	s->_segMan->reconstructStack(s);
@@ -761,13 +830,12 @@ void gamestate_restore(EngineState *s, Common::SeekableReadStream *fh) {
 
 	// Time state:
 	s->lastWaitTime = g_system->getMillis();
-	s->gameStartTime = g_system->getMillis();
 	s->_screenUpdateTime = g_system->getMillis();
+	g_engine->setTotalPlayTime(meta.playTime * 1000);
 
 	if (g_sci->_gfxPorts)
-		g_sci->_gfxPorts->reset();
-
-	g_sci->_soundCmd->reconstructPlayList(meta.savegame_version);
+		g_sci->_gfxPorts->saveLoadWithSerializer(ser);
+	g_sci->_soundCmd->reconstructPlayList();
 
 	// Message state:
 	delete s->_msgState;
@@ -789,12 +857,12 @@ bool get_savegame_metadata(Common::SeekableReadStream *stream, SavegameMetadata 
 	if (stream->eos())
 		return false;
 
-	if ((meta->savegame_version < MINIMUM_SAVEGAME_VERSION) ||
-	    (meta->savegame_version > CURRENT_SAVEGAME_VERSION)) {
-		if (meta->savegame_version < MINIMUM_SAVEGAME_VERSION)
+	if ((meta->version < MINIMUM_SAVEGAME_VERSION) ||
+	    (meta->version > CURRENT_SAVEGAME_VERSION)) {
+		if (meta->version < MINIMUM_SAVEGAME_VERSION)
 			warning("Old savegame version detected- can't load");
 		else
-			warning("Savegame version is %d- maximum supported is %0d", meta->savegame_version, CURRENT_SAVEGAME_VERSION);
+			warning("Savegame version is %d- maximum supported is %0d", meta->version, CURRENT_SAVEGAME_VERSION);
 
 		return false;
 	}

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/mahmud.h $
- * $Id: mahmud.h 53588 2010-10-18 21:03:28Z littleboy $
+ * $Id: mahmud.h 53629 2010-10-19 22:34:26Z jvprat $
  *
  */
 
@@ -57,7 +57,7 @@ public:
 	 * @param sequence    The sequence to draw
 	 * @param compartment The compartment
 	 */
-	DECLARE_FUNCTION_2(enterExitCompartment, const char* sequence, ObjectIndex compartment)
+	DECLARE_FUNCTION_2(enterExitCompartment, const char *sequence, ObjectIndex compartment)
 
 	/**
 	 * Handles entering/exiting a compartment.
@@ -67,21 +67,21 @@ public:
 	 * @param ticks       The time ticks
 	 * @param object      The object for loading the scene
 	 */
-	DECLARE_FUNCTION_4(enterExitCompartment2, const char* sequence, ObjectIndex compartment, uint32 ticks, ObjectIndex object)
+	DECLARE_FUNCTION_4(enterExitCompartment2, const char *sequence, ObjectIndex compartment, uint32 ticks, ObjectIndex object)
 
 	/**
 	 * Plays sound
 	 *
 	 * @param filename The sound filename
 	 */
-	DECLARE_FUNCTION_1(playSound, const char* filename)
+	DECLARE_FUNCTION_1(playSound, const char *filename)
 
 	/**
 	 * Plays sound
 	 *
 	 * @param filename The sound filename
 	 */
-	DECLARE_FUNCTION_1(playSoundMertens, const char* filename)
+	DECLARE_FUNCTION_1(playSoundMertens, const char *filename)
 
 	/**
 	 * Updates parameter 2 using time value

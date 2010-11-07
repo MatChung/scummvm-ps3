@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/imuse/imuse.cpp $
- * $Id: imuse.cpp 47279 2010-01-12 21:07:56Z lordhoto $
+ * $Id: imuse.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -700,9 +700,9 @@ int32 IMuseInternal::doCommand_internal(int numargs, int a[]) {
 
 	{
 		Common::String string = "doCommand - ";
-		string += Common::String::printf("%d (%d/%d)", a[0], (int)param, (int)cmd);
+		string += Common::String::format("%d (%d/%d)", a[0], (int)param, (int)cmd);
 		for (i = 1; i < numargs; ++i)
-			string += Common::String::printf(", %d", a[i]);
+			string += Common::String::format(", %d", a[i]);
 		debugC(DEBUG_IMUSE, "%s", string.c_str());
 	}
 

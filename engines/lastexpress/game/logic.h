@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/logic.h $
- * $Id: logic.h 53579 2010-10-18 19:17:38Z sev $
+ * $Id: logic.h 53841 2010-10-26 00:41:42Z littleboy $
  *
  */
 
@@ -54,6 +54,7 @@ public:
 	void eventMouse(const Common::Event &ev);
 	void eventTick(const Common::Event &ev);
 
+	void resetState();
 	void gameOver(SavegameType type, uint32 value, SceneIndex sceneIndex, bool showScene) const;
 	void playFinalSequence() const;
 	void updateCursor(bool redraw = true) const;

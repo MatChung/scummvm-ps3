@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/debug.cpp $
- * $Id: debug.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: debug.cpp 54007 2010-11-01 16:03:35Z fingolfin $
  *
  */
 
@@ -53,6 +53,7 @@
 
 #include "common/debug-channels.h"
 #include "common/events.h"
+#include "common/md5.h"
 
 namespace LastExpress {
 
@@ -66,6 +67,7 @@ Debugger::Debugger(LastExpressEngine *engine) : _engine(engine), _command(NULL),
 
 	// Data
 	DCmd_Register("ls",        WRAP_METHOD(Debugger, cmdListFiles));
+	DCmd_Register("dump",      WRAP_METHOD(Debugger, cmdDumpFiles));
 
 	DCmd_Register("showframe", WRAP_METHOD(Debugger, cmdShowFrame));
 	DCmd_Register("showbg",    WRAP_METHOD(Debugger, cmdShowBg));
@@ -81,7 +83,8 @@ Debugger::Debugger(LastExpressEngine *engine) : _engine(engine), _command(NULL),
 
 	// Game
 	DCmd_Register("delta",     WRAP_METHOD(Debugger, cmdTimeDelta));
-	DCmd_Register("dump",      WRAP_METHOD(Debugger, cmdDump));
+	DCmd_Register("time",      WRAP_METHOD(Debugger, cmdTime));
+	DCmd_Register("show",      WRAP_METHOD(Debugger, cmdShow));
 	DCmd_Register("entity",    WRAP_METHOD(Debugger, cmdEntity));
 
 	// Misc
@@ -98,11 +101,13 @@ Debugger::~Debugger() {
 	DebugMan.clearAllDebugChannels();
 
 	delete _soundStream;
+	resetCommand();
+
+	_command = NULL;
+	_commandParams = NULL;
 
 	// Zero passed pointers
 	_engine = NULL;
-	_command = NULL;
-	_commandParams = NULL;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -113,7 +118,13 @@ bool Debugger::hasCommand() const {
 }
 
 void Debugger::resetCommand() {
-	_command = NULL;
+	SAFE_DELETE(_command);
+
+	if (_commandParams)
+		for (int i = 0; i < _numParams; i++)
+			free(_commandParams[i]);
+
+	free(_commandParams);
 	_commandParams = NULL;
 	_numParams = 0;
 }
@@ -123,15 +134,15 @@ int Debugger::getNumber(const char *arg) const {
 }
 
 void Debugger::copyCommand(int argc, const char **argv) {
-	_commandParams = (char **)malloc((uint)argc);
+	_commandParams = (char **)malloc(sizeof(char *) * (uint)argc);
 	if (!_commandParams)
 		return;
 
 	_numParams = argc;
 
 	for (int i = 0; i < _numParams; i++) {
-		_commandParams[i] = (char *)malloc(strlen(argv[i]));
-		strcpy(_commandParams[i], "");
+		_commandParams[i] = (char *)malloc(strlen(argv[i]) + 1);
+		memset(_commandParams[i], 0, strlen(argv[i]) + 1);
 		strcpy(_commandParams[i], argv[i]);
 	}
 
@@ -188,6 +199,7 @@ bool Debugger::cmdHelp(int, const char **) {
 	DebugPrintf("Commands\n");
 	DebugPrintf("--------\n");
 	DebugPrintf(" ls - list files in the archive\n");
+	DebugPrintf(" dump - dump a list of files in all archives\n");
 	DebugPrintf("\n");
 	DebugPrintf(" showframe - show a frame from a sequence\n");
 	DebugPrintf(" showbg - show a background\n");
@@ -201,8 +213,8 @@ bool Debugger::cmdHelp(int, const char **) {
 	DebugPrintf(" beetle - start the beetle game\n");
 	DebugPrintf("\n");
 	DebugPrintf(" delta - Adjust the time delta\n");
-	DebugPrintf(" dump - Dump game data\n");
-	DebugPrintf(" entity - Dump entity data\n");
+	DebugPrintf(" show - show game data\n");
+	DebugPrintf(" entity - show entity data\n");
 	DebugPrintf("\n");
 	DebugPrintf(" loadgame - load a saved game\n");
 	DebugPrintf(" chapter - switch to a specific chapter\n");
@@ -238,7 +250,59 @@ bool Debugger::cmdListFiles(int argc, const char **argv) {
 		if (argc == 3)
 			restoreArchive();
 	} else {
-		DebugPrintf("Syntax: ls <filter> (use * for all)\n (<cd number>)");
+		DebugPrintf("Syntax: ls <filter> (use * for all) (<cd number>)\n");
+	}
+
+	return true;
+}
+
+/**
+ * Command: Dump the list of files in the archive
+ *
+ * @param argc The argument count.
+ * @param argv The values.
+ *
+ * @return true if it was handled, false otherwise
+ */
+bool Debugger::cmdDumpFiles(int argc, const char **) {
+#define OUTPUT_ARCHIVE_FILES(name, filename) { \
+	_engine->getResourceManager()->reset(); \
+	_engine->getResourceManager()->loadArchive(filename); \
+	Common::ArchiveMemberList list; \
+	int count = _engine->getResourceManager()->listMatchingMembers(list, "*"); \
+	debugC(1, kLastExpressDebugResource, "\n\n--------------------------------------------------------------------\n"); \
+	debugC(1, kLastExpressDebugResource, "-- " #name " (%d files)\n", count); \
+	debugC(1, kLastExpressDebugResource, "--------------------------------------------------------------------\n\n"); \
+	debugC(1, kLastExpressDebugResource, "Filename,Size,MD5\n"); \
+	for (Common::ArchiveMemberList::iterator it = list.begin(); it != list.end(); ++it) { \
+		Common::SeekableReadStream *stream = getArchive((*it)->getName()); \
+		if (!stream) { \
+			DebugPrintf("ERROR: Cannot create stream for file: %s\n", (*it)->getName().c_str()); \
+			restoreArchive(); \
+			return true; \
+		} \
+		char md5str[32+1]; \
+		Common::md5_file_string(*stream, md5str, (uint32)stream->size()); \
+		debugC(1, kLastExpressDebugResource, "%s, %d, %s", (*it)->getName().c_str(), stream->size(), (char *)&md5str); \
+		delete stream; \
+	} \
+}
+
+	if (argc == 1) {
+		// For each archive file, dump the list of files
+		if (_engine->isDemo()) {
+			OUTPUT_ARCHIVE_FILES("DEMO", "DEMO.HPF");
+		} else {
+			OUTPUT_ARCHIVE_FILES("HD", "HD.HPF");
+			OUTPUT_ARCHIVE_FILES("CD 1", "CD1.HPF");
+			OUTPUT_ARCHIVE_FILES("CD 2", "CD2.HPF");
+			OUTPUT_ARCHIVE_FILES("CD 3", "CD3.HPF");
+		}
+
+		// Restore current loaded archive
+		restoreArchive();
+	} else {
+		DebugPrintf("Syntax: dump");
 	}
 
 	return true;
@@ -279,7 +343,7 @@ bool Debugger::cmdShowFrame(int argc, const char **argv) {
 
 				AnimFrame *frame = sequence.getFrame((uint16)getNumber(argv[2]));
 				if (!frame) {
-					DebugPrintf("Invalid frame index: %i\n", filename.c_str());
+					DebugPrintf("Invalid frame index '%s'\n", argv[2]);
 					resetCommand();
 					return true;
 				}
@@ -599,7 +663,7 @@ bool Debugger::cmdPlayNis(int argc, const char **argv) {
 bool Debugger::cmdLoadScene(int argc, const char **argv) {
 	if (argc == 2 || argc == 3) {
 		int cd = 1;
-		SceneIndex index = (SceneIndex)getNumber(argv[1]);;
+		SceneIndex index = (SceneIndex)getNumber(argv[1]);
 
 		// Check args
 		if (argc == 3)
@@ -851,7 +915,7 @@ bool Debugger::cmdBeetle(int argc, const char **argv) {
 			// Cleanup
 			beetle->unload();
 			delete beetle;
-			SAFE_DELETE(action);
+			delete action;
 
 			// Pause for a second to be able to see the final scene
 			_engine->_system->delayMillis(1000);
@@ -893,7 +957,7 @@ bool Debugger::cmdBeetle(int argc, const char **argv) {
  */
 bool Debugger::cmdTimeDelta(int argc, const char **argv) {
 	if (argc == 2) {
-		int delta =  getNumber(argv[1]);
+		int delta = getNumber(argv[1]);
 
 		if (delta <= 0 || delta > 500)
 			goto label_error;
@@ -908,56 +972,81 @@ label_error:
 }
 
 /**
- * Command: dumps game logic data
+ * Command: Convert between in-game time and human readable time
  *
  * @param argc The argument count.
  * @param argv The values.
  *
  * @return true if it was handled, false otherwise
  */
-bool Debugger::cmdDump(int argc, const char **argv) {
+bool Debugger::cmdTime(int argc, const char **argv) {
+	if (argc == 2) {
+		int32 time = getNumber(argv[1]);
+
+		if (time < 0)
+			goto label_error;
+
+		// Convert to human-readable form
+		uint8 hours = 0;
+		uint8 minutes = 0;
+		State::getHourMinutes((uint32)time, &hours, &minutes);
+
+		DebugPrintf("%02d:%02d\n", hours, minutes);
+	} else {
+label_error:
+		DebugPrintf("Syntax: time <time to convert> (time=0-INT_MAX)\n");
+	}
+
+	return true;
+}
+
+/**
+ * Command: show game logic data
+ *
+ * @param argc The argument count.
+ * @param argv The values.
+ *
+ * @return true if it was handled, false otherwise
+ */
+bool Debugger::cmdShow(int argc, const char **argv) {
 #define OUTPUT_DUMP(name, text) \
 	DebugPrintf(#name "\n"); \
 	DebugPrintf("--------------------------------------------------------------------\n\n"); \
-	DebugPrintf(text); \
+	DebugPrintf("%s", text); \
 	DebugPrintf("\n");
 
 	if (argc == 2) {
-		switch (getNumber(argv[1])) {
-		default:
-			goto label_error;
 
-		// GameState
-		case 1:
+		Common::String name(const_cast<char *>(argv[1]));
+
+		if (name == "state" || name == "st") {
 			OUTPUT_DUMP("Game state", getState()->toString().c_str());
-			break;
-
-		// Inventory
-		case 2:
+		} else if (name == "progress" || name == "pr") {
+			OUTPUT_DUMP("Progress", getProgress().toString().c_str());
+		} else if (name == "flags" || name == "fl") {
+			OUTPUT_DUMP("Flags", getFlags()->toString().c_str());
+		} else if (name == "inventory" || name == "inv") {
 			OUTPUT_DUMP("Inventory", getInventory()->toString().c_str());
-			break;
-
-		// Objects
-		case 3:
+		} else if (name == "objects" || name == "obj") {
 			OUTPUT_DUMP("Objects", getObjects()->toString().c_str());
-			break;
-
-		// SavePoints
-		case 4:
+		} else if (name == "savepoints" || name == "pt") {
 			OUTPUT_DUMP("SavePoints", getSavePoints()->toString().c_str());
-			break;
-
-		case 5:
+		} else if (name == "scene" || name == "sc") {
 			OUTPUT_DUMP("Current scene", getScenes()->get(getState()->scene)->toString().c_str());
+		} else {
+			goto label_error;
 		}
+
 	} else {
 label_error:
 		DebugPrintf("Syntax: state <option>\n");
-		DebugPrintf("              1 : Game state\n");
-		DebugPrintf("              2 : Inventory\n");
-		DebugPrintf("              3 : Objects\n");
-		DebugPrintf("              4 : SavePoints\n");
-		DebugPrintf("              5 : Current scene\n");
+		DebugPrintf("          state / st\n");
+		DebugPrintf("          progress / pr\n");
+		DebugPrintf("          flags / fl\n");
+		DebugPrintf("          inventory / inv\n");
+		DebugPrintf("          objects / obj\n");
+		DebugPrintf("          savepoints / pt\n");
+		DebugPrintf("          scene / sc\n");
 	}
 
 	return true;
@@ -982,7 +1071,7 @@ bool Debugger::cmdEntity(int argc, const char **argv) {
 
 		DebugPrintf("Entity %s\n", ENTITY_NAME(index));
 		DebugPrintf("--------------------------------------------------------------------\n\n");
-		DebugPrintf(getEntities()->getData(index)->toString().c_str());
+		DebugPrintf("%s", getEntities()->getData(index)->toString().c_str());
 
 		// The Player entity does not have any callback data
 		if (index != kEntityPlayer) {
@@ -1020,9 +1109,7 @@ bool Debugger::cmdLoadGame(int argc, const char **argv) {
 		if (id == 0 || id > 6)
 			goto error;
 
-		if (!getSaveLoad()->loadGame((GameId)(id - 1)))
-			DebugPrintf("Error loading game with id=%d", id);
-
+		getSaveLoad()->loadGame((GameId)(id - 1));
 	} else {
 error:
 		DebugPrintf("Syntax: loadgame <id> (id=1-6)\n");

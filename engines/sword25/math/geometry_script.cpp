@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/math/geometry_script.cpp $
- * $Id: geometry_script.cpp 53477 2010-10-15 12:18:19Z fingolfin $
+ * $Id: geometry_script.cpp 53626 2010-10-19 21:03:33Z sev $
  *
  */
 
@@ -31,10 +31,6 @@
  * Licensed under GNU GPL v2
  *
  */
-
-// -----------------------------------------------------------------------------
-// Includes
-// -----------------------------------------------------------------------------
 
 #include "common/array.h"
 #include "sword25/gfx/graphicengine.h"
@@ -364,13 +360,13 @@ static int r_setY(lua_State *L) {
 }
 
 static void drawPolygon(const Polygon &polygon, uint color, const Vertex &offset) {
-	GraphicEngine *pGE = Kernel::GetInstance()->GetGfx();
+	GraphicEngine *pGE = Kernel::getInstance()->getGfx();
 	BS_ASSERT(pGE);
 
 	for (int i = 0; i < polygon.vertexCount - 1; i++)
-		pGE->DrawDebugLine(polygon.vertices[i] + offset, polygon.vertices[i + 1] + offset, color);
+		pGE->drawDebugLine(polygon.vertices[i] + offset, polygon.vertices[i + 1] + offset, color);
 
-	pGE->DrawDebugLine(polygon.vertices[polygon.vertexCount - 1] + offset, polygon.vertices[0] + offset, color);
+	pGE->drawDebugLine(polygon.vertices[polygon.vertexCount - 1] + offset, polygon.vertices[0] + offset, color);
 }
 
 static void drawRegion(const Region &region, uint color, const Vertex &offset) {
@@ -387,12 +383,12 @@ static int r_draw(lua_State *L) {
 	case 3: {
 		Vertex offset;
 		Vertex::luaVertexToVertex(L, 3, offset);
-		drawRegion(*pR, GraphicEngine::LuaColorToARGBColor(L, 2), offset);
+		drawRegion(*pR, GraphicEngine::luaColorToARGBColor(L, 2), offset);
 	}
 	break;
 
 	case 2:
-		drawRegion(*pR, GraphicEngine::LuaColorToARGBColor(L, 2), Vertex(0, 0));
+		drawRegion(*pR, GraphicEngine::luaColorToARGBColor(L, 2), Vertex(0, 0));
 		break;
 
 	default:
@@ -474,9 +470,9 @@ static const luaL_reg WALKREGION_METHODS[] = {
 };
 
 bool Geometry::registerScriptBindings() {
-	Kernel *pKernel = Kernel::GetInstance();
+	Kernel *pKernel = Kernel::getInstance();
 	BS_ASSERT(pKernel);
-	ScriptEngine *pScript = pKernel->GetScript();
+	ScriptEngine *pScript = pKernel->getScript();
 	BS_ASSERT(pScript);
 	lua_State *L = static_cast< lua_State *>(pScript->getScriptObject());
 	BS_ASSERT(L);

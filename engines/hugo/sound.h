@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/sound.h $
- * $Id: sound.h 52406 2010-08-27 09:48:53Z strangerke $
+ * $Id: sound.h 53825 2010-10-25 13:31:01Z strangerke $
  *
  */
 
@@ -38,10 +38,10 @@
 namespace Hugo {
 
 class MidiPlayer;
-	
+
 class SoundHandler {
 public:
-	SoundHandler(HugoEngine &vm);
+	SoundHandler(HugoEngine *vm);
 
 	void toggleMusic();
 	void toggleSound();
@@ -51,7 +51,7 @@ public:
 	void initSound();
 
 private:
-	HugoEngine &_vm;
+	HugoEngine *_vm;
 	Audio::SoundHandle _soundHandle;
 	MidiPlayer *_midiPlayer;
 

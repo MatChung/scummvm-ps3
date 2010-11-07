@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/scumm.cpp $
- * $Id: scumm.cpp 53567 2010-10-18 16:00:07Z fingolfin $
+ * $Id: scumm.cpp 54031 2010-11-01 21:37:47Z fingolfin $
  *
  */
 
@@ -61,6 +61,7 @@
 #include "scumm/player_pce.h"
 #include "scumm/player_v1.h"
 #include "scumm/player_v2.h"
+#include "scumm/player_v2cms.h"
 #include "scumm/player_v2a.h"
 #include "scumm/player_v3a.h"
 #include "scumm/player_v4a.h"
@@ -146,6 +147,7 @@ ScummEngine::ScummEngine(OSystem *syst, const DetectorResult &dr)
 	// Init all vars
 	_v0ObjectIndex = false;
 	_v0ObjectInInventory = false;
+	_v0ObjectFlag = 0;
 	_imuse = NULL;
 	_imuseDigital = NULL;
 	_musicEngine = NULL;
@@ -210,7 +212,6 @@ ScummEngine::ScummEngine(OSystem *syst, const DetectorResult &dr)
 	_saveLoadSlot = 0;
 	_lastSaveTime = 0;
 	_saveTemporaryState = false;
-	memset(_saveLoadFileName, 0, sizeof(_saveLoadFileName));
 	memset(_saveLoadName, 0, sizeof(_saveLoadName));
 	memset(_localScriptOffsets, 0, sizeof(_localScriptOffsets));
 	_scriptPointer = NULL;
@@ -484,7 +485,8 @@ ScummEngine::ScummEngine(OSystem *syst, const DetectorResult &dr)
 	if (ConfMan.getBool("demo_mode"))
 		_game.features |= GF_DEMO;
 	if (ConfMan.hasKey("nosubtitles")) {
-		printf("Configuration key 'nosubtitles' is deprecated. Use 'subtitles' instead\n");
+		// We replaced nosubtitles *ages* ago. Just convert it silently
+		debug("Configuration key 'nosubtitles' is deprecated. Converting to 'subtitles'");
 		if (!ConfMan.hasKey("subtitles"))
 			ConfMan.setBool("subtitles", !ConfMan.getBool("nosubtitles"));
 	}
@@ -1646,6 +1648,10 @@ void ScummEngine_v90he::resetScumm() {
 			_logicHE = new LogicHEsoccer(this);
 			break;
 
+		case GID_BASEBALL2001:
+			_logicHE = new LogicHEbaseball2001(this);
+			break;
+
 		case GID_BASKETBALL:
 			_logicHE = new LogicHEbasketball(this);
 			break;
@@ -1922,7 +1928,7 @@ int ScummEngine::getTalkSpeed() {
 #pragma mark -
 
 Common::Error ScummEngine::go() {
-	_engineStartTime = _system->getMillis() / 1000;
+	setTotalPlayTime();
 
 	// If requested, load a save game instead of running the boot script
 	if (_saveLoadFlag != 2 || !loadState(_saveLoadSlot, _saveTemporaryState)) {
@@ -2500,10 +2506,6 @@ void ScummEngine::startManiac() {
 
 void ScummEngine::pauseEngineIntern(bool pause) {
 	if (pause) {
-		// Record start of the pause, so that we can later
-		// adjust _engineStartTime accordingly.
-		_pauseStartTime = _system->getMillis();
-
 		// Pause sound & video
 		_oldSoundsPaused = _sound->_soundsPaused;
 		_sound->pauseSounds(true);
@@ -2521,10 +2523,6 @@ void ScummEngine::pauseEngineIntern(bool pause) {
 
 		// Resume sound & video
 		_sound->pauseSounds(_oldSoundsPaused);
-
-		// Adjust engine start time
-		_engineStartTime += (_system->getMillis() - _pauseStartTime) / 1000;
-		_pauseStartTime = 0;
 	}
 }
 

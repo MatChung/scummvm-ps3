@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/message.cpp $
- * $Id: message.cpp 51669 2010-08-02 22:35:29Z lordhoto $
+ * $Id: message.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -218,7 +218,7 @@ int MessageState::nextMessage(reg_t buf) {
 			return record.talker;
 		} else {
 			MessageTuple &t = _cursorStack.top();
-			outputString(buf, Common::String::printf("Msg %d: %d %d %d %d not found", _cursorStack.getModule(), t.noun, t.verb, t.cond, t.seq));
+			outputString(buf, Common::String::format("Msg %d: %d %d %d %d not found", _cursorStack.getModule(), t.noun, t.verb, t.cond, t.seq));
 			return 0;
 		}
 	} else {

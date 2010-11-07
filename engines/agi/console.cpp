@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/console.cpp $
- * $Id: console.cpp 50963 2010-07-17 18:38:42Z fingolfin $
+ * $Id: console.cpp 53868 2010-10-26 22:33:49Z fingolfin $
  *
  */
 
@@ -152,7 +152,7 @@ bool Console::Cmd_Flags(int argc, const char **argv) {
 		for (j = 0; j < 10; j++, i++) {
 			DebugPrintf("%c ", _vm->getflag(i) ? 'T' : 'F');
 		}
-		report("\n");
+		DebugPrintf("\n");
 	}
 
 	return true;

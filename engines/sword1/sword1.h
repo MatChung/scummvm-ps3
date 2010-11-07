@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword1/sword1.h $
- * $Id: sword1.h 53484 2010-10-15 12:48:19Z fingolfin $
+ * $Id: sword1.h 53924 2010-10-29 16:53:46Z lordhoto $
  *
  */
 
@@ -74,7 +74,6 @@ struct SystemVars {
 	uint8	showText;
 	uint8	language;
 	bool    isDemo;
-	uint32	engineStartTime;    // Used for playtime
 	Common::Platform platform;
 };
 

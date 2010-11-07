@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/resource.h $
- * $Id: resource.h 49046 2010-05-16 10:23:44Z thebluegr $
+ * $Id: resource.h 53779 2010-10-24 22:17:44Z h00ligan $
  *
  */
 
@@ -206,7 +206,7 @@ public:
 	virtual ~Resource();
 	bool createContexts();
 	void clearContexts();
-	void loadResource(ResourceContext *context, uint32 resourceId, byte*&resourceBuffer, size_t &resourceSize);
+	void loadResource(ResourceContext *context, uint32 resourceId, ByteArray &resourceBuffer);
 
 	virtual uint32 convertResourceId(uint32 resourceId) = 0;
 	virtual void loadGlobalResources(int chapter, int actorsEntrance) = 0;

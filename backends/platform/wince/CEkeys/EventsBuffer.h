@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEkeys/EventsBuffer.h $
- * $Id: EventsBuffer.h 52935 2010-09-28 20:30:50Z fingolfin $
+ * $Id: EventsBuffer.h 53978 2010-10-31 17:10:45Z fingolfin $
  *
  */
 
@@ -29,8 +29,6 @@
 #include "common/scummsys.h"
 #include "common/system.h"
 #include "common/list.h"
-
-#include <SDL.h>
 
 #include "gui/Key.h"
 

@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/tools/create_kyradat/games.cpp $
- * $Id: games.cpp 51834 2010-08-07 14:38:07Z athrxx $
+ * $Id: games.cpp 53965 2010-10-30 22:44:15Z fingolfin $
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "create_kyradat.h"
 

@@ -19,11 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/resource_v2.cpp $
- * $Id: resource_v2.cpp 42910 2009-07-29 21:39:00Z fingolfin $
+ * $Id: resource_v2.cpp 54031 2010-11-01 21:37:47Z fingolfin $
  *
  */
-
-
 
 #include "scumm/file.h"
 #include "scumm/scumm_v2.h"
@@ -175,24 +173,24 @@ void ScummEngine_v2::readIndexFile() {
 
 	switch (magic) {
 		case 0x0100:
-			printf("Enhanced V2 game detected\n");
+			debug("Enhanced V2 game detected");
 			assert(_game.version == 2);
 			readEnhancedIndexFile();
 			break;
 		case 0x0A31:
-			printf("Classic V1 game detected\n");
+			debug("Classic V1 game detected");
 			assert(_game.version == 1);
 			readClassicIndexFile();
 			break;
 		case 0x4643:
 			if (!(_game.platform == Common::kPlatformNES))
 				error("Use maniac target");
-			printf("NES V1 game detected\n");
+			debug("NES V1 game detected");
 			assert(_game.version == 1);
 			readClassicIndexFile();
 			break;
 		case 0x132:
-			printf("C64 V1 game detected\n");
+			debug("C64 V1 game detected");
 			if (_game.id == GID_MANIAC) {
 				assert(_game.version == 0);
 			} else {
@@ -201,7 +199,7 @@ void ScummEngine_v2::readIndexFile() {
 			readClassicIndexFile();
 			break;
 		case 0x032:
-			printf("Apple II V1 game detected\n");
+			debug("Apple II V1 game detected");
 			assert(_game.version == 0);
 			readClassicIndexFile();
 			break;

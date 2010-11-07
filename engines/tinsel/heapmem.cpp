@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/heapmem.cpp $
- * $Id: heapmem.cpp 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: heapmem.cpp 54011 2010-11-01 16:04:47Z fingolfin $
  *
  * This file contains the handle based Memory Manager code.
  */
@@ -94,7 +94,7 @@ static void MemoryStats() {
 		}
 	}
 
-	printf("%d nodes used, %d alloced, %d locked; %d bytes locked, %d used\n",
+	debug("%d nodes used, %d alloced, %d locked; %d bytes locked, %d used",
 			usedNodes, allocedNodes, lockedNodes, lockedSize, totalSize);
 }
 #endif

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/savepoint.h $
- * $Id: savepoint.h 53579 2010-10-18 19:17:38Z sev $
+ * $Id: savepoint.h 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -73,7 +73,7 @@ struct SavePoint {
 	}
 
 	Common::String toString() {
-		return Common::String::printf("{ %s - %d - %s - %s }", ENTITY_NAME(entity1), action, ENTITY_NAME(entity2), param.charValue);
+		return Common::String::format("{ %s - %d - %s - %s }", ENTITY_NAME(entity1), action, ENTITY_NAME(entity2), param.charValue);
 	}
 };
 
@@ -97,7 +97,7 @@ public:
 		}
 
 		Common::String toString() {
-			return Common::String::printf(" { %s - %d - %s - %d }", ENTITY_NAME(entity1), action, ENTITY_NAME(entity2), param);
+			return Common::String::format(" { %s - %d - %s - %d }", ENTITY_NAME(entity1), action, ENTITY_NAME(entity2), param);
 		}
 	};
 
@@ -106,7 +106,7 @@ public:
 
 	// Savepoints
 	void push(EntityIndex entity2, EntityIndex entity1, ActionIndex action, uint32 param = 0);
-	void push(EntityIndex entity2, EntityIndex entity1, ActionIndex action, const char* param);
+	void push(EntityIndex entity2, EntityIndex entity1, ActionIndex action, const char *param);
 	void pushAll(EntityIndex entity, ActionIndex action, uint32 param = 0);
 	void process();
 	void reset();
@@ -115,7 +115,7 @@ public:
 	void addData(EntityIndex entity, ActionIndex action, uint32 param);
 
 	// Callbacks
-	void setCallback(EntityIndex index, Entity::Callback* callback);
+	void setCallback(EntityIndex index, Entity::Callback *callback);
 	Callback *getCallback(EntityIndex entity) const;
 	void call(EntityIndex entity2, EntityIndex entity1, ActionIndex action, uint32 param = 0) const;
 	void call(EntityIndex entity2, EntityIndex entity1, ActionIndex action, const char *param) const;
@@ -131,6 +131,8 @@ public:
 	 */
 	Common::String toString();
 
+	uint32 count() { return _savepoints.size(); }
+
 private:
 	static const uint32 _savePointsMaxSize = 128;
 
@@ -138,7 +140,7 @@ private:
 
 	Common::List<SavePoint> _savepoints;    ///< could be a queue, but we need to be able to iterate on the items
 	Common::Array<SavePointData> _data;
-	Callback* _callbacks[40];
+	Callback *_callbacks[40];
 
 	SavePoint pop();
 	bool updateEntityFromData(const SavePoint &point);

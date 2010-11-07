@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/savestate.h $
- * $Id: savestate.h 48283 2010-03-18 15:09:48Z fingolfin $
+ * $Id: savestate.h 53922 2010-10-29 16:41:30Z lordhoto $
  *
  */
 
@@ -127,6 +127,11 @@ public:
 	 * Sets the 'play_time' key properly, based on the given values.
 	 */
 	void setPlayTime(int hours, int minutes);
+
+	/**
+	 * Sets the 'play_time' key properly, based on the given value.
+	 */
+	void setPlayTime(uint32 msecs);
 };
 
 /** List of savestates. */

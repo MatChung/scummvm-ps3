@@ -542,6 +542,14 @@ begin_credits("Credits");
 		  add_person("Jonathan Gray", "khalek", "(retired)");
 	  end_section();
 
+	  begin_section("Broken Sword 2.5");
+		  add_person("Eugene Sandulenko", "sev", "");
+		  add_person("Filippos Karapetis", "[md5]", "");
+		  add_person("Max Horn", "Fingolfin", "");
+		  add_person("Paul Gilbert", "dreammaster", "");
+		  add_person("Torbj&ouml;rn Andersson", "eriktorbjorn", "");
+	  end_section();
+
 	  begin_section("Cinematique evo 1");
 		  add_person("Vincent Hamm", "yaz0r", "(retired)");
 		  add_person("Pawe&#322; Ko&#322;odziejski", "aquadran", "");
@@ -582,6 +590,12 @@ begin_credits("Credits");
 		  add_person("Henry Bush", "spookypeanut", "");
 		  add_person("Scott Thomas", "ST", "");
 		  add_person("Jordi Vilalta Prat", "jvprat", "");
+	  end_section();
+
+	  begin_section("Hugo");
+		  add_person("Arnaud Boutonn&eacute;", "Strangerke", "");
+		  add_person("Oystein Eftevaag", "vinterstum", "");
+		  add_person("Eugene Sandulenko", "sev", "");
 	  end_section();
 
 	  begin_section("Kyra");
@@ -684,7 +698,7 @@ begin_credits("Credits");
 		  add_person("Marcus Comstedt", "", "");
 	  end_section();
 
-	  begin_section("GP2X");
+	  begin_section("GPH Devices (GP2X, GP2XWiz &amp; Caanoo)");
 		  add_person("John Willis", "DJWillis", "");
 	  end_section();
 
@@ -708,6 +722,10 @@ begin_credits("Credits");
 		  add_person("Neil Millstone", "agent-q", "");
 	  end_section();
 
+	  begin_section("OpenPandora");
+		  add_person("John Willis", "DJWillis", "");
+	  end_section();
+	  
 	  begin_section("PocketPC / WinCE");
 		add_person("Nicolas Bacca", "arisme", "(retired)");
 		add_person("Kostas Nakos", "Jubanka", "");

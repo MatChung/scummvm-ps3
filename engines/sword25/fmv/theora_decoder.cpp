@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/fmv/theora_decoder.cpp $
- * $Id: theora_decoder.cpp 53474 2010-10-15 10:52:23Z dreammaster $
+ * $Id: theora_decoder.cpp 54045 2010-11-03 00:19:28Z fingolfin $
  *
  */
 
@@ -244,10 +244,12 @@ bool TheoraDecoder::load(Common::SeekableReadStream *stream) {
 				if (_theoraComment.user_comments[i]) {
 					int len = _theoraComment.comment_lengths[i];
 					char *value = (char *)malloc(len + 1);
-					memcpy(value, _theoraComment.user_comments[i], len);
-					value[len] = '\0';
-					debug(1, "\t%s", value);
-					free(value);
+					if (value) {
+						memcpy(value, _theoraComment.user_comments[i], len);
+						value[len] = '\0';
+						debug(1, "\t%s", value);
+						free(value);
+					}
 				}
 			}
 		}
@@ -345,7 +347,7 @@ Graphics::Surface *TheoraDecoder::decodeNextFrame() {
 			int maxsamples = (AUDIOFD_FRAGSIZE - _audiobufFill) / 2 / _vorbisInfo.channels;
 			for (i = 0; i < ret && i < maxsamples; i++)
 				for (j = 0; j < _vorbisInfo.channels; j++) {
-					int val = CLIP((int)rint(pcm[j][i] * 32767.f), -32768, 32768);
+					int val = CLIP((int)rint(pcm[j][i] * 32767.f), -32768, 32767);
 					_audiobuf[count++] = val;
 				}
 
@@ -411,11 +413,15 @@ Graphics::Surface *TheoraDecoder::decodeNextFrame() {
 	}
 
 	// If playback has begun, top audio buffer off immediately.
-/* FIXME: This is currently crashing
-	if (_stateFlag) {
+	if (_stateFlag && _audiobufReady) {
 		_audStream->queueBuffer((byte *)_audiobuf, AUDIOFD_FRAGSIZE, DisposeAfterUse::NO, Audio::FLAG_16BITS | Audio::FLAG_LITTLE_ENDIAN | Audio::FLAG_STEREO);
+
+		// The audio mixer is now responsible for the old audio buffer.
+		// We need to create a new one.
+		_audiobuf = (ogg_int16_t *)calloc(AUDIOFD_FRAGSIZE, sizeof(ogg_int16_t));
+		_audiobufFill = 0;
+		_audiobufReady = false;
 	}
-*/
 
 	// are we at or past time for this video frame?
 	if (_stateFlag && _videobufReady) {

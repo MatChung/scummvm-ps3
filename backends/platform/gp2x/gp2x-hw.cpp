@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/gp2x/gp2x-hw.cpp $
- * $Id: gp2x-hw.cpp 52645 2010-09-08 21:43:46Z djwillis $
+ * $Id: gp2x-hw.cpp 53982 2010-10-31 17:24:27Z fingolfin $
  *
  */
 
@@ -29,6 +29,9 @@
  * for there help with us all getting to grips with this.
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "gp2x-common.h"
 
@@ -47,6 +50,10 @@
 #include <sys/soundcard.h>
 #include <sys/time.h>
 #include <unistd.h>
+
+extern "C" {
+static unsigned long gp2x_dev[8]={0,0,0,0,0,0,0,0};//, gp2x_ticks_per_second;
+}
 
 namespace GP2X_HW {
 

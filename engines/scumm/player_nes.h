@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/player_nes.h $
- * $Id: player_nes.h 48230 2010-03-10 21:03:50Z fingolfin $
+ * $Id: player_nes.h 53830 2010-10-25 16:42:24Z fingolfin $
  *
  */
 
@@ -74,8 +74,6 @@ private:
 	void APU_writeChannel(int chan, int offset, byte value);
 	void APU_writeControl(byte value);
 	byte APU_readStatus();
-
-	void do_mix(int16 *buf, uint len);
 
 	ScummEngine *_vm;
 	Audio::Mixer *_mixer;

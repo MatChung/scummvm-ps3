@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/image/pngloader.cpp $
- * $Id: pngloader.cpp 53451 2010-10-13 22:18:57Z fingolfin $
+ * $Id: pngloader.cpp 53961 2010-10-30 21:27:42Z fingolfin $
  *
  */
 
@@ -32,9 +32,8 @@
  *
  */
 
-// -----------------------------------------------------------------------------
-// Includes
-// -----------------------------------------------------------------------------
+// Disable symbol overrides so that we can use png.h
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "sword25/gfx/image/image.h"
 #include "sword25/gfx/image/pngloader.h"
@@ -44,16 +43,51 @@ namespace Sword25 {
 
 #define BS_LOG_PREFIX "PNGLOADER"
 
-// -----------------------------------------------------------------------------
-// Konstruktor / Destruktor
-// -----------------------------------------------------------------------------
 
-PNGLoader::PNGLoader() {
+/**
+ * Load a NULL-terminated string from the given stream.
+ */
+static Common::String loadString(Common::ReadStream &in, uint maxSize = 999) {
+	Common::String result;
+
+	while (!in.eos() && (result.size() < maxSize)) {
+		char ch = (char)in.readByte();
+		if (ch == '\0')
+			break;
+
+		result += ch;
+	}
+
+	return result;
 }
 
-// -----------------------------------------------------------------------------
-// Laden
-// -----------------------------------------------------------------------------
+/**
+ * Check if the given data is a savegame, and if so, locate the
+ * offset to the image data.
+ * @return offset to image data if fileDataPtr contains a savegame; 0 otherwise
+ */
+static uint findEmbeddedPNG(const byte *fileDataPtr, uint fileSize) {
+	if (fileSize < 100)
+		return 0;
+	if (memcmp(fileDataPtr, "BS25SAVEGAME", 12))
+		return 0;
+
+	// Read in the header
+	Common::MemoryReadStream stream(fileDataPtr, fileSize);
+	stream.seek(0, SEEK_SET);
+
+	// Headerinformationen der Spielstandes einlesen.
+	uint compressedGamedataSize;
+	loadString(stream);		// Marker
+	loadString(stream);		// Version
+	loadString(stream);		// Description
+	Common::String gameSize = loadString(stream);
+	compressedGamedataSize = atoi(gameSize.c_str());
+	loadString(stream);
+
+	// Return the offset of where the thumbnail starts
+	return static_cast<uint>(stream.pos() + compressedGamedataSize);
+}
 
 static void png_user_read_data(png_structp png_ptr, png_bytep data, png_size_t length) {
 	const byte **ref = (const byte **)png_get_io_ptr(png_ptr);
@@ -61,28 +95,22 @@ static void png_user_read_data(png_structp png_ptr, png_bytep data, png_size_t l
 	*ref += length;
 }
 
-// -----------------------------------------------------------------------------
+static bool doIsCorrectImageFormat(const byte *fileDataPtr, uint fileSize) {
+	return (fileSize > 8) && png_check_sig(const_cast<byte *>(fileDataPtr), 8);
+}
 
-bool PNGLoader::DoDecodeImage(const byte *FileDataPtr, uint FileSize,  GraphicEngine::COLOR_FORMATS ColorFormat, byte *&UncompressedDataPtr,
-                              int &Width, int &Height, int &Pitch) {
+
+bool PNGLoader::doDecodeImage(const byte *fileDataPtr, uint fileSize, byte *&uncompressedDataPtr, int &width, int &height, int &pitch) {
 	png_structp png_ptr = NULL;
 	png_infop   info_ptr = NULL;
-	png_bytep   RawDataBuffer = NULL;
-	png_bytep  *pRowPtr = NULL;
 
-	int         BitDepth;
-	int         ColorType;
-	int         InterlaceType;
+	int         bitDepth;
+	int         colorType;
+	int         interlaceType;
 	int         i;
 
-	// Zielfarbformat überprüfen
-	if (ColorFormat != GraphicEngine::CF_ARGB32) {
-		BS_LOG_ERRORLN("Illegal or unsupported color format.");
-		return false;
-	}
-
-	// PNG Signatur überprüfen
-	if (!png_check_sig(reinterpret_cast<png_bytep>(const_cast<byte *>(FileDataPtr)), 8)) {
+	// Check for valid PNG signature
+	if (!doIsCorrectImageFormat(fileDataPtr, fileSize)) {
 		error("png_check_sig failed");
 	}
 
@@ -98,128 +126,92 @@ bool PNGLoader::DoDecodeImage(const byte *FileDataPtr, uint FileSize,  GraphicEn
 	}
 
 	// Alternative Lesefunktion benutzen
-	const byte **ref = &FileDataPtr;
+	const byte **ref = &fileDataPtr;
 	png_set_read_fn(png_ptr, (void *)ref, png_user_read_data);
 
 	// PNG Header einlesen
 	png_read_info(png_ptr, info_ptr);
 
 	// PNG Informationen auslesen
-	png_get_IHDR(png_ptr, info_ptr, (png_uint_32 *)&Width, (png_uint_32 *)&Height, &BitDepth, &ColorType, &InterlaceType, NULL, NULL);
+	png_get_IHDR(png_ptr, info_ptr, (png_uint_32 *)&width, (png_uint_32 *)&height, &bitDepth, &colorType, &interlaceType, NULL, NULL);
 
 	// Pitch des Ausgabebildes berechnen
-	Pitch = GraphicEngine::CalcPitch(ColorFormat, Width);
+	pitch = GraphicEngine::calcPitch(GraphicEngine::CF_ARGB32, width);
 
 	// Speicher für die endgültigen Bilddaten reservieren
 	// Dieses geschieht vor dem reservieren von Speicher für temporäre Bilddaten um die Fragmentierung des Speichers gering zu halten
-	UncompressedDataPtr = new byte[Pitch * Height];
-	if (!UncompressedDataPtr) {
+	uncompressedDataPtr = new byte[pitch * height];
+	if (!uncompressedDataPtr) {
 		error("Could not allocate memory for output image.");
 	}
 
 	// Bilder jeglicher Farbformate werden zunächst in ARGB Bilder umgewandelt
-	if (BitDepth == 16)
+	if (bitDepth == 16)
 		png_set_strip_16(png_ptr);
-	if (ColorType == PNG_COLOR_TYPE_PALETTE)
+	if (colorType == PNG_COLOR_TYPE_PALETTE)
 		png_set_expand(png_ptr);
-	if (BitDepth < 8)
+	if (bitDepth < 8)
 		png_set_expand(png_ptr);
 	if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
 		png_set_expand(png_ptr);
-	if (ColorType == PNG_COLOR_TYPE_GRAY ||
-	        ColorType == PNG_COLOR_TYPE_GRAY_ALPHA)
+	if (colorType == PNG_COLOR_TYPE_GRAY ||
+	        colorType == PNG_COLOR_TYPE_GRAY_ALPHA)
 		png_set_gray_to_rgb(png_ptr);
 
 	png_set_bgr(png_ptr);
 
-	if (ColorType != PNG_COLOR_TYPE_RGB_ALPHA)
+	if (colorType != PNG_COLOR_TYPE_RGB_ALPHA)
 		png_set_filler(png_ptr, 0xff, PNG_FILLER_AFTER);
 
 	// Nachdem die Transformationen registriert wurden, werden die Bilddaten erneut eingelesen
 	png_read_update_info(png_ptr, info_ptr);
-	png_get_IHDR(png_ptr, info_ptr, (png_uint_32 *)&Width, (png_uint_32 *)&Height, &BitDepth, &ColorType, NULL, NULL, NULL);
+	png_get_IHDR(png_ptr, info_ptr, (png_uint_32 *)&width, (png_uint_32 *)&height, &bitDepth, &colorType, NULL, NULL, NULL);
 
-	// PNGs ohne Interlacing werden Zeilenweise eingelesen
-	if (InterlaceType == PNG_INTERLACE_NONE) {
-		// Speicher für eine Bildzeile reservieren
-		RawDataBuffer = new png_byte[png_get_rowbytes(png_ptr, info_ptr)];
-		if (!RawDataBuffer) {
-			error("Could not allocate memory for row buffer.");
-		}
-
-		// Bilddaten zeilenweise einlesen und in das gewünschte Zielformat konvertieren
-		for (i = 0; i < Height; i++) {
-			// Zeile einlesen
-			png_read_row(png_ptr, RawDataBuffer, NULL);
-
-			// Zeile konvertieren
-			switch (ColorFormat) {
-			case GraphicEngine::CF_ARGB32:
-				memcpy(&UncompressedDataPtr[i * Pitch], RawDataBuffer, Pitch);
-				break;
-			default:
-				assert(0);
-			}
+	if (interlaceType == PNG_INTERLACE_NONE) {
+		// PNGs without interlacing can simply be read row by row.
+		for (i = 0; i < height; i++) {
+			png_read_row(png_ptr, uncompressedDataPtr + i * pitch, NULL);
 		}
 	} else {
-		// PNGs mit Interlacing werden an einem Stück eingelesen
-		// Speicher für das komplette Bild reservieren
-		RawDataBuffer = new png_byte[png_get_rowbytes(png_ptr, info_ptr) * Height];
-		if (!RawDataBuffer) {
-			error("Could not allocate memory for raw image buffer.");
-		}
+		// PNGs with interlacing require us to allocate an auxillary
+		// buffer with pointers to all row starts.
 
-		// Speicher für die Rowpointer reservieren
-		pRowPtr = new png_bytep[Height];
+		// Allocate row pointer buffer
+		png_bytep *pRowPtr = new png_bytep[height];
 		if (!pRowPtr) {
 			error("Could not allocate memory for row pointers.");
 		}
 
-		// Alle Rowpointer mit den richtigen Offsets initialisieren
-		for (i = 0; i < Height; i++)
-			pRowPtr[i] = RawDataBuffer + i * png_get_rowbytes(png_ptr, info_ptr);
+		// Initialize row pointers
+		for (i = 0; i < height; i++)
+			pRowPtr[i] = uncompressedDataPtr + i * pitch;
 
-		// Bild einlesen
+		// Read image data
 		png_read_image(png_ptr, pRowPtr);
 
-		// Bilddaten zeilenweise in das gewünschte Ausgabeformat konvertieren
-		switch (ColorFormat) {
-		case GraphicEngine::CF_ARGB32:
-			for (i = 0; i < Height; i++)
-				memcpy(&UncompressedDataPtr[i * Pitch], &RawDataBuffer[i * png_get_rowbytes(png_ptr, info_ptr)], Pitch);
-			break;
-		default:
-			error("Unhandled case in DoDecodeImage");
-			break;
-		}
+		// Free row pointer buffer
+		delete[] pRowPtr;
 	}
 
-	// Die zusätzlichen Daten am Ende des Bildes lesen
+	// Read additional data at the end.
 	png_read_end(png_ptr, NULL);
 
-	// Die Strukturen freigeben
+	// Destroy libpng structures
 	png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 
-	// Temporäre Buffer freigeben
-	delete[] pRowPtr;
-	delete[] RawDataBuffer;
-
-	// Der Funktionsaufruf war erfolgreich
+	// Signal success
 	return true;
 }
 
-// -----------------------------------------------------------------------------
-
-bool PNGLoader::DecodeImage(const byte *FileDataPtr, uint FileSize,  GraphicEngine::COLOR_FORMATS ColorFormat, byte *&UncompressedDataPtr,
-                            int &Width, int &Height, int &Pitch) {
-	return DoDecodeImage(FileDataPtr, FileSize, ColorFormat, UncompressedDataPtr, Width, Height, Pitch);
+bool PNGLoader::decodeImage(const byte *fileDataPtr, uint fileSize, byte *&uncompressedDataPtr, int &width, int &height, int &pitch) {
+	uint pngOffset = findEmbeddedPNG(fileDataPtr, fileSize);
+	return doDecodeImage(fileDataPtr + pngOffset, fileSize - pngOffset, uncompressedDataPtr, width, height, pitch);
 }
 
-// -----------------------------------------------------------------------------
-
-bool PNGLoader::DoImageProperties(const byte *FileDataPtr, uint FileSize, GraphicEngine::COLOR_FORMATS &ColorFormat, int &Width, int &Height) {
-	// PNG Signatur überprüfen
-	if (!DoIsCorrectImageFormat(FileDataPtr, FileSize)) return false;
+bool PNGLoader::doImageProperties(const byte *fileDataPtr, uint fileSize, int &width, int &height) {
+	// Check for valid PNG signature
+	if (!doIsCorrectImageFormat(fileDataPtr, fileSize))
+		return false;
 
 	png_structp png_ptr = NULL;
 	png_infop info_ptr = NULL;
@@ -236,22 +228,16 @@ bool PNGLoader::DoImageProperties(const byte *FileDataPtr, uint FileSize, Graphi
 	}
 
 	// Alternative Lesefunktion benutzen
-	const byte **ref = &FileDataPtr;
+	const byte **ref = &fileDataPtr;
 	png_set_read_fn(png_ptr, (void *)ref, png_user_read_data);
 
 	// PNG Header einlesen
 	png_read_info(png_ptr, info_ptr);
 
 	// PNG Informationen auslesen
-	int BitDepth;
-	int ColorType;
-	png_get_IHDR(png_ptr, info_ptr, (png_uint_32 *)&Width, (png_uint_32 *)&Height, &BitDepth, &ColorType, NULL, NULL, NULL);
-
-	// PNG-ColorType in BS ColorFormat konvertieren.
-	if (ColorType & PNG_COLOR_MASK_ALPHA || png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
-		ColorFormat = GraphicEngine::CF_ARGB32;
-	else
-		ColorFormat = GraphicEngine::CF_RGB24;
+	int bitDepth;
+	int colorType;
+	png_get_IHDR(png_ptr, info_ptr, (png_uint_32 *)&width, (png_uint_32 *)&height, &bitDepth, &colorType, NULL, NULL, NULL);
 
 	// Die Strukturen freigeben
 	png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
@@ -260,27 +246,10 @@ bool PNGLoader::DoImageProperties(const byte *FileDataPtr, uint FileSize, Graphi
 
 }
 
-// -----------------------------------------------------------------------------
-
-bool PNGLoader::ImageProperties(const byte *FileDataPtr, uint FileSize,  GraphicEngine::COLOR_FORMATS &ColorFormat, int &Width, int &Height) {
-	return DoImageProperties(FileDataPtr, FileSize, ColorFormat, Width, Height);
+bool PNGLoader::imageProperties(const byte *fileDataPtr, uint fileSize, int &width, int &height) {
+	uint pngOffset = findEmbeddedPNG(fileDataPtr, fileSize);
+	return doImageProperties(fileDataPtr + pngOffset, fileSize - pngOffset, width, height);
 }
 
-// -----------------------------------------------------------------------------
-// Header überprüfen
-// -----------------------------------------------------------------------------
-
-bool PNGLoader::DoIsCorrectImageFormat(const byte *FileDataPtr, uint FileSize) {
-	if (FileSize > 8)
-		return png_check_sig(const_cast<byte *>(FileDataPtr), 8) ? true : false;
-	else
-		return false;
-}
-
-// -----------------------------------------------------------------------------
-
-bool PNGLoader::IsCorrectImageFormat(const byte *FileDataPtr, uint FileSize) {
-	return DoIsCorrectImageFormat(FileDataPtr, FileSize);
-}
 
 } // End of namespace Sword25

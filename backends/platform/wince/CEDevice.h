@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEDevice.h $
- * $Id: CEDevice.h 52935 2010-09-28 20:30:50Z fingolfin $
+ * $Id: CEDevice.h 53979 2010-10-31 17:11:43Z fingolfin $
  *
  */
 
@@ -31,20 +31,20 @@
 #include "common/str.h"
 
 class CEDevice {
-	public:
-		static void init();
-		static void end();
-		static void wakeUp();
-		static bool hasPocketPCResolution();
-		static bool hasSquareQVGAResolution();
-		static bool hasDesktopResolution();
-		static bool hasWideResolution();
-		static bool hasSmartphoneResolution();
-		static bool isSmartphone();
+public:
+	static void init();
+	static void end();
+	static void wakeUp();
+	static bool hasPocketPCResolution();
+	static bool hasSquareQVGAResolution();
+	static bool hasDesktopResolution();
+	static bool hasWideResolution();
+	static bool hasSmartphoneResolution();
+	static bool isSmartphone();
 
-	private:
-		static DWORD reg_access(TCHAR *key, TCHAR *val, DWORD data);
-		static void backlight_xchg();
+private:
+	static DWORD reg_access(TCHAR *key, TCHAR *val, DWORD data);
+	static void backlight_xchg();
 };
 
 #endif

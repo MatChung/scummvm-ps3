@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/rails.cpp $
- * $Id: rails.cpp 50912 2010-07-15 10:00:32Z dreammaster $
+ * $Id: rails.cpp 54047 2010-11-03 09:44:03Z dreammaster $
  *
  */
 
@@ -233,7 +233,7 @@ void Rails::createEdge(int32 node1, int32 node2) {
 
 	valid = isLineWalkable(_nodes[node1]->x, _nodes[node1]->y,
 		_nodes[node2]->x, _nodes[node2]->y);
-	printf("test code says: %d\n", valid);
+	debugCN(kDebugCore, "test code says: %d\n", valid);
 
 	// Check if the line passes through a forbidden rectangle
 	if (valid) {
@@ -255,7 +255,7 @@ void Rails::createEdge(int32 node1, int32 node2) {
 		_edges.insert_at(index, (int16*)(distance >> 16));
 	}
 
-	printf("node1 = %d, node2 = %d, valid = %d\n", node1, node2, valid);
+	debugCN(kDebugCore, "node1 = %d, node2 = %d, valid = %d\n", node1, node2, valid);
 
 }
 

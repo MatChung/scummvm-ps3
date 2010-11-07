@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lure/res.cpp $
- * $Id: res.cpp 53029 2010-10-05 10:50:22Z dreammaster $
+ * $Id: res.cpp 54001 2010-11-01 16:00:17Z fingolfin $
  *
  */
 
@@ -32,8 +32,6 @@
 #include "common/events.h"
 
 namespace Lure {
-
-using namespace Common;
 
 static Resources *int_resources = NULL;
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/shorten.cpp $
- * $Id: shorten.cpp 53614 2010-10-19 15:31:07Z h00ligan $
+ * $Id: shorten.cpp 53738 2010-10-23 15:46:50Z fingolfin $
  *
  */
 
@@ -239,7 +239,7 @@ byte *loadShortenFromStream(Common::ReadStream &stream, int &size, int &rate, by
 		return NULL;
 	}
 
-    // Get block size
+	// Get block size
 	if (version > 0) {
 		blockSize = gReader->getUint32((int) (log((double) DEFAULT_BLOCK_SIZE) / M_LN2));
 		maxLPC = gReader->getUint32(2);

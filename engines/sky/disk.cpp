@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sky/disk.cpp $
- * $Id: disk.cpp 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: disk.cpp 54031 2010-11-01 21:37:47Z fingolfin $
  *
  */
 
@@ -59,7 +59,7 @@ Disk::Disk() {
 	if (!_dataDiskHandle->isOpen())
 		error("Error opening %s", dataFilename);
 
-	printf("Found BASS version v0.0%d (%d dnr entries)\n", determineGameVersion(), _dinnerTableEntries);
+	debug("Found BASS version v0.0%d (%d dnr entries)", determineGameVersion(), _dinnerTableEntries);
 
 	memset(_buildList, 0, 60 * 2);
 	memset(_loadedFilesList, 0, 60 * 4);

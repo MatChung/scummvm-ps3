@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/fs/stdiostream.cpp $
- * $Id: stdiostream.cpp 46777 2009-12-30 22:56:19Z Hkz $
+ * $Id: stdiostream.cpp 53961 2010-10-30 21:27:42Z fingolfin $
  *
  */
+
+// Disable symbol overrides so that we can use FILE, fopen etc.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "backends/fs/stdiostream.h"
 
