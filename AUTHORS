@@ -64,6 +64,13 @@ ScummVM Team
        Fabio Battaglia       - PSX version support
        Jonathan Gray         - (retired)
 
+    Broken Sword 2.5:
+       Eugene Sandulenko
+       Filippos Karapetis
+       Max Horn
+       Paul Gilbert
+       Torbjorn Andersson
+
     Cinematique evo 1:
        Vincent Hamm          - (retired)
        Pawel Kolodziejski
@@ -235,6 +242,7 @@ ScummVM Team
        Max Horn              - Backend & Engine APIs, file API, sound mixer,
                                audiostreams, data structures, etc.
        Eugene Sandulenko
+       Johannes Schickel
 
     GUI:
        Vicent Marti
@@ -265,6 +273,7 @@ ScummVM Team
   -------------
      Thierry Crozat        - Numerous contributions to documentation
      Joachim Eberhard      - Numerous contributions to documentation
+                             (retired)
      Matthew Hoops         - Wiki editor
 
   Retired Team Members

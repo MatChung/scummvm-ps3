@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/schedule.cpp $
- * $Id: schedule.cpp 54019 2010-11-01 20:21:01Z strangerke $
+ * $Id: schedule.cpp 54124 2010-11-07 18:52:47Z strangerke $
  *
  */
 
@@ -42,7 +42,7 @@
 
 namespace Hugo {
 
-Scheduler::Scheduler(HugoEngine *vm) : _vm(vm) {
+Scheduler::Scheduler(HugoEngine *vm) : _vm(vm), _actListArr(0) {
 }
 
 Scheduler::~Scheduler() {
@@ -829,9 +829,11 @@ void Scheduler::loadActListArr(Common::File &in) {
 void Scheduler::freeActListArr() {
 	debugC(6, kDebugSchedule, "freeActListArr()");
 
-	for (int i = 0; i < _actListArrSize; i++)
-		free(_actListArr[i]);
-	free(_actListArr);
+	if (_actListArr) {
+		for (int i = 0; i < _actListArrSize; i++)
+			free(_actListArr[i]);
+		free(_actListArr);
+	}
 }
 
 /**

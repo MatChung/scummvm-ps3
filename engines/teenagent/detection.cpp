@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/teenagent/detection.cpp $
- * $Id: detection.cpp 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: detection.cpp 54105 2010-11-07 01:01:18Z fingolfin $
  */
 
 #include "common/system.h"
@@ -83,16 +83,27 @@ static const ADGameDescription teenAgentGameDescriptions[] = {
 };
 
 static const ADParams detectionParams = {
+	// Pointer to ADGameDescription or its superset structure
 	(const byte *)teenAgentGameDescriptions,
+	// Size of that superset structure
 	sizeof(ADGameDescription),
+	// Number of bytes to compute MD5 sum for
 	5000,
+	// List of all engine targets
 	teenAgentGames,
+	// Structure for autoupgrading obsolete targets
 	0,
+	// Name of single gameid (optional)
 	"teenagent",
+	// List of files for file-based fallback detection (optional)
 	0,
+	// Flags
 	0,
+	// Additional GUI options (for every game}
 	Common::GUIO_NONE,
+	// Maximum directory depth
 	1,
+	// List of directory globs
 	0
 };
 

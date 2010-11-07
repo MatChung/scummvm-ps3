@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cine/cine.h $
- * $Id: cine.h 53484 2010-10-15 12:48:19Z fingolfin $
+ * $Id: cine.h 54115 2010-11-07 15:02:41Z tdhs $
  *
  */
 
@@ -49,6 +49,7 @@
 #include "cine/anim.h"
 #include "cine/bg_list.h"
 #include "cine/various.h"
+#include "cine/console.h"
 
 //#define DUMP_SCRIPTS
 
@@ -99,6 +100,8 @@ struct SeqListElement;
 
 typedef Common::HashMap<Common::String, const char *> StringPtrHashMap;
 
+class CineConsole;
+
 class CineEngine : public Engine {
 
 protected:
@@ -137,6 +140,8 @@ public:
 	StringPtrHashMap _volumeEntriesMap;
 	TextHandler _textHandler;
 
+	GUI::Debugger *getDebugger() { return _console; }
+
 	bool _restartRequested;
 
 private:
@@ -151,6 +156,7 @@ private:
 	void mainLoop(int bootScriptIdx);
 	void readVolCnf();
 
+	CineConsole *_console;
 	bool _preLoad;
 	int _timerDelayMultiplier;
 

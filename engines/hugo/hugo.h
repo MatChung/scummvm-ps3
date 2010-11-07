@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/hugo.h $
- * $Id: hugo.h 54102 2010-11-06 13:21:18Z strangerke $
+ * $Id: hugo.h 54117 2010-11-07 15:04:47Z tdhs $
  *
  */
 
@@ -28,6 +28,7 @@
 
 #include "engines/engine.h"
 #include "common/file.h"
+#include "hugo/console.h"
 
 // This include is here temporarily while the engine is being refactored.
 #include "hugo/game.h"
@@ -126,8 +127,6 @@ public:
 	byte  *_introX;
 	byte  *_introY;
 	byte  *_screenStates;
-	byte  *_arrayFont[3];
-	int16  _arrayFontSize[3];
 	char  **_textData;
 	char  **_stringtData;
 	char  **_screenNames;
@@ -157,6 +156,8 @@ public:
 	uint16    _take;
 	uint16    _drop;
 	uint16    _numObj;
+
+	GUI::Debugger *getDebugger() { return _console; }
 
 	Common::RandomSource *_rnd;
 
@@ -265,6 +266,8 @@ private:
 	status_t _status;                               // Game status structure
 
 	static HugoEngine *s_Engine;
+
+	HugoConsole *_console;
 
 // The following are bit plane display overlays which mark travel boundaries,
 // foreground stationary objects and baselines for those objects (used to

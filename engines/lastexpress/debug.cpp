@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/debug.cpp $
- * $Id: debug.cpp 54007 2010-11-01 16:03:35Z fingolfin $
+ * $Id: debug.cpp 54121 2010-11-07 17:16:59Z fingolfin $
  *
  */
 
@@ -281,9 +281,8 @@ bool Debugger::cmdDumpFiles(int argc, const char **) {
 			restoreArchive(); \
 			return true; \
 		} \
-		char md5str[32+1]; \
-		Common::md5_file_string(*stream, md5str, (uint32)stream->size()); \
-		debugC(1, kLastExpressDebugResource, "%s, %d, %s", (*it)->getName().c_str(), stream->size(), (char *)&md5str); \
+		Common::String md5str = Common::computeStreamMD5AsString(*stream); \
+		debugC(1, kLastExpressDebugResource, "%s, %d, %s", (*it)->getName().c_str(), stream->size(), md5str.c_str()); \
 		delete stream; \
 	} \
 }

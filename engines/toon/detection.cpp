@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/detection.cpp $
- * $Id: detection.cpp 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: detection.cpp 54105 2010-11-07 01:01:18Z fingolfin $
  *
  */
 
@@ -112,13 +112,21 @@ static const char * const directoryGlobs[] = {
 };
 
 static const ADParams detectionParams = {
+	// Pointer to ADGameDescription or its superset structure
 	(const byte *)Toon::gameDescriptions,
+	// Size of that superset structure
 	sizeof(ADGameDescription),
-	5000, // number of md5 bytes
+	// Number of bytes to compute MD5 sum for
+	5000,
+	// List of all engine targets
 	ToonGames,
-	0, // no obsolete targets data
+	// Structure for autoupgrading obsolete targets
+	0,
+	// Name of single gameid (optional)
 	"toon",
+	// List of files for file-based fallback detection (optional)
 	Toon::fileBasedFallback,
+	// Flags
 	0,
 	// Additional GUI options (for every game}
 	Common::GUIO_NONE,

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/console.cpp $
- * $Id: console.cpp 52631 2010-09-07 20:18:30Z mthreepwood $
+ * $Id: console.cpp 54109 2010-11-07 02:08:02Z mthreepwood $
  *
  */
 
@@ -545,8 +545,14 @@ bool RivenConsole::Cmd_DumpScript(int argc, const char **argv) {
 
 	// Get CARD/HSPT data and dump their scripts
 	if (!scumm_stricmp(argv[2], "CARD")) {
-		printf ("\n\nDumping scripts for %s\'s card %d!\n", argv[1], (uint16)atoi(argv[3]));
-		printf ("==================================\n\n");
+		// Use debugN to print these because the scripts can get very large and would
+		// really be useless if the the text console is not used. A DumpFile could also
+		// theoretically be used, but I (clone2727) typically use this dynamically and
+		// don't want countless files laying around without game context. If one would
+		// want a file of a script they could just redirect stdout to a file or use
+		// deriven.
+		debugN("\n\nDumping scripts for %s\'s card %d!\n", argv[1], (uint16)atoi(argv[3]));
+		debugN("==================================\n\n");
 		Common::SeekableReadStream *cardStream = _vm->getRawData(MKID_BE('CARD'), (uint16)atoi(argv[3]));
 		cardStream->seek(4);
 		RivenScriptList scriptList = _vm->_scriptMan->readScripts(cardStream, false);
@@ -556,15 +562,16 @@ bool RivenConsole::Cmd_DumpScript(int argc, const char **argv) {
 		}
 		delete cardStream;
 	} else if (!scumm_stricmp(argv[2], "HSPT")) {
-		printf ("\n\nDumping scripts for %s\'s card %d hotspots!\n", argv[1], (uint16)atoi(argv[3]));
-		printf ("===========================================\n\n");
+		// See above for why this is printed via debugN
+		debugN("\n\nDumping scripts for %s\'s card %d hotspots!\n", argv[1], (uint16)atoi(argv[3]));
+		debugN("===========================================\n\n");
 
 		Common::SeekableReadStream *hsptStream = _vm->getRawData(MKID_BE('HSPT'), (uint16)atoi(argv[3]));
 
 		uint16 hotspotCount = hsptStream->readUint16BE();
 
 		for (uint16 i = 0; i < hotspotCount; i++) {
-			printf ("Hotspot %d:\n", i);
+			debugN("Hotspot %d:\n", i);
 			hsptStream->seek(22, SEEK_CUR);	// Skip non-script related stuff
 			RivenScriptList scriptList = _vm->_scriptMan->readScripts(hsptStream, false);
 			for (uint32 j = 0; j < scriptList.size(); j++) {
@@ -578,7 +585,8 @@ bool RivenConsole::Cmd_DumpScript(int argc, const char **argv) {
 		DebugPrintf("%s doesn't have any scripts!\n", argv[2]);
 	}
 
-	printf("\n\n");
+	// See above for why this is printed via debugN
+	debugN("\n\n");
 
 	_vm->changeToStack(oldStack);
 

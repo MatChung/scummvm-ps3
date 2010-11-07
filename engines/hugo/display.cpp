@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/display.cpp $
- * $Id: display.cpp 54102 2010-11-06 13:21:18Z strangerke $
+ * $Id: display.cpp 54103 2010-11-07 00:02:48Z strangerke $
  *
  */
 
@@ -49,7 +49,10 @@ namespace Hugo {
 #define OVERLAP(A, B) ((INX(A->x, B) || INX(A->x + A->dx, B) || INX(B->x, A) || INX(B->x + B->dx, A)) && (INY(A->y, B) || INY(A->y + A->dy, B) || INY(B->y, A) || INY(B->y + B->dy, A)))
 
 Screen::Screen(HugoEngine *vm) : _vm(vm), _palette(0) {
-
+	for (int j = 0; j < NUM_FONTS; j++) {
+		_arrayFont[j] = 0;
+		fontLoadedFl[j] = false;
+	}
 }
 
 Screen::~Screen() {
@@ -507,5 +510,14 @@ void Screen::freePalette() {
 	free(_palette);
 }
 
+/**
+* Free fonts
+*/
+void Screen::freeFonts() {
+	for (int i = 0; i < NUM_FONTS; i++) {
+		if (_arrayFont[i])
+			free(_arrayFont[i]);
+	}
+}
 } // End of namespace Hugo
 

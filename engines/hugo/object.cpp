@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/object.cpp $
- * $Id: object.cpp 54018 2010-11-01 20:20:21Z strangerke $
+ * $Id: object.cpp 54124 2010-11-07 18:52:47Z strangerke $
  *
  */
 
@@ -46,7 +46,7 @@
 
 namespace Hugo {
 
-ObjectHandler::ObjectHandler(HugoEngine *vm) : _vm(vm) {
+ObjectHandler::ObjectHandler(HugoEngine *vm) : _vm(vm), _objects(0) {
 }
 
 ObjectHandler::~ObjectHandler() {

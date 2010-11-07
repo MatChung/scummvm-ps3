@@ -18,35 +18,26 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/groovie/saveload.h $
- * $Id: saveload.h 54119 2010-11-07 17:15:46Z fingolfin $
+ * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cine/console.cpp $
+ * $Id: console.cpp 54115 2010-11-07 15:02:41Z tdhs $
  *
  */
 
-#ifndef GROOVIE_SAVELOAD_H
-#define GROOVIE_SAVELOAD_H
+#include "cine/console.h"
+#include "cine/cine.h"
 
-#include "common/savefile.h"
-#include "engines/game.h"
-#include "engines/savestate.h"
+namespace Cine {
 
-namespace Groovie {
+CineConsole::CineConsole(CineEngine *vm) : GUI::Debugger(), _vm(vm) {
+}
 
-class SaveLoad {
-public:
-	// Validating slot numbers
-	static int getMaximumSlot();
-	static bool isSlotValid(int slot);
+CineConsole::~CineConsole() {
+}
 
-	// Getting information
-	static Common::String getSlotSaveName(const Common::String &target, int slot);
-	static SaveStateList listValidSaves(const Common::String &target);
+void CineConsole::preEnter() {
+}
 
-	// Opening savefiles
-	static Common::InSaveFile *openForLoading(const Common::String &target, int slot, SaveStateDescriptor *descriptor = NULL);
-	static Common::OutSaveFile *openForSaving(const Common::String &target, int slot);
-};
+void CineConsole::postEnter() {
+}
 
-} // End of Groovie namespace
-
-#endif // GROOVIE_SAVELOAD_H
+} // End of namespace Cine

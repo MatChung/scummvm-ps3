@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cruise/saveload.cpp $
- * $Id: saveload.cpp 51936 2010-08-09 10:30:40Z sev $
+ * $Id: saveload.cpp 54108 2010-11-07 01:03:58Z fingolfin $
  *
  */
 
@@ -901,8 +901,7 @@ Common::Error loadSavegameData(int saveGameIdx) {
 			}
 
 			/*if (j < 2) {
-				printf("Unsupported mono file load!\n");
-				ASSERT(0);
+				error("Unsupported mono file load");
 				//loadFileMode1(filesDatabase[j].subData.name,filesDatabase[j].subData.var4);
 			} else */
 			if (strlen(filesDatabase[i].subData.name) > 0) {
