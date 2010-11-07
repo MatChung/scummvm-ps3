@@ -2921,6 +2921,7 @@ case $_backend in
 	ps3)
 		INCLUDES="$INCLUDES -I$PSL1GHT/include"
 		LDFLAGS="$LDFLAGS -L$PSL1GHT/lib"
+		LDFLAGS="$LDFLAGS -T $PSL1GHT/lib/linker.x -B$PSL1GHT/lib"
 		LIBS="$LIBS -laudio -lgcm_sys -lc-glue-ppu -lio -llv2 -lpsl1ght -lreality -lsysutil -lm -lc -lstdc++ "
 		
 		add_line_to_config_mk  ''
