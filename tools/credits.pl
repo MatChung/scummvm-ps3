@@ -761,6 +761,7 @@ begin_credits("Credits");
 	  begin_section("Infrastructure");
 		  add_person("Max Horn", "Fingolfin", "Backend &amp; Engine APIs, file API, sound mixer, audiostreams, data structures, etc.");
 		  add_person("Eugene Sandulenko", "sev", "");
+		  add_person("Johannes Schickel", "LordHoto", "");
 	  end_section();
 
 	  begin_section("GUI");
@@ -792,7 +793,7 @@ begin_credits("Credits");
     begin_section("Documentation");
 	  begin_persons();
 		add_person("Thierry Crozat", "criezy", "Numerous contributions to documentation");
-		add_person("Joachim Eberhard", "joachimeberhard", "Numerous contributions to documentation");
+		add_person("Joachim Eberhard", "joachimeberhard", "Numerous contributions to documentation (retired)");
 		add_person("Matthew Hoops", "clone2727", "Wiki editor");
 	  end_persons();
     end_section();

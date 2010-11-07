@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cruise/script.cpp $
- * $Id: script.cpp 53472 2010-10-15 08:57:18Z sev $
+ * $Id: script.cpp 54108 2010-11-07 01:03:58Z fingolfin $
  *
  */
 
@@ -449,7 +449,7 @@ int32 opcodeType3()	{	// math
 }
 
 int32 opcodeType9() {		// stop script
-	//printf("Stop a script of overlay %s\n",overlayTable[currentScriptPtr->overlayNumber].overlayName);
+	//debug("Stop a script of overlay %s", overlayTable[currentScriptPtr->overlayNumber].overlayName);
 	currentScriptPtr->scriptNumber = -1;
 	return (1);
 }
@@ -501,7 +501,7 @@ uint8 *attacheNewScriptToTail(scriptInstanceStruct *scriptHandlePtr, int16 overl
 	int var_C;
 	scriptInstanceStruct *oldTail;
 
-	//printf("Starting script %d of overlay %s\n",param,overlayTable[overlayNumber].overlayName);
+	//debug("Starting script %d of overlay %s", param,overlayTable[overlayNumber].overlayName);
 
 	if (scriptType < 0) {
 		useArg3Neg = 1;

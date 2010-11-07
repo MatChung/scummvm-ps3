@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/drascula/detection.cpp $
- * $Id: detection.cpp 53034 2010-10-05 20:11:19Z criezy $
+ * $Id: detection.cpp 54125 2010-11-07 19:13:08Z lordhoto $
  *
  */
 
@@ -88,10 +88,17 @@ static const DrasculaGameDescription gameDescriptions[] = {
 		{
 			"drascula",
 			0,
-			AD_ENTRY1s("packet.001", "c6a8697396e213a18472542d5f547cb4", 32847563),
+			{
+				{"packet.001", 0, "c6a8697396e213a18472542d5f547cb4", 32847563},
+				// HACK: List packet.001 twice to ensure this detector entry
+				// is ranked just as high as the others (which each have two
+				// detection files).
+				{"packet.001", 0, "c6a8697396e213a18472542d5f547cb4", 32847563},
+				{NULL, 0, NULL, 0}
+			},
 			Common::EN_ANY,
 			Common::kPlatformPC,
-			ADGF_KEEPMATCH | GF_PACKED,
+			GF_PACKED,
 			GUIO_NONE
 		},
 	},
@@ -281,7 +288,7 @@ static const ADParams detectionParams = {
 	// Flags
 	0,
 	// Additional GUI options (for every game}
-	Common::GUIO_NOMIDI,
+	Common::GUIO_NOMIDI | Common::GUIO_NOLAUNCHLOAD,
 	// Maximum directory depth
 	1,
 	// List of directory globs

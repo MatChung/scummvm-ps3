@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/staticres.cpp $
- * $Id: staticres.cpp 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: staticres.cpp 54121 2010-11-07 17:16:59Z fingolfin $
  *
  */
 
@@ -57,7 +57,7 @@ bool checkKyraDat(Common::SeekableReadStream *file) {
 
 	uint8 digestCalc[16];
 	file->seek(0, SEEK_SET);
-	if (!Common::md5_file(*file, digestCalc, size))
+	if (!Common::computeStreamMD5(*file, digestCalc, size))
 		return false;
 
 	for (int i = 0; i < 16; ++i)

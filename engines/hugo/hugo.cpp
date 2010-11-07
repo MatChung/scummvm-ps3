@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/hugo.cpp $
- * $Id: hugo.cpp 54102 2010-11-06 13:21:18Z strangerke $
+ * $Id: hugo.cpp 54124 2010-11-07 18:52:47Z strangerke $
  *
  */
 
@@ -79,21 +79,24 @@ HugoEngine::HugoEngine(OSystem *syst, const HugoGameDescription *gd) : Engine(sy
 	DebugMan.addDebugChannel(kDebugInventory, "Inventory", "Inventory debug level");
 	DebugMan.addDebugChannel(kDebugObject, "Object", "Object debug level");
 
-	for (int j = 0; j < NUM_FONTS; j++)
-		_arrayFont[j] = 0;
+	_console = new HugoConsole(this);
 }
 
 HugoEngine::~HugoEngine() {
 	free(_textData);
 	free(_stringtData);
 
-	for (int i = 0; _arrayNouns[i]; i++)
-		free(_arrayNouns[i]);
-	free(_arrayNouns);
+	if (_arrayNouns) {
+		for (int i = 0; _arrayNouns[i]; i++)
+			free(_arrayNouns[i]);
+		free(_arrayNouns);
+	}
 
-	for (int i = 0; _arrayVerbs[i]; i++)
-		free(_arrayVerbs[i]);
-	free(_arrayVerbs);
+	if (_arrayVerbs) {
+		for (int i = 0; _arrayVerbs[i]; i++)
+			free(_arrayVerbs[i]);
+		free(_arrayVerbs);
+	}
 
 	free(_screenNames);
 	_screen->freePalette();
@@ -109,25 +112,33 @@ HugoEngine::~HugoEngine() {
 	free(_hotspots);
 	free(_invent);
 
-	for (int i = 0; i < _usesSize; i++)
-		free(_uses[i].targets);
-	free(_uses);
+	if (_uses) {
+		for (int i = 0; i < _usesSize; i++)
+			free(_uses[i].targets);
+		free(_uses);
+	}
 
 	free(_catchallList);
 
-	for (int i = 0; i < _backgroundObjectsSize; i++)
-		free(_backgroundObjects[i]);
-	free(_backgroundObjects);
+	if (_backgroundObjects) {
+		for (int i = 0; i < _backgroundObjectsSize; i++)
+			free(_backgroundObjects[i]);
+		free(_backgroundObjects);
+	}
 
 	free(_points);
 
-	for (int i = 0; i < _cmdListSize; i++)
-		free(_cmdList[i]);
-	free(_cmdList);
+	if (_cmdList) {
+		for (int i = 0; i < _cmdListSize; i++)
+			free(_cmdList[i]);
+		free(_cmdList);
+	}
 
-	for (int i = 0; i < _screenActsSize; i++)
-		free(_screenActs[i]);
-	free(_screenActs);
+	if (_cmdList) {
+		for (int i = 0; i < _screenActsSize; i++)
+			free(_screenActs[i]);
+		free(_screenActs);
+	}
 
 	_object->freeObjectArr();
 	_scheduler->freeActListArr();
@@ -135,14 +146,7 @@ HugoEngine::~HugoEngine() {
 	free(_defltTunes);
 	free(_screenStates);
 
-	if (_arrayFont[0])
-		free(_arrayFont[0]);
-
-	if (_arrayFont[1])
-		free(_arrayFont[1]);
-
-	if (_arrayFont[2])
-		free(_arrayFont[2]);
+	_screen->freeFonts();
 
 	delete _object;
 	delete _sound;
@@ -153,6 +157,9 @@ HugoEngine::~HugoEngine() {
 	delete _screen;
 	delete _scheduler;
 	delete _file;
+
+	DebugMan.clearAllDebugChannels();
+	delete _console;
 }
 
 GameType HugoEngine::getGameType() const {
@@ -259,6 +266,10 @@ Common::Error HugoEngine::run() {
 		while (_eventMan->pollEvent(event)) {
 			switch (event.type) {
 			case Common::EVENT_KEYDOWN:
+				if (event.kbd.keycode == Common::KEYCODE_d && event.kbd.hasFlags(Common::KBD_CTRL)) {
+					this->getDebugger()->attach();
+					this->getDebugger()->onFrame();
+				}
 				_parser->keyHandler(event.kbd.keycode, 0);
 				break;
 			case Common::EVENT_MOUSEMOVE:
@@ -729,35 +740,8 @@ bool HugoEngine::loadHugoDat() {
 	}
 
 	_scheduler->loadAlNewscrIndex(in);
+	_screen->loadFontArr(in);
 
-	if (_gameVariant > 2) {
-		_arrayFontSize[0] = in.readUint16BE();
-		_arrayFont[0] = (byte *)malloc(sizeof(byte) * _arrayFontSize[0]);
-		for (int j = 0; j < _arrayFontSize[0]; j++)
-			_arrayFont[0][j] = in.readByte();
-
-		_arrayFontSize[1] = in.readUint16BE();
-		_arrayFont[1] = (byte *)malloc(sizeof(byte) * _arrayFontSize[1]);
-		for (int j = 0; j < _arrayFontSize[1]; j++)
-			_arrayFont[1][j] = in.readByte();
-
-		_arrayFontSize[2] = in.readUint16BE();
-		_arrayFont[2] = (byte *)malloc(sizeof(byte) * _arrayFontSize[2]);
-		for (int j = 0; j < _arrayFontSize[2]; j++)
-			_arrayFont[2][j] = in.readByte();
-	} else {
-		numElem = in.readUint16BE();
-		for (int j = 0; j < numElem; j++)
-			in.readByte();
-
-		numElem = in.readUint16BE();
-		for (int j = 0; j < numElem; j++)
-			in.readByte();
-
-		numElem = in.readUint16BE();
-		for (int j = 0; j < numElem; j++)
-			in.readByte();
-	}
 	return true;
 }
 

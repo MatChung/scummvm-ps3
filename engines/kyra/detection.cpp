@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/detection.cpp $
- * $Id: detection.cpp 52336 2010-08-24 13:11:12Z lordhoto $
+ * $Id: detection.cpp 54105 2010-11-07 01:01:18Z fingolfin $
  */
 
 #include "kyra/kyra_v1.h"
@@ -50,7 +50,7 @@ const char * const directoryGlobs[] = {
 	0
 };
 
-const ADParams detectionParams = {
+static const ADParams detectionParams = {
 	// Pointer to ADGameDescription or its superset structure
 	(const byte *)adGameDescs,
 	// Size of that superset structure

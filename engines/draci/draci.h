@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/draci/draci.h $
- * $Id: draci.h 53925 2010-10-29 16:54:10Z lordhoto $
+ * $Id: draci.h 54116 2010-11-07 15:03:54Z tdhs $
  *
  */
 
@@ -28,6 +28,7 @@
 
 #include "engines/engine.h"
 #include "common/random.h"
+#include "draci/console.h"
 
 struct ADGameDescription;
 
@@ -75,6 +76,8 @@ public:
 	virtual Common::Error saveGameState(int slot, const char *desc);
 	virtual bool canSaveGameStateCurrently();
 
+	GUI::Debugger *getDebugger() { return _console; }
+
 	Screen *_screen;
 	Mouse *_mouse;
 	Game *_game;
@@ -108,6 +111,8 @@ public:
 	Common::RandomSource _rnd;
 
 	int32 _pauseStartTime;
+private:
+	DraciConsole *_console;
 };
 
 enum {

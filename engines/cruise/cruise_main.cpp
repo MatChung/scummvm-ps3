@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cruise/cruise_main.cpp $
- * $Id: cruise_main.cpp 51936 2010-08-09 10:30:40Z sev $
+ * $Id: cruise_main.cpp 54108 2010-11-07 01:03:58Z fingolfin $
  *
  */
 
@@ -44,11 +44,11 @@ gfxEntryStruct* linkedMsgList = NULL;
 
 void MemoryList() {
 	if (!_vm->_memList.empty()) {
-		printf("Current list of un-freed memory blocks:\n");
+		debug("Current list of un-freed memory blocks:");
 		Common::List<byte *>::iterator i;
 		for (i = _vm->_memList.begin(); i != _vm->_memList.end(); ++i) {
 			byte *v = *i;
-			printf("%s - %d\n", (const char *)(v - 68), *((int32 *)(v - 72)));
+			debug("%s - %d", (const char *)(v - 68), *((int32 *)(v - 72)));
 		}
 	}
 }

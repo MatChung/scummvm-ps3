@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tucker/detection.cpp $
- * $Id: detection.cpp 49788 2010-06-15 10:59:23Z sev $
+ * $Id: detection.cpp 54126 2010-11-07 19:13:30Z lordhoto $
  *
  */
 
@@ -106,16 +106,27 @@ static const ADGameDescription tuckerGameDescriptions[] = {
 };
 
 static const ADParams detectionParams = {
+	// Pointer to ADGameDescription or its superset structure
 	(const byte *)tuckerGameDescriptions,
+	// Size of that superset structure
 	sizeof(ADGameDescription),
+	// Number of bytes to compute MD5 sum for
 	512,
+	// List of all engine targets
 	tuckerGames,
+	// Structure for autoupgrading obsolete targets
 	0,
+	// Name of single gameid (optional)
 	"tucker",
+	// List of files for file-based fallback detection (optional)
 	0,
+	// Flags
 	0,
-	Common::GUIO_NONE,
+	// Additional GUI options (for every game}
+	Common::GUIO_NOLAUNCHLOAD,
+	// Maximum directory depth
 	1,
+	// List of directory globs
 	0
 };
 

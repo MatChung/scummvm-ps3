@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/display_v1w.cpp $
- * $Id: display_v1w.cpp 54018 2010-11-01 20:20:21Z strangerke $
+ * $Id: display_v1w.cpp 54103 2010-11-07 00:02:48Z strangerke $
  *
  */
 
@@ -53,8 +53,6 @@ Screen_v1w::~Screen_v1w() {
 void Screen_v1w::loadFont(int16 fontId) {
 	debugC(2, kDebugDisplay, "loadFont(%d)", fontId);
 
-	static bool fontLoadedFl[NUM_FONTS] = {false, false, false};
-
 	_fnt = fontId - FIRST_FONT;                     // Set current font number
 
 	if (fontLoadedFl[_fnt])                             // If already loaded, return
@@ -79,6 +77,17 @@ void Screen_v1w::loadFont(int16 fontId) {
 			Utils::reverseByte(&_fontdata[_fnt][offset + 2 + j]);
 
 		offset += 2 + size;
+	}
+}
+
+/**
+* Skips the fonts used by the DOS versions
+*/
+void Screen_v1w::loadFontArr(Common::File &in) {
+	for (int i = 0; i < NUM_FONTS; i++) {
+		uint16 numElem = in.readUint16BE();
+		for (int j = 0; j < numElem; j++)
+			in.readByte();
 	}
 }
 } // End of namespace Hugo

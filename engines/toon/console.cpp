@@ -18,35 +18,26 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/groovie/saveload.h $
- * $Id: saveload.h 54119 2010-11-07 17:15:46Z fingolfin $
+ * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/console.cpp $
+ * $Id: console.cpp 54123 2010-11-07 17:18:59Z tdhs $
  *
  */
 
-#ifndef GROOVIE_SAVELOAD_H
-#define GROOVIE_SAVELOAD_H
+#include "toon/console.h"
+#include "toon/toon.h"
 
-#include "common/savefile.h"
-#include "engines/game.h"
-#include "engines/savestate.h"
+namespace Toon {
 
-namespace Groovie {
+ToonConsole::ToonConsole(ToonEngine *vm) : GUI::Debugger(), _vm(vm) {
+}
 
-class SaveLoad {
-public:
-	// Validating slot numbers
-	static int getMaximumSlot();
-	static bool isSlotValid(int slot);
+ToonConsole::~ToonConsole() {
+}
 
-	// Getting information
-	static Common::String getSlotSaveName(const Common::String &target, int slot);
-	static SaveStateList listValidSaves(const Common::String &target);
+void ToonConsole::preEnter() {
+}
 
-	// Opening savefiles
-	static Common::InSaveFile *openForLoading(const Common::String &target, int slot, SaveStateDescriptor *descriptor = NULL);
-	static Common::OutSaveFile *openForSaving(const Common::String &target, int slot);
-};
+void ToonConsole::postEnter() {
+}
 
-} // End of Groovie namespace
-
-#endif // GROOVIE_SAVELOAD_H
+} // End of namespace Toon
