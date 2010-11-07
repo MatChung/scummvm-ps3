@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/intro_v1w.cpp $
- * $Id: intro_v1w.cpp 53152 2010-10-11 21:41:31Z strangerke $
+ * $Id: intro_v1w.cpp 54018 2010-11-01 20:20:21Z strangerke $
  *
  */
 
@@ -39,16 +39,18 @@
 
 
 namespace Hugo {
-intro_v1w::intro_v1w(HugoEngine &vm) : IntroHandler(vm) {
+intro_v1w::intro_v1w(HugoEngine *vm) : IntroHandler(vm) {
 }
 
 intro_v1w::~intro_v1w() {
 }
 
+/**
+* Auto-start a new game
+*/
 void intro_v1w::preNewGame() {
-	// Auto-start a new game
-	_vm.file().restoreGame(-1);
-	_vm.getGameStatus().viewState = V_INTROINIT;
+	_vm->_file->restoreGame(-1);
+	_vm->getGameStatus().viewState = V_INTROINIT;
 }
 
 void intro_v1w::introInit() {

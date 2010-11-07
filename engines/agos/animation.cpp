@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/animation.cpp $
- * $Id: animation.cpp 52616 2010-09-07 09:02:46Z wjpalenstijn $
+ * $Id: animation.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -250,7 +250,7 @@ bool MoviePlayerDXA::load() {
 		}
 	}
 
-	Common::String videoName = Common::String::printf("%s.dxa", baseName);
+	Common::String videoName = Common::String::format("%s.dxa", baseName);
 	if (!loadFile(videoName))
 		error("Failed to load video file %s", videoName.c_str());
 
@@ -410,7 +410,7 @@ MoviePlayerSMK::MoviePlayerSMK(AGOSEngine_Feeble *vm, const char *name)
 }
 
 bool MoviePlayerSMK::load() {
-	Common::String videoName = Common::String::printf("%s.smk", baseName);
+	Common::String videoName = Common::String::format("%s.smk", baseName);
 
 	if (!loadFile(videoName))
 		error("Failed to load video file %s", videoName.c_str());

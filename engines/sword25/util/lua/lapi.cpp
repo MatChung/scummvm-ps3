@@ -1,5 +1,5 @@
 /*
-** $Id: lapi.cpp 53592 2010-10-18 22:17:18Z lordhoto $
+** $Id: lapi.cpp 54056 2010-11-04 00:31:50Z fingolfin $
 ** Lua API
 ** See Copyright Notice in lua.h
 */
@@ -32,9 +32,9 @@
 
 
 const char lua_ident[] =
-  "$Lua: " LUA_RELEASE " " LUA_COPYRIGHT " $\n"
-  "$Authors: " LUA_AUTHORS " $\n"
-  "$URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/util/lua/lapi.cpp $\n";
+  "Lua: " LUA_RELEASE " " LUA_COPYRIGHT " \n"
+  "Authors: " LUA_AUTHORS " \n"
+  "URL: www.lua.org\n";
 
 
 

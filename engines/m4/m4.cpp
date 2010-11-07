@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/m4.cpp $
- * $Id: m4.cpp 50723 2010-07-06 11:33:09Z dreammaster $
+ * $Id: m4.cpp 54047 2010-11-03 09:44:03Z dreammaster $
  *
  */
 
@@ -121,6 +121,8 @@ MadsM4Engine::MadsM4Engine(OSystem *syst, const M4GameDescription *gameDesc) :
 	DebugMan.addDebugChannel(kDebugScript, "script", "Script debug level");
 	DebugMan.addDebugChannel(kDebugGraphics, "graphics", "Graphics debug level");
 	DebugMan.addDebugChannel(kDebugConversations, "conversations", "Conversations debugging");
+	DebugMan.addDebugChannel(kDebugSound, "sound", "Sounds debug level");
+	DebugMan.addDebugChannel(kDebugCore, "core", "Core debug level");
 
 	_resourceManager = NULL;
 	_globals = NULL;
@@ -266,33 +268,39 @@ void MadsM4Engine::loadMenu(MenuType menuType, bool loadSaveFromHotkey, bool cal
 	_viewManager->moveToFront(view);
 }
 
+#define DUMP_BUFFER_SIZE 1024
+
 void MadsM4Engine::dumpFile(const char* filename, bool uncompress) {
+	Common::DumpFile f;
+	byte buffer[DUMP_BUFFER_SIZE];
 	Common::SeekableReadStream *fileS = res()->get(filename);
-	byte buffer[256];
-	FILE *destFile = fopen(filename, "wb");
+	
+	if (!f.open(filename))
+		error("Could not open '%s' for writing", filename);
+
 	int bytesRead = 0;
-	printf("Dumping %s, size: %i\n", filename, fileS->size());
+	warning("Dumping %s, size: %i\n", filename, fileS->size());
 
 	if (!uncompress) {
 		while (!fileS->eos()) {
-			bytesRead = fileS->read(buffer, 256);
-			fwrite(buffer, bytesRead, 1, destFile);
+			bytesRead = fileS->read(buffer, DUMP_BUFFER_SIZE);
+			f.write(buffer, bytesRead);
 		}
 	} else {
 		MadsPack packData(fileS);
 		Common::MemoryReadStream *sourceUnc;
 		for (int i = 0; i < packData.getCount(); i++) {
 			sourceUnc = packData.getItemStream(i);
-			printf("Dumping compressed chunk %i of %i, size is %i\n", i + 1, packData.getCount(), sourceUnc->size());
+			debugCN(kDebugCore, "Dumping compressed chunk %i of %i, size is %i\n", i + 1, packData.getCount(), sourceUnc->size());
 			while (!sourceUnc->eos()) {
-				bytesRead = sourceUnc->read(buffer, 256);
-				fwrite(buffer, bytesRead, 1, destFile);
+				bytesRead = sourceUnc->read(buffer, DUMP_BUFFER_SIZE);
+				f.write(buffer, bytesRead);
 			}
 			delete sourceUnc;
 		}
 	}
 
-	fclose(destFile);
+	f.close();
 	res()->toss(filename);
 	res()->purge();
 }
@@ -338,8 +346,7 @@ Common::Error M4Engine::run() {
 	for (int i = 1; i < 58; i++) {
 		_vm->_kernel->trigger = i;
 		_script->runFunction(func);
-		printf("=================================\n");
-		fflush(stdout);
+		debugCN(kDebugCore, "=================================\n");
 	}
 #endif
 
@@ -535,7 +542,7 @@ Common::Error MadsEngine::run() {
 
 	// Test code to dump all messages to the console
 	//for (int i = 0; i < _globals->getMessagesSize(); i++)
-	//printf("%s\n----------\n", _globals->loadMessage(i));
+	//debugCN(kDebugCore, "%s\n----------\n", _globals->loadMessage(i));
 
 	if (getGameType() == GType_RexNebular) {
 		MadsGameLogic::initialiseGlobals();

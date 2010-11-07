@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cruise/function.cpp $
- * $Id: function.cpp 53495 2010-10-15 14:14:33Z lordhoto $
+ * $Id: function.cpp 54108 2010-11-07 01:03:58Z fingolfin $
  *
  */
 
@@ -66,8 +66,6 @@ int16 Op_LoadOverlay() {
 int16 Op_Strcpy() {
 	char *ptr1 = (char *)popPtr();
 	char *ptr2 = (char *)popPtr();
-
-	//printf("strcpy %s\n",ptr1);
 
 	while (*ptr1) {
 		*ptr2 = *ptr1;
@@ -1994,7 +1992,6 @@ int32 opcodeType8() {
 		return (-21);
 
 	if (opcode < ARRAYSIZE(opcodeTablePtr) && opcodeTablePtr[opcode]) {
-		//	printf("Function: %d\n",opcode);
 		pushVar(opcodeTablePtr[opcode]());
 		return (0);
 	} else {

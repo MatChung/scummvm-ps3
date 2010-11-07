@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/parser/said.cpp $
- * $Id: said.cpp 52985 2010-10-02 23:17:03Z wjpalenstijn $
+ * $Id: said.cpp 54037 2010-11-02 09:49:47Z fingolfin $
  *
  */
 
@@ -39,7 +39,7 @@ namespace Sci {
 
 
 #ifdef SCI_DEBUG_PARSE_TREE_AUGMENTATION
-#define scidprintf printf
+#define scidprintf debugN
 #else
 void print_nothing(...) { }
 #define scidprintf print_nothing

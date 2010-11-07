@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/anna.cpp $
- * $Id: anna.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: anna.cpp 53880 2010-10-27 19:19:22Z littleboy $
  *
  */
 
@@ -547,7 +547,7 @@ IMPLEMENT_FUNCTION(16, Anna, chapter1)
 		break;
 
 	case kActionNone:
-		TIME_CHECK_CHAPTER1(setup_chapter1Handler);
+		TIME_CHECK(kTimeChapter1, params->param1, setup_chapter1Handler);
 		break;
 
 	case kActionDefault:
@@ -573,7 +573,7 @@ IMPLEMENT_FUNCTION_II(17, Anna, function17, uint32, uint32)
 		break;
 
 	case kActionNone:
-		getData()->inventoryItem = (params->param3 && getEntities()->isDistanceBetweenEntities(kEntityAnna, kEntityPlayer, 2000)) ? (InventoryItem)LOBYTE(params->param3) : kItemNone;
+		getData()->inventoryItem = (params->param3 && getEntities()->isDistanceBetweenEntities(kEntityAnna, kEntityPlayer, 2000)) ? (InventoryItem)LOW_BYTE(params->param3) : kItemNone;
 
 		if (getEntities()->updateEntity(kEntityAnna, (CarIndex)params->param1, (EntityPosition)params->param2)) {
 			getData()->inventoryItem = kItemNone;
@@ -699,7 +699,7 @@ IMPLEMENT_FUNCTION_I(18, Anna, function18, TimeValue)
 				params->param2 |= 8;
 		}
 
-		getData()->inventoryItem = (InventoryItem)LOBYTE(params->param2);
+		getData()->inventoryItem = (InventoryItem)LOW_BYTE(params->param2);
 		break;
 
 	case kActionDrawScene:
@@ -737,7 +737,7 @@ IMPLEMENT_FUNCTION_I(18, Anna, function18, TimeValue)
 				params->param2 |= 8;
 			}
 
-			getData()->inventoryItem = (InventoryItem)LOBYTE(params->param2);
+			getData()->inventoryItem = (InventoryItem)LOW_BYTE(params->param2);
 			getScenes()->loadSceneFromPosition(kCarRestaurant, 61);
 			break;
 		}
@@ -749,7 +749,7 @@ IMPLEMENT_FUNCTION_I(18, Anna, function18, TimeValue)
 		break;
 
 	case kAction168627977:
-		getData()->inventoryItem = (InventoryItem)LOBYTE(params->param2);
+		getData()->inventoryItem = (InventoryItem)LOW_BYTE(params->param2);
 		params->param4 = 0;
 		break;
 
@@ -1085,7 +1085,7 @@ IMPLEMENT_FUNCTION(27, Anna, function27)
 		case 1:
 		case 2:
 			if (getProgress().field_14 == 29) {
-				params->param1 = getState()->time + 900;
+				params->param1 = (uint)(getState()->time + 900);
 				setCallback(2);
 				setup_function15((TimeValue)params->param1, "NONE");
 			} else {
@@ -1145,7 +1145,99 @@ IMPLEMENT_FUNCTION(28, Anna, function28)
 
 //////////////////////////////////////////////////////////////////////////
 IMPLEMENT_FUNCTION(29, Anna, function29)
-	error("Anna: callback function 29 not implemented!");
+	switch (savepoint.action) {
+	default:
+		break;
+
+	case kActionNone:
+		if (params->param2) {
+			UPDATE_PARAM_PROC(params->param3, getState()->time, 900)
+				getData()->inventoryItem = (InventoryItem)(getData()->inventoryItem | kItemScarf);
+				params->param2 = 0;
+				params->param3 = 0;
+			UPDATE_PARAM_PROC_END
+		}
+
+		if (params->param1) {
+			UPDATE_PARAM(params->param4, getState()->timeTicks, 90);
+
+			getScenes()->loadSceneFromPosition(kCarRestaurant, 55);
+		} else {
+			params->param4 = 0;
+		}
+		break;
+
+	case kAction1:
+		setCallback(savepoint.param.intValue == 8 ? 1 : 2);
+		setup_savegame(kSavegameTypeEvent, savepoint.param.intValue == 8 ? kEventAnnaGiveScarf : kEventAnnaIntroductionRejected);
+		break;
+
+	case kActionDefault:
+		getData()->inventoryItem = kItemNone;
+
+		if (getProgress().jacket == kJacketGreen
+		 && !getEvent(kEventAnnaConversationGoodNight)
+		 && !getEvent(kEventAnnaIntroductionRejected))
+			getData()->inventoryItem = kItemInvalid;
+
+		if (getProgress().jacket == kJacketGreen
+		 && getData()->inventoryItem == kItemNone
+		 && !getEvent(kEventAnnaGiveScarfAsk)
+		 && !getEvent(kEventAnnaGiveScarfDinerAsk)
+		 && !getEvent(kEventAnnaGiveScarfSalonAsk))
+			getData()->inventoryItem = (InventoryItem)(getData()->inventoryItem | kItemScarf);
+
+		getEntities()->drawSequenceLeft(kEntityAnna, "104B");
+		break;
+
+	case kActionDrawScene:
+		params->param1 = getEntities()->isPlayerPosition(kCarRestaurant, 56);
+		break;
+
+	case kActionCallback:
+		switch (getCallback()) {
+		default:
+			break;
+
+		case 1:
+			if (getEvent(kEventAnnaGiveScarf)
+			 || getEvent(kEventAnnaGiveScarfDiner)
+			 || getEvent(kEventAnnaGiveScarfSalon)
+			 || getEvent(kEventAnnaGiveScarfMonogram)
+			 || getEvent(kEventAnnaGiveScarfDinerMonogram)
+			 || getEvent(kEventAnnaGiveScarfSalonMonogram)) {
+				getAction()->playAnimation(kEventAnnaGiveScarfSalonAsk);
+			} else {
+				getAction()->playAnimation((getEvent(kEventAugustPresentAnna) || getEvent(kEventAugustPresentAnnaFirstIntroduction)) ? kEventAnnaGiveScarfSalonMonogram : kEventAnnaGiveScarfSalon);
+				params->param2 = 1;
+			}
+
+			getData()->inventoryItem = (InventoryItem)(getData()->inventoryItem & kItemToggleLow);
+
+			getScenes()->loadSceneFromPosition(kCarRestaurant, 51);
+			break;
+
+		case 2:
+			getAction()->playAnimation((getEvent(kEventAugustPresentAnna) || getEvent(kEventAugustPresentAnnaFirstIntroduction)) ? kEventAnnaConversationGoodNight : kEventAnnaIntroductionRejected);
+
+			getData()->inventoryItem = (InventoryItem)(getData()->inventoryItem & kItemToggleLow);
+
+			if (getProgress().jacket == kJacketGreen
+			 && !getEvent(kEventAnnaGiveScarfAsk)
+			 && !getEvent(kEventAnnaGiveScarfDinerAsk)
+			 && !getEvent(kEventAnnaGiveScarfSalonAsk))
+				 getData()->inventoryItem = (InventoryItem)(getData()->inventoryItem | kItemScarf);
+
+			getScenes()->loadSceneFromPosition(kCarRestaurant, 51);
+			break;
+		}
+		break;
+
+	case kAction123712592:
+		getData()->inventoryItem = kItemNone;
+		setup_function30();
+		break;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1161,7 +1253,7 @@ IMPLEMENT_FUNCTION(30, Anna, function30)
 				getSound()->playSound(kEntityAnna, "AUG1004");
 			} else {
 				if (!getEntities()->isInSalon(kEntityPlayer) || !params->param3)
-					params->param3 = getState()->time + 450;
+					params->param3 = (uint)(getState()->time + 450);
 
 				if (params->param3 < getState()->time) {
 					params->param3 = kTimeInvalid;
@@ -1179,7 +1271,7 @@ IMPLEMENT_FUNCTION(30, Anna, function30)
 			}
 
 			if (!getEntities()->isInSalon(kEntityPlayer) || !params->param4)
-				params->param4 = getState()->time + 150;
+				params->param4 = (uint)(getState()->time + 150);
 
 			if (params->param4 < getState()->time) {
 				params->param4 = kTimeInvalid;
@@ -1297,7 +1389,7 @@ IMPLEMENT_FUNCTION(33, Anna, function33)
 	case kActionDefault:
 		getSavePoints()->push(kEntityAnna, kEntityMax, kAction101687594);
 
-		params->param1 = getState()->time + 4500;
+		params->param1 = (uint)(getState()->time + 4500);
 		setCallback(1);
 		setup_function15((TimeValue)params->param1, "NONE");
 		break;
@@ -1526,20 +1618,20 @@ IMPLEMENT_FUNCTION(36, Anna, function36)
 
 //////////////////////////////////////////////////////////////////////////
 IMPLEMENT_FUNCTION(37, Anna, function37)
-  switch (savepoint.action) {
-  default:
-	break;
+	switch (savepoint.action) {
+	default:
+		break;
 
-  case kActionDefault:
-	getData()->entityPosition = kPosition_8200;
-	getData()->location = kLocationOutsideCompartment;
-	getData()->car = kCarRedSleeping;
-	break;
+	case kActionDefault:
+		getData()->entityPosition = kPosition_8200;
+		getData()->location = kLocationOutsideCompartment;
+		getData()->car = kCarRedSleeping;
+		break;
 
-  case kAction191477936:
-	setup_function38();
-	break;
-  }
+	case kAction191477936:
+		setup_function38();
+		break;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1794,7 +1886,7 @@ IMPLEMENT_FUNCTION(42, Anna, chapter2)
 }
 
 //////////////////////////////////////////////////////////////////////////
-IMPLEMENT_FUNCTION(43 ,Anna, chapter2Handler)
+IMPLEMENT_FUNCTION(43, Anna, chapter2Handler)
 	switch (savepoint.action) {
 	default:
 		break;
@@ -1991,7 +2083,106 @@ IMPLEMENT_FUNCTION(47, Anna, function47)
 
 //////////////////////////////////////////////////////////////////////////
 IMPLEMENT_FUNCTION(48, Anna, function48)
-	error("Anna: callback function 48 not implemented!");
+	switch (savepoint.action) {
+	default:
+		break;
+
+	case kActionNone:
+		if (!params->param1)
+			break;
+
+		if (params->param3 != kTimeInvalid && getState()->time > kTime1969200) {
+			UPDATE_PARAM_PROC_TIME(kTime1983600, (!getEntities()->isInRestaurant(kEntityPlayer) || getSound()->isBuffered(kEntityBoutarel)), params->param3, 150)
+				setCallback(3);
+				setup_playSound("Aug3007A");
+				break;
+			UPDATE_PARAM_PROC_END
+		}
+
+label_callback_4:
+		if (ENTITY_PARAM(0, 2)) {
+			if (!params->param2)
+				params->param2 = (uint)(getState()->time + 4500);
+
+			if (params->param4 != kTimeInvalid) {
+				if (params->param2 >= getState()->time) {
+					if (!getEntities()->isInRestaurant(kEntityPlayer) || !params->param4)
+						params->param4 = (uint)(getState()->time + 450);
+
+					if (params->param4 >= getState()->time)
+						break;
+				}
+
+				params->param4 = kTimeInvalid;
+
+				setup_function50();
+			}
+		}
+		break;
+
+	case kActionDefault:
+		getEntities()->drawSequenceLeft(kEntityAnna, "026C");
+		getData()->location = kLocationInsideCompartment;
+
+		setCallback(1);
+		setup_updateFromTime(450);
+		break;
+
+	case kActionCallback:
+		switch (getCallback()) {
+		default:
+			break;
+
+		case 1:
+			setCallback(2);
+			setup_playSound("Ann3137B");
+			break;
+
+		case 2:
+			getSavePoints()->push(kEntityAnna, kEntityServers0, kAction218983616);
+			break;
+
+		case 3:
+			setCallback(4);
+			setup_playSound("Aug3006A");
+			break;
+
+		case 4:
+			goto label_callback_4;
+
+		case 5:
+			setCallback(6);
+			setup_updateFromTime(900);
+			break;
+
+		case 6:
+			setCallback(7);
+			setup_playSound("Aug3006");
+			break;
+
+		case 7:
+			setCallback(8);
+			setup_updateFromTime(2700);
+			break;
+
+		case 8:
+			getEntities()->drawSequenceLeft(kEntityAnna, "026H");
+			params->param1 = 1;
+			break;
+		}
+		break;
+
+	case kAction122288808:
+		getEntities()->drawSequenceLeft(kEntityAnna, "026C");
+
+		setCallback(5);
+		setup_playSound("Ann3138A");
+		break;
+
+	case kAction122358304:
+		getEntities()->drawSequenceLeft(kEntityAnna, "BLANK");
+		break;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -2189,12 +2380,316 @@ IMPLEMENT_FUNCTION(52, Anna, function52)
 
 //////////////////////////////////////////////////////////////////////////
 IMPLEMENT_FUNCTION(53, Anna, function53)
-	error("Anna: callback function 53 not implemented!");
+	switch (savepoint.action) {
+	default:
+		break;
+
+	case kActionNone:
+		if (getProgress().field_48 && params->param5 != kTimeInvalid) {
+			UPDATE_PARAM_PROC_TIME(kTime2065500, !getEntities()->isPlayerInCar(kCarRedSleeping), params->param5, 150)
+				setup_function54();
+				break;
+			UPDATE_PARAM_PROC_END
+		}
+
+		if (params->param3) {
+			UPDATE_PARAM_PROC(params->param6, getState()->time, 9000)
+				params->param4 = !params->param4;
+				getEntities()->drawSequenceLeft(kEntityAnna, params->param4 ? "417B" : "417A");
+				params->param6 = 0;
+			UPDATE_PARAM_PROC_END
+		}
+
+		if (params->param1) {
+			UPDATE_PARAM(params->param7, getState()->timeTicks, 75);
+
+			CursorStyle cursor = getEntities()->isInsideCompartment(kEntityMax, kCarRedSleeping, kPosition_4070) ? kCursorHand : kCursorNormal;
+
+			getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorNormal, cursor);
+			getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorNormal, cursor);
+
+			params->param1 = 0;
+			params->param2 = 1;
+		}
+
+		params->param7 = 0;
+		break;
+
+	case kActionOpenDoor:
+		if (getEntities()->isInsideCompartment(kEntityMax, kCarRedSleeping, kPosition_4070)) {
+			getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorNormal);
+			getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorNormal);
+
+			setCallback(1);
+			setup_playSound("LIB013");
+			break;
+		}
+		// Fallback to next case
+
+	case kActionKnock:
+		getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorNormal);
+		getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorNormal);
+
+		if (params->param1) {
+			if (savepoint.param.intValue == 53) {
+				setCallback(6);
+				setup_playSound(getSound()->justAMinuteCath());
+				break;
+			}
+
+			if (getInventory()->hasItem(kItemPassengerList)) {
+				setCallback(7);
+				setup_playSound(rnd(2) ? getSound()->wrongDoorCath() : (rnd(2) ? "CAT1506" : "CAT1506A"));
+				break;
+			}
+
+			setCallback(8);
+			setup_playSound(getSound()->wrongDoorCath());
+			break;
+		}
+
+		setCallback(savepoint.action == kActionKnock ? 3 : 4);
+		setup_playSound(savepoint.action == kActionKnock ? "LIB012" : "LIB013");
+		break;
+
+	case kActionDefault:
+		getSavePoints()->push(kEntityAnna, kEntityMax, kAction101687594);
+		getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+		getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+
+		getData()->clothes = kClothes2;
+		break;
+
+	case kActionDrawScene:
+		if (params->param1 || params->param2) {
+			getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+			getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+
+			params->param1 = 0;
+			params->param2 = 0;
+		}
+
+		if (!params->param3 && (getEntities()->isPlayerPosition(kCarRedSleeping, 60) || getState()->time > kTime2034000)) {
+			params->param3 = 1;
+
+			setCallback(9);
+			setup_draw("416");
+		}
+		break;
+
+	case kActionCallback:
+		switch (getCallback()) {
+		default:
+			break;
+
+		case 1:
+			if (!getSound()->isBuffered(kEntityMax)) {
+				setCallback(2);
+				setup_playSound("MAX1120");
+				break;
+			}
+			// Fallback to next case
+
+		case 2:
+			getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+			getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+			break;
+
+		case 3:
+		case 4:
+			setCallback(5);
+			setup_playSound("ANN1016");
+			break;
+
+		case 5:
+			getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorTalk, kCursorNormal);
+			getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorTalk, kCursorNormal);
+			params->param1 = 1;
+			break;
+
+		case 6:
+		case 7:
+		case 8:
+			if (getEntities()->isInsideCompartment(kEntityMax, kCarRedSleeping, kPosition_4070)) {
+				getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorHand);
+				getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorHand);
+			}
+
+			params->param1 = 0;
+			params->param2 = 1;
+			break;
+
+		case 9:
+			if (getEntities()->isPlayerPosition(kCarRedSleeping, 60))
+				getScenes()->loadSceneFromPosition(kCarRedSleeping, 78);
+			getEntities()->drawSequenceLeft(kEntityAnna, "417B");
+			break;
+		}
+		break;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
 IMPLEMENT_FUNCTION(54, Anna, function54)
-	error("Anna: callback function 54 not implemented!");
+	switch (savepoint.action) {
+	default:
+		break;
+
+	case kActionNone:
+		if (params->param3) {
+			TIME_CHECK(kTime2079000, params->param5, setup_function55);
+
+			UPDATE_PARAM_PROC(params->param6, getState()->time, 9000)
+				params->param4 = !params->param4;
+				getEntities()->drawSequenceLeft(kEntityAnna, params->param4 ? "417B" : "417A");
+				params->param6 = 0;
+			UPDATE_PARAM_PROC_END
+		}
+
+		if (params->param1) {
+			UPDATE_PARAM(params->param7, getState()->timeTicks, 75);
+
+			CursorStyle cursor = getEntities()->isInsideCompartment(kEntityMax, kCarRedSleeping, kPosition_4070) ? kCursorHand : kCursorNormal;
+
+			getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorNormal, cursor);
+			getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorNormal, cursor);
+
+			params->param1 = 0;
+			params->param2 = 1;
+		}
+
+		params->param7 = 0;
+		break;
+
+	case kActionOpenDoor:
+		if (getEntities()->isInsideCompartment(kEntityMax, kCarRedSleeping, kPosition_4070)) {
+			getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorNormal);
+			getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorNormal);
+
+			setCallback(1);
+			setup_playSound("LIB013");
+			break;
+		}
+		// Fallback to next case
+
+	case kActionKnock:
+		getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorNormal);
+		getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorNormal);
+
+		if (params->param1) {
+			if (savepoint.param.intValue == 53) {
+				setCallback(6);
+				setup_playSound(getSound()->justAMinuteCath());
+				break;
+			}
+
+			if (getInventory()->hasItem(kItemPassengerList)) {
+				setCallback(7);
+				setup_playSound(rnd(2) ? getSound()->wrongDoorCath() : (rnd(2) ? "CAT1506" : "CAT1506A"));
+				break;
+			}
+
+			setCallback(8);
+			setup_playSound(getSound()->wrongDoorCath());
+			break;
+		}
+
+		setCallback(savepoint.action == kActionKnock ? 3 : 4);
+		setup_playSound(savepoint.action == kActionKnock ? "LIB012" : "LIB013");
+		break;
+
+	case kActionDefault:
+		getObjects()->update(kObjectOutsideAnnaCompartment, kEntityPlayer, kObjectLocation1, kCursorKeepValue, kCursorKeepValue);
+		if (getEntities()->isPlayerPosition(kCarRedSleeping, 60))
+			getScenes()->loadSceneFromPosition(kCarRedSleeping, 78);
+
+		getSavePoints()->push(kEntityAnna, kEntityCoudert, kAction189750912);
+		break;
+
+	case kActionDrawScene:
+		if (params->param1 || params->param2) {
+			getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+			getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+
+			params->param1 = 0;
+			params->param2 = 0;
+		}
+		break;
+
+	case kActionCallback:
+		switch (getCallback()) {
+		default:
+			break;
+
+		case 1:
+			if (!getSound()->isBuffered(kEntityMax)) {
+				setCallback(2);
+				setup_playSound("MAX1120");
+				break;
+			}
+			// Fallback to next case
+
+		case 2:
+			getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+			getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+			break;
+
+		case 3:
+		case 4:
+			setCallback(5);
+			setup_playSound("ANN1016");
+			break;
+
+		case 5:
+			getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorTalk, kCursorNormal);
+			getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorTalk, kCursorNormal);
+			params->param1 = 1;
+			break;
+
+		case 6:
+		case 7:
+		case 8:
+			if (getEntities()->isInsideCompartment(kEntityMax, kCarRedSleeping, kPosition_4070)) {
+				getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorHand);
+				getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorHand);
+			}
+
+			params->param1 = 0;
+			params->param2 = 1;
+			break;
+
+		case 9:
+			getEntities()->exitCompartment(kEntityAnna, kObjectCompartmentF, true);
+			getEntities()->clearSequences(kEntityAnna);
+
+			getData()->location = kLocationInsideCompartment;
+			getData()->entityPosition = kPosition_4070;
+			params->param3 = 1;
+
+			getObjects()->update(kObjectOutsideAnnaCompartment, kEntityPlayer, kObjectLocationNone, kCursorKeepValue, kCursorKeepValue);
+			getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+
+			if (getEntities()->isPlayerPosition(kCarRedSleeping, 78))
+				getScenes()->loadSceneFromPosition(kCarRedSleeping, 49);
+			getEntities()->drawSequenceLeft(kEntityAnna, "417B");
+			break;
+		}
+		break;
+
+	case kAction123733488:
+		setCallback(9);
+		setup_enterExitCompartment("629Ef", kObjectCompartmentF);
+		break;
+
+	case kAction156049968:
+		getEntities()->drawSequenceLeft(kEntityAnna, "629DF");
+		getEntities()->enterCompartment(kEntityAnna, kObjectCompartmentF, true);
+		break;
+
+	case kAction253868128:
+		getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorNormal);
+		break;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -2372,7 +2867,143 @@ IMPLEMENT_FUNCTION(58, Anna, function58)
 
 //////////////////////////////////////////////////////////////////////////
 IMPLEMENT_FUNCTION(59, Anna, function59)
-	error("Anna: callback function 59 not implemented!");
+	switch (savepoint.action) {
+	default:
+		break;
+
+	case kActionNone:
+		if (getInventory()->hasItem(kItemKey) && params->param4 != kTimeInvalid && getState()->time > kTime2218500) {
+			if (getState()->time > kTime2248200) {
+				params->param4 = kTimeInvalid;
+				setup_function61();
+				break;
+			}
+
+			if (!params->param3
+			 || (!getEntities()->isPlayerInCar(kCarRedSleeping)
+			 && !getEntities()->isInSalon(kEntityPlayer)
+			 && !getEntities()->isInRestaurant(kEntityPlayer))
+			 || !params->param4)
+				params->param4 = (uint)getState()->time;
+
+			if (params->param4 < getState()->time) {
+				params->param4 = kTimeInvalid;
+				setup_function61();
+				break;
+			}
+		}
+
+		if (params->param1) {
+			UPDATE_PARAM(params->param5, getState()->timeTicks, 75);
+
+			CursorStyle style = getEntities()->isInsideCompartment(kEntityMax, kCarRedSleeping, kPosition_4070) ? kCursorHand : kCursorNormal;
+			getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorNormal, style);
+			getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorNormal, style);
+
+			params->param1= 0;
+			params->param2 = 1;
+		}
+
+		params->param5 = 0;
+		break;
+
+	case kActionKnock:
+	case kActionOpenDoor:
+		getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorNormal);
+		getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorNormal);
+
+		if (params->param1) {
+			if (savepoint.param.intValue == 53) {
+				setCallback(4);
+				setup_playSound(getSound()->justAMinuteCath());
+			} else if (getInventory()->hasItem(kItemPassengerList)) {
+				setCallback(5);
+				setup_playSound(rnd(2) ? getSound()->wrongDoorCath() : (rnd(2) ? "CAT1506" : "CAT1506A"));
+			} else {
+				setCallback(6);
+				setup_playSound(getSound()->wrongDoorCath());
+			}
+		} else {
+			setCallback(savepoint.action == kActionKnock ? 1 : 2);
+			setup_playSound(savepoint.action == kActionKnock ? "LIB012" : "LIB013");
+		}
+
+		break;
+
+	case kActionDefault:
+		getData()->entityPosition = kPosition_4070;
+		getData()->location = kLocationInsideCompartment;
+		getEntities()->clearSequences(kEntityAnna);
+
+		getObjects()->update(kObject107, kEntityPlayer, kObjectLocation2, kCursorKeepValue, kCursorKeepValue);
+		getObjects()->update(kObjectOutsideAnnaCompartment, kEntityPlayer, kObjectLocation1, kCursorKeepValue, kCursorKeepValue);
+		getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+		getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+
+		if (getEntities()->isPlayerPosition(kCarRedSleeping, 60))
+			getScenes()->loadSceneFromPosition(kCarRedSleeping, 78);
+		break;
+
+	case kActionDrawScene:
+		if (params->param1 || params->param2) {
+			getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+			getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+			params->param1 = 0;
+			params->param2 = 0;
+		}
+		break;
+
+	case kActionCallback:
+		switch (getCallback()) {
+		default:
+			break;
+
+		case 1:
+		case 2:
+			setCallback(3);
+			setup_playSound("ANN1016");
+			break;
+
+		case 3:
+			getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorTalk, kCursorNormal);
+			getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorTalk, kCursorNormal);
+			params->param1 = 1;
+			break;
+
+		case 4:
+		case 5:
+		case 6:
+			params->param1 = 0;
+			params->param2 = 1;
+			break;
+
+		case 7:
+			getSavePoints()->push(kEntityAnna, kEntityTatiana, kAction100906246);
+			break;
+		}
+		break;
+
+	case kAction156622016:
+		if (params->param3) {
+			setCallback(8);
+			setup_function60();
+		}
+		break;
+
+	case kAction236241630:
+		getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorNormal);
+		getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorNormal, kCursorNormal);
+
+		setCallback(7);
+		setup_playSound("Ann1016A");
+		break;
+
+	case kAction236517970:
+		params->param3 = 1;
+		getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+		getObjects()->update(kObject53, kEntityAnna, kObjectLocation1, kCursorHandKnock, kCursorHand);
+		break;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -2568,8 +3199,8 @@ IMPLEMENT_FUNCTION(64, Anna, baggage)
 
 			if (params->param1)
 				getLogic()->gameOver(kSavegameTypeIndex, 0, kSceneNone, params->param1 == Fight::kFightEndLost);
-			else  {
-				getState()->time += 1800;
+			else {
+				getState()->time = (TimeValue)(getState()->time + 1800);
 
 				setCallback(3);
 				setup_savegame(kSavegameTypeEvent, kEventAnnaBagagePart2);
@@ -2848,6 +3479,7 @@ IMPLEMENT_FUNCTION(69, Anna, function69)
 	case kAction100969180:
 		getEntities()->clearSequences(kEntityAnna);
 		params->param1 = 1;
+		break;
 
 	case kAction122288808:
 		getEntities()->drawSequenceLeft(kEntityAnna, "127E");
@@ -2997,7 +3629,7 @@ IMPLEMENT_FUNCTION(73, Anna, function73)
 
 		if (params->param2 >= getState()->time) {
 			if (!((getEntities()->isPlayerInCar(kCarGreenSleeping) || getEntities()->isPlayerInCar(kCarRedSleeping)) && params->param3))
-				params->param3 = getState()->time;
+				params->param3 = (uint)getState()->time;
 
 			if (params->param3 >= getState()->time)
 				break;
@@ -3028,8 +3660,8 @@ IMPLEMENT_FUNCTION(73, Anna, function73)
 		getObjects()->update(kObjectCompartmentF, kEntityAnna, kObjectLocationNone, kCursorHandKnock, kCursorHand);
 		getState()->timeDelta = 1;
 
-		params->param1 = getState()->time + 4500;
-		params->param2 = getState()->time + 9000;
+		params->param1 = (uint)(getState()->time + 4500);
+		params->param2 = (uint)(getState()->time + 9000);
 		break;
 
 	case kActionCallback:

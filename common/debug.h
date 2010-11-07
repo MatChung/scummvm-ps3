@@ -19,30 +19,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/debug.h $
- * $Id: debug.h 48936 2010-05-04 12:00:16Z fingolfin $
+ * $Id: debug.h 54023 2010-11-01 20:41:32Z fingolfin $
  */
 
 #ifndef COMMON_DEBUG_H
 #define COMMON_DEBUG_H
 
 #include "common/scummsys.h"
-#include "common/textconsole.h"
-
-namespace Common {
-
-/**
- * Set the output formatter used by debug() and related functions.
- */
-void setDebugOutputFormatter(OutputFormatter f);
-
-
-}	// End of namespace Common
-
 
 #ifdef DISABLE_TEXT_CONSOLE
 
 inline void debug(const char *s, ...) {}
 inline void debug(int level, const char *s, ...) {}
+inline void debugN(const char *s, ...) {}
 inline void debugN(int level, const char *s, ...) {}
 inline void debugC(int level, uint32 engineChannel, const char *s, ...) {}
 inline void debugC(uint32 engineChannel, const char *s, ...) {}
@@ -66,6 +55,12 @@ void debug(const char *s, ...) GCC_PRINTF(1, 2);
  * Automatically appends a newline.
  */
 void debug(int level, const char *s, ...) GCC_PRINTF(2, 3);
+
+/**
+ * Print a debug message to the text console (stdout).
+ * Does not append a newline.
+ */
+void debugN(const char *s, ...) GCC_PRINTF(1, 2);
 
 /**
  * Print a debug message to the text console (stdout), but only if

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lure/hotspots.h $
- * $Id: hotspots.h 52971 2010-10-02 00:08:13Z dreammaster $
+ * $Id: hotspots.h 54106 2010-11-07 01:03:03Z fingolfin $
  *
  */
 
@@ -158,8 +158,7 @@ public:
 	void clear();
 	void reset(RoomPathsData &src);
 	PathFinderResult process();
-	void list(char *buffer);
-	void list() { list(NULL); }
+	Common::String getDebugInfo() const;
 
 	void pop() { _list.erase(_list.begin()); }
 	WalkingActionEntry &top() { return **_list.begin(); }

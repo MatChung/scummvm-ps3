@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/script_v6.cpp $
- * $Id: script_v6.cpp 48499 2010-04-04 09:36:10Z Kirben $
+ * $Id: script_v6.cpp 53729 2010-10-23 06:27:16Z Kirben $
  *
  */
 
@@ -536,7 +536,18 @@ void ScummEngine_v6::o6_not() {
 }
 
 void ScummEngine_v6::o6_eq() {
-	push(pop() == pop());
+	int a = pop();
+	int b = pop();
+
+	// WORKAROUND: Forces the game version string set via script 1 to be used in both Macintosh and Windows versions,
+	// when checking for save game compatibility. Allows saved games to be shared between Macintosh and Windows versions.
+	// The scripts check VAR_PLATFORM (b) against the value (2) of the Macintosh platform (a).
+	if (_game.id == GID_BASEBALL2001 && (vm.slot[_currentScript].number == 291 || vm.slot[_currentScript].number == 292) &&
+		a == 2 && b == 1) {
+		push(1);
+	} else {
+		push(a == b);
+	}
 }
 
 void ScummEngine_v6::o6_neq() {
@@ -1285,7 +1296,7 @@ void ScummEngine_v6::o6_loadRoomWithEgo() {
 
 void ScummEngine_v6::o6_getRandomNumber() {
 	int rnd;
-	rnd = _rnd.getRandomNumber(pop());
+	rnd = _rnd.getRandomNumber(ABS(pop()));
 	if (VAR_RANDOM_NR != 0xFF)
 		VAR(VAR_RANDOM_NR) = rnd;
 	push(rnd);

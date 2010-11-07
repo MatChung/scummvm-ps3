@@ -19,22 +19,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/console.cpp $
- * $Id: console.cpp 53544 2010-10-16 17:25:08Z drmccoy $
+ * $Id: console.cpp 53985 2010-10-31 20:51:35Z drmccoy $
  *
  */
 
 #include "gob/console.h"
 #include "gob/gob.h"
 #include "gob/inter.h"
+#include "gob/dataio.h"
 
 namespace Gob {
 
 GobConsole::GobConsole(GobEngine *vm) : GUI::Debugger(), _vm(vm) {
-	DCmd_Register("varSize",   WRAP_METHOD(GobConsole, cmd_varSize));
-	DCmd_Register("var8",      WRAP_METHOD(GobConsole, cmd_var8));
-	DCmd_Register("var16",     WRAP_METHOD(GobConsole, cmd_var16));
-	DCmd_Register("var32",     WRAP_METHOD(GobConsole, cmd_var32));
-	DCmd_Register("varString", WRAP_METHOD(GobConsole, cmd_varString));
+	DCmd_Register("varSize",      WRAP_METHOD(GobConsole, cmd_varSize));
+	DCmd_Register("var8",         WRAP_METHOD(GobConsole, cmd_var8));
+	DCmd_Register("var16",        WRAP_METHOD(GobConsole, cmd_var16));
+	DCmd_Register("var32",        WRAP_METHOD(GobConsole, cmd_var32));
+	DCmd_Register("varString",    WRAP_METHOD(GobConsole, cmd_varString));
+	DCmd_Register("listArchives", WRAP_METHOD(GobConsole, cmd_listArchives));
 }
 
 GobConsole::~GobConsole() {
@@ -140,6 +142,20 @@ bool GobConsole::cmd_varString(int argc, const char **argv) {
 	}
 
 	DebugPrintf("varString_%d = \"%s\"\n", varNum, _vm->_inter->_variables->getAddressOffString(varNum));
+
+	return true;
+}
+
+bool GobConsole::cmd_listArchives(int argc, const char **argv) {
+	Common::Array<ArchiveInfo> info;
+
+	_vm->_dataIO->getArchiveInfo(info);
+
+	DebugPrintf("   Archive    | Base | FileCount\n");
+	DebugPrintf("--------------------------------\n");
+	for (Common::Array<ArchiveInfo>::const_iterator it = info.begin(); it != info.end(); ++it)
+		if (!it->name.empty())
+		DebugPrintf("%13s |   %d  | %d\n", it->name.c_str(), it->base, it->fileCount);
 
 	return true;
 }

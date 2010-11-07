@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/script.h $
- * $Id: script.h 42122 2009-07-05 11:27:26Z drmccoy $
+ * $Id: script.h 53984 2010-10-31 20:07:14Z drmccoy $
  *
  */
 
@@ -150,7 +150,7 @@ private:
 	byte *_totPtr;
 	uint32 _totSize;
 
-	int16 _lomHandle;
+	Common::SeekableReadStream *_lom;
 
 	TOTFile::Properties _totProperties;
 

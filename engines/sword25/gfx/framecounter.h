@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/framecounter.h $
- * $Id: framecounter.h 53405 2010-10-13 10:51:20Z fingolfin $
+ * $Id: framecounter.h 53621 2010-10-19 20:51:21Z sev $
  *
  */
 
@@ -39,7 +39,6 @@
 #include "sword25/kernel/common.h"
 
 namespace Sword25 {
-
 
 /**
  * A simple class that implements a frame counter
@@ -62,37 +61,37 @@ public:
 	 * @param UpdateFrequency   Specifies how often the frame counter should be updated in a sceond.
 	 * The default value is 10.
 	 */
-	Framecounter(int UpdateFrequency = DEFAULT_UPDATE_FREQUENCY);
+	Framecounter(int updateFrequency = DEFAULT_UPDATE_FREQUENCY);
 
 	/**
 	 * Determines how often the frame counter should be updated in a second.
 	 * @param UpdateFrequency   Specifies how often the frame counter should be updated in a second.
 	 */
-	inline void SetUpdateFrequency(int UpdateFrequency);
+	inline void setUpdateFrequency(int updateFrequency);
 
 	/**
 	 * This method must be called once per frame.
 	 */
-	void Update();
+	void update();
 
 	/**
 	 * Returns the current FPS value.
 	 */
-	int GetFPS() const {
-		return m_FPS;
+	int getFPS() const {
+		return _FPS;
 	}
 
 private:
-	int m_FPS;
-	int m_FPSCount;
-	int64 m_LastUpdateTime;
-	uint64 m_UpdateDelay;
+	int _FPS;
+	int _FPSCount;
+	int64 _lastUpdateTime;
+	uint64 _updateDelay;
 };
 
 // Inlines
-void Framecounter::SetUpdateFrequency(int UpdateFrequency) {
+void Framecounter::setUpdateFrequency(int updateFrequency) {
 	// Frequency in time (converted to microseconds)
-	m_UpdateDelay = 1000000 / UpdateFrequency;
+	_updateDelay = 1000000 / updateFrequency;
 }
 
 } // End of namespace Sword25

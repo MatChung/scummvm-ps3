@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/sound.cpp $
- * $Id: sound.cpp 49644 2010-06-14 05:27:54Z dreammaster $
+ * $Id: sound.cpp 54035 2010-11-02 00:51:12Z dreammaster $
  *
  */
 
@@ -194,7 +194,7 @@ void Sound::loadDSRFile(const char *fileName) {
 
 	// Read header
 	_dsrFile.entryCount = fileStream->readUint16LE();
-	//printf("DSR has %i entries\n", _dsrFile.entryCount);
+	//warning(kDebugSound, "DSR has %i entries\n", _dsrFile.entryCount);
 
 	for (int i = 0; i < _dsrFile.entryCount; i++) {
 		DSREntry newEntry;
@@ -206,13 +206,13 @@ void Sound::loadDSRFile(const char *fileName) {
 		_dsrFile.dsrEntries.push_back(newEntry);
 
 		/*
-		printf("%i: ", i);
-		printf("frequency: %i ", newEntry->frequency);
-		printf("channels: %i ", newEntry->channels);
-		printf("comp: %i ", newEntry.compSize);
-		printf("uncomp: %i ", newEntry.uncompSize);
-		printf("offset: %i ", newEntry->offset);
-		printf("\n");
+		warning(kDebugSound, "%i: ", i);
+		warning(kDebugSound, "frequency: %i ", newEntry->frequency);
+		warning(kDebugSound, "channels: %i ", newEntry->channels);
+		warning(kDebugSound, "comp: %i ", newEntry.compSize);
+		warning(kDebugSound, "uncomp: %i ", newEntry.uncompSize);
+		warning(kDebugSound, "offset: %i ", newEntry->offset);
+		warning(kDebugSound, "\n");
 		*/
 	}
 

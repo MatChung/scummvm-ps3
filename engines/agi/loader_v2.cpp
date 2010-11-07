@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/loader_v2.cpp $
- * $Id: loader_v2.cpp 49751 2010-06-15 10:34:45Z sev $
+ * $Id: loader_v2.cpp 54011 2010-11-01 16:04:47Z fingolfin $
  *
  */
 
@@ -43,7 +43,7 @@ int AgiLoader_v2::loadDir(AgiDir *agid, const char *fname) {
 	uint32 flen;
 	uint i;
 
-	report("Loading directory: %s\n", fname);
+	debug(0, "Loading directory: %s", fname);
 
 	if (!fp.open(fname)) {
 		return errBadFileOpen;
@@ -157,8 +157,7 @@ uint8 *AgiLoader_v2::loadVolRes(struct AgiDir *agid) {
 				exit(1);
 			}
 		} else {
-			report("Error: bad signature %04x\n", sig);
-			// fprintf (stderr, "ACK! BAD RESOURCE!!!\n");
+			warning("AgiLoader_v2::loadVolRes: bad signature %04x", sig);
 			return 0;
 		}
 		fp.close();

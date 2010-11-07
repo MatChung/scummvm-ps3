@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/parser/vocabulary.h $
- * $Id: vocabulary.h 53001 2010-10-03 20:58:50Z wjpalenstijn $
+ * $Id: vocabulary.h 54037 2010-11-02 09:49:47Z fingolfin $
  *
  */
 
@@ -243,7 +243,7 @@ public:
 	ParseRuleList *buildGNF(bool verbose = false);
 
 	/**
-	 * Deciphers a said block and dumps its content via printf.
+	 * Deciphers a said block and dumps its content via debugN.
 	 * For debugging only.
 	 * @param pos	pointer to the data to dump
 	 */

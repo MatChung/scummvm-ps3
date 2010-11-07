@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/detection_tables.h $
- * $Id: detection_tables.h 52966 2010-10-01 19:24:52Z athrxx $
+ * $Id: detection_tables.h 53729 2010-10-23 06:27:16Z Kirben $
  *
  */
 
@@ -370,7 +370,7 @@ static const GameSettings gameVariantsTable[] = {
 #ifdef USE_RGB_COLOR
 	// Added 16bit color
 	{"arttime", 0, 0, GID_HEGAME, 6, 99, MDT_NONE, GF_USE_KEY | GF_HE_LOCALIZED | GF_16BIT_COLOR, UNK, GUIO_NOLAUNCHLOAD | GUIO_NOMIDI},
-	{"baseball2001", 0, 0, GID_HEGAME, 6, 99, MDT_NONE, GF_USE_KEY | GF_16BIT_COLOR, UNK, GUIO_NOLAUNCHLOAD | GUIO_NOMIDI},
+	{"baseball2001", 0, 0, GID_BASEBALL2001, 6, 99, MDT_NONE, GF_USE_KEY | GF_16BIT_COLOR, UNK, GUIO_NOLAUNCHLOAD | GUIO_NOMIDI},
 	{"readtime", 0, 0, GID_HEGAME, 6, 99, MDT_NONE, GF_USE_KEY | GF_HE_LOCALIZED | GF_16BIT_COLOR, UNK, GUIO_NOLAUNCHLOAD | GUIO_NOMIDI},
 	{"SoccerMLS", 0, 0, GID_SOCCER, 6, 99, MDT_NONE, GF_USE_KEY | GF_HE_LOCALIZED | GF_16BIT_COLOR, UNK, GUIO_NOLAUNCHLOAD | GUIO_NOMIDI},
 	{"spyozon", 0, 0, GID_HEGAME, 6, 99, MDT_NONE, GF_USE_KEY | GF_HE_LOCALIZED | GF_16BIT_COLOR, UNK, GUIO_NOLAUNCHLOAD | GUIO_NOMIDI},

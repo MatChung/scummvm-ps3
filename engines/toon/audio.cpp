@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/audio.cpp $
- * $Id: audio.cpp 53545 2010-10-16 19:27:11Z sylvaintv $
+ * $Id: audio.cpp 54076 2010-11-04 22:12:16Z sylvaintv $
  *
  */
 
@@ -46,28 +46,43 @@ AudioManager::AudioManager(ToonEngine *vm, Audio::Mixer *mixer) : _vm(vm), _mixe
 	for (int32 i = 0; i < 16; i++)
 		_channels[i] = 0;
 
-	voiceMuted = false;
-	musicMuted = false;
-	sfxMuted = false;
+	for (int32 i = 0; i < 4; i++) 
+		_audioPacks[i] = 0;
+
+	for (int32 i = 0; i < 4; i++) {
+		_ambientSFXs[i]._delay = 0;
+		_ambientSFXs[i]._enabled = false;
+		_ambientSFXs[i]._id = -1;
+		_ambientSFXs[i]._channel = -1;
+		_ambientSFXs[i]._lastTimer = 0;
+		_ambientSFXs[i]._volume = 255;
+	}
+
+	_voiceMuted = false;
+	_musicMuted = false;
+	_sfxMuted = false;
 }
 
 AudioManager::~AudioManager(void) {
+	for (int32 i = 0; i < 4; i++) {
+		closeAudioPack(i);
+	}
 }
 
 void AudioManager::muteMusic(bool muted) {
 	setMusicVolume(muted ? 0 : 255);
-	musicMuted = muted;
+	_musicMuted = muted;
 }
 
 void AudioManager::muteVoice(bool muted) {
 	if(voiceStillPlaying() && _channels[2]) {
 		_channels[2]->setVolume(muted ? 0 : 255);
 	}
-	voiceMuted = muted;
+	_voiceMuted = muted;
 }
 
 void AudioManager::muteSfx(bool muted) {
-	sfxMuted = muted;
+	_sfxMuted = muted;
 }
 
 void AudioManager::removeInstance(AudioStreamInstance *inst) {
@@ -83,7 +98,7 @@ void AudioManager::playMusic(Common::String dir, Common::String music) {
 	debugC(1, kDebugAudio, "playMusic(%s, %s)", dir.c_str(), music.c_str());
 
 	// two musics can be played at same time
-	Common::String path = Common::String::printf("act%d/%s/%s.mus", _vm->state()->_currentChapter, dir.c_str(), music.c_str());
+	Common::String path = Common::String::format("act%d/%s/%s.mus", _vm->state()->_currentChapter, dir.c_str(), music.c_str());
 
 	if (_currentMusicName == music)
 		return;
@@ -119,7 +134,7 @@ void AudioManager::playMusic(Common::String dir, Common::String music) {
 	//if (!_channels[_currentMusicChannel])
 	//	delete _channels[_currentMusicChannel];
 	_channels[_currentMusicChannel] = new AudioStreamInstance(this, _mixer, srs, true);
-	_channels[_currentMusicChannel]->setVolume(musicMuted ? 0 : 255);
+	_channels[_currentMusicChannel]->setVolume(_musicMuted ? 0 : 255);
 	_channels[_currentMusicChannel]->play(true, Audio::Mixer::kMusicSoundType);
 }
 
@@ -146,11 +161,11 @@ void AudioManager::playVoice(int32 id, bool genericVoice) {
 
 	_channels[2] = new AudioStreamInstance(this, _mixer, stream);
 	_channels[2]->play(false, Audio::Mixer::kSpeechSoundType);
-	_channels[2]->setVolume(voiceMuted ? 0 : 255);
+	_channels[2]->setVolume(_voiceMuted ? 0 : 255);
 
 }
 
-void AudioManager::playSFX(int32 id, int volume , bool genericSFX) {
+int32 AudioManager::playSFX(int32 id, int volume , bool genericSFX) {
 	debugC(4, kDebugAudio, "playSFX(%d, %d)", id, (genericSFX) ? 1 : 0);
 
 	// find a free SFX channel
@@ -162,14 +177,24 @@ void AudioManager::playSFX(int32 id, int volume , bool genericSFX) {
 		stream = _audioPacks[3]->getStream(id, true);
 
 	if (stream->size() == 0)
-		return;
+		return -1;
 
 	for (int32 i = 3; i < 16; i++) {
 		if (!_channels[i]) {
 			_channels[i] = new AudioStreamInstance(this, _mixer, stream);
 			_channels[i]->play(false, Audio::Mixer::kSFXSoundType);
-			_channels[i]->setVolume(sfxMuted ? 0 : volume);
-			break;
+			_channels[i]->setVolume(_sfxMuted ? 0 : volume);
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+void AudioManager::stopAllSfxs() {
+	for (int32 i = 3; i < 16; i++) {
+		if (_channels[i] && _channels[i]->isPlaying()) {
+			_channels[i]->stop(false);
 		}
 	}
 }
@@ -181,9 +206,18 @@ void AudioManager::stopCurrentVoice() {
 		_channels[2]->stop(false);
 }
 
+
+void AudioManager::closeAudioPack(int32 id) {
+	if(_audioPacks[id]) {
+		delete _audioPacks[id];
+		_audioPacks[id] = 0;
+	}
+}
+
 bool AudioManager::loadAudioPack(int32 id, Common::String indexFile, Common::String packFile) {
 	debugC(4, kDebugAudio, "loadAudioPack(%d, %s, %s)", id, indexFile.c_str(), packFile.c_str());
 
+	closeAudioPack(id);
 	_audioPacks[id] = new AudioStreamPackage(_vm);
 	return _audioPacks[id]->loadAudioPackage(indexFile, packFile);
 }
@@ -449,10 +483,15 @@ void AudioStreamInstance::setVolume(int32 volume) {
 
 AudioStreamPackage::AudioStreamPackage(ToonEngine *vm) : _vm(vm) {
 	_indexBuffer = 0;
+	_file = 0;
 }
 
 AudioStreamPackage::~AudioStreamPackage() {
 	delete[] _indexBuffer;
+	if (_file) {
+		delete _file;
+		_file = 0;
+	}
 }
 
 bool AudioStreamPackage::loadAudioPackage(Common::String indexFile, Common::String streamFile) {
@@ -497,6 +536,95 @@ Common::SeekableReadStream *AudioStreamPackage::getStream(int32 id, bool ownMemo
 		return new Common::SeekableSubReadStream(_file, offset, size + offset);
 	}
 }
+
+void AudioManager::startAmbientSFX(int32 id, int32 delay, int32 mode, int32 volume)
+{
+	int32 found = -1;
+	for (int32 i = 0; i < 4; i++) {
+		if (!_ambientSFXs[i]._enabled) {
+			found = i;
+			break;
+		}
+	}
+
+	if (found < 0) 
+		return;
+
+	_ambientSFXs[found]._lastTimer = _vm->getOldMilli() - 1;
+	_ambientSFXs[found]._delay = delay;
+	_ambientSFXs[found]._enabled = true;
+	_ambientSFXs[found]._mode = mode;
+	_ambientSFXs[found]._volume = volume;
+	_ambientSFXs[found]._id = id;
+	updateAmbientSFX();
+
+}
+
+void AudioManager::setAmbientSFXVolume(int32 id, int volume) {
+	for (int32 i = 0; i < 4; i++) {
+		AudioAmbientSFX* ambient = &_ambientSFXs[i];
+		if (ambient->_id == id && ambient->_enabled) {
+			ambient->_volume = volume;
+			if (ambient->_channel >= 0 && _channels[ambient->_channel] && _channels[ambient->_channel]->isPlaying()) {
+				_channels[ambient->_channel]->setVolume(volume);
+			}
+			break;
+		}
+	}
+}
+
+void AudioManager::killAmbientSFX(int32 id)
+{
+	for (int32 i = 0; i < 4; i++) {
+		AudioAmbientSFX* ambient = &_ambientSFXs[i];
+		if (ambient->_id == id && ambient->_enabled) {
+			ambient->_enabled = false;
+			ambient->_id = -1;
+
+			if (_channels[ambient->_channel]) {
+				_channels[ambient->_channel]->stop(false);
+			}
+		}
+
+	}
+}
+
+void AudioManager::killAllAmbientSFX()
+{
+	for (int32 i = 0; i < 4; i++) {
+		AudioAmbientSFX* ambient = &_ambientSFXs[i];
+		if (ambient->_enabled) {
+			ambient->_enabled = false;
+			ambient->_id = -1;
+			if (ambient->_channel >= 0 && _channels[ambient->_channel] && _channels[ambient->_channel]->isPlaying()) {
+				_channels[ambient->_channel]->stop(false);
+			}
+			ambient->_channel = -1;
+		}
+	}
+}
+
+void AudioManager::updateAmbientSFX()
+{
+	if (_vm->getMoviePlayer()->isPlaying()) return;
+
+	for (int32 i = 0; i < 4; i++) {
+		AudioAmbientSFX* ambient = &_ambientSFXs[i];
+		if (ambient->_enabled && (ambient->_channel < 0 || !(_channels[ambient->_channel] && _channels[ambient->_channel]->isPlaying()))) {
+			if(ambient->_mode == 1) {
+				if (_vm->randRange(0, 32767) < ambient->_delay) {					
+					ambient->_channel = playSFX(ambient->_id, ambient->_volume, false);
+				}
+			} else {
+				if (_vm->getOldMilli() > ambient->_lastTimer) {
+					ambient->_channel = playSFX(ambient->_id, ambient->_volume, false);
+					ambient->_lastTimer = _vm->getOldMilli(); // + 60 * _vm->getTickLength() * ambient->_delay;
+				}
+			}
+		}
+	}
+}
+
 
 } // End of namespace Toon
 

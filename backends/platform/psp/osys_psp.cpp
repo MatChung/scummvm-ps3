@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/psp/osys_psp.cpp $
- * $Id: osys_psp.cpp 53460 2010-10-14 22:11:17Z bluddy $
+ * $Id: osys_psp.cpp 53741 2010-10-23 19:01:34Z bluddy $
  *
  */
 
@@ -87,6 +87,7 @@ void OSystem_PSP::initBackend() {
 	
 	// Set pointers for image viewer
 	_imageViewer.setInputHandler(&_inputHandler);
+	_imageViewer.setDisplayManager(&_displayManager);
 
 	_savefile = new PSPSaveFileManager;
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/testbed/detection.cpp $
- * $Id: detection.cpp 52973 2010-10-02 01:05:16Z sud03r $
+ * $Id: detection.cpp 54105 2010-11-07 01:01:18Z fingolfin $
  *
  */
 
@@ -51,16 +51,27 @@ static const ADGameDescription testbedDescriptions[] = {
 };
 
 static const ADParams detectionParams = {
+	// Pointer to ADGameDescription or its superset structure
 	(const byte *)testbedDescriptions,
+	// Size of that superset structure
 	sizeof(ADGameDescription),
+	// Number of bytes to compute MD5 sum for
 	512,
+	// List of all engine targets
 	testbed_setting,
+	// Structure for autoupgrading obsolete targets
 	0,
+	// Name of single gameid (optional)
 	"testbed",
+	// List of files for file-based fallback detection (optional)
 	0,
+	// Flags
 	ADGF_NO_FLAGS,
+	// Additional GUI options (for every game}
 	Common::GUIO_NONE,
+	// Maximum directory depth
 	1,
+	// List of directory globs
 	0
 };
 

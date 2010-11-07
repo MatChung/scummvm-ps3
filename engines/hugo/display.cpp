@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/display.cpp $
- * $Id: display.cpp 53468 2010-10-15 06:16:27Z strangerke $
+ * $Id: display.cpp 54103 2010-11-07 00:02:48Z strangerke $
  *
  */
 
@@ -48,8 +48,11 @@ namespace Hugo {
 #define INY(Y, B) (Y >= B->y && Y <= B->y + B->dy)
 #define OVERLAP(A, B) ((INX(A->x, B) || INX(A->x + A->dx, B) || INX(B->x, A) || INX(B->x + B->dx, A)) && (INY(A->y, B) || INY(A->y + A->dy, B) || INY(B->y, A) || INY(B->y + B->dy, A)))
 
-Screen::Screen(HugoEngine &vm) : _vm(vm) {
-
+Screen::Screen(HugoEngine *vm) : _vm(vm), _palette(0) {
+	for (int j = 0; j < NUM_FONTS; j++) {
+		_arrayFont[j] = 0;
+		fontLoadedFl[j] = false;
+	}
 }
 
 Screen::~Screen() {
@@ -58,16 +61,20 @@ Screen::~Screen() {
 void Screen::createPal() {
 	debugC(1, kDebugDisplay, "createPal");
 
-	g_system->setPalette(_vm._palette, 0, NUM_COLORS);
+	g_system->setPalette(_palette, 0, NUM_COLORS);
 }
 
+/**
+* Create logical palette
+*/
 void Screen::initDisplay() {
 	debugC(1, kDebugDisplay, "initDisplay");
-	// Create logical palette
 	createPal();
 }
 
-// Move an image from source to destination
+/**
+* Move an image from source to destination
+*/
 void Screen::moveImage(image_pt srcImage, uint16 x1, uint16 y1, uint16 dx, uint16 dy, uint16 width1, image_pt dstImage, uint16 x2, uint16 y2, uint16 width2) {
 	debugC(3, kDebugDisplay, "moveImage(srcImage, %d, %d, %d, %d, %d, dstImage, %d, %d, %d)", x1, y1, dx, dy, width1, x2, y2, width2);
 
@@ -91,19 +98,29 @@ void Screen::displayBackground() {
 	g_system->copyRectToScreen(_frontBuffer, 320, 0, 0, 320, 200);
 }
 
-// Blit the supplied rectangle from _frontBuffer to the screen
+/**
+* Blit the supplied rectangle from _frontBuffer to the screen
+*/
 void Screen::displayRect(int16 x, int16 y, int16 dx, int16 dy) {
 	debugC(3, kDebugDisplay, "displayRect(%d, %d, %d, %d)", x, y, dx, dy);
 
 	g_system->copyRectToScreen(&_frontBuffer[x + y * 320], 320, x, y, dx, dy);
 }
 
+/**
+* Change a color by remapping supplied palette index with new index
+*/
 void Screen::remapPal(uint16 oldIndex, uint16 newIndex) {
-// Change a color by remapping supplied palette index with new index
 	debugC(1, kDebugDisplay, "Remap_pal(%d, %d)", oldIndex, newIndex);
 
-	warning("STUB: Remap_pal()");
-	//bminfo.bmiColors[oldIndex] = ctab[newIndex];
+	byte pal[4];
+
+	pal[0] = _palette[newIndex * 4 + 0];
+	pal[1] = _palette[newIndex * 4 + 1];
+	pal[2] = _palette[newIndex * 4 + 2];
+	pal[3] = _palette[newIndex * 4 + 3];
+
+	g_system->setPalette(pal, oldIndex, 1);
 }
 
 void Screen::savePal(Common::WriteStream *f) {
@@ -121,21 +138,25 @@ void Screen::restorePal(Common::SeekableReadStream *f) {
 }
 
 
-// Set the new background color
+/**
+* Set the new background color
+*/
 void Screen::setBackgroundColor(long color) {
 	debugC(1, kDebugDisplay, "setBackgroundColor(%ld)", color);
 
 	// How???  Translate existing pixels in dib before objects rendered?
 }
 
-// Return the overlay state (Foreground/Background) of the currently
-// processed object by looking down the current column for an overlay
-// base bit set (in which case the object is foreground).
+/**
+* Return the overlay state (Foreground/Background) of the currently
+* processed object by looking down the current column for an overlay
+* base bit set (in which case the object is foreground).
+*/
 overlayState_t Screen::findOvl(seq_t *seq_p, image_pt dst_p, uint16 y) {
 	debugC(4, kDebugDisplay, "findOvl");
 
 	for (; y < seq_p->lines; y++) {              // Each line in object
-		image_pt ovb_p = _vm.getBaseBoundaryOverlay() + ((uint16)(dst_p - _frontBuffer) >> 3);  // Ptr into overlay bits
+		image_pt ovb_p = _vm->getBaseBoundaryOverlay() + ((uint16)(dst_p - _frontBuffer) >> 3);  // Ptr into overlay bits
 		if (*ovb_p & (0x80 >> ((uint16)(dst_p - _frontBuffer) & 7))) // Overlay bit is set
 			return FG;                              // Found a bit - must be foreground
 		dst_p += XPIX;
@@ -144,14 +165,16 @@ overlayState_t Screen::findOvl(seq_t *seq_p, image_pt dst_p, uint16 y) {
 	return BG;                                      // No bits set, must be background
 }
 
-// Merge an object frame into _frontBuffer at sx, sy and update rectangle list.
-// If fore TRUE, force object above any overlay
+/**
+* Merge an object frame into _frontBuffer at sx, sy and update rectangle list.
+* If fore TRUE, force object above any overlay
+*/
 void Screen::displayFrame(int sx, int sy, seq_t *seq, bool foreFl) {
 	debugC(3, kDebugDisplay, "displayFrame(%d, %d, seq, %d)", sx, sy, (foreFl) ? 1 : 0);
 
 	image_pt image = seq->imagePtr;                 // Ptr to object image data
 	image_pt subFrontBuffer = &_frontBuffer[sy * XPIX + sx]; // Ptr to offset in _frontBuffer
-	image_pt overlay = &_vm.getFirstOverlay()[(sy * XPIX + sx) >> 3]; // Ptr to overlay data
+	image_pt overlay = &_vm->getFirstOverlay()[(sy * XPIX + sx) >> 3]; // Ptr to overlay data
 	int16 frontBufferwrap = XPIX - seq->x2 - 1;     // Wraps dest_p after each line
 	int16 imageWrap = seq->bytesPerLine8 - seq->x2 - 1;
 
@@ -159,7 +182,7 @@ void Screen::displayFrame(int sx, int sy, seq_t *seq, bool foreFl) {
 	for (uint16 y = 0; y < seq->lines; y++) {       // Each line in object
 		for (uint16 x = 0; x <= seq->x2; x++) {
 			if (*image) {                           // Non-transparent
-				overlay = _vm.getFirstOverlay() + ((uint16)(subFrontBuffer - _frontBuffer) >> 3);       // Ptr into overlay bits
+				overlay = _vm->getFirstOverlay() + ((uint16)(subFrontBuffer - _frontBuffer) >> 3);       // Ptr into overlay bits
 				if (*overlay & (0x80 >> ((uint16)(subFrontBuffer - _frontBuffer) & 7))) {   // Overlay bit is set
 					if (overlayState == UNDEF)      // Overlay defined yet?
 						overlayState = findOvl(seq, subFrontBuffer, y);// No, find it.
@@ -180,7 +203,9 @@ void Screen::displayFrame(int sx, int sy, seq_t *seq, bool foreFl) {
 	displayList(D_ADD, sx, sy, seq->x2 + 1, seq->lines);
 }
 
-// Merge rectangles A,B leaving result in B
+/**
+* Merge rectangles A,B leaving result in B
+*/
 void Screen::merge(rect_t *rectA, rect_t *rectB) {
 	debugC(6, kDebugDisplay, "merge");
 
@@ -195,10 +220,12 @@ void Screen::merge(rect_t *rectA, rect_t *rectB) {
 	rectB->dy = MAX(ya, yb) - rectB->y;
 }
 
-// Coalesce the rectangles in the restore/add list into one unified
-// blist.  len is the sizes of alist or rlist.  blen is current length
-// of blist.  bmax is the max size of the blist.  Note that blist can
-// have holes, in which case dx = 0.  Returns used length of blist.
+/**
+* Coalesce the rectangles in the restore/add list into one unified
+* blist.  len is the sizes of alist or rlist.  blen is current length
+* of blist.  bmax is the max size of the blist.  Note that blist can
+* have holes, in which case dx = 0.  Returns used length of blist.
+*/
 int16 Screen::mergeLists(rect_t *list, rect_t *blist, int16 len, int16 blen, int16 bmax) {
 	debugC(4, kDebugDisplay, "mergeLists");
 
@@ -213,7 +240,7 @@ int16 Screen::mergeLists(rect_t *list, rect_t *blist, int16 len, int16 blen, int
 				if (OVERLAP(list, bp))
 					coalesce[c++] = b;
 		}
-		
+
 		// Any overlapping blit rects?
 		if (c == 0) {                               // None, add a new entry
 			blist[blen++] = *list;
@@ -233,8 +260,10 @@ int16 Screen::mergeLists(rect_t *list, rect_t *blist, int16 len, int16 blen, int
 	return blen;
 }
 
-// Process the display list
-// Trailing args are int16 x,y,dx,dy for the D_ADD operation
+/**
+* Process the display list
+* Trailing args are int16 x,y,dx,dy for the D_ADD operation
+*/
 void Screen::displayList(dupdate_t update, ...) {
 	debugC(6, kDebugDisplay, "displayList");
 
@@ -253,7 +282,7 @@ void Screen::displayList(dupdate_t update, ...) {
 		break;
 	case D_ADD:                                     // Add a rectangle to list
 		if (addIndex >= DMAX) {
-			Utils::Warn("%s", "Display list exceeded");
+			warning("Display list exceeded");
 			return;
 		}
 		va_start(marker, update);                   // Initialize variable arguments
@@ -269,8 +298,8 @@ void Screen::displayList(dupdate_t update, ...) {
 		// Don't blit if newscreen just loaded because _frontBuffer will
 		// get blitted via InvalidateRect() at end of this cycle
 		// and blitting here causes objects to appear too soon.
-		if (_vm.getGameStatus().newScreenFl) {
-			_vm.getGameStatus().newScreenFl = false;
+		if (_vm->getGameStatus().newScreenFl) {
+			_vm->getGameStatus().newScreenFl = false;
 			break;
 		}
 
@@ -295,13 +324,14 @@ void Screen::displayList(dupdate_t update, ...) {
 	}
 }
 
+/**
+* Write supplied character (font data) at sx,sy in supplied color
+* Font data as follows:
+* *(fontdata+1) = Font Height (pixels)
+* *(fontdata+1) = Font Width (pixels)
+* *(fontdata+x) = Font Bitmap (monochrome)
+*/
 void Screen::writeChr(int sx, int sy, byte color, char *local_fontdata) {
-// Write supplied character (font data) at sx,sy in supplied color
-// Font data as follows:
-//
-// *(fontdata+1) = Font Height (pixels)
-// *(fontdata+1) = Font Width (pixels)
-// *(fontdata+x) = Font Bitmap (monochrome)
 	debugC(2, kDebugDisplay, "writeChr(%d, %d, %d, %d)", sx, sy, color, local_fontdata[0]);
 
 	byte height = local_fontdata[0];
@@ -320,7 +350,9 @@ void Screen::writeChr(int sx, int sy, byte color, char *local_fontdata) {
 	}
 }
 
-// Returns height of characters in current font
+/**
+* Returns height of characters in current font
+*/
 int16 Screen::fontHeight() {
 	debugC(2, kDebugDisplay, "fontHeight");
 
@@ -328,8 +360,9 @@ int16 Screen::fontHeight() {
 	return height[_fnt - FIRST_FONT];
 }
 
-
-// Returns length of supplied string in pixels
+/**
+* Returns length of supplied string in pixels
+*/
 int16 Screen::stringLength(const char *s) {
 	debugC(2, kDebugDisplay, "stringLength(%s)", s);
 
@@ -341,15 +374,19 @@ int16 Screen::stringLength(const char *s) {
 	return sum;
 }
 
-// Return x which would center supplied string
+/**
+* Return x which would center supplied string
+*/
 int16 Screen::center(const char *s) {
 	debugC(1, kDebugDisplay, "center(%s)", s);
 
 	return (int16)((XPIX - stringLength(s)) >> 1);
 }
 
-// Write string at sx,sy in supplied color in current font
-// If sx == CENTER, center it
+/**
+* Write string at sx,sy in supplied color in current font
+* If sx == CENTER, center it
+*/
 void Screen::writeStr(int16 sx, int16 sy, const char *s, byte color) {
 	debugC(2, kDebugDisplay, "writeStr(%d, %d, %s, %d)", sx, sy, s, color);
 
@@ -363,7 +400,9 @@ void Screen::writeStr(int16 sx, int16 sy, const char *s, byte color) {
 	}
 }
 
-// Shadowed version of writestr
+/**
+* Shadowed version of writestr
+*/
 void Screen::shadowStr(int16 sx, int16 sy, const char *s, byte color) {
 	debugC(1, kDebugDisplay, "shadowStr(%d, %d, %s, %d)", sx, sy, s, color);
 
@@ -374,10 +413,11 @@ void Screen::shadowStr(int16 sx, int16 sy, const char *s, byte color) {
 	writeStr(sx, sy, s, color);
 }
 
+/** Introduce user to the game
+* DOS versions Only
+*/
 void Screen::userHelp() {
-// Introduce user to the game
-// DOS versions Only
-	Utils::Box(BOX_ANY , "%s", 
+	Utils::Box(BOX_ANY , "%s",
 	           "F1  - Press F1 again\n"
 	           "      for instructions\n"
 	           "F2  - Sound on/off\n"
@@ -394,18 +434,18 @@ void Screen::drawStatusText() {
 	debugC(4, kDebugDisplay, "drawStatusText");
 
 	loadFont(U_FONT8);
-	uint16 sdx = stringLength(_vm._statusLine);
+	uint16 sdx = stringLength(_vm->_statusLine);
 	uint16 sdy = fontHeight() + 1;                 // + 1 for shadow
 	uint16 posX = 0;
 	uint16 posY = YPIX - sdy;
 
 	// Display the string and add rect to display list
-	writeStr(posX, posY, _vm._statusLine, _TLIGHTYELLOW);
+	writeStr(posX, posY, _vm->_statusLine, _TLIGHTYELLOW);
 	displayList(D_ADD, posX, posY, sdx, sdy);
 
-	sdx = stringLength(_vm._scoreLine);
+	sdx = stringLength(_vm->_scoreLine);
 	posY = 0;
-	writeStr(posX, posY, _vm._scoreLine, _TCYAN);
+	writeStr(posX, posY, _vm->_scoreLine, _TCYAN);
 	displayList(D_ADD, posX, posY, sdx, sdy);
 }
 
@@ -421,7 +461,7 @@ void Screen::drawShape(int x, int y, int color1, int color2) {
 			_backBuffer[320 * (y + (2 * shapeSize - 1) - i) + (x + shapeSize + j)] = color2;
 			_frontBuffer[320 * (y + (2 * shapeSize - 1) - i) + (x + shapeSize + j)] = color2;
 		}
-	}		
+	}
 }
 
 void Screen::drawRectangle(bool filledFl, uint16 x1, uint16 y1, uint16 x2, uint16 y2, int color) {
@@ -440,14 +480,44 @@ void Screen::drawRectangle(bool filledFl, uint16 x1, uint16 y1, uint16 x2, uint1
 	}
 }
 
-// Initialize screen components and display results
+/**
+* Initialize screen components and display results
+*/
 void Screen::initNewScreenDisplay() {
 	displayList(D_INIT);
 	setBackgroundColor(_TBLACK);
 	displayBackground();
 
 	// Stop premature object display in Display_list(D_DISPLAY)
-	_vm.getGameStatus().newScreenFl = true;
+	_vm->getGameStatus().newScreenFl = true;
+}
+
+/**
+* Load palette from Hugo.dat
+*/
+void Screen::loadPalette(Common::File &in) {
+	// Read palette
+	_paletteSize = in.readUint16BE();
+	_palette = (byte *)malloc(sizeof(byte) * _paletteSize);
+	for (int i = 0; i < _paletteSize; i++)
+		_palette[i] = in.readByte();
+}
+
+/**
+* Free palette
+*/
+void Screen::freePalette() {
+	free(_palette);
+}
+
+/**
+* Free fonts
+*/
+void Screen::freeFonts() {
+	for (int i = 0; i < NUM_FONTS; i++) {
+		if (_arrayFont[i])
+			free(_arrayFont[i]);
+	}
 }
 } // End of namespace Hugo
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEgui/ToolbarHandler.h $
- * $Id: ToolbarHandler.h 52935 2010-09-28 20:30:50Z fingolfin $
+ * $Id: ToolbarHandler.h 53979 2010-10-31 17:11:43Z fingolfin $
  *
  */
 
@@ -39,29 +39,30 @@ using Common::HashMap;
 
 namespace CEGUI {
 
-	class ToolbarHandler {
-	public:
-		ToolbarHandler();
-		bool add(const String &name, const Toolbar &toolbar);
-		bool setActive(const String &name);
-		bool action(int x, int y, bool pushed);
-		void setVisible(bool visible);
-		bool visible();
-		String activeName();
-		void forceRedraw();
-		void setOffset(int offset);
-		int getOffset();
-		bool draw(SDL_Surface *surface, SDL_Rect *rect);
-		bool drawn();
-		Toolbar *active();
-		virtual ~ToolbarHandler();
-	private:
+class ToolbarHandler {
+public:
+	ToolbarHandler();
+	bool add(const String &name, const Toolbar &toolbar);
+	bool setActive(const String &name);
+	bool action(int x, int y, bool pushed);
+	void setVisible(bool visible);
+	bool visible();
+	String activeName();
+	void forceRedraw();
+	void setOffset(int offset);
+	int getOffset();
+	bool draw(SDL_Surface *surface, SDL_Rect *rect);
+	bool drawn();
+	Toolbar *active();
+	virtual ~ToolbarHandler();
+private:
 
-		HashMap<String, Toolbar*, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _toolbarMap;
-		String _current;
-		Toolbar *_active;
-		int _offset;
-	};
-}
+	HashMap<String, Toolbar*, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _toolbarMap;
+	String _current;
+	Toolbar *_active;
+	int _offset;
+};
+
+} // End of namespace CEGUI
 
 #endif

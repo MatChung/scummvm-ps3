@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/state.h $
- * $Id: state.h 53579 2010-10-18 19:17:38Z sev $
+ * $Id: state.h 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -28,6 +28,7 @@
 
 #include "lastexpress/shared.h"
 
+#include "common/serializer.h"
 #include "common/system.h"
 
 namespace LastExpress {
@@ -40,7 +41,7 @@ class SavePoints;
 
 class State {
 public:
-	struct GameProgress {
+	struct GameProgress : public Common::Serializable {
 		uint32 field_0;
 		JacketType jacket;
 		bool eventCorpseMovedFromFloor;
@@ -313,7 +314,15 @@ public:
 		 * @return true if equal, false if not.
 		 */
 		bool isEqual(uint index, uint val) {
-			#define EXPOSE_VALUE(idx, name) case idx: return ((uint)name == val);
+			return getValueName(index) == val;
+		}
+
+		uint32 getValueName(uint index, Common::String *name = NULL) {
+			#define EXPOSE_VALUE(idx, entryName) \
+				case idx: { \
+					if (name) (*name) = "" #entryName; \
+					return (uint32)entryName; \
+				}
 
 			switch (index) {
 			default:
@@ -450,16 +459,35 @@ public:
 			EXPOSE_VALUE(127, field_1FC);
 			}
 		}
+
+		Common::String toString() {
+			Common::String ret = "";
+
+			for (uint i = 0; i < 128; i++) {
+				Common::String name = "";
+				uint val = getValueName(i, &name);
+				ret += Common::String::format("(%03d) %s = %d\n", i, name.c_str(), val);
+			}
+
+			return ret;
+		}
+
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			for (uint i = 0; i < 128; i++) {
+				uint32 val = getValueName(i);
+				s.syncAsUint32LE(val);
+			}
+		}
 	};
 
-	struct GameState {
+	struct GameState : public Common::Serializable {
 		// Header
 		uint32 brightness;
 		uint32 volume;
 
 		// Game data
 		uint32 field_0;
-		uint32 time;
+		TimeValue time;
 		uint32 timeDelta;
 		uint32 timeTicks;
 		bool sceneUseBackup;       // byte
@@ -475,7 +503,7 @@ public:
 			volume = _defaultVolume;
 
 			//Game data
-			time = _defaultTime;
+			time = kTimeCityParis;
 			timeDelta = _defaultTimeDelta;
 			timeTicks = 0;
 			sceneUseBackup = false;
@@ -495,11 +523,30 @@ public:
 		Common::String toString() {
 			Common::String ret = "";
 
-			ret += Common::String::printf("Time: %d    - Time delta: %d    - Ticks: %d\n", time, timeDelta, timeTicks);
-			ret += Common::String::printf("Brightness: %d    - Volume: %d    - UseBackup: %d\n", brightness, volume, sceneUseBackup);
-			ret += Common::String::printf("Scene: %d    - Scene backup: %d    - Scene backup 2: %d\n", scene, sceneBackup, sceneBackup2);
+			uint8 hours = 0;
+			uint8 minutes = 0;
+			getHourMinutes(time, &hours, &minutes);
+
+			ret += Common::String::format("Time: %d (%d:%d)   - Time delta: %d    - Ticks: %d\n", time, hours, minutes, timeDelta, timeTicks);
+			ret += Common::String::format("Brightness: %d    - Volume: %d    - UseBackup: %d\n", brightness, volume, sceneUseBackup);
+			ret += Common::String::format("Scene: %d    - Scene backup: %d    - Scene backup 2: %d\n", scene, sceneBackup, sceneBackup2);
 
 			return ret;
+		}
+
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			s.syncAsUint32LE(time);
+			s.syncAsUint32LE(timeDelta);
+			s.syncAsUint32LE(timeTicks);
+			s.syncAsUint32LE(scene);
+			s.syncAsByte(sceneUseBackup);
+			s.syncAsUint32LE(sceneBackup);
+			s.syncAsUint32LE(sceneBackup2);
+		}
+
+		void syncEvents(Common::Serializer &s) {
+			for (uint i = 0; i < ARRAYSIZE(events); i++)
+				s.syncAsByte(events[i]);
 		}
 	};
 
@@ -542,6 +589,23 @@ public:
 			shouldRedraw = false;
 			shouldDrawEggOrHourGlass = false;
 		}
+
+		/**
+		 * Convert this object into a string representation.
+		 *
+		 * @return A string representation of this object.
+		 */
+		Common::String toString() {
+			Common::String ret = "";
+
+			ret += Common::String::format("Unknown: 0:%02d  -  3:%02d  -  4:%02d  -  5:%02d\n", flag_0, flag_3, flag_4, flag_5);
+			ret += Common::String::format("FrameInterval: %02d  -  ShouldRedraw:%02d  -  ShouldDrawEggOrHourGlass:%02d\n", frameInterval, shouldRedraw, shouldDrawEggOrHourGlass);
+			ret += Common::String::format("IsGameRunning: %02d\n", isGameRunning);
+			ret += Common::String::format("Mouse: RightClick:%02d  - LeftClick:%02d\n", mouseRightClick, mouseLeftClick);
+			ret += Common::String::format("Entities: 0:%02d  -  1:%02d\n", flag_entities_0, flag_entities_1);
+
+			return ret;
+		}
 	};
 
 	State(LastExpressEngine *engine);
@@ -567,11 +631,11 @@ public:
 
 	// Helpers
 	static uint32 getPowerOfTwo(uint32 x);
+	static void getHourMinutes(uint32 time, uint8 *hours, uint8 *minutes);
 
 private:
-	static const uint32 _defaultBrigthness = 0x3;
-	static const uint32 _defaultVolume = 0x7;
-	static const uint32 _defaultTime = 1037700;
+	static const uint32 _defaultBrigthness = 3;
+	static const uint32 _defaultVolume = 7;
 	static const uint32 _defaultTimeDelta = 3;
 	static const uint32 _defaultPortrait = 32;
 

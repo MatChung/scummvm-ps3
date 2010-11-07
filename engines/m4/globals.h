@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/globals.h $
- * $Id: globals.h 52364 2010-08-25 06:42:54Z dreammaster $
+ * $Id: globals.h 54034 2010-11-02 00:15:18Z dreammaster $
  *
  */
 
@@ -229,15 +229,18 @@ struct MadsConfigData {
 #define SET_GLOBAL(x,y) _madsVm->globals()->_globals[x] = y
 #define SET_GLOBAL32(x,y) { _madsVm->globals()->_globals[x] = (y) & 0xffff; _madsVm->globals()->_globals[(x) + 1] = (y) >> 16; }
 
+typedef int (*IntFunctionPtr)();
+
 union DataMapEntry {
 	bool *boolValue;
 	uint16 *uint16Value;
 	int *intValue;
+	IntFunctionPtr fnPtr;
 };
 
 typedef Common::HashMap<uint16, uint16> DataMapHash;
 
-enum DataMapType {BOOL, UINT16, INT};
+enum DataMapType {BOOL, UINT16, INT, INT_FN};
 
 class DataMapWrapper {
 	friend class DataMap;
@@ -249,16 +252,18 @@ public:
 	DataMapWrapper(uint16 *v) { _value.uint16Value = v; _type = UINT16; }
 	DataMapWrapper(int16 *v) { _value.uint16Value = (uint16 *)v; _type = UINT16; }
 	DataMapWrapper(int *v) { _value.intValue = v; _type = INT; }
+	DataMapWrapper(IntFunctionPtr v) { _value.fnPtr = v; _type = INT_FN; }
 
 	uint16 getIntValue() {
 		if (_type == BOOL) return *_value.boolValue ? 0xffff : 0;
 		else if (_type == UINT16) return *_value.uint16Value;
-		else return *_value.intValue;
+		else if (_type == INT) return *_value.intValue;
+		else return _value.fnPtr();
 	}
 	void setIntValue(uint16 v) {
 		if (_type == BOOL) *_value.boolValue = v != 0;
 		else if (_type == UINT16) *_value.uint16Value = v;
-		else *_value.intValue = v;
+		else if (_type == INT) *_value.intValue = v;
 	}
 };
 

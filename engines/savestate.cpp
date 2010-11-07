@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/savestate.cpp $
- * $Id: savestate.cpp 48567 2010-04-06 09:27:27Z fingolfin $
+ * $Id: savestate.cpp 53922 2010-10-29 16:41:30Z lordhoto $
  *
  */
 
@@ -70,3 +70,9 @@ void SaveStateDescriptor::setPlayTime(int hours, int minutes) {
 	snprintf(buffer, 32, "%.2d:%.2d", hours, minutes);
 	setVal("play_time", buffer);
 }
+
+void SaveStateDescriptor::setPlayTime(uint32 msecs) {
+	uint minutes = msecs / 60000;
+	setPlayTime(minutes / 60, minutes % 60);
+}
+

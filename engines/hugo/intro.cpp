@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/intro.cpp $
- * $Id: intro.cpp 53152 2010-10-11 21:41:31Z strangerke $
+ * $Id: intro.cpp 53674 2010-10-21 17:09:57Z strangerke $
  *
  */
 
@@ -37,7 +37,7 @@
 
 namespace Hugo {
 
-IntroHandler::IntroHandler(HugoEngine &vm) : _vm(vm) {
+IntroHandler::IntroHandler(HugoEngine *vm) : _vm(vm) {
 }
 
 IntroHandler::~IntroHandler() {

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/train.cpp $
- * $Id: train.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: train.cpp 53880 2010-10-27 19:19:22Z littleboy $
  *
  */
 
@@ -290,7 +290,7 @@ IMPLEMENT_FUNCTION(8, Train, process)
 label_process:
 		if (params->param7) {
 			if (!params1->param8) {
-				params1->param8 = getState()->time + 4500;
+				params1->param8 = (uint)(getState()->time + 4500);
 
 				if (!params1->param8)
 					params->param7 = 0;

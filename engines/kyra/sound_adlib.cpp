@@ -35,7 +35,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/sound_adlib.cpp $
- * $Id: sound_adlib.cpp 52340 2010-08-24 13:41:24Z lordhoto $
+ * $Id: sound_adlib.cpp 53911 2010-10-28 23:56:36Z lordhoto $
  *
  */
 
@@ -2304,7 +2304,7 @@ void SoundAdLibPC::haltTrack() {
 	//_vm->_system->delayMillis(3 * 60);
 }
 
-bool SoundAdLibPC::isPlaying() {
+bool SoundAdLibPC::isPlaying() const {
 	return _driver->callback(7, int(0)) != 0;
 }
 

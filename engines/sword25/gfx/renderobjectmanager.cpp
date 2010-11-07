@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/renderobjectmanager.cpp $
- * $Id: renderobjectmanager.cpp 53430 2010-10-13 15:41:00Z fingolfin $
+ * $Id: renderobjectmanager.cpp 53626 2010-10-19 21:03:33Z sev $
  *
  */
 
@@ -63,7 +63,7 @@ void RenderObjectManager::startFrame() {
 	_frameStarted = true;
 
 	// Verstrichene Zeit bestimmen
-	int timeElapsed = Kernel::GetInstance()->GetGfx()->GetLastFrameDurationMicro();
+	int timeElapsed = Kernel::getInstance()->getGfx()->getLastFrameDurationMicro();
 
 	// Alle BS_TimedRenderObject Objekte über den Framestart und die verstrichene Zeit in Kenntnis setzen
 	RenderObjectList::iterator iter = _timedRenderObjects.begin();

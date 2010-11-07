@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/math/walkregion.cpp $
- * $Id: walkregion.cpp 53606 2010-10-19 09:43:31Z fingolfin $
+ * $Id: walkregion.cpp 53626 2010-10-19 21:03:33Z sev $
  *
  */
 
@@ -165,7 +165,7 @@ static void relaxEndPoint(const Vertex &curNodePos,
 }
 
 template<class T>
-void ReverseArray(Common::Array<T> &arr) {
+void reverseArray(Common::Array<T> &arr) {
 	const uint size = arr.size();
 	if (size < 2)
 		return;
@@ -216,7 +216,7 @@ bool WalkRegion::findPath(const Vertex &start, const Vertex &end, BS_Path &path)
 
 			// The nodes of the path must be untwisted, as they were extracted in reverse order.
 			// This step could be saved if the path from end to the beginning was desired
-			ReverseArray<Vertex>(path);
+			reverseArray<Vertex>(path);
 
 			return true;
 		}

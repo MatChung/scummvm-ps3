@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/sword2.cpp $
- * $Id: sword2.cpp 52825 2010-09-20 20:31:56Z sev $
+ * $Id: sword2.cpp 53998 2010-11-01 11:29:57Z eriktorbjorn $
  */
 
 #include "base/plugins.h"
@@ -290,13 +290,6 @@ Sword2Engine::Sword2Engine(OSystem *syst) : Engine(syst) {
 
 	_wantSfxDebug = false;
 
-#ifdef SWORD2_DEBUG
-	_stepOneCycle = false;
-	_renderSkip = false;
-#endif
-
-	_gamePaused = false;
-
 	_gameCycle = 0;
 	_gameSpeed = 1;
 
@@ -481,13 +474,6 @@ Common::Error Sword2Engine::run() {
 	while (1) {
 		_debugger->onFrame();
 
-#ifdef SWORD2_DEBUG
-		if (_stepOneCycle) {
-			pauseEngine(true);
-			_stepOneCycle = false;
-		}
-#endif
-
 		// Handle GMM Loading
 		if (_gmmLoadSlot != -1) {
 
@@ -516,10 +502,13 @@ Common::Error Sword2Engine::run() {
 			} else if (ke->kbd.hasFlags(0) || ke->kbd.hasFlags(Common::KBD_SHIFT)) {
 				switch (ke->kbd.keycode) {
 				case Common::KEYCODE_p:
-					if (_gamePaused)
+					if (isPaused()) {
+						_screen->dimPalette(false);
 						pauseEngine(false);
-					else
+					} else {
 						pauseEngine(true);
+						_screen->dimPalette(true);
+					}
 					break;
 #if 0
 				// Disabled because of strange rumors about the
@@ -533,17 +522,6 @@ Common::Error Sword2Engine::run() {
 					}
 					break;
 #endif
-#ifdef SWORD2_DEBUG
-				case Common::KEYCODE_SPACE:
-					if (_gamePaused) {
-						_stepOneCycle = true;
-						pauseEngine(false);
-					}
-					break;
-				case Common::KEYCODE_s:
-					_renderSkip = !_renderSkip;
-					break;
-#endif
 				default:
 					break;
 				}
@@ -551,7 +529,7 @@ Common::Error Sword2Engine::run() {
 		}
 
 		// skip GameCycle if we're paused
-		if (!_gamePaused) {
+		if (!isPaused()) {
 			_gameCycle++;
 			gameCycle();
 		}
@@ -566,15 +544,7 @@ Common::Error Sword2Engine::run() {
 		// creates the debug text blocks
 		_debugger->buildDebugText();
 
-#ifdef SWORD2_DEBUG
-		// if not in console & '_renderSkip' is set, only render
-		// display once every 4 game-cycles
-
-		if (!_renderSkip || (_gameCycle % 4) == 0)
-			_screen->buildDisplay();
-#else
 		_screen->buildDisplay();
-#endif
 	}
 
 	return Common::kNoError;
@@ -798,49 +768,13 @@ void Sword2Engine::sleepUntil(uint32 time) {
 	}
 }
 
-void Sword2Engine::pauseEngine(bool pause) {
-	if (pause == _gamePaused)
-		return;
-
-	// We don't need to hide the cursor for outside pausing. Not as long
-	// as it replaces the cursor with the GUI cursor, at least.
-
-	_mouse->pauseEngine(pause);
-	pauseEngineIntern(pause);
-
-	if (pause) {
-#ifdef SWORD2_DEBUG
-		// Don't dim it if we're single-stepping through frames
-		// dim the palette during the pause
-
-		if (!_stepOneCycle)
-			_screen->dimPalette(true);
-#else
-		_screen->dimPalette(true);
-#endif
-	} else {
-		_screen->dimPalette(false);
-
-		// If mouse is about or we're in a chooser menu
-		if (!_mouse->getMouseStatus() || _mouse->isChoosing())
-			_mouse->setMouse(NORMAL_MOUSE_ID);
-	}
-}
-
 void Sword2Engine::pauseEngineIntern(bool pause) {
-	if (pause == _gamePaused)
-		return;
+	Engine::pauseEngineIntern(pause);
 
 	if (pause) {
-		_sound->pauseAllSound();
-		_logic->pauseMovie(true);
 		_screen->pauseScreen(true);
-		_gamePaused = true;
 	} else {
-		_logic->pauseMovie(false);
 		_screen->pauseScreen(false);
-		_sound->unpauseAllSound();
-		_gamePaused = false;
 	}
 }
 

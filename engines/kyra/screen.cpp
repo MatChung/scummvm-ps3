@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/screen.cpp $
- * $Id: screen.cpp 53554 2010-10-17 13:08:00Z athrxx $
+ * $Id: screen.cpp 53616 2010-10-19 16:58:27Z athrxx $
  *
  */
 
@@ -3313,7 +3313,7 @@ SJISFont::SJISFont(Screen *s, Graphics::FontSJIS *font, const uint8 invisColor, 
     : _colorMap(0), _font(font), _invisColor(invisColor), _is16Color(is16Color), _screen(s) {
 	assert(_font);
 
-	_font->setShadowMode(outlineSize ? Graphics::FontSJIS::kShadowTypeOutline : Graphics::FontSJIS::kShadowTypeNone);
+	_font->setDrawingMode(outlineSize ? Graphics::FontSJIS::kOutlineMode : Graphics::FontSJIS::kDefaultMode);
 
 	_sjisWidth = _font->getMaxFontWidth() >> 1;
 	_fontHeight = _font->getFontHeight() >> 1;
@@ -3345,9 +3345,9 @@ void SJISFont::setColorMap(const uint8 *src) {
 
 	if (!_is16Color) {
 		if (_colorMap[0] == _invisColor)
-			_font->setShadowMode(Graphics::FontSJIS::kShadowTypeNone);
+			_font->setDrawingMode(Graphics::FontSJIS::kDefaultMode);
 		else
-			_font->setShadowMode(Graphics::FontSJIS::kShadowTypeOutline);
+			_font->setDrawingMode(Graphics::FontSJIS::kOutlineMode);
 	}
 }
 

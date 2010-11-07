@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEgui/ItemAction.cpp $
- * $Id: ItemAction.cpp 28966 2007-09-19 08:40:12Z peres001 $
+ * $Id: ItemAction.cpp 53979 2010-10-31 17:11:43Z fingolfin $
  *
  */
 
@@ -27,25 +27,25 @@
 
 namespace CEGUI {
 
-	ItemAction::ItemAction(WORD reference, GUI::ActionType action) :
-	PanelItem(reference) {
-		_action = action;
-		if (!GUI::Actions::Instance()->isEnabled(_action))
-			_visible = false;
-	}
-
-
-	ItemAction::~ItemAction() {
-	}
-
-	bool ItemAction::action(int x, int y, bool pushed) {
-
-		if (checkInside(x, y) && _visible && pushed) {
-			GUI::Actions::Instance()->perform(_action, true);
-			GUI::Actions::Instance()->perform(_action, false);
-			return true;
-		}
-		else
-			return false;
-	}
+ItemAction::ItemAction(WORD reference, GUI::ActionType action) :
+PanelItem(reference) {
+	_action = action;
+	if (!GUI::Actions::Instance()->isEnabled(_action))
+		_visible = false;
 }
+
+
+ItemAction::~ItemAction() {
+}
+
+bool ItemAction::action(int x, int y, bool pushed) {
+
+	if (checkInside(x, y) && _visible && pushed) {
+		GUI::Actions::Instance()->perform(_action, true);
+		GUI::Actions::Instance()->perform(_action, false);
+		return true;
+	} else
+		return false;
+}
+
+} // End of namespace CEGUI

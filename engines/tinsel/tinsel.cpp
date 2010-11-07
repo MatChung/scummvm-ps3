@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/tinsel.cpp $
- * $Id: tinsel.cpp 52736 2010-09-15 22:00:20Z lordhoto $
+ * $Id: tinsel.cpp 54028 2010-11-01 20:59:17Z thebluegr $
  *
  */
 
@@ -80,6 +80,7 @@ namespace Tinsel {
 // In BG.CPP
 extern void SetDoFadeIn(bool tf);
 extern void DropBackground();
+extern BACKGND *pCurBgnd;
 
 // In CURSOR.CPP
 extern void CursorProcess(CORO_PARAM, const void *);
@@ -1032,6 +1033,9 @@ Common::Error TinselEngine::run() {
 
 	// Write configuration
 	_vm->_config->writeToDisk();
+
+	EndScene();
+	pCurBgnd = NULL;
 
 	return Common::kNoError;
 }

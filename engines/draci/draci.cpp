@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/draci/draci.cpp $
- * $Id: draci.cpp 52736 2010-09-15 22:00:20Z lordhoto $
+ * $Id: draci.cpp 54116 2010-11-07 15:03:54Z tdhs $
  *
  */
 
@@ -93,6 +93,8 @@ DraciEngine::DraciEngine(OSystem *syst, const ADGameDescription *gameDesc)
 	DebugMan.addDebugChannel(kDraciAnimationDebugLevel, "animation", "Animation debug info");
 	DebugMan.addDebugChannel(kDraciSoundDebugLevel, "sound", "Sound debug info");
 	DebugMan.addDebugChannel(kDraciWalkingDebugLevel, "walking", "Walking debug info");
+
+	_console = new DraciConsole(this);
 
 	// Don't forget to register your random source
 	g_eventRec.registerRandomSource(_rnd, "draci");
@@ -346,6 +348,12 @@ void DraciEngine::handleEvents() {
 					_game->inventorySwitch(event.kbd.keycode);
 				}
 				break;
+			case Common::KEYCODE_d:
+				if (event.kbd.hasFlags(Common::KBD_CTRL)) {
+					this->getDebugger()->attach();
+					this->getDebugger()->onFrame();
+				}
+				break;
 			default:
 				break;
 			}
@@ -399,11 +407,13 @@ DraciEngine::~DraciEngine() {
 
 	// Remove all of our debug levels here
 	DebugMan.clearAllDebugChannels();
+
+	delete _console;
 }
 
 Common::Error DraciEngine::run() {
 	init();
-	_engineStartTime = _system->getMillis() / 1000;
+	setTotalPlayTime(0);
 	_game->init();
 
 	// Load game from specified slot, if any
@@ -418,8 +428,6 @@ Common::Error DraciEngine::run() {
 void DraciEngine::pauseEngineIntern(bool pause) {
 	Engine::pauseEngineIntern(pause);
 	if (pause) {
-		// Record start of the pause, so that we can later
-		// adjust _engineStartTime accordingly.
 		_pauseStartTime = _system->getMillis();
 
 		_anims->pauseAnimations();
@@ -434,7 +442,6 @@ void DraciEngine::pauseEngineIntern(bool pause) {
 
 		// Adjust engine start time
 		const int delta = _system->getMillis() - _pauseStartTime;
-		_engineStartTime += delta / 1000;
 		_game->shiftSpeechAndFadeTick(delta);
 		_pauseStartTime = 0;
 	}

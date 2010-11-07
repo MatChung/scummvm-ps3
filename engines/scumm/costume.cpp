@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/costume.cpp $
- * $Id: costume.cpp 48272 2010-03-16 14:34:25Z lordhoto $
+ * $Id: costume.cpp 54031 2010-11-01 21:37:47Z fingolfin $
  *
  */
 
@@ -648,7 +648,7 @@ void ClassicCostumeRenderer::procPCEngine(Codec1 &v1) {
 				}
 			}
 			if (index != 128) {
-				printf("%d\n", index);
+				warning("ClassicCostumeRenderer::procPCEngine: index %d != 128\n", index);
 			}
 
 			for (int row = 0; row < 16; ++row) {

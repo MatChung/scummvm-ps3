@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/str.cpp $
- * $Id: str.cpp 53586 2010-10-18 20:20:14Z sev $
+ * $Id: str.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  */
 
 #include "common/str.h"
@@ -430,7 +430,7 @@ uint String::hash() const {
 }
 
 // static
-String String::printf(const char *fmt, ...) {
+String String::format(const char *fmt, ...) {
 	String output;
 	assert(output.isStorageIntern());
 

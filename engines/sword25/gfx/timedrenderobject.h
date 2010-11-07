@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/timedrenderobject.h $
- * $Id: timedrenderobject.h 53393 2010-10-13 00:10:18Z sev $
+ * $Id: timedrenderobject.h 53625 2010-10-19 20:54:30Z sev $
  *
  */
 
@@ -31,14 +31,6 @@
  * Licensed under GNU GPL v2
  *
  */
-
-// -----------------------------------------------------------------------------
-// System Includes
-// -----------------------------------------------------------------------------
-
-// -----------------------------------------------------------------------------
-// Engine Includes
-// -----------------------------------------------------------------------------
 
 #include "sword25/kernel/common.h"
 #include "sword25/gfx/renderobject.h"

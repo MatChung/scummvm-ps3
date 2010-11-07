@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/detection_tables.h $
- * $Id: detection_tables.h 53547 2010-10-16 20:48:51Z mthreepwood $
+ * $Id: detection_tables.h 53955 2010-10-30 19:51:17Z h00ligan $
  *
  */
 
@@ -752,10 +752,10 @@ static const struct ADGameDescription SciGameDescriptions[] = {
 		AD_LISTEND},
 		Common::EN_ANY, Common::kPlatformPC, 0, GUIO_NOSPEECH	},
 
-	// Hoyle 1 - English DOS (supplied by eddydrama in bug report #3052366)
+	// Hoyle 1 3.5' - English DOS (supplied by eddydrama in bug report #3052366 and dinnerx in bug report #3090841)
 	{"hoyle1", "", {
 		{"resource.map", 0, "0af9a3dcd72a091960de070432e1f524", 4386},
-		{"resource.001", 0, "e0dd44069a62463fd124974b915f10d", 518127},
+		{"resource.001", 0, "e0dd44069a62a463fd124974b915f10d", 518127},
 		AD_LISTEND},
 		Common::EN_ANY, Common::kPlatformPC, 0, GUIO_NOSPEECH	},
 
@@ -1479,20 +1479,6 @@ static const struct ADGameDescription SciGameDescriptions[] = {
 		{"resource.007", 0, "e45c888d9c7c04aec0a20e9f820b79ff", 317687},
 		AD_LISTEND},
 		Common::EN_ANY, Common::kPlatformPC, 0, GUIO_NOSPEECH	},
-
-	// Laura Bow - German DOS (from Tobis87, also includes english language)
-	// SCI interpreter version 0.000.631 (or 0.000.685?)
-	{"laurabow", "", {
-		{"resource.map", 0, "b1905f6aa68ff65a057b080b1eae954c", 12030},
-		{"resource.001", 0, "e45c888d9c7c04aec0a20e9f820b79ff", 108032},
-		{"resource.002", 0, "e45c888d9c7c04aec0a20e9f820b79ff", 354680},
-		{"resource.003", 0, "e45c888d9c7c04aec0a20e9f820b79ff", 361815},
-		{"resource.004", 0, "e45c888d9c7c04aec0a20e9f820b79ff", 339714},
-		{"resource.005", 0, "e45c888d9c7c04aec0a20e9f820b79ff", 327465},
-		{"resource.006", 0, "e45c888d9c7c04aec0a20e9f820b79ff", 328390},
-		{"resource.007", 0, "e45c888d9c7c04aec0a20e9f820b79ff", 317687},
-		AD_LISTEND},
-		Common::DE_DEU, Common::kPlatformPC, ADGF_ADDENGLISH, GUIO_NOSPEECH	},
 
 	// Laura Bow 2 - English DOS Non-Interactive Demo (from FRG)
 	// Executable scanning reports "x.yyy.zzz"
@@ -3340,6 +3326,19 @@ static const struct ADGameDescription SciGameDescriptions[] = {
 		AD_LISTEND},
 		Common::EN_ANY, Common::kPlatformMacintosh, 0, GUIO_NOSPEECH	},
 
+	// Space Quest 4 - Russian DOS
+	// Executable scanning reports "1.000.753", VERSION file reports "1.994"
+	{"sq4", "", {
+		{"resource.map", 0, "e4f77dd99012d51e16903da07769a7bf", 5928},
+		{"resource.000", 0, "e1f46832cd2458796028e054a0466031", 186750},
+		{"resource.001", 0, "1110371c3bafbbf8968a324097c83fdb", 1283759},
+		{"resource.002", 0, "9c342cd76b421369406d6fafd7b1a285", 1234726},
+		{"resource.003", 0, "e617f09840d9f86181f7602c8bf2e8ad", 1266491},
+		{"resource.004", 0, "2763fe4f0cb74df716ec8b0c464b0988", 1217428},
+		{"resource.005", 0, "d608713197c5ba1cd8c6ed46299c3069", 1057924},
+		AD_LISTEND},
+		Common::RU_RUS, Common::kPlatformPC, 0, GUIO_NOSPEECH	},
+
 	// Space Quest 5 - English DOS (from the Space Quest Collection)
 	// Executable scanning reports "1.001.068", VERSION file reports "1.04"
 	{"sq5", "", {
@@ -3382,6 +3381,23 @@ static const struct ADGameDescription SciGameDescriptions[] = {
 		{"resource.map", 0, "5b09168baa2f6e2e22787429b2d72f54", 6492},
 		AD_LISTEND},
 		Common::IT_ITA, Common::kPlatformPC, 0, GUIO_NOSPEECH	},
+
+	// Space Quest 5 - Spanish DOS Floppy (from mirir, bug report #3090664)
+	{"sq5", "", {
+		{"resource.000", 0, "73748852548faa42927f7537b165582d", 6049994},
+		{"resource.map", 0, "5714a899033bdebf2d61ad333c8c6637", 6492},
+		{"resource.msg", 0, "46deca7ef9cf057f7d442df98c1a2ae2", 134612},
+		AD_LISTEND},
+		Common::ES_ESP, Common::kPlatformPC, 0, GUIO_NOSPEECH	},
+
+	// Space Quest 5 - Russian DOS
+	// Executable scanning reports "1.001.068", VERSION file reports "1.994"
+	{"sq5", "", {
+		{"resource.map", 0, "82e6e9b4270a4007578a119b6a51860c", 6493},
+		{"resource.000", 0, "6f9ed21e1001526b4137f6703ed476af", 6103778},
+		{"resource.msg", 0, "0a8931990cd2eac1691602391c68ab85", 147580},
+		AD_LISTEND},
+		Common::RU_RUS, Common::kPlatformPC, 0, GUIO_NOSPEECH	},
 
 #ifdef ENABLE_SCI32
 	// Space Quest 6 - English DOS/Win3.11 CD (from the Space Quest Collection)

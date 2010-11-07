@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/sound/cdrom.h $
- * $Id: cdrom.h 41632 2009-06-18 13:27:14Z drmccoy $
+ * $Id: cdrom.h 53984 2010-10-31 20:07:14Z drmccoy $
  *
  */
 
@@ -28,14 +28,12 @@
 
 namespace Gob {
 
-class DataStream;
-
 class CDROM {
 public:
 	CDROM();
 	~CDROM();
 
-	void readLIC(DataStream &stream);
+	void readLIC(Common::SeekableReadStream &stream);
 	void freeLICBuffer();
 
 	void startTrack(const char *trackName);

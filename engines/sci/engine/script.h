@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/script.h $
- * $Id: script.h 52702 2010-09-13 13:17:55Z thebluegr $
+ * $Id: script.h 54077 2010-11-04 23:19:23Z thebluegr $
  *
  */
 
@@ -238,9 +238,10 @@ public:
 	void mcpyInOut(int dst, const void *src, size_t n);
 
 	/**
-	 * Finds the pointer where a block of a specific type starts from
+	 * Finds the pointer where a block of a specific type starts from,
+	 * in SCI0 - SCI1 games
 	 */
-	byte *findBlock(int type, int skipBlockIndex = -1);
+	byte *findBlockSCI0(int type, int startBlockIndex = -1);
 
 private:
 	/**
@@ -267,6 +268,8 @@ private:
 	 * @param segmentId	The script's segment id
 	 */
 	void initialiseObjectsSci11(SegManager *segMan, SegmentId segmentId);
+
+	void syncHeap(Common::Serializer &ser);
 };
 
 } // End of namespace Sci

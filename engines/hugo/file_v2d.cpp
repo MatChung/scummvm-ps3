@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/file_v2d.cpp $
- * $Id: file_v2d.cpp 53152 2010-10-11 21:41:31Z strangerke $
+ * $Id: file_v2d.cpp 54018 2010-11-01 20:20:21Z strangerke $
  *
  */
 
@@ -40,12 +40,15 @@
 #include "hugo/util.h"
 
 namespace Hugo {
-FileManager_v2d::FileManager_v2d(HugoEngine &vm) : FileManager(vm) {
+FileManager_v2d::FileManager_v2d(HugoEngine *vm) : FileManager(vm) {
 }
 
 FileManager_v2d::~FileManager_v2d() {
 }
 
+/**
+* Open "database" file (packed files)
+*/
 void FileManager_v2d::openDatabaseFiles() {
 	debugC(1, kDebugFile, "openDatabaseFiles");
 
@@ -57,6 +60,9 @@ void FileManager_v2d::openDatabaseFiles() {
 		Utils::Error(FILE_ERR, "%s", OBJECTS_FILE);
 }
 
+/**
+* Close "Database" files
+*/
 void FileManager_v2d::closeDatabaseFiles() {
 	debugC(1, kDebugFile, "closeDatabaseFiles");
 
@@ -65,8 +71,10 @@ void FileManager_v2d::closeDatabaseFiles() {
 	_objectsArchive.close();
 }
 
+/**
+* Read a PCX image into dib_a
+*/
 void FileManager_v2d::readBackground(int screenIndex) {
-// Read a PCX image into dib_a
 	debugC(1, kDebugFile, "readBackground(%d)", screenIndex);
 
 	_sceneryArchive1.seek((uint32) screenIndex * sizeof(sceneBlock_t), SEEK_SET);
@@ -85,14 +93,16 @@ void FileManager_v2d::readBackground(int screenIndex) {
 
 	// Read the image into dummy seq and static dib_a
 	seq_t dummySeq;                                 // Image sequence structure for Read_pcx
-	readPCX(_sceneryArchive1, &dummySeq, _vm.screen().getFrontBuffer(), true, _vm._screenNames[screenIndex]);
+	readPCX(_sceneryArchive1, &dummySeq, _vm->_screen->getFrontBuffer(), true, _vm->_screenNames[screenIndex]);
 }
 
+/**
+* Open and read in an overlay file, close file
+*/
 void FileManager_v2d::readOverlay(int screenNum, image_pt image, ovl_t overlayType) {
-// Open and read in an overlay file, close file
 	debugC(1, kDebugFile, "readOverlay(%d, ...)", screenNum);
 
-    image_pt tmpImage = image;                  // temp ptr to overlay file
+	image_pt tmpImage = image;                  // temp ptr to overlay file
 	_sceneryArchive1.seek((uint32)screenNum * sizeof(sceneBlock_t), SEEK_SET);
 
 	sceneBlock_t sceneBlock;                        // Database header entry
@@ -147,8 +157,10 @@ void FileManager_v2d::readOverlay(int screenNum, image_pt image, ovl_t overlayTy
 	} while (k < OVL_SIZE);
 }
 
+/**
+* Fetch string from file, decode and return ptr to string in memory
+*/
 char *FileManager_v2d::fetchString(int index) {
-// Fetch string from file, decode and return ptr to string in memory
 	debugC(1, kDebugFile, "fetchString(%d)", index);
 
 	// Get offset to string[index] (and next for length calculation)
@@ -170,7 +182,7 @@ char *FileManager_v2d::fetchString(int index) {
 
 	// Null terminate, decode and return it
 	_textBoxBuffer[off2-off1] = '\0';
-	_vm.scheduler().decodeString(_textBoxBuffer);
+	_vm->_scheduler->decodeString(_textBoxBuffer);
 	return _textBoxBuffer;
 }
 } // End of namespace Hugo

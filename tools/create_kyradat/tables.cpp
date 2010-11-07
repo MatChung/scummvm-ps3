@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/tools/create_kyradat/tables.cpp $
- * $Id: tables.cpp 53160 2010-10-12 02:18:11Z jvprat $
+ * $Id: tables.cpp 53965 2010-10-30 22:44:15Z fingolfin $
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "tables.h"
 #include "create_kyradat.h"

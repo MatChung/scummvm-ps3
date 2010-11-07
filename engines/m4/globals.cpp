@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/globals.cpp $
- * $Id: globals.cpp 50722 2010-07-06 11:32:10Z dreammaster $
+ * $Id: globals.cpp 54047 2010-11-03 09:44:03Z dreammaster $
  *
  */
 
@@ -75,7 +75,7 @@ bool Kernel::sendTrigger(int32 triggerNum) {
 
 bool Kernel::handleTrigger(int32 triggerNum) {
 
-	printf("betweenRooms = %d; triggerNum = %08X\n", betweenRooms, (uint)triggerNum);
+	debugCN(kDebugScript, "betweenRooms = %d; triggerNum = %08X\n", betweenRooms, (uint)triggerNum);
 
 	if (betweenRooms)
 		return true;
@@ -89,10 +89,10 @@ bool Kernel::handleTrigger(int32 triggerNum) {
 
 	int room = (triggerNum >> 16) & 0xFFF;
 
-	printf("room = %d; currentRoom = %d\n", room, currentRoom); fflush(stdout);
+	debugCN(kDebugScript, "room = %d; currentRoom = %d\n", room, currentRoom);
 
 	if (room != currentRoom) {
-		printf("Kernel::handleTrigger() Trigger from another room\n");
+		debugCN(kDebugScript, "Kernel::handleTrigger() Trigger from another room\n");
 		return false;
 	}
 
@@ -123,8 +123,7 @@ bool Kernel::handleTrigger(int32 triggerNum) {
 		break;
 
 	case KT_DAEMON:
-		printf("KT_DAEMON\n");
-		fflush(stdout);
+		debugCN(kDebugScript, "KT_DAEMON\n");
 		triggerMode = KT_DAEMON;
 		daemonTriggerAvailable = false;
 		roomDaemon();
@@ -140,7 +139,7 @@ bool Kernel::handleTrigger(int32 triggerNum) {
 		break;
 
 	default:
-		printf("Kernel::handleTrigger() Unknown trigger mode %d\n", mode);
+		debugCN(kDebugScript, "Kernel::handleTrigger() Unknown trigger mode %d\n", mode);
 
 	}
 
@@ -181,7 +180,7 @@ void Kernel::globalDaemon() {
 	if (_globalDaemonFn)
 		_vm->_script->runFunction(_globalDaemonFn);
 	else {
-		printf("Kernel::globalDaemon() _globalDaemonFn is NULL\n");
+		debugCN(kDebugScript, "Kernel::globalDaemon() _globalDaemonFn is NULL\n");
 	}
 }
 
@@ -189,7 +188,7 @@ void Kernel::globalParser() {
 	if (_globalParserFn)
 		_vm->_script->runFunction(_globalParserFn);
 	else {
-		printf("Kernel::globalParser() _globalParserFn is NULL\n");
+		debugCN(kDebugScript, "Kernel::globalParser() _globalParserFn is NULL\n");
 	}
 }
 
@@ -197,7 +196,7 @@ void Kernel::sectionInit() {
 	if (_sectionInitFn)
 		_vm->_script->runFunction(_sectionInitFn);
 	else {
-		printf("Kernel::sectionInit() _sectionInitFn is NULL\n");
+		debugCN(kDebugScript, "Kernel::sectionInit() _sectionInitFn is NULL\n");
 	}
 }
 
@@ -205,7 +204,7 @@ void Kernel::sectionDaemon() {
 	if (_sectionDaemonFn)
 		_vm->_script->runFunction(_sectionDaemonFn);
 	else {
-		printf("Kernel::sectionDaemon() _sectionDaemonFn is NULL\n");
+		debugCN(kDebugScript, "Kernel::sectionDaemon() _sectionDaemonFn is NULL\n");
 	}
 }
 
@@ -213,7 +212,7 @@ void Kernel::sectionParser() {
 	if (_sectionParserFn)
 		_vm->_script->runFunction(_sectionParserFn);
 	else {
-		printf("Kernel::sectionParser() _sectionParserFn is NULL\n");
+		debugCN(kDebugScript, "Kernel::sectionParser() _sectionParserFn is NULL\n");
 	}
 }
 
@@ -221,7 +220,7 @@ void Kernel::roomInit() {
 	if (_roomInitFn)
 		_vm->_script->runFunction(_roomInitFn);
 	else {
-		printf("Kernel::roomInit() _roomInitFn is NULL\n");
+		debugCN(kDebugScript, "Kernel::roomInit() _roomInitFn is NULL\n");
 	}
 }
 
@@ -229,7 +228,7 @@ void Kernel::roomDaemon() {
 	if (_roomDaemonFn)
 		_vm->_script->runFunction(_roomDaemonFn);
 	else {
-		printf("Kernel::roomDaemon() _roomDaemonFn is NULL\n");
+		debugCN(kDebugScript, "Kernel::roomDaemon() _roomDaemonFn is NULL\n");
 	}
 }
 
@@ -237,7 +236,7 @@ void Kernel::roomPreParser() {
 	if (_roomPreParserFn)
 		_vm->_script->runFunction(_roomPreParserFn);
 	else {
-		printf("Kernel::roomPreParser() _roomPreParserFn is NULL\n");
+		debugCN(kDebugScript, "Kernel::roomPreParser() _roomPreParserFn is NULL\n");
 	}
 }
 
@@ -245,7 +244,7 @@ void Kernel::roomParser() {
 	if (_roomParserFn)
 		_vm->_script->runFunction(_roomParserFn);
 	else {
-		printf("Kernel::roomParser() _roomParserFn is NULL\n");
+		debugCN(kDebugScript, "Kernel::roomParser() _roomParserFn is NULL\n");
 	}
 }
 
@@ -351,7 +350,7 @@ void MadsGlobals::loadMadsMessagesInfo() {
 	Common::SeekableReadStream *messageS = _vm->res()->get("messages.dat");
 
 	int16 count = messageS->readUint16LE();
-	//printf("%i messages\n", count);
+	//debugCN(kDebugScript, "%i messages\n", count);
 
 	for (int i = 0; i < count; i++) {
 		MessageItem curMessage;
@@ -365,7 +364,7 @@ void MadsGlobals::loadMadsMessagesInfo() {
 		if (i == count - 1)
 			curMessage.compSize = messageS->size() - curMessage.offset;
 
-		//printf("id: %i, offset: %i, uncomp size: %i\n", curMessage->id, curMessage->offset, curMessage->uncompSize);
+		//debugCN(kDebugScript, "id: %i, offset: %i, uncomp size: %i\n", curMessage->id, curMessage->offset, curMessage->uncompSize);
 		_madsMessages.push_back(curMessage);
 	}
 

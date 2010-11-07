@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/text.h $
- * $Id: text.h 44802 2009-10-08 21:28:57Z fingolfin $
+ * $Id: text.h 53935 2010-10-30 00:34:21Z fingolfin $
  *
  * Text utility defines
  */
@@ -98,7 +98,7 @@ struct TEXTOUT {
  * @param mode			mode flags for the string
  * @param sleepTime		Sleep time between each character (if non-zero)
  */
-OBJECT *ObjectTextOut(CORO_PARAM, OBJECT *pList, char *szStr, int colour,
+OBJECT *ObjectTextOut(OBJECT *pList, char *szStr, int colour,
 					int xPos, int yPos, SCNHANDLE hFont, int mode, int sleepTime = 0);
 
 OBJECT *ObjectTextOutIndirect(	// output a string of text

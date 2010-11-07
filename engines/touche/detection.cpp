@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/touche/detection.cpp $
- * $Id: detection.cpp 49929 2010-06-17 13:42:02Z Kirben $
+ * $Id: detection.cpp 54105 2010-11-07 01:01:18Z fingolfin $
  *
  */
 
@@ -130,13 +130,21 @@ static const char *directoryGlobs[] = {
 };
 
 static const ADParams detectionParams = {
+	// Pointer to ADGameDescription or its superset structure
 	(const byte *)Touche::gameDescriptions,
+	// Size of that superset structure
 	sizeof(ADGameDescription),
-	4096, // number of md5 bytes
+	// Number of bytes to compute MD5 sum for
+	4096,
+	// List of all engine targets
 	toucheGames,
-	0, // no obsolete targets data
+	// Structure for autoupgrading obsolete targets
+	0,
+	// Name of single gameid (optional)
 	"touche",
-	Touche::fileBasedFallback, // file-based detection data to enable not yet known versions to start
+	// List of files for file-based fallback detection (optional)
+	Touche::fileBasedFallback,
+	// Flags
 	kADFlagPrintWarningOnFileBasedFallback,
 	// Additional GUI options (for every game}
 	Common::GUIO_NONE,

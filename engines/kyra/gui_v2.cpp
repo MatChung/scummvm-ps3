@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/gui_v2.cpp $
- * $Id: gui_v2.cpp 50952 2010-07-16 23:30:29Z lordhoto $
+ * $Id: gui_v2.cpp 53912 2010-10-28 23:57:24Z lordhoto $
  *
  */
 
@@ -625,7 +625,7 @@ int GUI_v2::saveMenu(Button *caller) {
 	Graphics::Surface thumb;
 	createScreenThumbnail(thumb);
 	Util::convertDOSToISO(_saveDescription);
-	_vm->saveGameState(_saveSlot, _saveDescription, &thumb);
+	_vm->saveGameStateIntern(_saveSlot, _saveDescription, &thumb);
 	thumb.free();
 
 	_displayMenu = false;

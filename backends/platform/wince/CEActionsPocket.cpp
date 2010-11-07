@@ -19,25 +19,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEActionsPocket.cpp $
- * $Id: CEActionsPocket.cpp 49795 2010-06-15 11:02:23Z sev $
+ * $Id: CEActionsPocket.cpp 53979 2010-10-31 17:11:43Z fingolfin $
  *
  */
 
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
+
+#include "backends/platform/wince/wince-sdl.h"
 
 #include "CEActionsPocket.h"
 #include "EventsBuffer.h"
 #include "gui/message.h"
-#include "scumm/scumm.h"
 #include "common/config-manager.h"
 #include "gui/KeysDialog.h"
 
 #include "common/translation.h"
 
+
 #ifdef _WIN32_WCE
 #define		KEY_ALL_SKIP	3457
 #endif
 
-const String pocketActionNames[] = {
+const Common::String pocketActionNames[] = {
 	_s("Pause"),
 	_s("Save"),
 	_s("Quit"),
@@ -64,7 +68,7 @@ void CEActionsPocket::init() {
 }
 
 
-String CEActionsPocket::actionName(GUI::ActionType action) {
+Common::String CEActionsPocket::actionName(GUI::ActionType action) {
 	return _(pocketActionNames[action]);
 }
 
@@ -72,7 +76,7 @@ int CEActionsPocket::size() {
 	return POCKET_ACTION_LAST;
 }
 
-String CEActionsPocket::domain() {
+Common::String CEActionsPocket::domain() {
 	return ConfMan.kApplicationDomain;
 }
 
@@ -81,8 +85,7 @@ int CEActionsPocket::version() {
 }
 
 CEActionsPocket::CEActionsPocket(const Common::String &gameid) :
-GUI::Actions()
-{
+GUI::Actions() {
 	int i;
 
 	_right_click_needed = false;
@@ -114,7 +117,7 @@ void CEActionsPocket::initInstanceMain(OSystem *mainSystem) {
 }
 
 void CEActionsPocket::initInstanceGame() {
-	String gameid(ConfMan.get("gameid"));
+	Common::String gameid(ConfMan.get("gameid"));
 	bool is_simon = (strncmp(gameid.c_str(), "simon", 5) == 0);
 	bool is_sword1 = (gameid == "sword1");
 	bool is_sword2 = (strcmp(gameid.c_str(), "sword2") == 0);

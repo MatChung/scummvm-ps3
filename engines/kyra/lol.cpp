@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/lol.cpp $
- * $Id: lol.cpp 51834 2010-08-07 14:38:07Z athrxx $
+ * $Id: lol.cpp 53740 2010-10-23 16:01:40Z athrxx $
  *
  */
 
@@ -1930,11 +1930,11 @@ int LoLEngine::playCharacterScriptChat(int charId, int mode, int restorePortrait
 	return 1;
 }
 
-void LoLEngine::giveItemToMonster(MonsterInPlay *monster, uint16 item) {
+void LoLEngine::giveItemToMonster(MonsterInPlay *monster, Item item) {
 	uint16 *c = &monster->assignedItems;
 	while (*c)
 		c = &_itemsInPlay[*c].nextAssignedObject;
-	*c = item;
+	*c = (uint16)item;
 	_itemsInPlay[item].nextAssignedObject = 0;
 }
 

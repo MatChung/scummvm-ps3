@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/midi/seq.cpp $
- * $Id: seq.cpp 51056 2010-07-20 08:56:53Z eriktorbjorn $
+ * $Id: seq.cpp 53961 2010-10-30 21:27:42Z fingolfin $
  */
 
 /*
@@ -27,6 +27,9 @@
  * Alsa support by Nicolas Noble <nicolas@nobis-crew.org> copied from
  *    both the QuickTime support and (vkeybd http://www.alsa-project.org/~iwai/alsa.html)
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "common/scummsys.h"
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/display_v1w.cpp $
- * $Id: display_v1w.cpp 53152 2010-10-11 21:41:31Z strangerke $
+ * $Id: display_v1w.cpp 54103 2010-11-07 00:02:48Z strangerke $
  *
  */
 
@@ -41,17 +41,17 @@
 
 namespace Hugo {
 
-Screen_v1w::Screen_v1w(HugoEngine &vm) : Screen(vm) {
+Screen_v1w::Screen_v1w(HugoEngine *vm) : Screen(vm) {
 }
 
 Screen_v1w::~Screen_v1w() {
 }
 
-// Load font file, construct font ptrs and reverse data bytes
+/**
+* Load font file, construct font ptrs and reverse data bytes
+*/
 void Screen_v1w::loadFont(int16 fontId) {
 	debugC(2, kDebugDisplay, "loadFont(%d)", fontId);
-
-	static bool fontLoadedFl[NUM_FONTS] = {false, false, false};
 
 	_fnt = fontId - FIRST_FONT;                     // Set current font number
 
@@ -59,7 +59,7 @@ void Screen_v1w::loadFont(int16 fontId) {
 		return;
 
 	fontLoadedFl[_fnt] = true;
-	_vm.file().readUIFItem(fontId, _fontdata[_fnt]);
+	_vm->_file->readUIFItem(fontId, _fontdata[_fnt]);
 
 	// Compile font ptrs.  Note: First ptr points to height,width of font
 	_font[_fnt][0] = _fontdata[_fnt];               // Store height,width of fonts
@@ -77,6 +77,17 @@ void Screen_v1w::loadFont(int16 fontId) {
 			Utils::reverseByte(&_fontdata[_fnt][offset + 2 + j]);
 
 		offset += 2 + size;
+	}
+}
+
+/**
+* Skips the fonts used by the DOS versions
+*/
+void Screen_v1w::loadFontArr(Common::File &in) {
+	for (int i = 0; i < NUM_FONTS; i++) {
+		uint16 numElem = in.readUint16BE();
+		for (int j = 0; j < numElem; j++)
+			in.readByte();
 	}
 }
 } // End of namespace Hugo

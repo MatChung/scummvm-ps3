@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/view.h $
- * $Id: view.h 51660 2010-08-02 21:04:09Z m_kiewitz $
+ * $Id: view.h 53855 2010-10-26 20:19:17Z m_kiewitz $
  *
  */
 
@@ -66,6 +66,7 @@ public:
 	int16 getHeight(int16 loopNo, int16 celNo) const;
 	const CelInfo *getCelInfo(int16 loopNo, int16 celNo) const;
 	void getCelRect(int16 loopNo, int16 celNo, int16 x, int16 y, int16 z, Common::Rect &outRect) const;
+	void getCelSpecialHoyle4Rect(int16 loopNo, int16 celNo, int16 x, int16 y, int16 z, Common::Rect &outRect) const;
 	void getCelScaledRect(int16 loopNo, int16 celNo, int16 x, int16 y, int16 z, int16 scaleX, int16 scaleY, Common::Rect &outRect) const;
 	const byte *getBitmap(int16 loopNo, int16 celNo);
 	void draw(const Common::Rect &rect, const Common::Rect &clipRect, const Common::Rect &clipRectTranslated, int16 loopNo, int16 celNo, byte priority, uint16 EGAmappingNr, bool upscaledHires);

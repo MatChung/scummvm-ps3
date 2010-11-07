@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/keyboard.cpp $
- * $Id: keyboard.cpp 49843 2010-06-15 12:33:20Z fingolfin $
+ * $Id: keyboard.cpp 53868 2010-10-26 22:33:49Z fingolfin $
  *
  */
 
@@ -121,7 +121,6 @@ int AgiEngine::handleController(int key) {
 		if (_game.controllers[i].keycode == key) {
 			debugC(3, kDebugLevelInput, "event %d: key press", _game.controllers[i].controller);
 			_game.controllerOccured[_game.controllers[i].controller] = true;
-			report("event AC:%i occurred\n", _game.controllers[i].controller);
 			return true;
 		}
 	}

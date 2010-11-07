@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEActionsPocket.h $
- * $Id: CEActionsPocket.h 52935 2010-09-28 20:30:50Z fingolfin $
+ * $Id: CEActionsPocket.h 53979 2010-10-31 17:11:43Z fingolfin $
  *
  */
 
@@ -28,7 +28,7 @@
 
 #include "common/scummsys.h"
 #include "common/system.h"
-#include "wince-sdl.h"
+#include "common/str.h"
 #include "gui/Key.h"
 #include "gui/Actions.h"
 
@@ -58,33 +58,35 @@ enum pocketActionType {
 	POCKET_ACTION_LAST
 };
 
+class OSystem_WINCE3;
+
 class CEActionsPocket : public GUI::Actions {
-	public:
-		// Actions
-		bool perform(GUI::ActionType action, bool pushed = true);
-		String actionName(GUI::ActionType action);
-		int size();
+public:
+	// Actions
+	bool perform(GUI::ActionType action, bool pushed = true);
+	Common::String actionName(GUI::ActionType action);
+	int size();
 
-		static void init();
-		void initInstanceMain(OSystem *mainSystem);
-		void initInstanceGame();
+	static void init();
+	void initInstanceMain(OSystem *mainSystem);
+	void initInstanceGame();
 
-		// Action domain
-		String domain();
-		int version();
+	// Action domain
+	Common::String domain();
+	int version();
 
-		// Utility
-		bool needsRightClickMapping();
-		bool needsHideToolbarMapping();
-		bool needsZoomMapping();
+	// Utility
+	bool needsRightClickMapping();
+	bool needsHideToolbarMapping();
+	bool needsZoomMapping();
 
-		~CEActionsPocket();
-	private:
-		CEActionsPocket(const Common::String &gameid);
-		bool _right_click_needed;
-		bool _hide_toolbar_needed;
-		bool _zoom_needed;
-		OSystem_WINCE3 *_CESystem;
-	};
+	~CEActionsPocket();
+private:
+	CEActionsPocket(const Common::String &gameid);
+	bool _right_click_needed;
+	bool _hide_toolbar_needed;
+	bool _zoom_needed;
+	OSystem_WINCE3 *_CESystem;
+};
 
 #endif

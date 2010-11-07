@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/gui_ns.cpp $
- * $Id: gui_ns.cpp 52791 2010-09-18 10:55:16Z eriktorbjorn $
+ * $Id: gui_ns.cpp 53701 2010-10-22 14:19:37Z peres001 $
  *
  */
 
@@ -118,6 +118,7 @@ public:
 	ChooseLanguageInputState_NS(Parallaction *vm, MenuInputHelper *helper) : MenuInputState("chooselanguage", helper), _vm(vm) {
 		_allowChoice = false;
 		_nextState = "selectgame";
+		_label = 0;
 
 		_dosLanguageSelectBlocks[0] = Common::Rect(  80, 110, 128, 180 );	// Italian
 		_dosLanguageSelectBlocks[1] = Common::Rect( 129,  85, 177, 155 );	// French
@@ -147,7 +148,6 @@ public:
 			_blocks = _dosLanguageSelectBlocks;
 		}
 
-		_label = 0;
 		_language = -1;
 		_allowChoice = true;
 	}

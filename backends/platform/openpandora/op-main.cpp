@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL$
- * $Id: op-main.cpp 53162 2010-10-12 07:50:33Z djwillis $
+ * $Id: op-main.cpp 54041 2010-11-02 11:20:43Z djwillis $
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "common/scummsys.h"
 #include <SDL/SDL.h>

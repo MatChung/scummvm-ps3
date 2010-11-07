@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/testbed/graphics.cpp $
- * $Id: graphics.cpp 52973 2010-10-02 01:05:16Z sud03r $
+ * $Id: graphics.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  */
 
 #include "common/events.h"
@@ -769,7 +769,7 @@ TestExitStatus GFXtests::scaledCursors() {
 		// Switch Graphics mode
 		// FIXME: Crashes with "3x" mode now.:
 		
-		info = Common::String::printf("Testing : Scaled cursors with GFX Mode %s\n", gfxMode->name);
+		info = Common::String::format("Testing : Scaled cursors with GFX Mode %s\n", gfxMode->name);
 		if (Testsuite::handleInteractiveInput(info, "OK", "Skip", kOptionRight)) {
 			Testsuite::logPrintf("\tInfo! Skipping sub-test : Scaled Cursors :: GFX Mode %s\n", gfxMode->name);
 			gfxMode++;
@@ -1104,7 +1104,7 @@ TestExitStatus GFXtests::pixelFormats() {
 
 		Common::Point pt(0, 170);
 		Common::String msg;
-		msg = Common::String::printf("Testing Pixel Formats, %d of %d", numFormatsTested, pfList.size());
+		msg = Common::String::format("Testing Pixel Formats, %d of %d", numFormatsTested, pfList.size());
 		Testsuite::writeOnScreen(msg, pt, true);
 
 		// CopyRectToScreen could have been used, but that may involve writing code which

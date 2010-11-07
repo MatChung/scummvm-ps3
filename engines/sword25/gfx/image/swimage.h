@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/image/swimage.h $
- * $Id: swimage.h 53357 2010-10-12 23:52:13Z sev $
+ * $Id: swimage.h 53623 2010-10-19 20:52:47Z sev $
  *
  */
 
@@ -35,20 +35,12 @@
 #ifndef SWORD25_SWIMAGE_H
 #define SWORD25_SWIMAGE_H
 
-// -----------------------------------------------------------------------------
-// INCLUDES
-// -----------------------------------------------------------------------------
-
 #include "sword25/kernel/common.h"
 #include "sword25/gfx/image/image.h"
 #include "sword25/gfx/graphicengine.h"
 
 
 namespace Sword25 {
-
-// -----------------------------------------------------------------------------
-// CLASS DEFINITION
-// -----------------------------------------------------------------------------
 
 class SWImage : public Image {
 public:

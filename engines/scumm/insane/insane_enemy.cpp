@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/insane/insane_enemy.cpp $
- * $Id: insane_enemy.cpp 53581 2010-10-18 19:19:28Z sev $
+ * $Id: insane_enemy.cpp 53762 2010-10-24 13:04:33Z fingolfin $
  *
  */
 
@@ -2072,7 +2072,7 @@ void Insane::actor12Reaction(int32 buttons) {
 			setEnemyState();
 			_actor[1].act[2].tilt = 0;
 			// for some reason there is no break at this
-			// place, so tilt gets overriden on next line
+			// place, so tilt gets overridden on next line
 		}
 		_actor[1].act[2].tilt = calcTilt(_actor[1].tilt);
 		break;

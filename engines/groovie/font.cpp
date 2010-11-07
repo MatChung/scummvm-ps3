@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/groovie/font.cpp $
- * $Id: font.cpp 49919 2010-06-17 05:40:48Z eriktorbjorn $
+ * $Id: font.cpp 53874 2010-10-27 14:31:20Z jvprat $
  *
  */
 
@@ -61,6 +61,10 @@ bool T7GFont::load(Common::SeekableReadStream &stream) {
 	// Allocate the glyph data
 	delete[] _glyphs;
 	_glyphs = new Glyph[numGlyphs];
+
+	// Ensure we're ready to read the first glyph. (Most versions don't
+	// need it, but the russian one does. This fixes bug #3095031.)
+	stream.seek(glyphOffsets[0]);
 
 	// Read the glyphs
 	_maxHeight = _maxWidth = 0;

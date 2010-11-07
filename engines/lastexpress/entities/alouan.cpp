@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/alouan.cpp $
- * $Id: alouan.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: alouan.cpp 53880 2010-10-27 19:19:22Z littleboy $
  *
  */
 
@@ -116,7 +116,7 @@ IMPLEMENT_FUNCTION(10, Alouan, chapter1)
 		break;
 
 	case kActionNone:
-		TIME_CHECK_CHAPTER1(setup_chapter1Handler);
+		TIME_CHECK(kTimeChapter1, params->param1, setup_chapter1Handler);
 		break;
 
 	case kActionDefault:
@@ -209,7 +209,7 @@ IMPLEMENT_FUNCTION(14, Alouan, chapter2Handler)
 
 		if (getState()->time <= kTime1777500) {
 			if (!getEntities()->isPlayerInCar(kCarGreenSleeping) || !params->param2)
-				params->param2 = getState()->time + 75;
+				params->param2 = (uint)getState()->time + 75;
 
 			if (params->param2 >= getState()->time)
 				break;
@@ -293,7 +293,7 @@ label_callback1:
 			TIME_CHECK_CAR(kTime2119500, params->param5, 5, setup_compartment8);
 
 label_callback2:
-		TIME_CHECK_PLAYSOUND(kTime2052000, params->param3, 3, "Har1005");
+		TIME_CHECK_CALLBACK_1(kTime2052000, params->param3, 3, setup_playSound, "Har1005");
 
 label_callback3:
 		TIME_CHECK_CALLBACK(kTime2133000, params->param4, 4, setup_compartment6to8);

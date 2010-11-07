@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/sfx/soundengine.cpp $
- * $Id: soundengine.cpp 53390 2010-10-13 00:07:27Z sev $
+ * $Id: soundengine.cpp 53835 2010-10-25 22:41:25Z fingolfin $
  *
  */
 
@@ -65,10 +65,6 @@ SoundEngine::SoundEngine(Kernel *pKernel) : ResourceService(pKernel) {
 
 	for (int i = 0; i < SOUND_HANDLES; i++)
 		_handles[i].type = kFreeHandle;
-}
-
-Service *SoundEngine_CreateObject(Kernel *pKernel) {
-	return new SoundEngine(pKernel);
 }
 
 bool SoundEngine::init(uint sampleRate, uint channels) {
@@ -157,7 +153,7 @@ bool SoundEngine::playSound(const Common::String &fileName, SOUND_TYPES type, fl
 }
 
 uint SoundEngine::playSoundEx(const Common::String &fileName, SOUND_TYPES type, float volume, float pan, bool loop, int loopStart, int loopEnd, uint layer) {
-	Common::SeekableReadStream *in = Kernel::GetInstance()->GetPackage()->getStream(fileName);
+	Common::SeekableReadStream *in = Kernel::getInstance()->getPackage()->getStream(fileName);
 	Audio::SeekableAudioStream *stream = Audio::makeVorbisStream(in, DisposeAfterUse::YES);
 	uint id;
 	SndHandle *handle = getHandle(&id);

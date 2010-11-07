@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/animation.cpp $
- * $Id: animation.cpp 49154 2010-05-23 11:16:10Z eriktorbjorn $
+ * $Id: animation.cpp 53997 2010-11-01 11:25:11Z eriktorbjorn $
  */
 
 #include "common/file.h"
@@ -396,12 +396,6 @@ MoviePlayer *makeMoviePlayer(const char *name, Sword2Engine *vm, Audio::Mixer *s
 		warning("Cutscene '%s' not found", name);
 
 	return NULL;
-}
-
-void MoviePlayer::pauseMovie(bool pause) {
-	if (_bgSoundHandle) {
-		_snd->pauseHandle(*_bgSoundHandle, pause);
-	}
 }
 
 } // End of namespace Sword2

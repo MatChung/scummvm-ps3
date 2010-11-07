@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/debugger.cpp $
- * $Id: debugger.cpp 53471 2010-10-15 08:52:22Z dreammaster $
+ * $Id: debugger.cpp 54007 2010-11-01 16:03:35Z fingolfin $
  *
  */
 
@@ -117,7 +117,7 @@ bool Console::cmd_music(int argc, const char **argv) {
 
 	int param = strToInt(argv[1]);
 	if (param == 0) {
-		DebugPrintf("Track number/offset can't be 0!\n", argv[0]);
+		DebugPrintf("Track number/offset can't be 0!\n");
 	} else if (param > 0) {
 		// Track provided
 		PlayMidiSequence(GetTrackOffset(param - 1), false);

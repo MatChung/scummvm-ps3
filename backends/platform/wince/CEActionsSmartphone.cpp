@@ -19,14 +19,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEActionsSmartphone.cpp $
- * $Id: CEActionsSmartphone.cpp 49795 2010-06-15 11:02:23Z sev $
+ * $Id: CEActionsSmartphone.cpp 53978 2010-10-31 17:10:45Z fingolfin $
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
+
+#include "backends/platform/wince/wince-sdl.h"
 
 #include "CEActionsSmartphone.h"
 #include "EventsBuffer.h"
 #include "gui/message.h"
-#include "scumm/scumm.h"
 #include "common/config-manager.h"
 #include "gui/KeysDialog.h"
 

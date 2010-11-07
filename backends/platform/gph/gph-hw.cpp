@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/gph/gph-hw.cpp $
- * $Id: gph-hw.cpp 52648 2010-09-09 09:48:32Z djwillis $
+ * $Id: gph-hw.cpp 53964 2010-10-30 22:43:25Z fingolfin $
  *
  */
 
@@ -27,6 +27,9 @@
  * GP2X Wiz: Hardware Stuff.
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "backends/platform/gph/gph-hw.h"
 

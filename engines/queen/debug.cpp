@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/queen/debug.cpp $
- * $Id: debug.cpp 30238 2008-01-05 12:45:14Z dreammaster $
+ * $Id: debug.cpp 54007 2010-11-01 16:03:35Z fingolfin $
  *
  */
 
@@ -149,12 +149,12 @@ bool Debugger::Cmd_Items(int argc, const char **argv) {
 bool Debugger::Cmd_PrintBobs(int argc, const char**argv) {
 	int i;
 	BobSlot *bob = _vm->graphics()->bob(0);
-	DebugPrintf("+--------------------------------+\n");
-	DebugPrintf("|# |  x|  y|f|scl|frm|a|m| ex| ey|\n");
-	DebugPrintf("+--+---+---+-+---+---+-+-+---+---+\n");
+	DebugPrintf("+------------------------------------+\n");
+	DebugPrintf("|# |  x|  y|f|scl|frm|a|m|spd| ex| ey|\n");
+	DebugPrintf("+--+---+---+-+---+---+-+-+---+---+---+\n");
 	for (i = 0; i < Graphics::MAX_BOBS_NUMBER; ++i, ++bob) {
 		if (bob->active) {
-			DebugPrintf("|%2d|%3d|%3d|%1d|%3d|%3d|%1d|%1d|%3d|%3d|\n",
+			DebugPrintf("|%2d|%3d|%3d|%1d|%3d|%3d|%1d|%1d|%3d|%3d|%3d|\n",
 				i, bob->x, bob->y, bob->xflip, bob->scale, bob->frameNum,
 				bob->animating, bob->moving, bob->speed, bob->endx, bob->endy);
 		}

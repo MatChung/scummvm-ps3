@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/scenes.cpp $
- * $Id: scenes.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: scenes.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -78,7 +78,7 @@ void SceneManager::loadSceneDataFile(ArchiveIndex archive) {
 	case kArchiveCd1:
 	case kArchiveCd2:
 	case kArchiveCd3:
-		if (!_sceneLoader->load(getArchive(Common::String::printf("CD%iTRAIN.DAT", archive))))
+		if (!_sceneLoader->load(getArchive(Common::String::format("CD%iTRAIN.DAT", archive))))
 			error("SceneManager::loadSceneDataFile: cannot load data file CD%iTRAIN.DAT", archive);
 		break;
 
@@ -216,7 +216,7 @@ void SceneManager::loadSceneFromItemPosition(InventoryItem item) {
 	Scene *scene = getScenes()->get(getState()->scene);
 	Position position = scene->position;
 
-    if (getState()->sceneUseBackup) {
+	if (getState()->sceneUseBackup) {
 		Scene *sceneBackup = getScenes()->get(getState()->sceneBackup);
 		position = sceneBackup->position;
 	}
@@ -228,8 +228,8 @@ void SceneManager::loadSceneFromItemPosition(InventoryItem item) {
 		if (getState()->sceneUseBackup)
 			getState()->sceneBackup = getSceneIndexFromPosition(car, position);
 		else
-           loadSceneFromPosition(car, position);
-    }
+			loadSceneFromPosition(car, position);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -586,7 +586,7 @@ void SceneManager::updateDoorsAndClock() {
 
 			// Load door sequence
 			Scene *scene = getScenes()->get(getState()->scene);
-			Common::String name = Common::String::printf("633X%c-%02d.seq", (index - firstIndex) + 65, scene->position);
+			Common::String name = Common::String::format("633X%c-%02d.seq", (index - firstIndex) + 65, scene->position);
 			Sequence *sequence = loadSequence1(name, 255);
 
 			// If the sequence doesn't exists, skip
@@ -612,9 +612,9 @@ void SceneManager::updateDoorsAndClock() {
 		Sequence *sequenceMinutes = loadSequence1("SCLKM-81.seq", 255);
 
 		// Compute hours and minutes indexes
-		uint16 hoursIndex = getState()->time % 1296000 % 54000 / 900;
+		uint16 hoursIndex = (uint)getState()->time % 1296000 % 54000 / 900;
 
-		uint hours = (getState()->time % 1296000) / 54000;
+		uint hours = ((uint)getState()->time % 1296000) / 54000;
 		if (hours >= 12)
 			hours -= 12;
 
@@ -1077,7 +1077,7 @@ void SceneManager::postProcessScene() {
 	case Scene::kTypeList: {
 
 		// Adjust time
-		getState()->time += (scene->param1 + 10) * getState()->timeDelta;
+		getState()->time = (TimeValue)(getState()->time + (TimeValue)((scene->param1 + 10) * getState()->timeDelta));
 		getState()->timeTicks += (scene->param1 + 10);
 
 		// Wait for a number of frames unless right mouse is clicked
@@ -1176,7 +1176,7 @@ void SceneManager::postProcessScene() {
 		break;
 
 	case Scene::kTypeReadText:
-        getSound()->readText(scene->param1);
+		getSound()->readText(scene->param1);
 		break;
 
 	case Scene::kType133:

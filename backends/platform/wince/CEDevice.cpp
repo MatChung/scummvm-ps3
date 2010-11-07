@@ -19,15 +19,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEDevice.cpp $
- * $Id: CEDevice.cpp 30664 2008-01-27 19:47:41Z jvprat $
+ * $Id: CEDevice.cpp 53978 2010-10-31 17:10:45Z fingolfin $
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "CEDevice.h"
 
 #include <SDL.h>
 
-#include "wince-sdl.h"
+#include "backends/platform/wince/wince-sdl.h"
 
 static void (WINAPI* _SHIdleTimerReset)(void) = NULL;
 static HANDLE (WINAPI* _SetPowerRequirement)(PVOID,int,ULONG,PVOID,ULONG) = NULL;

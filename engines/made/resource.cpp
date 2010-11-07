@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/made/resource.cpp $
- * $Id: resource.cpp 50950 2010-07-16 23:10:41Z eriktorbjorn $
+ * $Id: resource.cpp 54036 2010-11-02 09:49:07Z fingolfin $
  *
  */
 
@@ -295,7 +295,6 @@ void MenuResource::load(byte *source, int size) {
 		_strings.push_back(string);
 		debug(2, "%02d: %s\n", i, string);
 	}
-	fflush(stdout);
 	delete sourceS;
 }
 

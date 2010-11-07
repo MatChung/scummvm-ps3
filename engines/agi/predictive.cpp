@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/predictive.cpp $
- * $Id: predictive.cpp 53148 2010-10-11 17:52:44Z wjpalenstijn $
+ * $Id: predictive.cpp 54031 2010-11-01 21:37:47Z fingolfin $
  *
  */
 
@@ -546,7 +546,7 @@ void AgiEngine::loadDict() {
 #endif
 
 	uint32 time3 = _system->getMillis();
-	printf("Time to parse pred.dic: %d, total: %d\n", time3-time2, time3-time1);
+	debug("Time to parse pred.dic: %d, total: %d", time3-time2, time3-time1);
 }
 
 bool AgiEngine::matchWord() {

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/selector.cpp $
- * $Id: selector.cpp 52508 2010-09-03 18:14:59Z m_kiewitz $
+ * $Id: selector.cpp 54037 2010-11-02 09:49:47Z fingolfin $
  *
  */
 
@@ -40,10 +40,10 @@ namespace Sci {
 // The defines below can be used to construct static selector tables for games which don't have
 // a vocab.997 resource, by dumping the selector table from other similar versions or games
 #define FIND_SELECTOR(_slc_) _selectorCache._slc_ = findSelector(#_slc_); \
-	printf("\t{ \"%s\", %d },\n", #_slc_, _selectorCache._slc_)
+	debugN("\t{ \"%s\", %d },\n", #_slc_, _selectorCache._slc_)
 
 #define FIND_SELECTOR2(_slc_, _slcstr_) _selectorCache._slc_ = findSelector(_slcstr_); \
-	printf("\t{ \"%s\", %d },\n", _slcstr_, _selectorCache._slc_)
+	debugN("\t{ \"%s\", %d },\n", _slcstr_, _selectorCache._slc_)
 
 #endif
 

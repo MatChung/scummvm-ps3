@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/debug.h $
- * $Id: debug.h 53579 2010-10-18 19:17:38Z sev $
+ * $Id: debug.h 53749 2010-10-23 22:02:52Z littleboy $
  *
  */
 
@@ -64,6 +64,7 @@ private:
 	bool cmdHelp(int argc, const char **argv);
 
 	bool cmdListFiles(int argc, const char **argv);
+	bool cmdDumpFiles(int argc, const char **argv);
 
 	bool cmdShowFrame(int argc, const char **argv);
 	bool cmdShowBg(int argc, const char **argv);
@@ -77,7 +78,8 @@ private:
 	bool cmdBeetle(int argc, const char **argv);
 
 	bool cmdTimeDelta(int argc, const char **argv);
-	bool cmdDump(int argc, const char **argv);
+	bool cmdTime(int argc, const char **argv);
+	bool cmdShow(int argc, const char **argv);
 	bool cmdEntity(int argc, const char **argv);
 
 	bool cmdLoadGame(int argc, const char **argv);

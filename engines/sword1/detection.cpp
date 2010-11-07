@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword1/detection.cpp $
- * $Id: detection.cpp 48287 2010-03-18 15:54:40Z fingolfin $
+ * $Id: detection.cpp 53924 2010-10-29 16:53:46Z lordhoto $
  *
  */
 
@@ -309,12 +309,9 @@ SaveStateDescriptor SwordMetaEngine::querySaveMetaInfos(const char *target, int 
 		desc.setSaveTime(hour, minutes);
 
 		if (versionSave > 1) {
-			minutes = playTime / 60;
-			hour = minutes / 60;
-			minutes %= 60;
-			desc.setPlayTime(hour, minutes);
+			desc.setPlayTime(playTime * 1000);
 		} else { //We have no playtime data
-			desc.setPlayTime(0, 0);
+			desc.setPlayTime(0);
 		}
 
 		delete in;

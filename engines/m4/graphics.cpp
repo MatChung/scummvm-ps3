@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/graphics.cpp $
- * $Id: graphics.cpp 51239 2010-07-24 08:08:19Z dreammaster $
+ * $Id: graphics.cpp 54047 2010-11-03 09:44:03Z dreammaster $
  *
  */
 
@@ -213,8 +213,8 @@ void M4Surface::drawSprite(int x, int y, SpriteInfo &info, const Common::Rect &c
 	int scaledHeight = scaleValue(info.height, info.scaleY, errY);
 
 	/*
-	printf("M4Surface::drawSprite() info.width = %d; info.scaleX = %d; info.height = %d; info.scaleY = %d; scaledWidth = %d; scaledHeight = %d\n",
-		info.width, info.scaleX, info.height, info.scaleY, scaledWidth, scaledHeight); fflush(stdout);
+	debugCN(kDebugGraphics, "M4Surface::drawSprite() info.width = %d; info.scaleX = %d; info.height = %d; info.scaleY = %d; scaledWidth = %d; scaledHeight = %d\n",
+		info.width, info.scaleX, info.height, info.scaleY, scaledWidth, scaledHeight);
 	*/
 
 	int clipX = 0, clipY = 0;
@@ -233,7 +233,7 @@ void M4Surface::drawSprite(int x, int y, SpriteInfo &info, const Common::Rect &c
 		scaledHeight = y + scaledHeight;
 	}
 
-	//printf("M4Surface::drawSprite() width = %d; height = %d; scaledWidth = %d; scaledHeight = %d\n", info.width, info.height, scaledWidth, scaledHeight); fflush(stdout);
+	//debugCN(kDebugGraphics, "M4Surface::drawSprite() width = %d; height = %d; scaledWidth = %d; scaledHeight = %d\n", info.width, info.height, scaledWidth, scaledHeight);
 
 	// Check if sprite is inside the screen. If it's not, there's no need to draw it
 	if (scaledWidth + x <= 0 || scaledHeight + y <= 0)	// check left and top (in case x,y are negative)
@@ -703,7 +703,7 @@ void M4Surface::madsLoadBackground(int roomNumber, RGBList **palData) {
 		else
 			compressedTileDataSize = tileDataUncomp->readUint32LE() - tileOfs;
 
-		//printf("Tile: %i, compressed size: %i\n", i, compressedTileDataSize);
+		//debugCN(kDebugGraphics, "Tile: %i, compressed size: %i\n", i, compressedTileDataSize);
 
 		newTile->clear();
 
@@ -787,7 +787,7 @@ void M4Surface::m4LoadBackground(Common::SeekableReadStream *source) {
 	uint8 blackIndex = 0;
 
 	// Debug
-	//printf("loadBackground(): %dx%d picture (%d bytes) - %dx%d tiles of size %dx%d\n",
+	//debugCN(kDebugGraphics, "loadBackground(): %dx%d picture (%d bytes) - %dx%d tiles of size %dx%d\n",
 	//	   widthVal, heightVal, size, tilesX, tilesY, tileWidth, tileHeight);
 
 	// BGR data, which is converted to RGB8
@@ -807,7 +807,7 @@ void M4Surface::m4LoadBackground(Common::SeekableReadStream *source) {
 	// note that the height of the scene in game scenes is smaller than 480, as the bottom part of the
 	// screen is the inventory
 	assert(width() == (int)widthVal);
-	//printf("width(): %d, widthVal: %d, height(): %d, heightVal: %d\n", width(), widthVal, height(), heightVal);
+	//debugCN(kDebugGraphics, "width(): %d, widthVal: %d, height(): %d, heightVal: %d\n", width(), widthVal, height(), heightVal);
 
 	tileBuffer->create(tileWidth, tileHeight, 1);
 

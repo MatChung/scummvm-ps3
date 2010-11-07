@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/milos.h $
- * $Id: milos.h 53588 2010-10-18 21:03:28Z littleboy $
+ * $Id: milos.h 53629 2010-10-19 22:34:26Z jvprat $
  *
  */
 
@@ -48,7 +48,7 @@ public:
 	 *
 	 * @param sequence The sequence to draw
 	 */
-	DECLARE_FUNCTION_1(draw, const char* sequence)
+	DECLARE_FUNCTION_1(draw, const char *sequence)
 
 	/**
 	 * Handles entering/exiting a compartment.
@@ -56,7 +56,7 @@ public:
 	 * @param sequence    The sequence to draw
 	 * @param compartment The compartment
 	 */
-	DECLARE_FUNCTION_2(enterExitCompartment, const char* sequence, ObjectIndex compartment)
+	DECLARE_FUNCTION_2(enterExitCompartment, const char *sequence, ObjectIndex compartment)
 
 	/**
 	 * Handles entering/exiting a compartment and updates position/play animation
@@ -64,7 +64,7 @@ public:
 	 * @param sequence    The sequence to draw
 	 * @param compartment The compartment
 	 */
-	DECLARE_FUNCTION_2(enterExitCompartment2, const char* sequence, ObjectIndex compartment)
+	DECLARE_FUNCTION_2(enterExitCompartment2, const char *sequence, ObjectIndex compartment)
 
 	/**
 	 * Process callback action when the entity direction is not kDirectionRight
@@ -76,14 +76,14 @@ public:
 	 *
 	 * @param filename The sound filename
 	 */
-	DECLARE_FUNCTION_1(playSound, const char* filename)
+	DECLARE_FUNCTION_1(playSound, const char *filename)
 
 	/**
 	 * Plays sound
 	 *
 	 * @param filename The sound filename
 	 */
-	DECLARE_FUNCTION_1(playSound16, const char* filename)
+	DECLARE_FUNCTION_1(playSound16, const char *filename)
 
 	/**
 	 * Saves the game

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/data/scene.cpp $
- * $Id: scene.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: scene.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -51,7 +51,7 @@ SceneHotspot *SceneHotspot::load(Common::SeekableReadStream *stream) {
 	hs->cursor = stream->readByte();
 	hs->next = stream->readUint32LE();
 
-	debugC(10, kLastExpressDebugScenes, "\thotspot: scene=%d location=%02d action=%d param1=%02d param2=%02d param3=%02d cursor=%02d rect=(%d, %d)x(%d,%d)",
+	debugC(10, kLastExpressDebugScenes, "\thotspot: scene=%d location=%02d action=%d param1=%02d param2=%02d param3=%02d cursor=%02d rect=(%d, %d)x(%d, %d)",
 	                                   hs->scene, hs->location, hs->action, hs->param1, hs->param2, hs->param3, hs->cursor, hs->rect.left, hs->rect.top, hs->rect.right, hs->rect.bottom);
 	debugC(10, kLastExpressDebugScenes, "\t         coords=%d next=%d ", hs->coordsOffset, hs->next);
 
@@ -79,7 +79,7 @@ SceneHotspot *SceneHotspot::load(Common::SeekableReadStream *stream) {
 Common::String SceneHotspot::toString() const {
 	Common::String output = "";
 
-	output += Common::String::printf("    hotspot: scene=%d location=%02d action=%d param1=%02d param2=%02d param3=%02d cursor=%02d rect=(%d, %d)x(%d,%d)",
+	output += Common::String::format("    hotspot: scene=%d location=%02d action=%d param1=%02d param2=%02d param3=%02d cursor=%02d rect=(%d, %d)x(%d, %d)",
 	                                   scene, location, action, param1, param2, param3, cursor, rect.left, rect.top, rect.right, rect.bottom);
 
 	return output;
@@ -123,7 +123,7 @@ Scene *Scene::load(Common::SeekableReadStream *stream) {
 
 	stream->read(&scene->_name, sizeof(scene->_name));
 	scene->_sig = stream->readByte();
-	scene->entityPosition = (EntityPosition)stream->readUint16LE();;
+	scene->entityPosition = (EntityPosition)stream->readUint16LE();
 	scene->location = (Location)stream->readUint16LE();
 	scene->car = (CarIndex)stream->readUint16LE();
 	scene->position = stream->readByte();
@@ -209,9 +209,9 @@ Common::Rect Scene::draw(Graphics::Surface *surface) {
 Common::String Scene::toString() {
 	Common::String output = "";
 
-	output += Common::String::printf("Scene:  name=%s, sig=%02d, entityPosition=%d, location=%d\n", _name, _sig, entityPosition, location);
-	output += Common::String::printf("        car=%02d, position=%02d, type=%02d, param1=%02d\n", car, position, type, param1);
-	output += Common::String::printf("        param2=%02d, param3=%02d, hotspot=%d\n", param2, param3, _hotspot);
+	output += Common::String::format("Scene:  name=%s, sig=%02d, entityPosition=%d, location=%d\n", _name, _sig, entityPosition, location);
+	output += Common::String::format("        car=%02d, position=%02d, type=%02d, param1=%02d\n", car, position, type, param1);
+	output += Common::String::format("        param2=%02d, param3=%02d, hotspot=%d\n", param2, param3, _hotspot);
 
 	// Hotspots
 	if (_hotspots.size() != 0) {

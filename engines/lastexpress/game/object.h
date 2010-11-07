@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/object.h $
- * $Id: object.h 53579 2010-10-18 19:17:38Z sev $
+ * $Id: object.h 53845 2010-10-26 06:55:34Z littleboy $
  *
  */
 
@@ -38,7 +38,7 @@ class LastExpressEngine;
 class Objects : Common::Serializable {
 public:
 
-	struct Object {                         // All  fields should be saved as bytes
+	struct Object : Common::Serializable {                         // All fields should be saved as bytes
 		EntityIndex entity;
 		ObjectLocation location;
 		CursorStyle cursor;
@@ -54,6 +54,15 @@ public:
 		}
 
 		Common::String toString();
+
+		// Serializable
+		void saveLoadWithSerializer(Common::Serializer &s) {
+			s.syncAsByte(entity);
+			s.syncAsByte(location);
+			s.syncAsByte(cursor);
+			s.syncAsByte(cursor2);
+			s.syncAsByte(location2);
+		}
 	};
 
 	Objects(LastExpressEngine *engine);
@@ -63,7 +72,7 @@ public:
 	void updateLocation2(ObjectIndex index, ObjectLocation location2);
 
 	// Serializable
-	void saveLoadWithSerializer(Common::Serializer &ser);
+	void saveLoadWithSerializer(Common::Serializer &s);
 
 	/**
 	 * Convert this object into a string representation.
@@ -73,7 +82,7 @@ public:
 	Common::String toString();
 
 private:
-	LastExpressEngine* _engine;
+	LastExpressEngine *_engine;
 
 	Object _objects[kObjectMax];
 };

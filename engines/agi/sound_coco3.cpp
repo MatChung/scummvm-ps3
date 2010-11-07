@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/sound_coco3.cpp $
- * $Id: sound_coco3.cpp 49757 2010-06-15 10:36:54Z sev $
+ * $Id: sound_coco3.cpp 53738 2010-10-23 15:46:50Z fingolfin $
  *
  */
 
@@ -61,9 +61,9 @@ void SoundGenCoCo3::play(int resnum) {
 			uint32 start_time = _vm->_system->getMillis();
 
 			while (_vm->_system->getMillis() < start_time + note.duration) {
-                _vm->_system->updateScreen();
+				_vm->_system->updateScreen();
 
-                _vm->_system->delayMillis(10);
+				_vm->_system->delayMillis(10);
 			}
 		}
 	} while (note.freq != 0xff);

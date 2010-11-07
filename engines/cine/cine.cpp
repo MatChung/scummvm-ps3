@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cine/cine.cpp $
- * $Id: cine.cpp 51937 2010-08-09 11:38:01Z sev $
+ * $Id: cine.cpp 54115 2010-11-07 15:02:41Z tdhs $
  *
  */
 
@@ -56,6 +56,7 @@ CineEngine::CineEngine(OSystem *syst, const CINEGameDescription *gameDesc) : Eng
 	DebugMan.addDebugChannel(kCineDebugScript, "Script", "Script debug level");
 	DebugMan.addDebugChannel(kCineDebugPart,   "Part",   "Part debug level");
 	DebugMan.addDebugChannel(kCineDebugSound,  "Sound",  "Sound debug level");
+	_console = new CineConsole(this);
 
 	// Setup mixer
 	_mixer->setVolumeForSoundType(Audio::Mixer::kSFXSoundType, ConfMan.getInt("sfx_volume"));
@@ -74,7 +75,9 @@ CineEngine::~CineEngine() {
 	if (getGameType() == Cine::GType_OS) {
 		freeErrmessDat();
 	}
+
 	DebugMan.clearAllDebugChannels();
+	delete _console;
 }
 
 Common::Error CineEngine::run() {

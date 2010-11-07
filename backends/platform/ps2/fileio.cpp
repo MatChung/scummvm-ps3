@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/ps2/fileio.cpp $
- * $Id: fileio.cpp 46115 2009-11-23 23:32:34Z fingolfin $
+ * $Id: fileio.cpp 53969 2010-10-30 23:53:59Z fingolfin $
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "backends/platform/ps2/fileio.h"
 

@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/sound/decoders/flac.cpp $
- * $Id: flac.cpp 53161 2010-10-12 04:19:58Z eriktorbjorn $
+ * $Id: flac.cpp 53961 2010-10-30 21:27:42Z fingolfin $
  *
  */
+
+// Disable symbol overrides for FILE as that is used in FLAC headers
+#define FORBIDDEN_SYMBOL_EXCEPTION_FILE
 
 #include "sound/decoders/flac.h"
 
@@ -303,7 +306,7 @@ int FLACStream::readBuffer(int16 *buffer, const int numSamples) {
 	const uint numChannels = getChannels();
 
 	if (numChannels == 0) {
-		warning("FLACStream: Stream not sucessfully initialised, cant playback");
+		warning("FLACStream: Stream not successfully initialised, cant playback");
 		return -1; // streaminfo wasnt read!
 	}
 

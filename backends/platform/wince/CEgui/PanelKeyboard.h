@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEgui/PanelKeyboard.h $
- * $Id: PanelKeyboard.h 52935 2010-09-28 20:30:50Z fingolfin $
+ * $Id: PanelKeyboard.h 53979 2010-10-31 17:11:43Z fingolfin $
  *
  */
 
@@ -37,15 +37,16 @@ using CEKEYS::EventsBuffer;
 
 namespace CEGUI {
 
-	class PanelKeyboard : public Toolbar {
-	public:
-		PanelKeyboard(WORD reference);
-		virtual ~PanelKeyboard();
-		virtual bool action(int x, int y, bool pushed);
-	private:
-		bool _state;
-		Key _lastKey;
-	};
-}
+class PanelKeyboard : public Toolbar {
+public:
+	PanelKeyboard(WORD reference);
+	virtual ~PanelKeyboard();
+	virtual bool action(int x, int y, bool pushed);
+private:
+	bool _state;
+	Key _lastKey;
+};
+
+} // End of namespace CEGUI
 
 #endif

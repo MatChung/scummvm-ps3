@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/palette.cpp $
- * $Id: palette.cpp 52353 2010-08-24 17:33:35Z m_kiewitz $
+ * $Id: palette.cpp 54093 2010-11-05 12:33:07Z wjpalenstijn $
  *
  */
 
@@ -192,6 +192,16 @@ void GfxPalette::modifyAmigaPalette(byte *data) {
 	_screen->setPalette(&_sysPalette);
 }
 
+static byte blendColours(byte c1, byte c2) {
+	// linear
+	// return (c1/2+c2/2)+((c1&1)+(c2&1))/2;
+
+	// gamma 2.2
+	double t = (pow(c1/255.0, 2.2/1.0) * 255.0) + 
+	           (pow(c2/255.0, 2.2/1.0) * 255.0);
+	return (byte)(0.5 + (pow(0.5*t/255.0, 1.0/2.2) * 255.0));
+}
+
 void GfxPalette::setEGA() {
 	int curColor;
 	byte color1, color2;
@@ -219,9 +229,10 @@ void GfxPalette::setEGA() {
 	for (curColor = 0x10; curColor <= 0xFE; curColor++) {
 		_sysPalette.colors[curColor].used = 1;
 		color1 = curColor & 0x0F; color2 = curColor >> 4;
-		_sysPalette.colors[curColor].r = (_sysPalette.colors[color1].r >> 1) + (_sysPalette.colors[color2].r >> 1);
-		_sysPalette.colors[curColor].g = (_sysPalette.colors[color1].g >> 1) + (_sysPalette.colors[color2].g >> 1);
-		_sysPalette.colors[curColor].b = (_sysPalette.colors[color1].b >> 1) + (_sysPalette.colors[color2].b >> 1);
+
+		_sysPalette.colors[curColor].r = blendColours(_sysPalette.colors[color1].r, _sysPalette.colors[color2].r);
+		_sysPalette.colors[curColor].g = blendColours(_sysPalette.colors[color1].g, _sysPalette.colors[color2].g);
+		_sysPalette.colors[curColor].b = blendColours(_sysPalette.colors[color1].b, _sysPalette.colors[color2].b);
 	}
 	_sysPalette.timestamp = 1;
 	setOnScreen();

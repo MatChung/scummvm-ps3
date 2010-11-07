@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/console.cpp $
- * $Id: console.cpp 48458 2010-04-01 16:11:29Z eriktorbjorn $
+ * $Id: console.cpp 54007 2010-11-01 16:03:35Z fingolfin $
  */
 
 
@@ -237,13 +237,15 @@ bool Debugger::Cmd_Mem(int argc, const char **argv) {
 			break;
 		}
 
-		DebugPrintf("%9ld %-3d %-4d %-20s %s\n", blocks[i]->size, blocks[i]->id, blocks[i]->uid, type, _vm->_resman->fetchName(blocks[i]->ptr));
+		DebugPrintf("%9d %-3d %-4d %-20s %s\n",
+				blocks[i]->size, blocks[i]->id, blocks[i]->uid,
+				type, _vm->_resman->fetchName(blocks[i]->ptr));
 	}
 
 	free(blocks);
 
 	DebugPrintf("---------------------------------------------------------------------------\n");
-	DebugPrintf("%9ld\n", _vm->_memory->getTotAlloc());
+	DebugPrintf("%9d\n", _vm->_memory->getTotAlloc());
 
 	return true;
 }

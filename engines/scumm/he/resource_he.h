@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/he/resource_he.h $
- * $Id: resource_he.h 47258 2010-01-11 20:41:07Z sev $
+ * $Id: resource_he.h 53739 2010-10-23 15:47:23Z fingolfin $
  *
  */
 
@@ -184,7 +184,7 @@ class Win32ResExtractor : public ResExtractor {
 		bool numeric_id;
 		bool is_directory;
 
-		char *get_resource_id_quoted();
+		Common::String getQuotedResourceId() const;
 	} PACKED_STRUCT;
 
 

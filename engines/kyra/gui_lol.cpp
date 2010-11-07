@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/gui_lol.cpp $
- * $Id: gui_lol.cpp 50952 2010-07-16 23:30:29Z lordhoto $
+ * $Id: gui_lol.cpp 53912 2010-10-28 23:57:24Z lordhoto $
  *
  */
 
@@ -2906,7 +2906,7 @@ int GUI_LoL::clickedSavenameMenu(Button *button) {
 		int slot = _menuResult == -2 ? getNextSavegameSlot() : _menuResult - 1;
 		Graphics::Surface thumb;
 		createScreenThumbnail(thumb);
-		_vm->saveGameState(slot, _saveDescription, &thumb);
+		_vm->saveGameStateIntern(slot, _saveDescription, &thumb);
 		thumb.free();
 
 		_displayMenu = false;

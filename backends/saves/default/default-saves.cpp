@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/saves/default/default-saves.cpp $
- * $Id: default-saves.cpp 48286 2010-03-18 15:44:59Z fingolfin $
+ * $Id: default-saves.cpp 54089 2010-11-05 10:31:36Z fingolfin $
  *
  */
 
@@ -34,8 +34,9 @@
 #include "common/config-manager.h"
 #include "common/zlib.h"
 
+#ifndef _WIN32_WCE
 #include <errno.h>	// for removeSavefile()
-
+#endif
 
 DefaultSaveFileManager::DefaultSaveFileManager() {
 }

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/inventory.cpp $
- * $Id: inventory.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: inventory.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -406,8 +406,13 @@ void Inventory::setLocationAndProcess(InventoryItem item, ObjectLocation locatio
 //////////////////////////////////////////////////////////////////////////
 // Serializable
 //////////////////////////////////////////////////////////////////////////
-void Inventory::saveLoadWithSerializer(Common::Serializer &) {
-	error("Inventory::saveLoadWithSerializer: not implemented!");
+void Inventory::saveLoadWithSerializer(Common::Serializer &s) {
+	for (uint i = 0; i < ARRAYSIZE(_entries); i++)
+		_entries[i].saveLoadWithSerializer(s);
+}
+
+void Inventory::saveSelectedItem(Common::Serializer &s) {
+	s.syncAsUint32LE(_selectedItem);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -417,7 +422,7 @@ Common::String Inventory::toString() {
 	Common::String ret = "";
 
 	for (int i = 0; i < kPortraitOriginal; i++)
-		ret += Common::String::printf("%d : %s\n", i, _entries[i].toString().c_str());
+		ret += Common::String::format("%d : %s\n", i, _entries[i].toString().c_str());
 
 	return ret;
 }

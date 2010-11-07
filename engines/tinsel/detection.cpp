@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/detection.cpp $
- * $Id: detection.cpp 49788 2010-06-15 10:59:23Z sev $
+ * $Id: detection.cpp 54121 2010-11-07 17:16:59Z fingolfin $
  *
  */
 
@@ -133,7 +133,14 @@ bool TinselMetaEngine::hasFeature(MetaEngineFeature f) const {
 bool Tinsel::TinselEngine::hasFeature(EngineFeature f) const {
 	return
 #if 0
-		// FIXME: tinsel does not exit cleanly yet
+		// FIXME: It is possible to return to the launcher from tinsel.
+		// But then any attempt to re-enter the engine will lead to
+		// a crash or at least seriously broken behavior.
+		//
+		// This is because the Tinsel engine makes use of tons of
+		// global variables (static and non-static) which are never
+		// explicitly re-initialized when the engine is started
+		// for a second time.
 		(f == kSupportsRTL) ||
 #endif
 		(f == kSupportsLoadingDuringRuntime);
@@ -184,7 +191,7 @@ bool TinselMetaEngine::createInstance(OSystem *syst, Engine **engine, const ADGa
 
 struct SizeMD5 {
 	int size;
-	char md5[32+1];
+	Common::String md5;
 };
 typedef Common::HashMap<Common::String, SizeMD5, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> SizeMD5Map;
 typedef Common::HashMap<Common::String, Common::FSNode, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> FileMap;
@@ -205,8 +212,13 @@ const ADGameDescription *TinselMetaEngine::fallbackDetect(const Common::FSList &
 	if (fslist.empty())
 		return NULL;
 
+	// TODO: The following code is essentially a slightly modified copy of the
+	// complete code of function detectGame() in engines/advancedDetector.cpp.
+	// That quite some hefty and undesirable code duplication. Its only purpose
+	// seems to be to treat filenames of the form "foo1.ext" as "foo.ext".
+	// It would be nice to avoid this code duplication.
+
 	// First we compose a hashmap of all files in fslist.
-	// Includes nifty stuff like removing trailing dots and ignoring case.
 	for (Common::FSList::const_iterator file = fslist.begin(); file != fslist.end(); ++file) {
 		if (file->isDirectory()) {
 			if (!scumm_stricmp(file->getName().c_str(), "dw2")) {
@@ -256,11 +268,9 @@ const ADGameDescription *TinselMetaEngine::fallbackDetect(const Common::FSList &
 
 				if (testFile.open(allFiles[fname])) {
 					tmp.size = (int32)testFile.size();
-					if (!md5_file_string(testFile, tmp.md5, detectionParams.md5Bytes))
-						tmp.md5[0] = 0;
+					tmp.md5 = computeStreamMD5AsString(testFile, detectionParams.md5Bytes);
 				} else {
 					tmp.size = -1;
-					tmp.md5[0] = 0;
 				}
 
 				filesSizeMD5[fname] = tmp;
@@ -306,7 +316,7 @@ const ADGameDescription *TinselMetaEngine::fallbackDetect(const Common::FSList &
 				break;
 			}
 
-			if (fileDesc->md5 != NULL && 0 != strcmp(fileDesc->md5, filesSizeMD5[tstr].md5)) {
+			if (fileDesc->md5 != NULL && fileDesc->md5 != filesSizeMD5[tstr].md5) {
 				fileMissing = true;
 				break;
 			}
@@ -330,12 +340,7 @@ const ADGameDescription *TinselMetaEngine::fallbackDetect(const Common::FSList &
 			if (curFilesMatched > maxFilesMatched) {
 				maxFilesMatched = curFilesMatched;
 
-				for (uint j = 0; j < matched.size();) {
-					if (matched[j]->flags & ADGF_KEEPMATCH)
-						 ++j;
-					else
-						matched.remove_at(j);
-				}
+				matched.clear();	// Remove any prior, lower ranked matches.
 				matched.push_back((const ADGameDescription *)g);
 			} else if (curFilesMatched == maxFilesMatched) {
 				matched.push_back((const ADGameDescription *)g);

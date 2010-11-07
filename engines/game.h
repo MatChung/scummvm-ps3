@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/game.h $
- * $Id: game.h 49786 2010-06-15 10:57:28Z sev $
+ * $Id: game.h 54119 2010-11-07 17:15:46Z fingolfin $
  *
  */
 
@@ -28,7 +28,6 @@
 
 #include "common/array.h"
 #include "common/hash-str.h"
-#include "engines/savestate.h"	// TODO: Push this #include out to .cpp files needing it
 
 /**
  * A simple structure used to map gameids (like "monkey", "sword1", ...) to

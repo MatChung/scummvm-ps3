@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/script_v2.cpp $
- * $Id: script_v2.cpp 52130 2010-08-16 19:58:01Z fingolfin $
+ * $Id: script_v2.cpp 53806 2010-10-25 08:03:55Z Kirben $
  *
  */
 
@@ -1174,6 +1174,8 @@ void ScummEngine_v2::o2_walkActorToObject() {
 	int obj;
 	Actor *a;
 
+	_v0ObjectFlag = 0;
+
 	a = derefActor(getVarOrDirectByte(PARAM_1), "o2_walkActorToObject");
 	obj = getVarOrDirectWord(PARAM_2);
 	if (whereIsObject(obj) != WIO_NOT_FOUND) {
@@ -1182,6 +1184,7 @@ void ScummEngine_v2::o2_walkActorToObject() {
 		AdjustBoxResult r = a->adjustXYToBeInBox(x, y);
 		x = r.x;
 		y = r.y;
+
 		a->startWalkActor(x, y, dir);
 	}
 }

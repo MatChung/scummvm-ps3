@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/sound_sarien.cpp $
- * $Id: sound_sarien.cpp 49757 2010-06-15 10:36:54Z sev $
+ * $Id: sound_sarien.cpp 53868 2010-10-26 22:33:49Z fingolfin $
  *
  */
 
@@ -95,13 +95,10 @@ SoundGenSarien::SoundGenSarien(AgiEngine *vm, Audio::Mixer *pMixer) : SoundGen(v
 		break;
 	}
 
-	report("Initializing sound:\n");
-
-	report("sound: envelopes ");
 	if (_env) {
-		report("enabled (decay=%d, sustain=%d)\n", ENV_DECAY, ENV_SUSTAIN);
+		debug(0, "Initializing sound: envelopes enabled (decay=%d, sustain=%d)", ENV_DECAY, ENV_SUSTAIN);
 	} else {
-		report("disabled\n");
+		debug(0, "Initializing sound: envelopes disabled");
 	}
 
 	_mixer->playStream(Audio::Mixer::kMusicSoundType, &_soundHandle, this, -1, Audio::Mixer::kMaxChannelVolume, 0, DisposeAfterUse::NO, true);

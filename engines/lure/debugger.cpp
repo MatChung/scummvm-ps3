@@ -19,10 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lure/debugger.cpp $
- * $Id: debugger.cpp 50963 2010-07-17 18:38:42Z fingolfin $
+ * $Id: debugger.cpp 54106 2010-11-07 01:03:03Z fingolfin $
  *
  */
-
 
 #include "common/config-manager.h"
 #include "common/endian.h"
@@ -323,7 +322,7 @@ bool Debugger::cmd_hotspot(int argc, const char **argv) {
 
 		if (h != NULL) {
 			DebugPrintf("Frame Number = %d of %d\n", h->frameNumber(), h->numFrames());
-			DebugPrintf("Persistant = %s\n", h->persistant() ? "true" : "false");
+			DebugPrintf("Persistent = %s\n", h->persistant() ? "true" : "false");
 		}
 
 	} else if (strcmp(argv[2], "actions") == 0) {
@@ -353,15 +352,13 @@ bool Debugger::cmd_hotspot(int argc, const char **argv) {
 	} else {
 		if (strcmp(argv[2], "schedule") == 0) {
 			// List any current schedule for the character
-			hs->npcSchedule.list(buffer);
-			DebugPrintf("%s", buffer);
+			DebugPrintf("%s", hs->npcSchedule.getDebugInfo().c_str());
 		}
 		if (!h)
 			DebugPrintf("The specified hotspot is not currently active\n");
 		else if (strcmp(argv[2], "paths") == 0) {
 			// List any paths for a charcter
-			h->pathFinder().list(buffer);
-			DebugPrintf("%s", buffer);
+			DebugPrintf("%s", h->pathFinder().getDebugInfo().c_str());
 		}
 		else if (strcmp(argv[2], "pixels") == 0) {
 			// List the pixel data for the hotspot

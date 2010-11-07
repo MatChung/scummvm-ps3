@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cruise/overlay.cpp $
- * $Id: overlay.cpp 47541 2010-01-25 01:39:44Z lordhoto $
+ * $Id: overlay.cpp 54108 2010-11-07 01:03:58Z fingolfin $
  *
  */
 
@@ -662,6 +662,7 @@ int loadOverlay(const char *scriptName) {
 #endif
 #ifdef DUMP_OBJECT
 	{
+		// TODO: Rewrite this to use Common::DumpFile
 		int i;
 		FILE *fHandle;
 		char nameBundle[100];

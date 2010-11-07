@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/music.cpp $
- * $Id: music.cpp 52674 2010-09-11 05:28:54Z dreammaster $
+ * $Id: music.cpp 54011 2010-11-01 16:04:47Z fingolfin $
  *
  */
 
@@ -382,7 +382,7 @@ void OpenMidiFiles() {
 
 		assert(curTrack < ARRAYSIZE(midiOffsets));
 		midiOffsets[curTrack] = curOffset + (4 * curTrack);
-		//printf("%d: %d\n", curTrack, midiOffsets[curTrack]);
+		//debug("%d: %d", curTrack, midiOffsets[curTrack]);
 
 		songLength = midiStream.readUint32LE();
 		curOffset += songLength;

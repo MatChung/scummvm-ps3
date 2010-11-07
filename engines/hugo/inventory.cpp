@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/inventory.cpp $
- * $Id: inventory.cpp 52988 2010-10-03 08:08:42Z strangerke $
+ * $Id: inventory.cpp 54018 2010-11-01 20:20:21Z strangerke $
  *
  */
 
@@ -40,29 +40,32 @@
 #include "hugo/mouse.h"
 #include "hugo/inventory.h"
 #include "hugo/parser.h"
+#include "hugo/object.h"
 
 namespace Hugo {
 
 #define MAX_DISP       (XPIX / INV_DX)              // Max icons displayable
 
-InventoryHandler::InventoryHandler(HugoEngine &vm) : _vm(vm) {
+InventoryHandler::InventoryHandler(HugoEngine *vm) : _vm(vm) {
 }
 
-// Construct the inventory scrollbar in dib_i
-// imageTotNumb is total number of inventory icons
-// displayNumb is number requested for display
-// scrollFl is TRUE if scroll arrows required
-// firstObjId is index of first (scrolled) inventory object to display
+/**
+* Construct the inventory scrollbar in dib_i
+* imageTotNumb is total number of inventory icons
+* displayNumb is number requested for display
+* scrollFl is TRUE if scroll arrows required
+* firstObjId is index of first (scrolled) inventory object to display
+*/
 void InventoryHandler::constructInventory(int16 imageTotNumb, int displayNumb, bool scrollFl, int16 firstObjId) {
 	debugC(1, kDebugInventory, "constructInventory(%d, %d, %d, %d)", imageTotNumb, displayNumb, (scrollFl) ? 0 : 1, firstObjId);
 
 	// Clear out icon buffer
-	memset(_vm.screen().getIconBuffer(), 0, sizeof(_vm.screen().getIconBuffer()));
+	memset(_vm->_screen->getIconBuffer(), 0, sizeof(_vm->_screen->getIconBuffer()));
 
 	// If needed, copy arrows - reduce number of icons displayable
 	if (scrollFl) { // Display at first and last icon positions
-		_vm.screen().moveImage(_vm.screen().getGUIBuffer(), 0, 0, INV_DX, INV_DY, XPIX, _vm.screen().getIconBuffer(), 0, 0, XPIX);
-		_vm.screen().moveImage(_vm.screen().getGUIBuffer(), INV_DX, 0, INV_DX, INV_DY, XPIX, _vm.screen().getIconBuffer(), INV_DX *(MAX_DISP - 1), 0, XPIX);
+		_vm->_screen->moveImage(_vm->_screen->getGUIBuffer(), 0, 0, INV_DX, INV_DY, XPIX, _vm->_screen->getIconBuffer(), 0, 0, XPIX);
+		_vm->_screen->moveImage(_vm->_screen->getGUIBuffer(), INV_DX, 0, INV_DX, INV_DY, XPIX, _vm->_screen->getIconBuffer(), INV_DX *(MAX_DISP - 1), 0, XPIX);
 		displayNumb = MIN(displayNumb, MAX_DISP - NUM_ARROWS);
 	} else  // No, override first index - we can show 'em all!
 		firstObjId = 0;
@@ -71,7 +74,7 @@ void InventoryHandler::constructInventory(int16 imageTotNumb, int displayNumb, b
 	int16 displayed = 0;
 	int16 carried = 0;
 	for (int16 i = 0; i < imageTotNumb; i++) {
-		if (_vm._objects[_vm._invent[i]].carriedFl) {
+		if (_vm->_object->isCarried(_vm->_invent[i])) {
 			// Check still room to display and past first scroll index
 			if (displayed < displayNumb && carried >= firstObjId) {
 				// Compute source coordinates in dib_u
@@ -80,18 +83,20 @@ void InventoryHandler::constructInventory(int16 imageTotNumb, int displayNumb, b
 
 				// Compute dest coordinates in dib_i
 				int16 ix = ((scrollFl) ? displayed + 1 : displayed) * INV_DX;
-				displayed++;        // Count number displayed
+				displayed++;                        // Count number displayed
 
 				// Copy the icon
-				_vm.screen().moveImage(_vm.screen().getGUIBuffer(), ux, uy, INV_DX, INV_DY, XPIX, _vm.screen().getIconBuffer(), ix, 0, XPIX);
+				_vm->_screen->moveImage(_vm->_screen->getGUIBuffer(), ux, uy, INV_DX, INV_DY, XPIX, _vm->_screen->getIconBuffer(), ix, 0, XPIX);
 			}
 			carried++;                              // Count number carried
 		}
 	}
 }
 
-// Process required action for inventory
-// Returns objId under cursor (or -1) for INV_GET
+/**
+* Process required action for inventory
+* Returns objId under cursor (or -1) for INV_GET
+*/
 int16 InventoryHandler::processInventory(invact_t action, ...) {
 	debugC(1, kDebugInventory, "processInventory(invact_t action, ...)");
 
@@ -100,8 +105,8 @@ int16 InventoryHandler::processInventory(invact_t action, ...) {
 	int16 imageNumb;                                // Total number of inventory items
 	int displayNumb;                                // Total number displayed/carried
 	// Compute total number and number displayed, i.e. number carried
-	for (imageNumb = 0, displayNumb = 0; imageNumb < _vm._maxInvent && _vm._invent[imageNumb] != -1; imageNumb++) {
-		if (_vm._objects[_vm._invent[imageNumb]].carriedFl)
+	for (imageNumb = 0, displayNumb = 0; imageNumb < _vm->_maxInvent && _vm->_invent[imageNumb] != -1; imageNumb++) {
+		if (_vm->_object->isCarried(_vm->_invent[imageNumb]))
 			displayNumb++;
 	}
 
@@ -109,7 +114,7 @@ int16 InventoryHandler::processInventory(invact_t action, ...) {
 	bool scrollFl = displayNumb > MAX_DISP;
 	va_list marker;                                 // Args used for D_ADD operation
 	int16 cursorx, cursory;                         // Current cursor position
-	int16 objId = -1;								// Return objid under cursor
+	int16 objId = -1;                               // Return objid under cursor
 
 	switch (action) {
 	case INV_INIT:                                  // Initialize inventory display
@@ -148,8 +153,8 @@ int16 InventoryHandler::processInventory(invact_t action, ...) {
 			if (objId == -1 && i < displayNumb) {
 				// Find objid by counting # carried objects == i+1
 				int16 j;
-				for (j = 0, i++; i > 0 && j < _vm._numObj; j++) {
-					if (_vm._objects[j].carriedFl) {
+				for (j = 0, i++; i > 0 && j < _vm->_numObj; j++) {
+					if (_vm->_object->isCarried(j)) {
 						if (--i == 0)
 							objId = j;
 					}
@@ -158,15 +163,17 @@ int16 InventoryHandler::processInventory(invact_t action, ...) {
 		}
 		break;
 	}
-	return objId;               // For the INV_GET action
+	return objId;                                   // For the INV_GET action
 }
 
+/**
+* Process inventory state machine
+*/
 void InventoryHandler::runInventory() {
-	status_t &gameStatus = _vm.getGameStatus();
+	status_t &gameStatus = _vm->getGameStatus();
 
 	debugC(1, kDebugInventory, "runInventory");
 
-// Process inventory state machine
 	switch (gameStatus.inventoryState) {
 	case I_OFF:                                     // Icon bar off screen
 		break;
@@ -176,15 +183,15 @@ void InventoryHandler::runInventory() {
 			gameStatus.inventoryHeight = 0;
 
 		// Move visible portion to _frontBuffer, restore uncovered portion, display results
-		_vm.screen().moveImage(_vm.screen().getIconBuffer(), 0, 0, XPIX, gameStatus.inventoryHeight, XPIX, _vm.screen().getFrontBuffer(), 0, DIBOFF_Y, XPIX);
-		_vm.screen().moveImage(_vm.screen().getBackBufferBackup(), 0, gameStatus.inventoryHeight + DIBOFF_Y, XPIX, STEP_DY, XPIX, _vm.screen().getFrontBuffer(), 0, gameStatus.inventoryHeight + DIBOFF_Y, XPIX);
-		_vm.screen().displayRect(0, DIBOFF_Y, XPIX, gameStatus.inventoryHeight + STEP_DY);
+		_vm->_screen->moveImage(_vm->_screen->getIconBuffer(), 0, 0, XPIX, gameStatus.inventoryHeight, XPIX, _vm->_screen->getFrontBuffer(), 0, DIBOFF_Y, XPIX);
+		_vm->_screen->moveImage(_vm->_screen->getBackBufferBackup(), 0, gameStatus.inventoryHeight + DIBOFF_Y, XPIX, STEP_DY, XPIX, _vm->_screen->getFrontBuffer(), 0, gameStatus.inventoryHeight + DIBOFF_Y, XPIX);
+		_vm->_screen->displayRect(0, DIBOFF_Y, XPIX, gameStatus.inventoryHeight + STEP_DY);
 
 		if (gameStatus.inventoryHeight == 0) {      // Finished moving up?
 			// Yes, restore dibs and exit back to game state machine
-			_vm.screen().moveImage(_vm.screen().getBackBufferBackup(), 0, 0, XPIX, YPIX, XPIX, _vm.screen().getBackBuffer(), 0, 0, XPIX);
-			_vm.screen().moveImage(_vm.screen().getBackBuffer(), 0, 0, XPIX, YPIX, XPIX, _vm.screen().getFrontBuffer(), 0, 0, XPIX);
-			_vm.updateImages();                     // Add objects back into display list for restore
+			_vm->_screen->moveImage(_vm->_screen->getBackBufferBackup(), 0, 0, XPIX, YPIX, XPIX, _vm->_screen->getBackBuffer(), 0, 0, XPIX);
+			_vm->_screen->moveImage(_vm->_screen->getBackBuffer(), 0, 0, XPIX, YPIX, XPIX, _vm->_screen->getFrontBuffer(), 0, 0, XPIX);
+			_vm->_object->updateImages();            // Add objects back into display list for restore
 			gameStatus.inventoryState = I_OFF;
 			gameStatus.viewState = V_PLAY;
 		}
@@ -194,9 +201,9 @@ void InventoryHandler::runInventory() {
 		// and get any icon/text out of _frontBuffer
 		if (gameStatus.inventoryHeight == 0) {
 			processInventory(INV_INIT);             // Initialize dib_i
-			_vm.screen().displayList(D_RESTORE);    // Restore _frontBuffer
-			_vm.updateImages();                     // Rebuild _frontBuffer without icons/text
-			_vm.screen().displayList(D_DISPLAY);    // Blit display list to screen
+			_vm->_screen->displayList(D_RESTORE);   // Restore _frontBuffer
+			_vm->_object->updateImages();           // Rebuild _frontBuffer without icons/text
+			_vm->_screen->displayList(D_DISPLAY);   // Blit display list to screen
 		}
 
 		gameStatus.inventoryHeight += STEP_DY;      // Move the icon bar down
@@ -204,8 +211,8 @@ void InventoryHandler::runInventory() {
 			gameStatus.inventoryHeight = INV_DY;
 
 		// Move visible portion to _frontBuffer, display results
-		_vm.screen().moveImage(_vm.screen().getIconBuffer(), 0, 0, XPIX, gameStatus.inventoryHeight, XPIX, _vm.screen().getFrontBuffer(), 0, DIBOFF_Y, XPIX);
-		_vm.screen().displayRect(0, DIBOFF_Y, XPIX, gameStatus.inventoryHeight);
+		_vm->_screen->moveImage(_vm->_screen->getIconBuffer(), 0, 0, XPIX, gameStatus.inventoryHeight, XPIX, _vm->_screen->getFrontBuffer(), 0, DIBOFF_Y, XPIX);
+		_vm->_screen->displayRect(0, DIBOFF_Y, XPIX, gameStatus.inventoryHeight);
 
 		if (gameStatus.inventoryHeight == INV_DY) { // Finished moving down?
 			// Yes, prepare view dibs for special inventory display since
@@ -213,17 +220,17 @@ void InventoryHandler::runInventory() {
 			// 1. Save backing store _backBuffer in temporary dib_c
 			// 2. Make snapshot of _frontBuffer the new _backBuffer backing store
 			// 3. Reset the display list
-			_vm.screen().moveImage(_vm.screen().getBackBuffer(), 0, 0, XPIX, YPIX, XPIX, _vm.screen().getBackBufferBackup(), 0, 0, XPIX);
-			_vm.screen().moveImage(_vm.screen().getFrontBuffer(), 0, 0, XPIX, YPIX, XPIX, _vm.screen().getBackBuffer(), 0, 0, XPIX);
-			_vm.screen().displayList(D_INIT);
+			_vm->_screen->moveImage(_vm->_screen->getBackBuffer(), 0, 0, XPIX, YPIX, XPIX, _vm->_screen->getBackBufferBackup(), 0, 0, XPIX);
+			_vm->_screen->moveImage(_vm->_screen->getFrontBuffer(), 0, 0, XPIX, YPIX, XPIX, _vm->_screen->getBackBuffer(), 0, 0, XPIX);
+			_vm->_screen->displayList(D_INIT);
 			gameStatus.inventoryState = I_ACTIVE;
 		}
 		break;
 	case I_ACTIVE:                                  // Inventory active
-		_vm.parser().charHandler();                 // Still allow commands
-		_vm.screen().displayList(D_RESTORE);        // Restore previous background
-		_vm.mouse().mouseHandler();                 // Mouse activity - adds to display list
-		_vm.screen().displayList(D_DISPLAY);        // Blit the display list to screen
+		_vm->_parser->charHandler();                // Still allow commands
+		_vm->_screen->displayList(D_RESTORE);       // Restore previous background
+		_vm->_mouse->mouseHandler();                // Mouse activity - adds to display list
+		_vm->_screen->displayList(D_DISPLAY);       // Blit the display list to screen
 		break;
 	}
 }

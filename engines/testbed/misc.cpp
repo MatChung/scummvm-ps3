@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/testbed/misc.cpp $
- * $Id: misc.cpp 52973 2010-10-02 01:05:16Z sud03r $
+ * $Id: misc.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  */
 
 #include "testbed/misc.h"
@@ -28,7 +28,7 @@
 namespace Testbed {
 
 Common::String MiscTests::getHumanReadableFormat(TimeDate &td) {
-	return Common::String::printf("%d:%d:%d on %d/%d/%d (dd/mm/yyyy)", td.tm_hour, td.tm_min, td.tm_sec, td.tm_mday, td.tm_mon + 1, td.tm_year + 1900);
+	return Common::String::format("%d:%d:%d on %d/%d/%d (dd/mm/yyyy)", td.tm_hour, td.tm_min, td.tm_sec, td.tm_mday, td.tm_mon + 1, td.tm_year + 1900);
 }
 
 void MiscTests::timerCallback(void *arg) {

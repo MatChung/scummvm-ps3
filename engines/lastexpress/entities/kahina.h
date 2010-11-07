@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/kahina.h $
- * $Id: kahina.h 53588 2010-10-18 21:03:28Z littleboy $
+ * $Id: kahina.h 53629 2010-10-19 22:34:26Z jvprat $
  *
  */
 
@@ -48,7 +48,7 @@ public:
 	 *
 	 * @param filename The sound filename
 	 */
-	DECLARE_FUNCTION_1(playSound, const char* filename)
+	DECLARE_FUNCTION_1(playSound, const char *filename)
 
 	/**
 	 * Saves the game
@@ -97,7 +97,7 @@ public:
 	 * @param sequence    The sequence to draw
 	 * @param compartment The compartment
 	 */
-	DECLARE_FUNCTION_2(enterExitCompartment, const char* sequence, ObjectIndex compartment)
+	DECLARE_FUNCTION_2(enterExitCompartment, const char *sequence, ObjectIndex compartment)
 
 	/**
 	 * Setup Chapter 1

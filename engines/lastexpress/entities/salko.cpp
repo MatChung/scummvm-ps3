@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/salko.cpp $
- * $Id: salko.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: salko.cpp 53844 2010-10-26 06:55:17Z littleboy $
  *
  */
 
@@ -158,7 +158,7 @@ IMPLEMENT_FUNCTION(9, Salko, chapter1)
 		break;
 
 	case kActionNone:
-		TIME_CHECK_CHAPTER1(setup_chapter1Handler);
+		TIME_CHECK(kTimeChapter1, params->param1, setup_chapter1Handler);
 		break;
 
 	case kActionDefault:
@@ -611,7 +611,7 @@ IMPLEMENT_FUNCTION(24, Salko, chapter5Handler)
 			params->param1 = getFight()->setup(kFightSalko);
 
 			if (params->param1 == Fight::kFightEndWin) {
-				getState()->time += 1800;
+				getState()->time = (TimeValue)(getState()->time + 1800);
 				setCallback(3);
 				setup_savegame(kSavegameTypeEvent, kEventCathSalkoTrainTopWin);
 			} else {

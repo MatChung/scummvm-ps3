@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/debugger.cpp $
- * $Id: debugger.cpp 50966 2010-07-17 19:11:59Z thebluegr $
+ * $Id: debugger.cpp 54067 2010-11-04 16:09:20Z wjpalenstijn $
  *
  */
+
+// NB: This is really only necessary if USE_READLINE is defined
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "common/debug.h"
 #include "common/debug-channels.h"
@@ -78,7 +81,7 @@ int Debugger::DebugPrintf(const char *format, ...) {
 	va_start(argptr, format);
 	int count;
 #ifndef USE_TEXT_CONSOLE
-	count = _debuggerDialog->vprintf(format, argptr);
+	count = _debuggerDialog->vprintFormat(1, format, argptr);
 #else
 	count = ::vprintf(format, argptr);
 #endif

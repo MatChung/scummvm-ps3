@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/agi.h $
- * $Id: agi.h 53484 2010-10-15 12:48:19Z fingolfin $
+ * $Id: agi.h 53868 2010-10-26 22:33:49Z fingolfin $
  *
  */
 
@@ -235,8 +235,6 @@ enum AgiMouseButton {
 	kAgiMouseButtonRight, // Right mouse button
 	kAgiMouseButtonMiddle // Middle mouse button
 };
-
-#define report printf
 
 enum GameId {
 	GID_AGI = 1

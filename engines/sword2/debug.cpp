@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/debug.cpp $
- * $Id: debug.cpp 30667 2008-01-28 00:14:17Z jvprat $
+ * $Id: debug.cpp 53998 2010-11-01 11:29:57Z eriktorbjorn $
  */
 
 
@@ -119,15 +119,6 @@ void Debugger::buildDebugText() {
 		sprintf(buf, "TESTING LOGIC STABILITY!");
 		makeDebugTextBlock(buf, 0, 105);
 	}
-
-#ifdef SWORD2_DEBUG
-	// speed-up indicator
-
-	if (_vm->_renderSkip) {		// see sword2.cpp
-		sprintf(buf, "SKIPPING FRAMES FOR SPEED-UP!");
-		makeDebugTextBlock(buf, 0, 120);
-	}
-#endif
 
 	// debug info at top of screen - enabled/disabled as one complete unit
 

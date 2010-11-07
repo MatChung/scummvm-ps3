@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/image/swimage.cpp $
- * $Id: swimage.cpp 53477 2010-10-15 12:18:19Z fingolfin $
+ * $Id: swimage.cpp 54045 2010-11-03 00:19:28Z fingolfin $
  *
  */
 
@@ -32,12 +32,8 @@
  *
  */
 
-// -----------------------------------------------------------------------------
-// INCLUDES
-// -----------------------------------------------------------------------------
-
 #include "sword25/package/packagemanager.h"
-#include "sword25/gfx/image/imageloader.h"
+#include "sword25/gfx/image/pngloader.h"
 #include "sword25/gfx/image/swimage.h"
 
 namespace Sword25 {
@@ -45,38 +41,34 @@ namespace Sword25 {
 #define BS_LOG_PREFIX "SWIMAGE"
 
 
-// -----------------------------------------------------------------------------
-// CONSTRUCTION / DESTRUCTION
-// -----------------------------------------------------------------------------
-
 SWImage::SWImage(const Common::String &filename, bool &result) :
 	_imageDataPtr(0),
 	_width(0),
 	_height(0) {
 	result = false;
 
-	PackageManager *pPackage = Kernel::GetInstance()->GetPackage();
+	PackageManager *pPackage = Kernel::getInstance()->getPackage();
 	BS_ASSERT(pPackage);
 
 	// Datei laden
 	byte *pFileData;
 	uint fileSize;
-	if (!(pFileData = (byte *)pPackage->getFile(filename, &fileSize))) {
+	pFileData = pPackage->getFile(filename, &fileSize);
+	if (!pFileData) {
 		BS_LOG_ERRORLN("File \"%s\" could not be loaded.", filename.c_str());
 		return;
 	}
 
 	// Bildeigenschaften bestimmen
-	GraphicEngine::COLOR_FORMATS colorFormat;
 	int pitch;
-	if (!ImageLoader::ExtractImageProperties(pFileData, fileSize, colorFormat, _width, _height)) {
+	if (!PNGLoader::imageProperties(pFileData, fileSize, _width, _height)) {
 		BS_LOG_ERRORLN("Could not read image properties.");
 		return;
 	}
 
 	// Das Bild dekomprimieren
 	byte *pUncompressedData;
-	if (!ImageLoader::LoadImage(pFileData, fileSize, GraphicEngine::CF_ARGB32, pUncompressedData, _width, _height, pitch)) {
+	if (!PNGLoader::decodeImage(pFileData, fileSize, pUncompressedData, _width, _height, pitch)) {
 		BS_LOG_ERRORLN("Could not decode image.");
 		return;
 	}
@@ -90,14 +82,10 @@ SWImage::SWImage(const Common::String &filename, bool &result) :
 	return;
 }
 
-// -----------------------------------------------------------------------------
-
 SWImage::~SWImage() {
 	delete[] _imageDataPtr;
 }
 
-
-// -----------------------------------------------------------------------------
 
 bool SWImage::blit(int posX, int posY,
                       int flipping,
@@ -108,21 +96,15 @@ bool SWImage::blit(int posX, int posY,
 	return false;
 }
 
-// -----------------------------------------------------------------------------
-
 bool SWImage::fill(const Common::Rect *pFillRect, uint color) {
 	BS_LOG_ERRORLN("Fill() is not supported.");
 	return false;
 }
 
-// -----------------------------------------------------------------------------
-
 bool SWImage::setContent(const byte *pixeldata, uint size, uint offset, uint stride) {
 	BS_LOG_ERRORLN("SetContent() is not supported.");
 	return false;
 }
-
-// -----------------------------------------------------------------------------
 
 uint SWImage::getPixel(int x, int y) {
 	BS_ASSERT(x >= 0 && x < _width);

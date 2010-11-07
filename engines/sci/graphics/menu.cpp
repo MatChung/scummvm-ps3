@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/menu.cpp $
- * $Id: menu.cpp 52913 2010-09-26 18:23:53Z m_kiewitz $
+ * $Id: menu.cpp 54037 2010-11-02 09:49:47Z fingolfin $
  *
  */
 
@@ -296,7 +296,7 @@ void GfxMenu::kernelSetAttribute(uint16 menuId, uint16 itemId, uint16 attributeI
 		itemEntry->keyPress = tolower(value.offset);
 		itemEntry->keyModifier = 0;
 		// TODO: Find out how modifier is handled
-		printf("setAttr keypress %X %X\n", value.segment, value.offset);
+		debug("setAttr keypress %X %X", value.segment, value.offset);
 		break;
 	case SCI_MENU_ATTRIBUTE_TAG:
 		itemEntry->tag = value.offset;

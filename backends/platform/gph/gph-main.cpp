@@ -19,13 +19,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/gph/gph-main.cpp $
- * $Id: gph-main.cpp 52791 2010-09-18 10:55:16Z eriktorbjorn $
+ * $Id: gph-main.cpp 53964 2010-10-30 22:43:25Z fingolfin $
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "common/scummsys.h"
 #include <SDL/SDL.h>
 
+// #include "backends/platform/gph/gph-options.h"
 #include "backends/platform/gph/gph-sdl.h"
 #include "backends/platform/gph/gph-hw.h"
 #include "backends/plugins/posix/posix-provider.h"
@@ -78,7 +82,7 @@ void OSystem_GPH::initBackend() {
 	char workDirName[PATH_MAX+1];
 
 	if (getcwd(workDirName, PATH_MAX) == NULL) {
-		error("Could not obtain current working directory");
+		error("Could not obtain current working directory.");
 	} else {
 		printf("Current working directory: %s\n", workDirName);
 	}
@@ -158,6 +162,9 @@ void OSystem_GPH::initBackend() {
 	/* Make sure SDL knows that we have a joystick we want to use. */
 	ConfMan.setInt("joystick_num", 0);
 
+	/* Now setup any device specific user options (Left handed mode, that sort of thing). */
+	// GPH::setOptions();
+
 	printf("%s\n", "Passing to OSystem::SDL initBackend.");
 
 	/* Pass to SDL backend to do the heavy lifting */
@@ -170,7 +177,7 @@ void OSystem_GPH::addSysArchivesToSearchSet(Common::SearchSet &s, int priority) 
 	char workDirName[PATH_MAX+1];
 
 	if (getcwd(workDirName, PATH_MAX) == NULL) {
-		error("Error: Could not obtain current working directory");
+		error("Error: Could not obtain current working directory.");
 	}
 
 	Common::FSNode workdirNode(workDirName);

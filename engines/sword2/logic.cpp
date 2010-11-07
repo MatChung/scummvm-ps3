@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/logic.cpp $
- * $Id: logic.cpp 45284 2009-10-20 19:51:32Z fingolfin $
+ * $Id: logic.cpp 53997 2010-11-01 11:25:11Z eriktorbjorn $
  */
 
 
@@ -275,16 +275,6 @@ void Logic::logicReplace(uint32 new_script) {
 
 void Logic::resetKillList() {
 	_kills = 0;
-}
-
-/**
- * Pause or unpause the currently playing cutscene movie, if any.
- * @param pause		true if pausing, false if unpausing
- */
-
-void Logic::pauseMovie(bool pause) {
-	if (_moviePlayer)
-		_moviePlayer->pauseMovie(pause);
 }
 
 /**

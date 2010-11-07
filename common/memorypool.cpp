@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/memorypool.cpp $
- * $Id: memorypool.cpp 48313 2010-03-20 13:18:47Z lordhoto $
+ * $Id: memorypool.cpp 54003 2010-11-01 16:00:53Z fingolfin $
  *
  */
 
@@ -161,7 +161,7 @@ void MemoryPool::freeUnusedPages() {
 		}
 	}
 
-//	printf("freed %d pages out of %d\n", (int)freedPagesCount, (int)_pages.size());
+//	debug("freed %d pages out of %d", (int)freedPagesCount, (int)_pages.size());
 
 	// Remove all now unused pages
 	size_t newSize = 0;

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/staticbitmap.h $
- * $Id: staticbitmap.h 53310 2010-10-12 23:32:32Z sev $
+ * $Id: staticbitmap.h 53625 2010-10-19 20:54:30Z sev $
  *
  */
 
@@ -35,18 +35,10 @@
 #ifndef SWORD25_STATIC_BITMAP_H
 #define SWORD25_STATIC_BITMAP_H
 
-// -----------------------------------------------------------------------------
-// Includes
-// -----------------------------------------------------------------------------
-
 #include "sword25/kernel/common.h"
 #include "sword25/gfx/bitmap.h"
 
 namespace Sword25 {
-
-// -----------------------------------------------------------------------------
-// Klassendeklaration
-// -----------------------------------------------------------------------------
 
 class StaticBitmap : public Bitmap {
 	friend class RenderObject;
@@ -63,20 +55,20 @@ public:
 
 	virtual uint getPixel(int x, int y) const;
 
-	virtual bool    setContent(const byte *pixeldata, uint size, uint offset, uint stride);
+	virtual bool setContent(const byte *pixeldata, uint size, uint offset, uint stride);
 
-	virtual bool    isScalingAllowed() const;
-	virtual bool    isAlphaAllowed() const;
-	virtual bool    isColorModulationAllowed() const;
-	virtual bool    isSetContentAllowed() const {
+	virtual bool isScalingAllowed() const;
+	virtual bool isAlphaAllowed() const;
+	virtual bool isColorModulationAllowed() const;
+	virtual bool isSetContentAllowed() const {
 		return false;
 	}
 
-	virtual bool    persist(OutputPersistenceBlock &writer);
-	virtual bool    unpersist(InputPersistenceBlock &reader);
+	virtual bool persist(OutputPersistenceBlock &writer);
+	virtual bool unpersist(InputPersistenceBlock &reader);
 
 protected:
-	virtual bool    doRender();
+	virtual bool doRender();
 
 private:
 	Common::String _resourceFilename;

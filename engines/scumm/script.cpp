@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/script.cpp $
- * $Id: script.cpp 53572 2010-10-18 18:55:24Z fingolfin $
+ * $Id: script.cpp 54031 2010-11-01 21:37:47Z fingolfin $
  *
  */
 
@@ -467,11 +467,11 @@ void ScummEngine::executeScript() {
 	while (_currentScript != 0xFF) {
 
 		if (_showStack == 1) {
-			printf("Stack:");
+			debugN("Stack:");
 			for (c = 0; c < _scummStackPos; c++) {
-				printf(" %d", _vmStack[c]);
+				debugN(" %d", _vmStack[c]);
 			}
-			printf("\n");
+			debugN("\n");
 		}
 		_opcode = fetchScriptByte();
 		if (_game.version > 2) // V0-V2 games didn't use the didexec flag
@@ -483,9 +483,9 @@ void ScummEngine::executeScript() {
 				getOpcodeDesc(_opcode));
 		if (_hexdumpScripts == true) {
 			for (c = -1; c < 15; c++) {
-				printf(" %02x", *(_scriptPointer + c));
+				debugN(" %02x", *(_scriptPointer + c));
 			}
-			printf("\n");
+			debugN("\n");
 		}
 
 		executeOpcode(_opcode);

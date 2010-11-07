@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cine/main_loop.cpp $
- * $Id: main_loop.cpp 51937 2010-08-09 11:38:01Z sev $
+ * $Id: main_loop.cpp 54115 2010-11-07 15:02:41Z tdhs $
  *
  */
 
@@ -161,6 +161,12 @@ static void processEvent(Common::Event &event) {
 		case Common::KEYCODE_KP3:
 			moveUsingKeyboard(+1, -1); // Down & Right
 			break;
+		case Common::KEYCODE_d:
+			if (event.kbd.hasFlags(Common::KBD_CTRL)) {
+				g_cine->getDebugger()->attach();
+				g_cine->getDebugger()->onFrame();
+			}
+			// No Break to allow fallthrough to process 'd' without CTRL
 		default:
 			lastKeyStroke = event.kbd.keycode;
 			break;

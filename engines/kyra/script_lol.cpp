@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/script_lol.cpp $
- * $Id: script_lol.cpp 49069 2010-05-17 23:29:44Z lordhoto $
+ * $Id: script_lol.cpp 53954 2010-10-30 18:37:15Z athrxx $
  *
  */
 
@@ -267,6 +267,12 @@ int LoLEngine::olol_setItemProperty(EMCState *script) {
 	tmp->nameStringId = stackPos(1);
 	tmp->shpIndex = stackPos(2);
 	tmp->type = stackPos(3);
+
+	// WORKAROUND for unpatched early floppy versions.
+	// The Vaelan's cube should not be able to be equipped in a weapon slot.
+	if (stackPos(0) == 264 && tmp->type == 5)
+		tmp->type = 0;
+
 	tmp->itemScriptFunc = stackPos(4);
 	tmp->might = stackPos(5);
 	tmp->skill = stackPos(6);
@@ -1065,6 +1071,7 @@ int LoLEngine::olol_createHandItem(EMCState *script) {
 	debugC(3, kDebugLevelScriptFuncs, "LoLEngine::olol_createHandItem(%p) (%d, %d, %d)", (const void *)script, stackPos(0), stackPos(1), stackPos(2));
 	if (_itemInHand)
 		return 0;
+
 	setHandItem(makeItem(stackPos(0), stackPos(1), stackPos(2)));
 	return 1;
 }

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/staticres.cpp $
- * $Id: staticres.cpp 53161 2010-10-12 04:19:58Z eriktorbjorn $
+ * $Id: staticres.cpp 54121 2010-11-07 17:16:59Z fingolfin $
  *
  */
 
@@ -42,7 +42,7 @@
 
 namespace Kyra {
 
-#define RESFILE_VERSION 72
+#define RESFILE_VERSION 73
 
 namespace {
 bool checkKyraDat(Common::SeekableReadStream *file) {
@@ -57,7 +57,7 @@ bool checkKyraDat(Common::SeekableReadStream *file) {
 
 	uint8 digestCalc[16];
 	file->seek(0, SEEK_SET);
-	if (!Common::md5_file(*file, digestCalc, size))
+	if (!Common::computeStreamMD5(*file, digestCalc, size))
 		return false;
 
 	for (int i = 0; i < 16; ++i)
@@ -209,7 +209,7 @@ bool StaticResource::tryKyraDatLoad() {
 		return false;
 
 	// load the ID map for our game
-	const Common::String filenamePattern = Common::String::printf("0%01X%01X%01X000%01X", game, platform, special, lang);
+	const Common::String filenamePattern = Common::String::format("0%01X%01X%01X000%01X", game, platform, special, lang);
 	Common::SeekableReadStream *idMap = _vm->resource()->createReadStream(filenamePattern);
 	if (!idMap)
 		return false;
@@ -328,7 +328,7 @@ bool StaticResource::prefetchId(int id) {
 	ResData data;
 	data.id = id;
 	data.type = dDesc->_value.type;
-	Common::SeekableReadStream *fileStream = _vm->resource()->createReadStream(Common::String::printf("%08X", dDesc->_value.filename));
+	Common::SeekableReadStream *fileStream = _vm->resource()->createReadStream(Common::String::format("%08X", dDesc->_value.filename));
 	if (!fileStream)
 		return false;
 
@@ -912,16 +912,7 @@ void KyraEngine_LoK::loadItems() {
 			_shapes[216 + i] = _screen->encodeShape( (i % 20) * 16, i/20 * 16, 16, 16, 0);
 	}
 
-	uint32 size;
-	uint8 *fileData = _res->fileData("_ITEM_HT.DAT", &size);
-	assert(fileData);
-
-	for (int i = 0; i < 107; i++) {
-		_itemTable[i].height = fileData[i];
-		_itemTable[i].unk1 = _itemTable[i].unk2 = 0;
-	}
-
-	delete[] fileData;
+	_res->loadFileToBuf("_ITEM_HT.DAT", &_itemHtDat, sizeof(_itemHtDat));
 }
 
 void KyraEngine_LoK::loadButtonShapes() {
@@ -1866,9 +1857,9 @@ const uint8 KyraEngine_HoF::_cauldronStateTable[] = {
 	3, 3, 3, 3, 3, 3, 3
 };
 
-const int16 KyraEngine_HoF::_flaskTable[] = {
+const Item KyraEngine_HoF::_flaskTable[] = {
 	0x19, 0x14, 0x15, 0x16, 0x17, 0x18, 0x34,
-	0x1B, 0x39, 0x1A, 0x3A, 0x4D, 0x72, -1
+	0x1B, 0x39, 0x1A, 0x3A, 0x4D, 0x72, kItemNone
 };
 
 const uint8 KyraEngine_HoF::_rainbowRoomData[] = {
@@ -1964,10 +1955,10 @@ const uint8 KyraEngine_MR::_inventoryY[] = {
 	0xB2, 0xB2, 0xB2, 0xB2, 0xB2
 };
 
-const uint8 KyraEngine_MR::_trashItemList[] = {
+const Item KyraEngine_MR::_trashItemList[] = {
 	0x1E, 0x1D, 0x1C, 0x1F, 0x0F, 0x05, 0x04, 0x00,
 	0x03, 0x22, 0x0B, 0x20, 0x21, 0x10, 0x11, 0x3A,
-	0x39, 0x40, 0x3E, 0x3D, 0x3C, 0x3F, 0xFF
+	0x39, 0x40, 0x3E, 0x3D, 0x3C, 0x3F, kItemNone
 };
 
 const uint8 KyraEngine_MR::_itemStringPickUp[] = {

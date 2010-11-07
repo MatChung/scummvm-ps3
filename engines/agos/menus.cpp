@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/menus.cpp $
- * $Id: menus.cpp 42163 2009-07-06 06:21:59Z Kirben $
+ * $Id: menus.cpp 54001 2010-11-01 16:00:17Z fingolfin $
  *
  */
 
@@ -32,8 +32,6 @@
 
 #include "agos/agos.h"
 #include "agos/intern.h"
-
-using Common::File;
 
 namespace AGOS {
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/draci/detection.cpp $
- * $Id: detection.cpp 51707 2010-08-03 17:09:27Z spalek $
+ * $Id: detection.cpp 54105 2010-11-07 01:01:18Z fingolfin $
  *
  */
 
@@ -86,7 +86,7 @@ const ADGameDescription gameDescriptions[] = {
 
 } // End of namespace Draci
 
-const ADParams detectionParams = {
+static const ADParams detectionParams = {
 	// Pointer to ADGameDescription or its superset structure
 	(const byte *)Draci::gameDescriptions,
 	// Size of that superset structure
@@ -103,7 +103,7 @@ const ADParams detectionParams = {
 	0,
 	// Flags
 	0,
-	// Global GUI options
+	// Additional GUI options (for every game}
 	Common::GUIO_NONE,
 	// Maximum directory depth
 	1,
@@ -202,10 +202,7 @@ SaveStateDescriptor DraciMetaEngine::querySaveMetaInfos(const char *target, int 
 	int minutes = header.time & 0xFF;
 	desc.setSaveTime(hour, minutes);
 
-	minutes = header.playtime / 60;
-	hour = minutes / 60;
-	minutes %= 60;
-	desc.setPlayTime(hour, minutes);
+	desc.setPlayTime(header.playtime * 1000);
 
 	return desc;
 }

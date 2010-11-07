@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/hadija.cpp $
- * $Id: hadija.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: hadija.cpp 53880 2010-10-27 19:19:22Z littleboy $
  *
  */
 
@@ -116,7 +116,7 @@ IMPLEMENT_FUNCTION(10, Hadija, chapter1)
 		break;
 
 	case kActionNone:
-		TIME_CHECK_CHAPTER1(setup_chapter1Handler);
+		TIME_CHECK(kTimeChapter1, params->param1, setup_chapter1Handler);
 		break;
 
 	case kActionDefault:
@@ -146,7 +146,7 @@ label_callback2:
 			if (getState()->time <= kTime1134000) {
 
 				if (!getEntities()->isPlayerInCar(kCarGreenSleeping) || !getEntities()->isInsideCompartment(kEntityMahmud, kCarGreenSleeping, kPosition_5790) || !params->param3) {
-					params->param3 = getState()->time + 75;
+					params->param3 = (uint)getState()->time + 75;
 
 					if (!params->param3) {
 						setCallback(3);
@@ -173,7 +173,7 @@ label_callback4:
 			if (getState()->time <= kTime1188000) {
 
 				if (!getEntities()->isPlayerInCar(kCarGreenSleeping) || !getEntities()->isInsideCompartment(kEntityMahmud, kCarGreenSleeping, kPosition_5790) || !params->param5) {
-					params->param5 = getState()->time + 75;
+					params->param5 = (uint)getState()->time + 75;
 
 					if (!params->param5) {
 						setCallback(5);
@@ -250,7 +250,10 @@ IMPLEMENT_FUNCTION(14, Hadija, chapter2Handler)
 		break;
 
 	case kActionNone:
-		TIME_CHECK_POSITION(kTime1782000, params->param1, kPosition_2740);
+		if (getState()->time > kTime1782000 && !params->param1) {
+			params->param1 = 1;
+			getData()->entityPosition = kPosition_2740;
+		}
 
 		if (params->param2 == kTimeInvalid || getState()->time <= kTime1786500) {
 			TIME_CHECK_CALLBACK(kTime1822500, params->param3, 2, setup_compartment8to6);
@@ -260,7 +263,7 @@ IMPLEMENT_FUNCTION(14, Hadija, chapter2Handler)
 		if (getState()->time <= kTime1818000) {
 
 			if (!getEntities()->isPlayerInCar(kCarGreenSleeping) || !params->param2)
-				params->param2 = getState()->time + 75;
+				params->param2 = (uint)getState()->time + 75;
 
 			if (params->param2 >= getState()->time) {
 				TIME_CHECK_CALLBACK(kTime1822500, params->param3, 2, setup_compartment8to6);

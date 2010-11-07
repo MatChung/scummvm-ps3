@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/options.cpp $
- * $Id: options.cpp 53160 2010-10-12 02:18:11Z jvprat $
+ * $Id: options.cpp 54092 2010-11-05 11:17:57Z thebluegr $
  */
 
 #include "gui/browser.h"
@@ -98,6 +98,7 @@ void OptionsDialog::init() {
 	_renderModePopUp = 0;
 	_fullscreenCheckbox = 0;
 	_aspectCheckbox = 0;
+	_disableDitheringCheckbox = 0;
 	_enableAudioSettings = false;
 	_midiPopUp = 0;
 	_oplPopUp = 0;
@@ -192,6 +193,7 @@ void OptionsDialog::open() {
 		// Aspect ratio setting
 		_aspectCheckbox->setState(ConfMan.getBool("aspect_ratio", _domain));
 #endif // SMALL_SCREEN_DEVICE
+		_disableDitheringCheckbox->setState(ConfMan.getBool("disable_dithering", _domain));
 	}
 
 	// Audio options
@@ -213,14 +215,8 @@ void OptionsDialog::open() {
 	}
 
 	if (_multiMidiCheckbox) {
-		if (!loadMusicDeviceSetting(_gmDevicePopUp, "gm_device")) {
-			if (_domain.equals(Common::ConfigManager::kApplicationDomain)) {
-				if (!loadMusicDeviceSetting(_gmDevicePopUp, Common::String(), MT_GM))
-					_gmDevicePopUp->setSelected(0);
-			} else {
-				_gmDevicePopUp->setSelected(0);
-			}
-		}
+		if (!loadMusicDeviceSetting(_gmDevicePopUp, "gm_device"))
+			_gmDevicePopUp->setSelected(0);
 
 		// Multi midi setting
 		_multiMidiCheckbox->setState(ConfMan.getBool("multi_midi", _domain));
@@ -244,14 +240,8 @@ void OptionsDialog::open() {
 
 	// MT-32 options
 	if (_mt32DevicePopUp) {
-		if (!loadMusicDeviceSetting(_mt32DevicePopUp, "mt32_device")) {
-			if (_domain.equals(Common::ConfigManager::kApplicationDomain)) {
-				if (!loadMusicDeviceSetting(_mt32DevicePopUp, Common::String(), MT_MT32))
-					_mt32DevicePopUp->setSelected(0);
-			} else {
-				_mt32DevicePopUp->setSelected(0);
-			}
-		}
+		if (!loadMusicDeviceSetting(_mt32DevicePopUp, "mt32_device"))
+			_mt32DevicePopUp->setSelected(0);
 
 		// Native mt32 setting
 		_mt32Checkbox->setState(ConfMan.getBool("native_mt32", _domain));
@@ -309,6 +299,7 @@ void OptionsDialog::close() {
 			if (_enableGraphicSettings) {
 				ConfMan.setBool("fullscreen", _fullscreenCheckbox->getState(), _domain);
 				ConfMan.setBool("aspect_ratio", _aspectCheckbox->getState(), _domain);
+				ConfMan.setBool("disable_dithering", _disableDitheringCheckbox->getState(), _domain);
 
 				bool isSet = false;
 
@@ -332,6 +323,7 @@ void OptionsDialog::close() {
 			} else {
 				ConfMan.removeKey("fullscreen", _domain);
 				ConfMan.removeKey("aspect_ratio", _domain);
+				ConfMan.removeKey("disable_dithering", _domain);
 				ConfMan.removeKey("gfx_mode", _domain);
 				ConfMan.removeKey("render_mode", _domain);
 			}
@@ -518,6 +510,7 @@ void OptionsDialog::setGraphicSettingsState(bool enabled) {
 	_fullscreenCheckbox->setEnabled(enabled);
 	_aspectCheckbox->setEnabled(enabled);
 #endif
+	_disableDitheringCheckbox->setEnabled(enabled);
 }
 
 void OptionsDialog::setAudioSettingsState(bool enabled) {
@@ -657,6 +650,7 @@ void OptionsDialog::addGraphicControls(GuiObject *boss, const Common::String &pr
 
 	// Aspect ratio checkbox
 	_aspectCheckbox = new CheckboxWidget(boss, prefix + "grAspectCheckbox", _("Aspect ratio correction"), _("Correct aspect ratio for 320x200 games"));
+	_disableDitheringCheckbox = new CheckboxWidget(boss, prefix + "grDisableDitheringCheckbox", _("Disable EGA dithering"), _("Disable dithering in EGA games"));
 
 	_enableGraphicSettings = true;
 }
@@ -679,7 +673,7 @@ void OptionsDialog::addAudioControls(GuiObject *boss, const Common::String &pref
 			const uint32 deviceGuiOption = MidiDriver::musicType2GUIO(d->getMusicType());
 
 			if ((_domain == Common::ConfigManager::kApplicationDomain && d->getMusicType() != MT_TOWNS  // global dialog - skip useless FM-Towns, C64, Amiga, AppleIIGS options there
-				 && d->getMusicType() != MT_C64 && d->getMusicType() != MT_AMIGA && d->getMusicType() != MT_APPLEIIGS)
+				 && d->getMusicType() != MT_C64 && d->getMusicType() != MT_AMIGA && d->getMusicType() != MT_APPLEIIGS && d->getMusicType() != MT_PC98)
 				|| (_domain != Common::ConfigManager::kApplicationDomain && !(_guioptions & allFlags)) // No flags are specified
 				|| (_guioptions & deviceGuiOption) // flag is present
 				// HACK/FIXME: For now we have to show GM devices, even when the game only has GUIO_MIDIMT32 set,
@@ -719,13 +713,25 @@ void OptionsDialog::addMIDIControls(GuiObject *boss, const Common::String &prefi
 
 	// Populate
 	const MusicPlugin::List p = MusicMan.getPlugins();
+	// Make sure the null device is the first one in the list to avoid undesired
+	// auto detection for users who don't have a saved setting yet.
 	for (MusicPlugin::List::const_iterator m = p.begin(); m != p.end(); ++m) {
 		MusicDevices i = (**m)->getDevices();
 		for (MusicDevices::iterator d = i.begin(); d != i.end(); ++d) {
-			if (d->getMusicType() >= MT_GM || d->getMusicDriverId() == "auto") {
+			if (d->getMusicDriverId() == "null")
+				_gmDevicePopUp->appendEntry(_("Don't use General MIDI music"), d->getHandle());
+		}
+	}
+	// Now we add the other devices.
+	for (MusicPlugin::List::const_iterator m = p.begin(); m != p.end(); ++m) {
+		MusicDevices i = (**m)->getDevices();
+		for (MusicDevices::iterator d = i.begin(); d != i.end(); ++d) {
+			if (d->getMusicType() >= MT_GM) {
 				if (d->getMusicType() != MT_MT32)
 					_gmDevicePopUp->appendEntry(d->getCompleteName(), d->getHandle());
-			}
+			} else if (d->getMusicDriverId() == "auto") {
+				_gmDevicePopUp->appendEntry(_("Use first available device"), d->getHandle());
+			}		
 		}
 	}
 
@@ -769,12 +775,23 @@ void OptionsDialog::addMT32Controls(GuiObject *boss, const Common::String &prefi
 	_enableGSCheckbox = new CheckboxWidget(boss, prefix + "mcGSCheckbox", _("Enable Roland GS Mode"), _("Turns off General MIDI mapping for games with Roland MT-32 soundtrack"));
 
 	const MusicPlugin::List p = MusicMan.getPlugins();
+	// Make sure the null device is the first one in the list to avoid undesired
+	// auto detection for users who don't have a saved setting yet.
+	for (MusicPlugin::List::const_iterator m = p.begin(); m != p.end(); ++m) {
+		MusicDevices i = (**m)->getDevices();		
+		for (MusicDevices::iterator d = i.begin(); d != i.end(); ++d) {
+			if (d->getMusicDriverId() == "null")
+				_mt32DevicePopUp->appendEntry(_("Don't use Roland MT-32 music"), d->getHandle());
+		}
+	}
+	// Now we add the other devices.
 	for (MusicPlugin::List::const_iterator m = p.begin(); m != p.end(); ++m) {
 		MusicDevices i = (**m)->getDevices();
 		for (MusicDevices::iterator d = i.begin(); d != i.end(); ++d) {
-			if (d->getMusicType() >= MT_GM || d->getMusicDriverId() == "auto") {
+			if (d->getMusicType() >= MT_GM)
 				_mt32DevicePopUp->appendEntry(d->getCompleteName(), d->getHandle());
-			}
+			else if (d->getMusicDriverId() == "auto")
+				_mt32DevicePopUp->appendEntry(_("Use first available device"), d->getHandle());
 		}
 	}
 

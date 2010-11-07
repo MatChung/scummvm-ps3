@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/sound/decoders/wave.cpp $
- * $Id: wave.cpp 47717 2010-01-30 15:28:07Z lordhoto $
+ * $Id: wave.cpp 54022 2010-11-01 20:41:03Z fingolfin $
  *
  */
 
@@ -90,15 +90,15 @@ bool loadWAVFromStream(Common::SeekableReadStream &stream, int &size, int &rate,
 	if (blockAlign_ != 0)
 		*blockAlign_ = blockAlign;
 #if 0
-	printf("WAVE information:\n");
-	printf("  total size: %d\n", wavLength);
-	printf("  fmt size: %d\n", fmtLength);
-	printf("  type: %d\n", type);
-	printf("  numChannels: %d\n", numChannels);
-	printf("  samplesPerSec: %d\n", samplesPerSec);
-	printf("  avgBytesPerSec: %d\n", avgBytesPerSec);
-	printf("  blockAlign: %d\n", blockAlign);
-	printf("  bitsPerSample: %d\n", bitsPerSample);
+	debug("WAVE information:");
+	debug("  total size: %d", wavLength);
+	debug("  fmt size: %d", fmtLength);
+	debug("  type: %d", type);
+	debug("  numChannels: %d", numChannels);
+	debug("  samplesPerSec: %d", samplesPerSec);
+	debug("  avgBytesPerSec: %d", avgBytesPerSec);
+	debug("  blockAlign: %d", blockAlign);
+	debug("  bitsPerSample: %d", bitsPerSample);
 #endif
 
 	if (type != 1 && type != 2 && type != 17) {
@@ -152,7 +152,7 @@ bool loadWAVFromStream(Common::SeekableReadStream &stream, int &size, int &rate,
 		offset = stream.readUint32LE();
 
 #if 0
-		printf("  found a '%s' tag of size %d\n", buf, offset);
+		debug("  found a '%s' tag of size %d", buf, offset);
 #endif
 	} while (memcmp(buf, "data", 4) != 0);
 

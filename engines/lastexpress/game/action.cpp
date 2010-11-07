@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/action.cpp $
- * $Id: action.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: action.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -406,7 +406,9 @@ SceneIndex Action::processHotspot(const SceneHotspot &hotspot) {
 //////////////////////////////////////////////////////////////////////////
 // Action 0
 IMPLEMENT_ACTION(dummy)
-	error("Action::action_dummy: Function should never be called (hotspot action: %d)!", hotspot.action);
+	warning("Action::action_dummy: Dummy action function called (hotspot action: %d)!", hotspot.action);
+
+	return kSceneInvalid;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -452,7 +454,7 @@ IMPLEMENT_ACTION(savePoint)
 IMPLEMENT_ACTION(playSound)
 
 	// Check that the file is not already buffered
-	if (hotspot.param2 || !getSound()->isBuffered(Common::String::printf("LIB%03d", hotspot.param1), true))
+	if (hotspot.param2 || !getSound()->isBuffered(Common::String::format("LIB%03d", hotspot.param1), true))
 		getSound()->playSoundEvent(kEntityPlayer, hotspot.param1, hotspot.param2);
 
 	return kSceneInvalid;
@@ -462,7 +464,7 @@ IMPLEMENT_ACTION(playSound)
 // Action 4
 IMPLEMENT_ACTION(playMusic)
 	// Check that the file is not already buffered
-	Common::String filename = Common::String::printf("MUS%03d", hotspot.param1);
+	Common::String filename = Common::String::format("MUS%03d", hotspot.param1);
 
 	if (!getSound()->isBuffered(filename) && (hotspot.param1 != 50 || getProgress().chapter == kChapter5))
 		getSound()->playSound(kEntityPlayer, filename, SoundManager::kFlagDefault, hotspot.param2);
@@ -637,19 +639,15 @@ IMPLEMENT_ACTION(setItemLocation)
 	if (item >= kPortraitOriginal)
 		return kSceneInvalid;
 
-	Inventory::InventoryEntry* entry = getInventory()->get(item);
-	if (!entry->isPresent)
+	Inventory::InventoryEntry *entry = getInventory()->get(item);
+	if (entry->isPresent)
 		return kSceneInvalid;
 
 	entry->location = (ObjectLocation)hotspot.param2;
 
 	if (item == kItemCorpse) {
 		ObjectLocation corpseLocation = getInventory()->get(kItemCorpse)->location;
-
-		if (corpseLocation == kObjectLocation3 || corpseLocation == kObjectLocation4)
-			getProgress().eventCorpseMovedFromFloor = true;
-		else
-			getProgress().eventCorpseMovedFromFloor = false;
+		getProgress().eventCorpseMovedFromFloor = (corpseLocation == kObjectLocation3 || corpseLocation == kObjectLocation4);
 	}
 
 	return kSceneInvalid;
@@ -679,7 +677,7 @@ IMPLEMENT_ACTION(pickItem)
 	if (item >= kPortraitOriginal)
 		return kSceneInvalid;
 
-	Inventory::InventoryEntry* entry = getInventory()->get(item);
+	Inventory::InventoryEntry *entry = getInventory()->get(item);
 	if (!entry->location)
 		return kSceneInvalid;
 
@@ -1184,7 +1182,7 @@ IMPLEMENT_ACTION(29)
 	getProgress().field_C = 1;
 	getSound()->playSoundEvent(kEntityPlayer, hotspot.param1, hotspot.param2);
 
-	Common::String filename = Common::String::printf("MUS%03d", hotspot.param3);
+	Common::String filename = Common::String::format("MUS%03d", hotspot.param3);
 	if (!getSound()->isBuffered(filename))
 		getSound()->playSound(kEntityPlayer, filename, SoundManager::kFlagDefault);
 
@@ -1409,7 +1407,7 @@ IMPLEMENT_ACTION(playMusicChapter)
 	}
 
 	if (id) {
-		Common::String filename = Common::String::printf("MUS%03d", id);
+		Common::String filename = Common::String::format("MUS%03d", id);
 
 		if (!getSound()->isBuffered(filename))
 			getSound()->playSound(kEntityPlayer, filename, SoundManager::kFlagDefault);
@@ -1441,7 +1439,7 @@ IMPLEMENT_ACTION(playMusicChapterSetupTrain)
 		break;
 	}
 
-	Common::String filename = Common::String::printf("MUS%03d", hotspot.param1);
+	Common::String filename = Common::String::format("MUS%03d", hotspot.param1);
 
 	if (!getSound()->isBuffered(filename) && hotspot.param3 & id) {
 		getSound()->playSound(kEntityPlayer, filename, SoundManager::kFlagDefault);
@@ -1514,20 +1512,20 @@ void Action::pickCorpse(ObjectLocation bedPosition, bool process) const {
 
 	// Floor
 	case kObjectLocation1:
-		if (bedPosition != 4) {
-			playAnimation(getProgress().jacket == kJacketGreen ? kEventCorpsePickFloorGreen : kEventCorpsePickFloorOriginal);
+		// Bed is fully opened, move corpse directly there
+		if (bedPosition == 4) {
+			playAnimation(kEventCorpsePickFloorOpenedBedOriginal);
+
+			getInventory()->get(kItemCorpse)->location = kObjectLocation5;
 			break;
 		}
 
-		if (getProgress().jacket)
-			playAnimation(kEventCorpsePickFloorOpenedBedOriginal);
-
-		getInventory()->get(kItemCorpse)->location = kObjectLocation5;
+		playAnimation(getProgress().jacket == kJacketGreen ? kEventCorpsePickFloorGreen : kEventCorpsePickFloorOriginal);
 		break;
 
 	// Bed
 	case kObjectLocation2:
-		playAnimation(getProgress().jacket == kJacketGreen ? kEventCorpsePickFloorGreen : kEventCorpsePickBedOriginal);
+		playAnimation(getProgress().jacket == kJacketGreen ? kEventCorpsePickBedGreen : kEventCorpsePickBedOriginal);
 		break;
 	}
 
@@ -1535,7 +1533,7 @@ void Action::pickCorpse(ObjectLocation bedPosition, bool process) const {
 		getScenes()->processScene();
 
 	// Add corpse to inventory
-	if (bedPosition != 4) { // bed position
+	if (bedPosition != 4) { // bed is not fully opened
 		getInventory()->addItem(kItemCorpse);
 		getInventory()->selectItem(kItemCorpse);
 		_engine->getCursor()->setStyle(kCursorCorpse);
@@ -1765,7 +1763,7 @@ CursorStyle Action::getCursor(const SceneHotspot &hotspot) const {
 			return kCursorNormal;
 
 		if ((!getInventory()->getSelectedItem() || getInventory()->getSelectedEntry()->manualSelect)
-		 && (object != kObject21 || getProgress().eventCorpseMovedFromFloor == 1))
+		 && (object != kObject21 || getProgress().eventCorpseMovedFromFloor))
 			return kCursorHand;
 		else
 			return kCursorNormal;
@@ -1962,7 +1960,7 @@ void Action::playAnimation(EventIndex index, bool debugMode) const {
 
 	// Adjust game time
 	getState()->timeTicks += _animationList[index].time;
-	getState()->time += _animationList[index].time * getState()->timeDelta;
+	getState()->time = (TimeValue)(getState()->time + (TimeValue)(_animationList[index].time * getState()->timeDelta));
 }
 
 } // End of namespace LastExpress

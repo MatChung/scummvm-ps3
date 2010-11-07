@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/animation.cpp $
- * $Id: animation.cpp 53477 2010-10-15 12:18:19Z fingolfin $
+ * $Id: animation.cpp 53899 2010-10-28 00:26:25Z fingolfin $
  *
  */
 
@@ -38,7 +38,6 @@
 #include "sword25/kernel/resmanager.h"
 #include "sword25/kernel/inputpersistenceblock.h"
 #include "sword25/kernel/outputpersistenceblock.h"
-#include "sword25/kernel/callbackregistry.h"
 #include "sword25/package/packagemanager.h"
 #include "sword25/gfx/image/image.h"
 #include "sword25/gfx/animationtemplate.h"
@@ -99,8 +98,8 @@ Animation::Animation(InputPersistenceBlock &reader, RenderObjectPtr<RenderObject
 
 void Animation::initializeAnimationResource(const Common::String &fileName) {
 	// Die Resource wird für die gesamte Lebensdauer des Animations-Objektes gelockt.
-	Resource *resourcePtr = Kernel::GetInstance()->GetResourceManager()->RequestResource(fileName);
-	if (resourcePtr && resourcePtr->GetType() == Resource::TYPE_ANIMATION)
+	Resource *resourcePtr = Kernel::getInstance()->getResourceManager()->requestResource(fileName);
+	if (resourcePtr && resourcePtr->getType() == Resource::TYPE_ANIMATION)
 		_animationResourcePtr = static_cast<AnimationResource *>(resourcePtr);
 	else {
 		BS_LOG_ERRORLN("The resource \"%s\" could not be requested. The Animation can't be created.", fileName.c_str());
@@ -133,14 +132,14 @@ Animation::~Animation() {
 		getAnimationDescription()->unlock();
 	}
 
-	// Delete Callbacks
-	Common::Array<ANIMATION_CALLBACK_DATA>::iterator it = _deleteCallbacks.begin();
-	for (; it != _deleteCallbacks.end(); it++)((*it).Callback)((*it).Data);
+	// Invoke the "delete" callback
+	if (_deleteCallback)
+		(_deleteCallback)(getHandle());
 
 }
 
 void Animation::play() {
-	// Wenn die Animation zuvor komplett durchgelaufen ist, wird sie wieder von Anfang abgespielt
+	// If the animation was completed, then play it again from the start.
 	if (_finished)
 		stop();
 
@@ -182,13 +181,13 @@ bool Animation::doRender() {
 	BS_ASSERT(_currentFrame < animationDescriptionPtr->getFrameCount());
 
 	// Bitmap des aktuellen Frames holen
-	Resource *pResource = Kernel::GetInstance()->GetResourceManager()->RequestResource(animationDescriptionPtr->getFrame(_currentFrame).fileName);
+	Resource *pResource = Kernel::getInstance()->getResourceManager()->requestResource(animationDescriptionPtr->getFrame(_currentFrame).fileName);
 	BS_ASSERT(pResource);
-	BS_ASSERT(pResource->GetType() == Resource::TYPE_BITMAP);
+	BS_ASSERT(pResource->getType() == Resource::TYPE_BITMAP);
 	BitmapResource *pBitmapResource = static_cast<BitmapResource *>(pResource);
 
 	// Framebufferobjekt holen
-	GraphicEngine *pGfx = Kernel::GetInstance()->GetGfx();
+	GraphicEngine *pGfx = Kernel::getInstance()->getGfx();
 	BS_ASSERT(pGfx);
 
 	// Bitmap zeichnen
@@ -242,28 +241,20 @@ void Animation::frameNotification(int timeElapsed) {
 			BS_ASSERT(0);
 		}
 
-		// Überläufe behandeln
+		// Deal with overflows
 		if (tmpCurFrame < 0) {
-			// Loop-Point Callbacks
-			for (uint i = 0; i < _loopPointCallbacks.size();) {
-				if ((_loopPointCallbacks[i].Callback)(_loopPointCallbacks[i].Data) == false) {
-					_loopPointCallbacks.remove_at(i);
-				} else
-					i++;
-			}
+			// Loop-Point callback
+			if (_loopPointCallback && !(_loopPointCallback)(getHandle()))
+				_loopPointCallback = 0;
 
-			// Ein Unterlauf darf nur auftreten, wenn der Animationstyp JOJO ist.
+			// An underflow may only occur if the animation type is JOJO.
 			BS_ASSERT(animationDescriptionPtr->getAnimationType() == AT_JOJO);
 			tmpCurFrame = - tmpCurFrame;
 			_direction = FORWARD;
 		} else if (static_cast<uint>(tmpCurFrame) >= animationDescriptionPtr->getFrameCount()) {
-			// Loop-Point Callbacks
-			for (uint i = 0; i < _loopPointCallbacks.size();) {
-				if ((_loopPointCallbacks[i].Callback)(_loopPointCallbacks[i].Data) == false) {
-					_loopPointCallbacks.remove_at(i);
-				} else
-					i++;
-			}
+			// Loop-Point callback
+			if (_loopPointCallback && !(_loopPointCallback)(getHandle()))
+				_loopPointCallback = 0;
 
 			switch (animationDescriptionPtr->getAnimationType()) {
 			case AT_ONESHOT:
@@ -290,13 +281,9 @@ void Animation::frameNotification(int timeElapsed) {
 			forceRefresh();
 
 			if (animationDescriptionPtr->getFrame(_currentFrame).action != "") {
-				// Action Callbacks
-				for (uint i = 0; i < _actionCallbacks.size();) {
-					if ((_actionCallbacks[i].Callback)(_actionCallbacks[i].Data) == false) {
-						_actionCallbacks.remove_at(i);
-					} else
-						i++;
-				}
+				// action callback
+				if (_actionCallback && !(_actionCallback)(getHandle()))
+					_actionCallback = 0;
 			}
 		}
 
@@ -315,9 +302,9 @@ void Animation::computeCurrentCharacteristics() {
 	BS_ASSERT(animationDescriptionPtr);
 	const AnimationResource::Frame &curFrame = animationDescriptionPtr->getFrame(_currentFrame);
 
-	Resource *pResource = Kernel::GetInstance()->GetResourceManager()->RequestResource(curFrame.fileName);
+	Resource *pResource = Kernel::getInstance()->getResourceManager()->requestResource(curFrame.fileName);
 	BS_ASSERT(pResource);
-	BS_ASSERT(pResource->GetType() == Resource::TYPE_BITMAP);
+	BS_ASSERT(pResource->getType() == Resource::TYPE_BITMAP);
 	BitmapResource *pBitmap = static_cast<BitmapResource *>(pResource);
 
 	// Größe des Bitmaps auf die Animation übertragen
@@ -338,7 +325,7 @@ bool Animation::lockAllFrames() {
 		AnimationDescription *animationDescriptionPtr = getAnimationDescription();
 		BS_ASSERT(animationDescriptionPtr);
 		for (uint i = 0; i < animationDescriptionPtr->getFrameCount(); ++i) {
-			if (!Kernel::GetInstance()->GetResourceManager()->RequestResource(animationDescriptionPtr->getFrame(i).fileName)) {
+			if (!Kernel::getInstance()->getResourceManager()->requestResource(animationDescriptionPtr->getFrame(i).fileName)) {
 				BS_LOG_ERRORLN("Could not lock all animation frames.");
 				return false;
 			}
@@ -356,14 +343,14 @@ bool Animation::unlockAllFrames() {
 		BS_ASSERT(animationDescriptionPtr);
 		for (uint i = 0; i < animationDescriptionPtr->getFrameCount(); ++i) {
 			Resource *pResource;
-			if (!(pResource = Kernel::GetInstance()->GetResourceManager()->RequestResource(animationDescriptionPtr->getFrame(i).fileName))) {
+			if (!(pResource = Kernel::getInstance()->getResourceManager()->requestResource(animationDescriptionPtr->getFrame(i).fileName))) {
 				BS_LOG_ERRORLN("Could not unlock all animation frames.");
 				return false;
 			}
 
 			// Zwei mal freigeben um den Request von LockAllFrames() und den jetzigen Request aufzuheben
 			pResource->release();
-			if (pResource->GetLockCount())
+			if (pResource->getLockCount())
 				pResource->release();
 		}
 
@@ -524,9 +511,9 @@ int Animation::computeXModifier() const {
 	BS_ASSERT(animationDescriptionPtr);
 	const AnimationResource::Frame &curFrame = animationDescriptionPtr->getFrame(_currentFrame);
 
-	Resource *pResource = Kernel::GetInstance()->GetResourceManager()->RequestResource(curFrame.fileName);
+	Resource *pResource = Kernel::getInstance()->getResourceManager()->requestResource(curFrame.fileName);
 	BS_ASSERT(pResource);
-	BS_ASSERT(pResource->GetType() == Resource::TYPE_BITMAP);
+	BS_ASSERT(pResource->getType() == Resource::TYPE_BITMAP);
 	BitmapResource *pBitmap = static_cast<BitmapResource *>(pResource);
 
 	int result = curFrame.flipV ? - static_cast<int>((pBitmap->getWidth() - 1 - curFrame.hotspotX) * _scaleFactorX) :
@@ -542,9 +529,9 @@ int Animation::computeYModifier() const {
 	BS_ASSERT(animationDescriptionPtr);
 	const AnimationResource::Frame &curFrame = animationDescriptionPtr->getFrame(_currentFrame);
 
-	Resource *pResource = Kernel::GetInstance()->GetResourceManager()->RequestResource(curFrame.fileName);
+	Resource *pResource = Kernel::getInstance()->getResourceManager()->requestResource(curFrame.fileName);
 	BS_ASSERT(pResource);
-	BS_ASSERT(pResource->GetType() == Resource::TYPE_BITMAP);
+	BS_ASSERT(pResource->getType() == Resource::TYPE_BITMAP);
 	BitmapResource *pBitmap = static_cast<BitmapResource *>(pResource);
 
 	int result = curFrame.flipH ? - static_cast<int>((pBitmap->getHeight() - 1 - curFrame.hotspotY) * _scaleFactorY) :
@@ -553,63 +540,6 @@ int Animation::computeYModifier() const {
 	pBitmap->release();
 
 	return result;
-}
-
-void Animation::registerActionCallback(ANIMATION_CALLBACK callback, uint data) {
-	ANIMATION_CALLBACK_DATA cd;
-	cd.Callback = callback;
-	cd.Data = data;
-	_actionCallbacks.push_back(cd);
-}
-
-void Animation::registerLoopPointCallback(ANIMATION_CALLBACK callback, uint data) {
-	ANIMATION_CALLBACK_DATA cd;
-	cd.Callback = callback;
-	cd.Data = data;
-	_loopPointCallbacks.push_back(cd);
-}
-
-void Animation::registerDeleteCallback(ANIMATION_CALLBACK callback, uint data) {
-	ANIMATION_CALLBACK_DATA cd;
-	cd.Callback = callback;
-	cd.Data = data;
-	_deleteCallbacks.push_back(cd);
-}
-
-void Animation::persistCallbackVector(OutputPersistenceBlock &writer, const Common::Array<ANIMATION_CALLBACK_DATA> &vector) {
-	// Anzahl an Callbacks persistieren.
-	writer.write(vector.size());
-
-	// Alle Callbacks einzeln persistieren.
-	Common::Array<ANIMATION_CALLBACK_DATA>::const_iterator it = vector.begin();
-	while (it != vector.end()) {
-		writer.write(CallbackRegistry::instance().resolveCallbackPointer((void (*)(int))it->Callback));
-		writer.write(it->Data);
-
-		++it;
-	}
-}
-
-void Animation::unpersistCallbackVector(InputPersistenceBlock &reader, Common::Array<ANIMATION_CALLBACK_DATA> &vector) {
-	// Callbackvector leeren.
-	vector.resize(0);
-
-	// Anzahl an Callbacks einlesen.
-	uint callbackCount;
-	reader.read(callbackCount);
-
-	// Alle Callbacks einzeln wieder herstellen.
-	for (uint i = 0; i < callbackCount; ++i) {
-		ANIMATION_CALLBACK_DATA callbackData;
-
-		Common::String callbackFunctionName;
-		reader.read(callbackFunctionName);
-		callbackData.Callback = reinterpret_cast<ANIMATION_CALLBACK>(CallbackRegistry::instance().resolveCallbackFunction(callbackFunctionName));
-
-		reader.read(callbackData.Data);
-
-		vector.push_back(callbackData);
-	}
 }
 
 bool Animation::persist(OutputPersistenceBlock &writer) {
@@ -632,7 +562,7 @@ bool Animation::persist(OutputPersistenceBlock &writer) {
 	if (_animationResourcePtr) {
 		uint marker = 0;
 		writer.write(marker);
-		writer.write(_animationResourcePtr->getFileName());
+		writer.writeString(_animationResourcePtr->getFileName());
 	} else if (_animationTemplateHandle) {
 		uint marker = 1;
 		writer.write(marker);
@@ -644,9 +574,18 @@ bool Animation::persist(OutputPersistenceBlock &writer) {
 	//writer.write(_AnimationDescriptionPtr);
 
 	writer.write(_framesLocked);
-	persistCallbackVector(writer, _loopPointCallbacks);
-	persistCallbackVector(writer, _actionCallbacks);
-	persistCallbackVector(writer, _deleteCallbacks);
+
+	// The following is only there to for compatibility with older saves
+	// resp. the original engine.
+	writer.write((uint)1);
+	writer.writeString("LuaLoopPointCB");
+	writer.write(getHandle());
+	writer.write((uint)1);
+	writer.writeString("LuaActionCB");
+	writer.write(getHandle());
+	writer.write((uint)1);
+	writer.writeString("LuaDeleteCB");
+	writer.write(getHandle());
 
 	result &= RenderObject::persistChildren(writer);
 
@@ -678,7 +617,7 @@ bool Animation::unpersist(InputPersistenceBlock &reader) {
 	reader.read(marker);
 	if (marker == 0) {
 		Common::String resourceFilename;
-		reader.read(resourceFilename);
+		reader.readString(resourceFilename);
 		initializeAnimationResource(resourceFilename);
 	} else if (marker == 1) {
 		reader.read(_animationTemplateHandle);
@@ -690,9 +629,39 @@ bool Animation::unpersist(InputPersistenceBlock &reader) {
 	if (_framesLocked)
 		lockAllFrames();
 
-	unpersistCallbackVector(reader, _loopPointCallbacks);
-	unpersistCallbackVector(reader, _actionCallbacks);
-	unpersistCallbackVector(reader, _deleteCallbacks);
+
+	// The following is only there to for compatibility with older saves
+	// resp. the original engine.
+	uint callbackCount;
+	Common::String callbackFunctionName;
+	uint callbackData;
+
+	// loop point callback
+	reader.read(callbackCount);
+	assert(callbackCount == 1);
+	reader.readString(callbackFunctionName);
+	assert(callbackFunctionName == "LuaLoopPointCB");
+	reader.read(callbackData);
+	assert(callbackData == getHandle());
+
+	// loop point callback
+	reader.read(callbackCount);
+	assert(callbackCount == 1);
+	reader.readString(callbackFunctionName);
+	assert(callbackFunctionName == "LuaActionCB");
+	reader.read(callbackData);
+	assert(callbackData == getHandle());
+
+	// loop point callback
+	reader.read(callbackCount);
+	assert(callbackCount == 1);
+	reader.readString(callbackFunctionName);
+	assert(callbackFunctionName == "LuaDeleteCB");
+	reader.read(callbackData);
+	assert(callbackData == getHandle());
+
+	// Set the callbacks
+	setCallbacks();
 
 	result &= RenderObject::unpersistChildren(reader);
 

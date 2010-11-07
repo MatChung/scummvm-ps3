@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/data/subtitle.cpp $
- * $Id: subtitle.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: subtitle.cpp 53777 2010-10-24 22:15:25Z littleboy $
  *
  */
 
@@ -72,8 +72,7 @@ void Subtitle::reset() {
 }
 
 template<typename T>
-T *newArray(size_t n)
-{
+T *newArray(size_t n) {
 	if (n <= (size_t)-1 / sizeof(T))
 		return new T[n];
 
@@ -97,14 +96,18 @@ bool Subtitle::load(Common::SeekableReadStream *in) {
 
 	// Create the buffers
 	if (_topLength) {
-		_topText = newArray<uint16>(_topLength);
+		_topText = newArray<uint16>(_topLength + 1);
 		if (!_topText)
 			return false;
+
+		_topText[_topLength] = 0;
 	}
 	if (_bottomLength) {
-		_bottomText = newArray<uint16>(_bottomLength);
+		_bottomText = newArray<uint16>(_bottomLength + 1);
 		if (!_bottomText)
 			return false;
+
+		_bottomText[_bottomLength] = 0;
 	}
 
 	// Read the texts
@@ -143,6 +146,7 @@ SubtitleManager::SubtitleManager(Font *font) : _font(font), _maxTime(0), _curren
 SubtitleManager::~SubtitleManager() {
 	reset();
 
+	// Zero passed pointers
 	_font = NULL;
 }
 
@@ -153,9 +157,6 @@ void SubtitleManager::reset() {
 	_subtitles.clear();
 	_currentIndex = -1;
 	_lastIndex = -1;
-
-	// Zero passed pointers
-	_font = NULL;
 }
 
 bool SubtitleManager::load(Common::SeekableReadStream *stream) {

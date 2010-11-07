@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/charset.cpp $
- * $Id: charset.cpp 53597 2010-10-18 23:54:35Z athrxx $
+ * $Id: charset.cpp 54079 2010-11-05 00:36:23Z athrxx $
  */
 
 
@@ -383,8 +383,8 @@ int CharsetRendererClassic::getCharWidth(uint16 chr) {
 
  	if (_vm->_useCJKMode) {
 		if (_vm->_game.platform == Common::kPlatformFMTowns) {
-			if ((chr & 0x00ff) == 0x00fd) {
-				chr >>= 8;
+			if ((chr & 0xff00) == 0xfd00) {
+				chr &= 0xff;
 			} else if (chr >= 256) {
 				spacing = 8;
 			} else if (useTownsFontRomCharacter(chr)) {
@@ -394,8 +394,8 @@ int CharsetRendererClassic::getCharWidth(uint16 chr) {
 			if (spacing) {
 				if (_vm->_game.id == GID_MONKEY) {
 					spacing++;
-					//if (_curId == 2)
-					//	spacing++;
+					if (_curId == 2)
+						spacing++;
 				} else if (_vm->_game.id != GID_INDY4 && _curId == 1) {
 					spacing++;
 				}
@@ -435,7 +435,7 @@ bool CharsetRendererClassic::useTownsFontRomCharacter(uint16 chr) {
 int CharsetRenderer::getStringWidth(int arg, const byte *text) {
 	int pos = 0;
 	int width = 1;
-	uint16 chr;
+	int chr;
 	int oldID = getCurID();
 	int code = (_vm->_game.heversion >= 80) ? 127 : 64;
 
@@ -497,7 +497,9 @@ int CharsetRenderer::getStringWidth(int arg, const byte *text) {
 		if (_vm->_useCJKMode) {
 			if (_vm->_game.platform == Common::kPlatformFMTowns) {
 				if (checkSJISCode(chr))
-					chr |= (text[pos++] << 8);
+					// This strange character conversion is the exact way the original does it here.
+					// This is the only way to get an accurate text formatting in the MI1 intro.
+					chr = (int8)text[pos++] | (chr << 8);
 			} else if (chr & 0x80) {
 				pos++;
 				width += _vm->_2byteWidth;
@@ -515,7 +517,7 @@ int CharsetRenderer::getStringWidth(int arg, const byte *text) {
 void CharsetRenderer::addLinebreaks(int a, byte *str, int pos, int maxwidth) {
 	int lastspace = -1;
 	int curw = 1;
-	uint16 chr;
+	int chr;
 	int oldID = getCurID();
 	int code = (_vm->_game.heversion >= 80) ? 127 : 64;
 
@@ -580,7 +582,9 @@ void CharsetRenderer::addLinebreaks(int a, byte *str, int pos, int maxwidth) {
 		if (_vm->_useCJKMode) {
 			if (_vm->_game.platform == Common::kPlatformFMTowns) {
 				if (checkSJISCode(chr))
-					chr |= (str[pos++] << 8);
+					// This strange character conversion is the exact way the original does it here.
+					// This is the only way to get an accurate text formatting in the MI1 intro.
+					chr = (int8)str[pos++] | (chr << 8);
 				curw += getCharWidth(chr);
 			} else if (chr & 0x80) {
 				pos++;
@@ -666,15 +670,16 @@ void CharsetRendererCommon::enableShadow(bool enable) {
 			_shadowColor = _vm->_game.version == 5 ? _vm->_townsCharsetColorMap[0] : 0x88;
 			if (_vm->_cjkFont) {
 				if (_vm->_game.version == 5) {
-					if (_vm->_game.id == GID_MONKEY) {
-						_vm->_cjkFont->setShadowMode((_curId == 2 || _curId == 4 || _curId == 6) ? Graphics::FontSJIS::kShadowTypeOutline : Graphics::FontSJIS::kShadowTypeNone);
-					} else if (_vm->_game.id == GID_MONKEY2) {
-						_vm->_cjkFont->setShadowMode((_curId != 1 && _curId != 5 && _curId != 9) ? Graphics::FontSJIS::kShadowTypeOutline : Graphics::FontSJIS::kShadowTypeNone);
-					} else if (_vm->_game.id == GID_INDY4) {
-						_vm->_cjkFont->setShadowMode((_curId == 2 || _curId == 3 || _curId == 4) ? Graphics::FontSJIS::kShadowTypeOutline : Graphics::FontSJIS::kShadowTypeNone);
-					}					
+					if (((_vm->_game.id == GID_MONKEY) && (_curId == 2 || _curId == 4 || _curId == 6)) ||
+						((_vm->_game.id == GID_MONKEY2) && (_curId != 1 && _curId != 5 && _curId != 9)) ||
+						((_vm->_game.id == GID_INDY4) && (_curId == 2 || _curId == 3 || _curId == 4))) {
+							_vm->_cjkFont->setDrawingMode(Graphics::FontSJIS::kOutlineMode);
+					} else {
+						_vm->_cjkFont->setDrawingMode(Graphics::FontSJIS::kDefaultMode);
+					}
+					_vm->_cjkFont->toggleFlippedMode((_vm->_game.id == GID_MONKEY || _vm->_game.id == GID_MONKEY2) && _curId == 3);
 				} else {
-					_vm->_cjkFont->setShadowMode(Graphics::FontSJIS::kShadowTypeScumm3Towns);
+					_vm->_cjkFont->setDrawingMode(Graphics::FontSJIS::kShadowMode);
 				}
 			}
 #endif
@@ -684,8 +689,10 @@ void CharsetRendererCommon::enableShadow(bool enable) {
 			_shadowMode = kNormalShadowMode;
 		}
 	} else {
-		if (_vm->_cjkFont)
-			_vm->_cjkFont->setShadowMode(Graphics::FontSJIS::kShadowTypeNone);
+		if (_vm->_cjkFont) {
+			_vm->_cjkFont->setDrawingMode(Graphics::FontSJIS::kDefaultMode);
+			_vm->_cjkFont->toggleFlippedMode(false);
+		}
 		_shadowMode = kNoShadowMode;
 	}
 }
@@ -766,13 +773,13 @@ void CharsetRendererV3::printChar(int chr, bool ignoreCharsetMask) {
 		if (charPtr)
 			drawBits1(*vs, dst, charPtr, drawTop, origWidth, origHeight, vs->bytesPerPixel);
 		else if (_vm->_cjkFont)
-			_vm->_cjkFont->drawChar(dst, chr, vs->pitch, vs->bytesPerPixel, _color, _shadowColor);
+			_vm->_cjkFont->drawChar(vs, chr, _left, drawTop, _color, _shadowColor);
 	} else {
 		dst = (byte *)_vm->_textSurface.getBasePtr(_left * _vm->_textSurfaceMultiplier, _top * _vm->_textSurfaceMultiplier);
 		if (charPtr)
 			drawBits1(_vm->_textSurface, dst, charPtr, drawTop, origWidth, origHeight, _vm->_textSurface.bytesPerPixel, (_vm->_textSurfaceMultiplier == 2 && !is2byte));
 		else if (_vm->_cjkFont)
-			_vm->_cjkFont->drawChar(dst, chr, _vm->_textSurface.pitch, vs->bytesPerPixel, _color, _shadowColor);
+			_vm->_cjkFont->drawChar(_vm->_textSurface, chr, _left * _vm->_textSurfaceMultiplier, _top * _vm->_textSurfaceMultiplier, _color, _shadowColor);
 		if (is2byte)
 			origWidth /= _vm->_textSurfaceMultiplier;
 	}
@@ -792,17 +799,14 @@ void CharsetRendererV3::printChar(int chr, bool ignoreCharsetMask) {
 		_str.bottom = _top + height / _vm->_textSurfaceMultiplier;
 }
 
-void CharsetRendererV3::drawChar(int chr, const Graphics::Surface &s, int x, int y) {
+void CharsetRendererV3::drawChar(int chr, Graphics::Surface &s, int x, int y) {
 	const byte *charPtr;
 	byte *dst;
 	int width, height;
 	int is2byte = (chr >= 0x80 && _vm->_useCJKMode) ? 1 : 0;
 	if (is2byte) {
 		if (_vm->_game.platform == Common::kPlatformFMTowns) {
-			width = _vm->_cjkFont->getCharWidth(chr);
-			height = _vm->_cjkFont->getFontHeight();
-			dst = (byte *)s.pixels + y * s.pitch + x;
-			_vm->_cjkFont->drawChar(dst, chr, s.pitch, s.bytesPerPixel, _color, _shadowColor);
+			_vm->_cjkFont->drawChar(s, chr, x * _vm->_textSurfaceMultiplier, y * _vm->_textSurfaceMultiplier, _color, _shadowColor);
 			return;
 		} else {
 			charPtr = _vm->get2byteCharPtr(chr);
@@ -907,7 +911,15 @@ void CharsetRendererClassic::printChar(int chr, bool ignoreCharsetMask) {
 		charPtr = 0;
 		_vm->_cjkChar = chr;
 		enableShadow(true);
-		origWidth = width = getCharWidth(chr);
+		
+		width = getCharWidth(chr);
+		// For whatever reason MI1 uses a different font width
+		// for alignment calculation and for drawing when
+		// charset 2 is active. This fixes some subtle glitches.
+		if (_vm->_game.id == GID_MONKEY && _curId == 2)
+			width--;
+		origWidth = width;
+
 		origHeight = height = getFontHeight();
 		offsX = offsY = 0;
 	} else
@@ -1064,9 +1076,9 @@ void CharsetRendererClassic::printCharIntern(bool is2byte, const byte *charPtr, 
 			drawTop = _top - _vm->_screenTop;
 		}
 
-		if (!charPtr && _vm->_cjkFont)
-			_vm->_cjkFont->drawChar(dstPtr, _vm->_cjkChar, dstSurface.pitch, dstSurface.bytesPerPixel, _vm->_townsCharsetColorMap[1], _shadowColor);
-		else if (is2byte) {
+		if (!charPtr && _vm->_cjkFont) {
+			_vm->_cjkFont->drawChar(dstSurface, _vm->_cjkChar, _left * _vm->_textSurfaceMultiplier, (_top - _vm->_screenTop) * _vm->_textSurfaceMultiplier, _vm->_townsCharsetColorMap[1], _shadowColor);
+		} else if (is2byte) {
 			drawBits1(dstSurface, dstPtr, charPtr, drawTop, origWidth, origHeight, dstSurface.bytesPerPixel);
 		} else {
 			drawBitsN(dstSurface, dstPtr, charPtr, *_fontPtr, drawTop, origWidth, origHeight, _vm->_textSurfaceMultiplier == 2);
@@ -1109,7 +1121,7 @@ void CharsetRendererClassic::printCharIntern(bool is2byte, const byte *charPtr, 
 	}
 }
 
-void CharsetRendererClassic::drawChar(int chr, const Graphics::Surface &s, int x, int y) {
+void CharsetRendererClassic::drawChar(int chr, Graphics::Surface &s, int x, int y) {
 	const byte *charPtr;
 	byte *dst;
 	int width, height;
@@ -1118,10 +1130,7 @@ void CharsetRendererClassic::drawChar(int chr, const Graphics::Surface &s, int x
 	if (is2byte) {
 		enableShadow(true);
 		if (_vm->_game.platform == Common::kPlatformFMTowns) {
-			width = _vm->_cjkFont->getCharWidth(chr);
-			height = _vm->_cjkFont->getFontHeight();
-			dst = (byte *)s.pixels + y * s.pitch + x;
-			_vm->_cjkFont->drawChar(dst, chr, s.pitch, s.bytesPerPixel, _color, _shadowColor);
+			_vm->_cjkFont->drawChar(s, chr, x * _vm->_textSurfaceMultiplier, y * _vm->_textSurfaceMultiplier, _color, _shadowColor);
 			return;
 		} else {
 			charPtr = _vm->get2byteCharPtr(chr);
@@ -1510,7 +1519,7 @@ void CharsetRendererNES::printChar(int chr, bool ignoreCharsetMask) {
 		_str.bottom = _top + height;
 }
 
-void CharsetRendererNES::drawChar(int chr, const Graphics::Surface &s, int x, int y) {
+void CharsetRendererNES::drawChar(int chr, Graphics::Surface &s, int x, int y) {
 	byte *charPtr, *dst;
 	int width, height;
 

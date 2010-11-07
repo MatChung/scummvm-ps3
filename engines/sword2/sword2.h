@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/sword2.h $
- * $Id: sword2.h 53484 2010-10-15 12:48:19Z fingolfin $
+ * $Id: sword2.h 53998 2010-11-01 11:29:57Z eriktorbjorn $
  */
 
 #ifndef	SWORD2_H
@@ -155,8 +155,6 @@ public:
 	Sword2Engine(OSystem *syst);
 	~Sword2Engine();
 
-	void pauseEngine(bool pause);
-
 	int getFramesPerSecond();
 
 	void registerDefaultSettings();
@@ -204,11 +202,6 @@ public:
 
 	int32 _gameCycle;
 
-#ifdef SWORD2_DEBUG
-	bool _renderSkip;
-	bool _stepOneCycle;
-#endif
-
 #if RIGHT_CLICK_CLEARS_LUGGAGE
 	bool heldIsInInventory();
 #endif
@@ -236,8 +229,6 @@ public:
 	uint32 restoreFromBuffer(byte *buffer, uint32 size);
 	char *getSaveFileName(uint16 slotNo);
 	uint32 findBufferSize();
-
-	bool _gamePaused;
 
 	void startGame();
 	void gameCycle();

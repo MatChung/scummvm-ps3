@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/sound.h $
- * $Id: sound.h 49725 2010-06-15 10:25:34Z sev $
+ * $Id: sound.h 53773 2010-10-24 20:22:21Z h00ligan $
  *
  */
 
@@ -95,7 +95,6 @@ public:
 
 	SagaEngine *_vm;
 	Audio::Mixer *_mixer;
-	MemoryReadStream *_voxStream;
 
 	SndHandle _handles[SOUND_HANDLES];
 };

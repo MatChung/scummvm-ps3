@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/testbed/testbed.cpp $
- * $Id: testbed.cpp 52973 2010-10-02 01:05:16Z sud03r $
+ * $Id: testbed.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  */
 
 #include "common/debug-channels.h"
@@ -48,10 +48,10 @@ void TestbedExitDialog::init() {
 	GUI::ListWidget::ColorList colors;
 
 	for (Common::Array<Testsuite *>::const_iterator i = _testsuiteList.begin(); i != _testsuiteList.end(); ++i) {
-		strArray.push_back(Common::String::printf("%s :", (*i)->getDescription()));
+		strArray.push_back(Common::String::format("%s :", (*i)->getDescription()));
 		colors.push_back(GUI::ThemeEngine::kFontColorNormal);
 		if ((*i)->isEnabled()) {
-			strArray.push_back(Common::String::printf("Passed: %d  Failed: %d Skipped: %d", (*i)->getNumTestsPassed(), (*i)->getNumTestsFailed(), (*i)->getNumTestsSkipped()));
+			strArray.push_back(Common::String::format("Passed: %d  Failed: %d Skipped: %d", (*i)->getNumTestsPassed(), (*i)->getNumTestsFailed(), (*i)->getNumTestsSkipped()));
 		} else {
 			strArray.push_back("Skipped");
 		}

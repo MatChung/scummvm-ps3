@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/testbed/testsuite.cpp $
- * $Id: testsuite.cpp 52973 2010-10-02 01:05:16Z sud03r $
+ * $Id: testsuite.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  */
 
 #include "common/config-manager.h"
@@ -233,7 +233,7 @@ uint Testsuite::parseEvents() {
 }
 
 void Testsuite::updateStats(const char *prefix, const char *info, uint testNum, uint numTests, Common::Point pt) {
-	Common::String text = Common::String::printf(" Running %s: %s (%d of %d) ", prefix, info, testNum, numTests);
+	Common::String text = Common::String::format(" Running %s: %s (%d of %d) ", prefix, info, testNum, numTests);
 	writeOnScreen(text, pt);
 	uint barColor = kColorSpecial;
 	// below the text a rectangle denoting the progress in the testsuite can be drawn.

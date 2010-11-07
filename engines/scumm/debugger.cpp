@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/debugger.cpp $
- * $Id: debugger.cpp 53567 2010-10-18 16:00:07Z fingolfin $
+ * $Id: debugger.cpp 53829 2010-10-25 16:41:39Z fingolfin $
  *
  */
 
@@ -35,7 +35,6 @@
 #include "scumm/debugger.h"
 #include "scumm/imuse/imuse.h"
 #include "scumm/object.h"
-#include "scumm/player_v2.h"
 #include "scumm/scumm.h"
 #include "scumm/sound.h"
 
@@ -529,7 +528,7 @@ bool ScummDebugger::Cmd_Debug(int argc, const char **argv) {
 	} else {
 		DebugPrintf("Usage: debug [+CHANNEL|-CHANNEL]\n");
 		DebugPrintf("Enables or disables the given debug channel.\n");
-		DebugPrintf("When used without parameters, lists all avaiable debug channels and their status.\n");
+		DebugPrintf("When used without parameters, lists all available debug channels and their status.\n");
 	}
 
 	return true;

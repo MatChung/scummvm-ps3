@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/frameout.h $
- * $Id: frameout.h 52804 2010-09-19 14:50:28Z thebluegr $
+ * $Id: frameout.h 53744 2010-10-23 19:23:07Z thebluegr $
  *
  */
 
@@ -109,7 +109,7 @@ private:
 	GfxScreen *_screen;
 	GfxPaint32 *_paint32;
 
-	Common::Array<reg_t> _screenItems;
+	Common::List<FrameoutEntry *> _screenItems;
 	PlaneList _planes;
 	PlanePictureList _planePictures;
 

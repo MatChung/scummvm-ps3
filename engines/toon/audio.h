@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/audio.h $
- * $Id: audio.h 53545 2010-10-16 19:27:11Z sylvaintv $
+ * $Id: audio.h 53928 2010-10-29 22:00:31Z sylvaintv $
  *
  */
 
@@ -109,6 +109,16 @@ protected:
 	ToonEngine *_vm;
 };
 
+struct AudioAmbientSFX {
+	int32 _id;
+	int32 _volume;
+	int32 _lastTimer;
+	int32 _delay;
+	int32 _mode;
+	int32 _channel;
+	bool _enabled;
+};
+
 class AudioManager {
 public:
 	void removeInstance(AudioStreamInstance *inst); // called by destructor
@@ -120,17 +130,25 @@ public:
 
 	void playMusic(Common::String dir, Common::String music);
 	void playVoice(int32 id, bool genericVoice);
-	void playSFX(int32 id, int volume, bool genericSFX);
+	int32 playSFX(int32 id, int volume, bool genericSFX);
 	void stopCurrentVoice();
+	void stopAllSfxs(); 
 	void setMusicVolume(int32 volume);
 	void stopMusic();
 	void muteVoice(bool mute);
 	void muteMusic(bool mute);
 	void muteSfx(bool mute);
-	bool isVoiceMuted() { return voiceMuted; }
-	bool isMusicMuted() { return musicMuted; }	
-	bool isSfxMuted() { return sfxMuted; }
+	bool isVoiceMuted() { return _voiceMuted; }
+	bool isMusicMuted() { return _musicMuted; }	
+	bool isSfxMuted() { return _sfxMuted; }
 
+	void startAmbientSFX(int32 id, int32 delay, int32 mode, int32 volume);
+	void killAmbientSFX(int32 id);
+	void killAllAmbientSFX();
+	void updateAmbientSFX();
+	void setAmbientSFXVolume(int32 id, int volume);
+
+	void closeAudioPack(int32 id);
 	bool loadAudioPack(int32 id, Common::String indexFile, Common::String packFile);
 
 	AudioStreamInstance *_channels[16];  // 0-1 : music
@@ -147,9 +165,11 @@ public:
 	Audio::Mixer *_mixer;
 
 protected:
-	bool voiceMuted;
-	bool musicMuted;
-	bool sfxMuted;
+	bool _voiceMuted;
+	bool _musicMuted;
+	bool _sfxMuted;
+
+	AudioAmbientSFX _ambientSFXs[4];
 };
 
 } // End of namespace Toon

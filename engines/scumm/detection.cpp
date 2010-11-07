@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/detection.cpp $
- * $Id: detection.cpp 52370 2010-08-25 07:40:13Z sev $
+ * $Id: detection.cpp 54121 2010-11-07 17:16:59Z fingolfin $
  *
  */
 
@@ -422,7 +422,6 @@ static void composeFileHashMap(const Common::FSList &fslist, DescMap &fileMD5Map
 static void detectGames(const Common::FSList &fslist, Common::List<DetectorResult> &results, const char *gameid) {
 	DescMap fileMD5Map;
 	DetectorResult dr;
-	char md5str[32+1];
 
 	// Dive one level down since mac indy3/loom has its files split into directories. See Bug #1438631
 	composeFileHashMap(fslist, fileMD5Map, 2, directoryGlobs);
@@ -479,10 +478,13 @@ static void detectGames(const Common::FSList &fslist, Common::List<DetectorResul
 				tmp->open(d.node);
 			}
 
-			if (tmp && tmp->isOpen() && Common::md5_file_string(*tmp, md5str, kMD5FileSizeLimit)) {
+			Common::String md5str;
+			if (tmp && tmp->isOpen())
+				md5str = computeStreamMD5AsString(*tmp, kMD5FileSizeLimit);
+			if (!md5str.empty()) {
 
 				d.md5 = md5str;
-				d.md5Entry = findInMD5Table(md5str);
+				d.md5Entry = findInMD5Table(md5str.c_str());
 
 				dr.md5 = d.md5;
 
@@ -494,7 +496,7 @@ static void detectGames(const Common::FSList &fslist, Common::List<DetectorResul
 					int filesize = tmp->size();
 					if (d.md5Entry->filesize != filesize)
 					debug(1, "SCUMM detector found matching file '%s' with MD5 %s, size %d\n",
-						file.c_str(), md5str, filesize);
+						file.c_str(), md5str.c_str(), filesize);
 
 					// Sanity check: We *should* have found a matching gameid / variant at this point.
 					// If not, then there's a bug in our data tables...
@@ -1198,12 +1200,7 @@ SaveStateDescriptor ScummMetaEngine::querySaveMetaInfos(const char *target, int 
 		int minutes = infos.time & 0xFF;
 
 		desc.setSaveTime(hour, minutes);
-
-		minutes = infos.playtime / 60;
-		hour = minutes / 60;
-		minutes %= 60;
-
-		desc.setPlayTime(hour, minutes);
+		desc.setPlayTime(infos.playtime * 1000);
 	}
 
 	return desc;

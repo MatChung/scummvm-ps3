@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/debugger.cpp $
- * $Id: debugger.cpp 52340 2010-08-24 13:41:24Z lordhoto $
+ * $Id: debugger.cpp 54032 2010-11-01 22:19:16Z lordhoto $
  *
  */
 
@@ -51,6 +51,16 @@ Debugger::Debugger(KyraEngine_v1 *vm)
 	DCmd_Register("queryflag",			WRAP_METHOD(Debugger, cmd_queryFlag));
 	DCmd_Register("timers",				WRAP_METHOD(Debugger, cmd_listTimers));
 	DCmd_Register("settimercountdown",	WRAP_METHOD(Debugger, cmd_setTimerCountdown));
+}
+
+void Debugger::preEnter() {
+	_vm->pauseEngine(true);
+	::GUI::Debugger::preEnter();
+}
+
+void Debugger::postEnter() {
+	::GUI::Debugger::postEnter();
+	_vm->pauseEngine(false);
 }
 
 bool Debugger::cmd_setScreenDebug(int argc, const char **argv) {
@@ -201,14 +211,6 @@ Debugger_LoK::Debugger_LoK(KyraEngine_LoK *vm)
 	DCmd_Register("birthstones",		WRAP_METHOD(Debugger_LoK, cmd_listBirthstones));
 }
 
-void Debugger_LoK::preEnter() {
-	//_vm->midi.pause(1);
-}
-
-void Debugger_LoK::postEnter() {
-	//_vm->midi.pause(0);
-}
-
 bool Debugger_LoK::cmd_enterRoom(int argc, const char **argv) {
 	uint direction = 0;
 	if (argc > 1) {
@@ -331,7 +333,7 @@ bool Debugger_v2::cmd_enterScene(int argc, const char **argv) {
 		return false;
 	}
 
-	DebugPrintf("Syntax: %d <scenenum> <direction>\n", argv[0]);
+	DebugPrintf("Syntax: %s <scenenum> <direction>\n", argv[0]);
 	return true;
 }
 

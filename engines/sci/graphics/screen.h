@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/screen.h $
- * $Id: screen.h 51583 2010-08-01 17:54:48Z mthreepwood $
+ * $Id: screen.h 54068 2010-11-04 18:37:03Z m_kiewitz $
  *
  */
 
@@ -115,6 +115,7 @@ public:
 	void adjustBackUpscaledCoordinates(int16 &y, int16 &x);
 
 	void dither(bool addToFlag);
+	void ditherForceMemorial(byte color);
 	void debugUnditherSetState(bool flag);
 	int16 *unditherGetMemorial();
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/palanim.h $
- * $Id: palanim.h 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: palanim.h 53779 2010-10-24 22:17:44Z h00ligan $
  *
  */
 
@@ -33,29 +33,24 @@ namespace Saga {
 #define PALANIM_CYCLETIME 100
 
 struct PalanimEntry {
-	uint16 pal_count;
-	uint16 color_count;
 	uint16 cycle;
-	byte *pal_index;
-	Color *colors;
+	ByteArray palIndex;
+	Common::Array<Color> colors;
 };
 
 class PalAnim {
  public:
 	PalAnim(SagaEngine *vm);
-	~PalAnim();
 
-	int loadPalAnim(const byte *, size_t);
-	int cycleStart();
-	int cycleStep(int vectortime);
-	int freePalAnim();
+	void loadPalAnim(const ByteArray &resourceData);
+	void cycleStart();
+	void cycleStep(int vectortime);
+	void clear();
 
  private:
 	SagaEngine *_vm;
 
-	bool _loaded;
-	uint16 _entryCount;
-	PalanimEntry *_entries;
+	Common::Array<PalanimEntry> _entries;
 };
 
 } // End of namespace Saga

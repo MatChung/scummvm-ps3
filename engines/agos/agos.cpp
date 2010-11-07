@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/agos.cpp $
- * $Id: agos.cpp 52904 2010-09-26 12:07:50Z eriktorbjorn $
+ * $Id: agos.cpp 54001 2010-11-01 16:00:17Z fingolfin $
  *
  */
 
@@ -42,8 +42,6 @@
 #include "sound/mididrv.h"
 #include "sound/mods/protracker.h"
 #include "sound/audiocd.h"
-
-using Common::File;
 
 namespace AGOS {
 

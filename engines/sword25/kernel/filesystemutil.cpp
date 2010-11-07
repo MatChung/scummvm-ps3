@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/kernel/filesystemutil.cpp $
- * $Id: filesystemutil.cpp 53407 2010-10-13 11:18:34Z thebluegr $
+ * $Id: filesystemutil.cpp 53838 2010-10-25 23:19:39Z fingolfin $
  *
  */
 
@@ -32,10 +32,6 @@
  *
  */
 
-// -----------------------------------------------------------------------------
-// Includes
-// -----------------------------------------------------------------------------
-
 #include "common/config-manager.h"
 #include "common/fs.h"
 #include "common/savefile.h"
@@ -47,106 +43,45 @@ namespace Sword25 {
 
 #define BS_LOG_PREFIX "FILESYSTEMUTIL"
 
-// -----------------------------------------------------------------------------
-// Constants and utility functions
-// -----------------------------------------------------------------------------
+Common::String FileSystemUtil::getUserdataDirectory() {
+	// FIXME: This code is a hack which bypasses the savefile API,
+	// and should eventually be removed.
+	Common::String path = ConfMan.get("savepath");
 
-Common::String GetAbsolutePath(const Common::String &Path) {
-	Common::FSNode node(Path);
-
-	if (!node.exists()) {
-		// An error has occurred finding the node
-		// We can do nothing at this pointer than return an empty string
-		BS_LOG_ERRORLN("A call to GetAbsolutePath failed.");
+	if (path.empty()) {
+		error("No save path has been defined");
 		return "";
 	}
 
-	// Return the result
-	return node.getPath();
+	// Return the path
+	return path;
 }
 
-// -----------------------------------------------------------------------------
-// Class definitions
-// -----------------------------------------------------------------------------
+Common::String FileSystemUtil::getPathSeparator() {
+	// FIXME: This code is a hack which bypasses the savefile API,
+	// and should eventually be removed.
+	return Common::String("/");
+}
 
-class BS_FileSystemUtilScummVM : public FileSystemUtil {
-public:
-	virtual Common::String GetUserdataDirectory() {
-		Common::String path = ConfMan.get("savepath");
+bool FileSystemUtil::fileExists(const Common::String &filename) {
+	Common::File f;
+	if (f.exists(filename))
+		return true;
 
-		if (path.empty()) {
-			error("No save path has been defined");
-			return "";
+	// Check if the file exists in the save folder
+	Common::FSNode folder(PersistenceService::getSavegameDirectory());
+	Common::FSNode fileNode = folder.getChild(getPathFilename(filename));
+	return fileNode.exists();
+}
+
+Common::String FileSystemUtil::getPathFilename(const Common::String &path) {
+	for (int i = path.size() - 1; i >= 0; --i) {
+		if ((path[i] == '/') || (path[i] == '\\')) {
+			return Common::String(&path.c_str()[i + 1]);
 		}
-
-		// Return the path
-		return path;
 	}
 
-	virtual Common::String GetPathSeparator() {
-		return Common::String("/");
-	}
-
-	virtual int32 GetFileSize(const Common::String &Filename) {
-		Common::FSNode node(Filename);
-
-		// If the file does not exist, return -1 as a result
-		if (!node.exists())
-			return -1;
-
-		// Get the size of the file and return it
-		Common::File f;
-		f.open(node);
-		uint32 size = f.size();
-		f.close();
-
-		return size;
-	}
-
-	virtual TimeDate GetFileTime(const Common::String &Filename) {
-		// TODO: There isn't any way in ScummVM to get a file's modified date/time. We will need to check
-		// what code makes use of it. If it's only the save game code, for example, we may be able to
-		// encode the date/time inside the savegame files themselves.
-		TimeDate result;
-		g_system->getTimeAndDate(result);
-		return result;
-	}
-
-	virtual bool FileExists(const Common::String &Filename) {
-		Common::File f;
-		if (f.exists(Filename))
-			return true;
-
-		// Check if the file exists in the save folder
-		Common::FSNode folder(PersistenceService::GetSavegameDirectory());
-		Common::FSNode fileNode = folder.getChild(FileSystemUtil::GetInstance().GetPathFilename(Filename));
-		return fileNode.exists();
-	}
-
-	virtual bool CreateDirectory(const Common::String &DirectoryName) {
-		// ScummVM doesn't support creating folders, so this is only a stub
-		BS_LOG_ERRORLN("CreateDirectory method called");
-		return false;
-	}
-
-	virtual Common::String GetPathFilename(const Common::String &Path) {
-		for (int i = Path.size() - 1; i >= 0; --i) {
-			if ((Path[i] == '/') || (Path[i] == '\\')) {
-				return Common::String(&Path.c_str()[i + 1]);
-			}
-		}
-
-		return Path;
-	}
-};
-
-// -----------------------------------------------------------------------------
-// Singleton method of parent class
-// -----------------------------------------------------------------------------
-
-FileSystemUtil &FileSystemUtil::GetInstance() {
-	static BS_FileSystemUtilScummVM Instance;
-	return Instance;
+	return path;
 }
 
 } // End of namespace Sword25

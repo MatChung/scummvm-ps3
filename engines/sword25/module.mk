@@ -3,6 +3,8 @@ MODULE := engines/sword25
 MODULE_OBJS := \
 	detection.o \
 	sword25.o \
+	fmv/movieplayer.o \
+	fmv/movieplayer_script.o \
 	gfx/animation.o \
 	gfx/animationdescription.o \
 	gfx/animationresource.o \
@@ -24,8 +26,6 @@ MODULE_OBJS := \
 	gfx/text.o \
 	gfx/timedrenderobject.o \
 	gfx/image/art.o \
-	gfx/image/b25sloader.o \
-	gfx/image/imageloader.o \
 	gfx/image/pngloader.o \
 	gfx/image/renderedimage.o \
 	gfx/image/swimage.o \
@@ -33,7 +33,6 @@ MODULE_OBJS := \
 	gfx/image/vectorimagerenderer.o \
 	input/inputengine.o \
 	input/inputengine_script.o \
-	kernel/callbackregistry.o \
 	kernel/filesystemutil.o \
 	kernel/inputpersistenceblock.o \
 	kernel/kernel.o \
@@ -43,8 +42,6 @@ MODULE_OBJS := \
 	kernel/persistenceservice.o \
 	kernel/resmanager.o \
 	kernel/resource.o \
-	kernel/scummvmwindow.o \
-	kernel/window.o \
 	math/geometry.o \
 	math/geometry_script.o \
 	math/polygon.o \
@@ -96,8 +93,6 @@ MODULE_OBJS := \
 
 ifdef USE_THEORADEC
 MODULE_OBJS += \
-	fmv/movieplayer.o \
-	fmv/movieplayer_script.o \
 	fmv/theora_decoder.o \
 	fmv/yuvtorgba.o
 endif

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/screen.cpp $
- * $Id: screen.cpp 53397 2010-10-13 03:28:59Z mthreepwood $
+ * $Id: screen.cpp 54068 2010-11-04 18:37:03Z m_kiewitz $
  *
  */
 
@@ -614,6 +614,11 @@ void GfxScreen::dither(bool addToFlag) {
 				displayPtr += _displayWidth;
 		}
 	}
+}
+
+// Force a color combination into memorial
+void GfxScreen::ditherForceMemorial(byte color) {
+	_unditherMemorial[color] = 256;
 }
 
 void GfxScreen::debugUnditherSetState(bool flag) {

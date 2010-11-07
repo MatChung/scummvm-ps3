@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/fmv/movieplayer.cpp $
- * $Id: movieplayer.cpp 53474 2010-10-15 10:52:23Z dreammaster $
+ * $Id: movieplayer.cpp 53835 2010-10-25 22:41:25Z fingolfin $
  *
  */
 
@@ -39,8 +39,6 @@
 #include "sword25/package/packagemanager.h"
 #include "sword25/sfx/soundengine.h"
 
-#ifdef USE_THEORADEC
-
 #define INDIRECTRENDERING 1
 
 namespace Sword25 {
@@ -49,10 +47,7 @@ namespace Sword25 {
 
 #define FLT_EPSILON     1.192092896e-07F        /* smallest such that 1.0+FLT_EPSILON != 1.0 */
 
-Service *OggTheora_CreateObject(Kernel *pKernel) {
-	return new MoviePlayer(pKernel);
-}
-
+#ifdef USE_THEORADEC
 MoviePlayer::MoviePlayer(Kernel *pKernel) : Service(pKernel), _decoder(g_system->getMixer()) {
 	if (!registerScriptBindings())
 		BS_LOG_ERRORLN("Script bindings could not be registered.");
@@ -66,22 +61,22 @@ MoviePlayer::~MoviePlayer() {
 
 bool MoviePlayer::loadMovie(const Common::String &filename, uint z) {
 	// Get the file and load it into the decoder
-	Common::SeekableReadStream *in = Kernel::GetInstance()->GetPackage()->getStream(filename);
+	Common::SeekableReadStream *in = Kernel::getInstance()->getPackage()->getStream(filename);
 	_decoder.load(in);
 
 	// Ausgabebitmap erstellen
-	GraphicEngine *pGfx = Kernel::GetInstance()->GetGfx();
+	GraphicEngine *pGfx = Kernel::getInstance()->getGfx();
 
 #if INDIRECTRENDERING
-	_outputBitmap = pGfx->GetMainPanel()->addDynamicBitmap(_decoder.getWidth(), _decoder.getHeight());
+	_outputBitmap = pGfx->getMainPanel()->addDynamicBitmap(_decoder.getWidth(), _decoder.getHeight());
 	if (!_outputBitmap.isValid()) {
 		BS_LOG_ERRORLN("Output bitmap for movie playback could not be created.");
 		return false;
 	}
 
 	// Skalierung des Ausgabebitmaps berechnen, so dass es möglichst viel Bildschirmfläche einnimmt.
-	float screenToVideoWidth = (float)pGfx->GetDisplayWidth() / (float)_outputBitmap->getWidth();
-	float screenToVideoHeight = (float)pGfx->GetDisplayHeight() / (float)_outputBitmap->getHeight();
+	float screenToVideoWidth = (float)pGfx->getDisplayWidth() / (float)_outputBitmap->getWidth();
+	float screenToVideoHeight = (float)pGfx->getDisplayHeight() / (float)_outputBitmap->getHeight();
 	float scaleFactor = MIN(screenToVideoWidth, screenToVideoHeight);
 
 	if (abs((int)(scaleFactor - 1.0f)) < FLT_EPSILON)
@@ -93,13 +88,13 @@ bool MoviePlayer::loadMovie(const Common::String &filename, uint z) {
 	_outputBitmap->setZ(z);
 
 	// Ausgabebitmap auf dem Bildschirm zentrieren
-	_outputBitmap->setX((pGfx->GetDisplayWidth() - _outputBitmap->getWidth()) / 2);
-	_outputBitmap->setY((pGfx->GetDisplayHeight() - _outputBitmap->getHeight()) / 2);
+	_outputBitmap->setX((pGfx->getDisplayWidth() - _outputBitmap->getWidth()) / 2);
+	_outputBitmap->setY((pGfx->getDisplayHeight() - _outputBitmap->getHeight()) / 2);
 #else
 	_backSurface = pGfx->getSurface();
 
-	_outX = (pGfx->GetDisplayWidth() - _decoder.getWidth()) / 2;
-	_outY = (pGfx->GetDisplayHeight() - _decoder.getHeight()) / 2;
+	_outX = (pGfx->getDisplayWidth() - _decoder.getWidth()) / 2;
+	_outY = (pGfx->getDisplayHeight() - _decoder.getHeight()) / 2;
 
 	if (_outX < 0)
 		_outX = 0;
@@ -168,9 +163,9 @@ void MoviePlayer::setScaleFactor(float scaleFactor) {
 		_outputBitmap->setScaleFactor(scaleFactor);
 
 		// Ausgabebitmap auf dem Bildschirm zentrieren
-		GraphicEngine *gfxPtr = Kernel::GetInstance()->GetGfx();
-		_outputBitmap->setX((gfxPtr->GetDisplayWidth() - _outputBitmap->getWidth()) / 2);
-		_outputBitmap->setY((gfxPtr->GetDisplayHeight() - _outputBitmap->getHeight()) / 2);
+		GraphicEngine *gfxPtr = Kernel::getInstance()->getGfx();
+		_outputBitmap->setX((gfxPtr->getDisplayWidth() - _outputBitmap->getWidth()) / 2);
+		_outputBitmap->setY((gfxPtr->getDisplayHeight() - _outputBitmap->getHeight()) / 2);
 	}
 }
 
@@ -178,7 +173,56 @@ double MoviePlayer::getTime() {
 	return _decoder.getElapsedTime() / 1000.0;
 }
 
+#else // USE_THEORADEC
+
+MoviePlayer::MoviePlayer(Kernel *pKernel) : Service(pKernel) {
+	if (!registerScriptBindings())
+		BS_LOG_ERRORLN("Script bindings could not be registered.");
+	else
+		BS_LOGLN("Script bindings registered.");
+}
+
+MoviePlayer::~MoviePlayer() {
+}
+
+bool MoviePlayer::loadMovie(const Common::String &Filename, unsigned int Z) {
+	return true;
+}
+
+bool MoviePlayer::unloadMovie() {
+	return true;
+}
+
+bool MoviePlayer::play() {
+	return true;
+}
+
+bool MoviePlayer::pause() {
+	return true;
+}
+
+void MoviePlayer::update() {
+}
+
+bool MoviePlayer::isMovieLoaded() {
+	return true;
+}
+
+bool MoviePlayer::isPaused() {
+	return true;
+}
+
+float MoviePlayer::getScaleFactor() {
+	return 1.0f;
+}
+
+void MoviePlayer::setScaleFactor(float ScaleFactor) {
+}
+
+double MoviePlayer::getTime() {
+	return 1.0;
+}
+
+#endif // USE_THEORADEC
+
 } // End of namespace Sword25
-
-#endif
-

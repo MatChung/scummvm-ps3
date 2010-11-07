@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/groovie/saveload.h $
- * $Id: saveload.h 35855 2009-01-13 23:22:47Z jvprat $
+ * $Id: saveload.h 54119 2010-11-07 17:15:46Z fingolfin $
  *
  */
 
@@ -28,6 +28,7 @@
 
 #include "common/savefile.h"
 #include "engines/game.h"
+#include "engines/savestate.h"
 
 namespace Groovie {
 

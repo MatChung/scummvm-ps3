@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lure/res_struct.h $
- * $Id: res_struct.h 48533 2010-04-05 06:07:14Z dreammaster $
+ * $Id: res_struct.h 54106 2010-11-07 01:03:03Z fingolfin $
  *
  */
 
@@ -464,7 +464,7 @@ private:
 public:
 	CurrentActionStack() { _actions.clear(); }
 
-	bool isEmpty() { return _actions.begin() == _actions.end(); }
+	bool isEmpty() const { return _actions.begin() == _actions.end(); }
 	void clear() { _actions.clear(); }
 	CurrentActionEntry &top() { return **_actions.begin(); }
 	CurrentActionEntry &bottom() { 
@@ -474,9 +474,8 @@ public:
 	}
 	CurrentAction action() { return isEmpty() ? NO_ACTION : top().action(); }
 	void pop() { _actions.erase(_actions.begin()); }
-	int size() { return _actions.size(); }
-	void list(char *buffer);
-	void list() { list(NULL); }
+	int size() const { return _actions.size(); }
+	Common::String getDebugInfo() const;
 
 	void addBack(CurrentAction newAction, uint16 roomNum) {
 		_actions.push_back(ActionsList::value_type(new CurrentActionEntry(newAction, roomNum)));

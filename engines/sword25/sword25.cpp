@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/sword25.cpp $
- * $Id: sword25.cpp 53610 2010-10-19 09:44:48Z fingolfin $
+ * $Id: sword25.cpp 53901 2010-10-28 09:51:56Z dreammaster $
  *
  */
 
@@ -39,6 +39,7 @@
 #include "sword25/sword25.h"
 #include "sword25/kernel/filesystemutil.h"
 #include "sword25/kernel/kernel.h"
+#include "sword25/kernel/persistenceservice.h"
 #include "sword25/package/packagemanager.h"
 #include "sword25/script/script.h"
 
@@ -90,19 +91,13 @@ Common::Error Sword25Engine::appStart() {
 		return Common::kUnsupportedColorMode;
 
 	// Kernel initialization
-	if (!Kernel::GetInstance()->GetInitSuccess()) {
+	if (!Kernel::getInstance()->getInitSuccess()) {
 		BS_LOG_ERRORLN("Kernel initialization failed.");
 		return Common::kUnknownError;
 	}
 
-	// Package-Manager starten, damit die Packfiles geladen werden können.
-	PackageManager *packageManagerPtr = static_cast<PackageManager *>(Kernel::GetInstance()->NewService("package", PACKAGE_MANAGER));
-	if (!packageManagerPtr) {
-		BS_LOG_ERRORLN("PackageManager initialization failed.");
-		return Common::kUnknownError;
-	}
-
-	// Packages laden oder das aktuelle Verzeichnis mounten, wenn das über Kommandozeile angefordert wurde.
+	// Load packages
+	PackageManager *packageManagerPtr = Kernel::getInstance()->getPackage();
 	if (getGameFlags() & GF_EXTRACTED) {
 		if (!packageManagerPtr->loadDirectoryAsPackage(ConfMan.get("path"), "/"))
 			return Common::kUnknownError;
@@ -111,12 +106,15 @@ Common::Error Sword25Engine::appStart() {
 			return Common::kUnknownError;
 	}
 
-	// Einen Pointer auf den Skript-Engine holen.
-	ScriptEngine *scriptPtr = Kernel::GetInstance()->GetScript();
+	// Pass the command line to the script engine.
+	ScriptEngine *scriptPtr = Kernel::getInstance()->getScript();
 	if (!scriptPtr) {
 		BS_LOG_ERRORLN("Script intialization failed.");
 		return Common::kUnknownError;
 	}
+
+	// Set the game target for use in savegames
+	setGameTarget(_targetName.c_str());
 
 	Common::StringArray commandParameters;
 	scriptPtr->setCommandLine(commandParameters);
@@ -126,7 +124,7 @@ Common::Error Sword25Engine::appStart() {
 
 bool Sword25Engine::appMain() {
 	// The main script start. This script loads all the other scripts and starts the actual game.
-	ScriptEngine *scriptPtr = Kernel::GetInstance()->GetScript();
+	ScriptEngine *scriptPtr = Kernel::getInstance()->getScript();
 	BS_ASSERT(scriptPtr);
 	scriptPtr->executeFile(DEFAULT_SCRIPT_FILE);
 
@@ -135,24 +133,25 @@ bool Sword25Engine::appMain() {
 
 bool Sword25Engine::appEnd() {
 	// The kernel is shutdown, and un-initialises all subsystems
-	Kernel::DeleteInstance();
+	Kernel::deleteInstance();
 
 	AnimationTemplateRegistry::destroy();
 	RenderObjectRegistry::destroy();
 	RegionRegistry::destroy();
 
 	// Free the log file if it was used
-	BS_Log::_CloseLog();
+	BS_Log::closeLog();
 
 	return true;
 }
 
 bool Sword25Engine::loadPackages() {
-	PackageManager *packageManagerPtr = Kernel::GetInstance()->GetPackage();
+	PackageManager *packageManagerPtr = Kernel::getInstance()->getPackage();
 	BS_ASSERT(packageManagerPtr);
 
 	// Load the main package
-	if (!packageManagerPtr->loadPackage("data.b25c", "/")) return false;
+	if (!packageManagerPtr->loadPackage("data.b25c", "/"))
+		return false;
 
 	// Get the contents of the main program directory and sort them alphabetically
 	Common::FSNode dir(ConfMan.get("path"));
@@ -185,6 +184,19 @@ bool Sword25Engine::loadPackages() {
 	}
 
 	return true;
+}
+
+bool Sword25Engine::hasFeature(EngineFeature f) const {
+	return
+		(f == kSupportsRTL);
+	// TODO: Implement more of these features?!
+#if 0
+	return
+		(f == kSupportsSubtitleOptions) ||
+		(f == kSupportsRTL) ||
+		(f == kSupportsLoadingDuringRuntime) ||
+		(f == kSupportsSavingDuringRuntime);
+#endif
 }
 
 } // End of namespace Sword25

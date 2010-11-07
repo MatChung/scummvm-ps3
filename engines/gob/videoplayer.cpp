@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/videoplayer.cpp $
- * $Id: videoplayer.cpp 53491 2010-10-15 13:55:18Z drmccoy $
+ * $Id: videoplayer.cpp 53984 2010-10-31 20:07:14Z drmccoy $
  *
  */
 
@@ -686,7 +686,7 @@ Common::String VideoPlayer::findFile(const Common::String &file, Properties &pro
 			if ((properties.type == kVideoTypeTry) || (properties.type == ((Type) i))) {
 				fileName = base + "." + _extensions[i];
 
-				if (_vm->_dataIO->existData(fileName.c_str())) {
+				if (_vm->_dataIO->hasFile(fileName)) {
 					properties.type = (Type) i;
 					break;
 				}
@@ -707,7 +707,7 @@ Graphics::CoktelDecoder *VideoPlayer::openVideo(const Common::String &file, Prop
 	if (fileName.empty())
 		return 0;
 
-	Common::SeekableReadStream *stream = _vm->_dataIO->getDataStream(fileName.c_str());
+	Common::SeekableReadStream *stream = _vm->_dataIO->getFile(fileName);
 	if (!stream)
 		return 0;
 

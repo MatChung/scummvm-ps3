@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/display.h $
- * $Id: display.h 53468 2010-10-15 06:16:27Z strangerke $
+ * $Id: display.h 54103 2010-11-07 00:02:48Z strangerke $
  *
  */
 
@@ -46,8 +46,11 @@ struct rect_t {                                     // Rectangle used in Display
 
 class Screen {
 public:
-	Screen(HugoEngine &vm);
+	Screen(HugoEngine *vm);
 	virtual ~Screen();
+
+	virtual void loadFont(int16 fontId) = 0;
+	virtual void loadFontArr(Common::File &in) = 0;
 
 	int16    fontHeight();
 	int16    stringLength(const char *s);
@@ -59,9 +62,11 @@ public:
 	void     drawRectangle(bool filledFl, uint16 x1, uint16 y1, uint16 x2, uint16 y2, int color);
 	void     drawShape(int x, int y, int color1, int color2);
 	void     drawStatusText();
+	void     freeFonts();
+	void     freePalette();
 	void     initDisplay();
 	void     initNewScreenDisplay();
-	virtual void loadFont(int16 fontId) = 0;
+	void     loadPalette(Common::File &in);
 	void     moveImage(image_pt srcImage, uint16 x1, uint16 y1, uint16 dx, uint16 dy, uint16 width1, image_pt dstImage, uint16 x2, uint16 y2, uint16 width2);
 	void     remapPal(uint16 oldIndex, uint16 newIndex);
 	void     restorePal(Common::SeekableReadStream *f);
@@ -93,12 +98,19 @@ public:
 	}
 
 protected:
-	HugoEngine &_vm;
+	HugoEngine *_vm;
+
+	bool fontLoadedFl[NUM_FONTS];
 
 	// Fonts used in dib (non-GDI)
-	byte _fnt;                                      // Current font number
-	byte _fontdata[NUM_FONTS][FONTSIZE];            // Font data
+	byte *_arrayFont[NUM_FONTS];
+	byte  _fnt;                                     // Current font number
+	byte  _fontdata[NUM_FONTS][FONTSIZE];           // Font data
 	byte *_font[NUM_FONTS][FONT_LEN];               // Ptrs to each char
+	byte *_palette;
+	byte  _paletteSize;
+
+	int16 _arrayFontSize[NUM_FONTS];
 
 private:
 	viewdib_t _frontBuffer;
@@ -116,18 +128,20 @@ private:
 
 class Screen_v1d : public Screen {
 public:
-	Screen_v1d(HugoEngine &vm);
+	Screen_v1d(HugoEngine *vm);
 	~Screen_v1d();
 
-	virtual void loadFont(int16 fontId);
+	void loadFont(int16 fontId);
+	void loadFontArr(Common::File &in);
 };
 
 class Screen_v1w : public Screen {
 public:
-	Screen_v1w(HugoEngine &vm);
+	Screen_v1w(HugoEngine *vm);
 	~Screen_v1w();
 
-	virtual void loadFont(int16 fontId);
+	void loadFont(int16 fontId);
+	void loadFontArr(Common::File &in);
 };
 
 } // End of namespace Hugo

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cine/script_fw.cpp $
- * $Id: script_fw.cpp 51937 2010-08-09 11:38:01Z sev $
+ * $Id: script_fw.cpp 53738 2010-10-23 15:46:50Z fingolfin $
  *
  */
 
@@ -3098,7 +3098,7 @@ void decompileScript(const byte *scriptPtr, uint16 scriptSize, uint16 scriptIdx)
 }
 
 void dumpScript(char *dumpName) {
-    Common::DumpFile fHandle;
+	Common::DumpFile fHandle;
 	uint16 i;
 
 	fHandle.open(dumpName);

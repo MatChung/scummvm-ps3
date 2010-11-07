@@ -19,25 +19,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/plugins/psp/psp-provider.h $
- * $Id: psp-provider.h 48299 2010-03-19 11:55:18Z Bluddy $
+ * $Id: psp-provider.h 54052 2010-11-03 22:57:42Z wjpalenstijn $
  *
  */
+
+#if defined(DYNAMIC_MODULES) && defined(__PSP__)
 
 #ifndef BACKENDS_PLUGINS_PSP_PSP_PROVIDER_H
 #define BACKENDS_PLUGINS_PSP_PSP_PROVIDER_H
 
-#include "base/plugins.h"
+#include "backends/plugins/elf/elf-provider.h"
 
-#if defined(DYNAMIC_MODULES) && defined(__PSP__)
-
-class PSPPluginProvider : public FilePluginProvider {
-protected:
-	Plugin* createPlugin(const Common::FSNode &node) const;
-
-	bool isPluginFilename(const Common::FSNode &node) const;
-
+class PSPPluginProvider : public ELFPluginProvider {
+public:
+	Plugin *createPlugin(const Common::FSNode &node) const;
 };
+
+#endif // BACKENDS_PLUGINS_PSP_PROVIDER_H
 
 #endif // defined(DYNAMIC_MODULES) && defined(__PSP__)
 
-#endif /* BACKENDS_PLUGINS_PSP_PSP_PROVIDER_H */

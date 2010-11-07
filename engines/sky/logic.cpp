@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sky/logic.cpp $
- * $Id: logic.cpp 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: logic.cpp 54031 2010-11-01 21:37:47Z fingolfin $
  *
  */
 
@@ -2510,7 +2510,7 @@ bool Logic::fnUnPauseFx(uint32 a, uint32 b, uint32 c) {
 }
 
 bool Logic::fnPrintf(uint32 a, uint32 b, uint32 c) {
-	printf("fnPrintf: %d\n", a);
+	debug("fnPrintf(%d, %d, %d)", a, b, c);
 	return true;
 }
 

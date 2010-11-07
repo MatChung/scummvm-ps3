@@ -19,16 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/textconsole.cpp $
- * $Id: textconsole.cpp 51094 2010-07-21 18:17:51Z lordhoto $
+ * $Id: textconsole.cpp 53989 2010-10-31 21:49:53Z fingolfin $
  */
+
+// Disable symbol overrides so that we can use system headers.
+// FIXME: Necessary for the PS2 port, should get rid of this eventually.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "common/textconsole.h"
 #include "common/system.h"
-
-#ifdef _WIN32_WCE
-// This is required for the debugger attachment
-extern bool isSmartphone();
-#endif
 
 #ifdef __PLAYSTATION2__
 	// for those replaced fopen/fread/etc functions

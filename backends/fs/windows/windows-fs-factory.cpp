@@ -19,10 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/fs/windows/windows-fs-factory.cpp $
- * $Id: windows-fs-factory.cpp 34716 2008-10-02 16:58:59Z fingolfin $
+ * $Id: windows-fs-factory.cpp 53972 2010-10-31 00:14:59Z fingolfin $
  */
 
 #if defined(WIN32)
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
+
 #include "backends/fs/windows/windows-fs-factory.h"
 #include "backends/fs/windows/windows-fs.cpp"
 

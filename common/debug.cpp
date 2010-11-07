@@ -19,8 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/debug.cpp $
- * $Id: debug.cpp 48935 2010-05-04 11:59:22Z fingolfin $
+ * $Id: debug.cpp 54023 2010-11-01 20:41:32Z fingolfin $
  */
+
+// Disable symbol overrides so that we can use system headers.
+// FIXME: Necessary for the PS2 port, should get rid of this eventually.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "common/debug.h"
 #include "common/debug-channels.h"
@@ -119,31 +123,15 @@ bool DebugManager::isDebugChannelEnabled(uint32 channel) {
 		return (gDebugChannelsEnabled & channel) != 0;
 }
 
-
-
-static OutputFormatter s_debugOutputFormatter = 0;
-
-void setDebugOutputFormatter(OutputFormatter f) {
-	s_debugOutputFormatter = f;
-}
-
 }	// End of namespace Common
 
 
 #ifndef DISABLE_TEXT_CONSOLE
 
 static void debugHelper(const char *s, va_list va, bool caret = true) {
-	char in_buf[STRINGBUFLEN];
 	char buf[STRINGBUFLEN];
-	vsnprintf(in_buf, STRINGBUFLEN, s, va);
 
-	// Next, give the active engine (if any) a chance to augment the message,
-	// but only if not used from debugN.
-	if (caret && Common::s_debugOutputFormatter) {
-		(*Common::s_debugOutputFormatter)(buf, in_buf, STRINGBUFLEN);
-	} else {
-		strncpy(buf, in_buf, STRINGBUFLEN);
-	}
+	vsnprintf(buf, STRINGBUFLEN, s, va);
 	buf[STRINGBUFLEN-1] = '\0';
 
 	if (caret) {
@@ -184,6 +172,14 @@ void debug(int level, const char *s, ...) {
 	debugHelper(s, va);
 	va_end(va);
 
+}
+
+void debugN(const char *s, ...) {
+	va_list va;
+
+	va_start(va, s);
+	debugHelper(s, va, false);
+	va_end(va);
 }
 
 void debugN(int level, const char *s, ...) {

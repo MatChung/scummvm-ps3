@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/package/packagemanager.cpp $
- * $Id: packagemanager.cpp 53600 2010-10-19 04:59:45Z eriktorbjorn $
+ * $Id: packagemanager.cpp 53937 2010-10-30 04:30:42Z dreammaster $
  *
  */
 
@@ -73,10 +73,6 @@ PackageManager::~PackageManager() {
 	for (i = _archiveList.begin(); i != _archiveList.end(); ++i)
 		delete *i;
 
-}
-
-Service *PackageManager_CreateObject(Kernel *kernelPtr) {
-	return new PackageManager(kernelPtr);
 }
 
 /**
@@ -154,7 +150,7 @@ byte *PackageManager::getFile(const Common::String &fileName, uint *fileSizePtr)
 		// Savegame loading logic
 		Common::SaveFileManager *sfm = g_system->getSavefileManager();
 		Common::InSaveFile *file = sfm->openForLoading(
-			FileSystemUtil::GetInstance().GetPathFilename(fileName));
+			FileSystemUtil::getPathFilename(fileName));
 		if (!file) {
 			BS_LOG_ERRORLN("Could not load savegame \"%s\".", fileName.c_str());
 			return 0;
@@ -218,27 +214,14 @@ Common::String PackageManager::getAbsolutePath(const Common::String &fileName) {
 	return normalizePath(fileName, _currentDirectory);
 }
 
-uint PackageManager::getFileSize(const Common::String &fileName) {
-	Common::SeekableReadStream *in;
-	Common::ArchiveMemberPtr fileNode = getArchiveMember(normalizePath(fileName, _currentDirectory));
-	if (!fileNode)
-		return 0;
-	if (!(in = fileNode->createReadStream()))
-		return 0;
-
-	uint fileSize = in->size();
-
-	return fileSize;
-}
-
-uint PackageManager::getFileType(const Common::String &fileName) {
-	warning("STUB: BS_PackageManager::GetFileType(%s)", fileName.c_str());
-
-	//return fileNode.isDirectory() ? BS_PackageManager::FT_DIRECTORY : BS_PackageManager::FT_FILE;
-	return PackageManager::FT_FILE;
-}
-
 bool PackageManager::fileExists(const Common::String &fileName) {
+	// FIXME: The current Zip implementation doesn't support getting a folder entry, which is needed for detecting
+	// the English voick pack
+	if (fileName == "/speech/en") {
+		// To get around this, change to detecting one of the files in the folder
+		return getArchiveMember(normalizePath(fileName + "/APO0001.ogg", _currentDirectory));
+	}
+
 	Common::ArchiveMemberPtr fileNode = getArchiveMember(normalizePath(fileName, _currentDirectory));
 	return fileNode;
 }

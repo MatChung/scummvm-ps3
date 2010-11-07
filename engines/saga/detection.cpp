@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/detection.cpp $
- * $Id: detection.cpp 49788 2010-06-15 10:59:23Z sev $
+ * $Id: detection.cpp 53737 2010-10-23 15:45:22Z fingolfin $
  *
  */
 
@@ -56,9 +56,9 @@ struct SAGAGameDescription {
 
 bool SagaEngine::isBigEndian() const { return isMacResources() && getGameId() == GID_ITE; }
 bool SagaEngine::isMacResources() const { return (getPlatform() == Common::kPlatformMacintosh); }
-const GameResourceDescription *SagaEngine::getResourceDescription() { return _gameDescription->resourceDescription; }
+const GameResourceDescription *SagaEngine::getResourceDescription() const { return _gameDescription->resourceDescription; }
 
-const GameFontDescription *SagaEngine::getFontDescription(int index) {
+const GameFontDescription *SagaEngine::getFontDescription(int index) const {
 	assert(index < _gameDescription->fontsCount);
 	return &_gameDescription->fontDescriptions[index];
 }
@@ -259,7 +259,7 @@ SaveStateDescriptor SagaMetaEngine::querySaveMetaInfos(const char *target, int s
 			version = SWAP_BYTES_32(version);
 		}
 
-		debug(2, "Save version: %x", version);
+		debug(2, "Save version: 0x%X", version);
 
 		if (version < 4)
 			warning("This savegame is not endian-safe. There may be problems");

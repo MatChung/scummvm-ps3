@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/state.h $
- * $Id: state.h 52474 2010-08-31 15:50:46Z m_kiewitz $
+ * $Id: state.h 53974 2010-10-31 01:45:24Z thebluegr $
  *
  */
 
@@ -125,7 +125,6 @@ public:
 
 	/* Non-VM information */
 
-	uint32 gameStartTime; /**< The time at which the interpreter was started */
 	uint32 lastWaitTime; /**< The last time the game invoked Wait() */
 	uint32 _screenUpdateTime;	/**< The last time the game updated the screen */
 

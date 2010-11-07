@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/mads_menus.cpp $
- * $Id: mads_menus.cpp 52793 2010-09-18 12:02:52Z dreammaster $
+ * $Id: mads_menus.cpp 54047 2010-11-03 09:44:03Z dreammaster $
  *
  */
 
@@ -546,7 +546,7 @@ int DragonMainMenuView::getHighlightedItem(int x, int y) {
 		M4Sprite *spr = _menuItem->getFrame(0);
 
 		if ((x >= pt.x - 25) && (y >= pt.y - spr->height()) && (x < (pt.x - 25 + spr->width())) && (y < (pt.y)))  {
-			printf("x = %d, y = %d, index = %d\n", x, y, index);
+			debugCN(kDebugGraphics, "x = %d, y = %d, index = %d\n", x, y, index);
 			return index;
 		}
 	}

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/draw.cpp $
- * $Id: draw.cpp 53490 2010-10-15 13:54:23Z drmccoy $
+ * $Id: draw.cpp 53984 2010-10-31 20:07:14Z drmccoy $
  *
  */
 
@@ -639,10 +639,11 @@ void Draw::wobble(Surface &surfDesc) {
 }
 
 Font *Draw::loadFont(const char *path) const {
-	if (!_vm->_dataIO->existData(path))
+	if (!_vm->_dataIO->hasFile(path))
 		return 0;
 
-	byte *data = _vm->_dataIO->getData(path);
+	int32 size;
+	byte *data = _vm->_dataIO->getFile(path, size);
 
 	return new Font(data);
 }

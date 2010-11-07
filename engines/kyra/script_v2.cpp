@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/script_v2.cpp $
- * $Id: script_v2.cpp 44634 2009-10-04 21:26:33Z fingolfin $
+ * $Id: script_v2.cpp 53695 2010-10-22 02:08:26Z lordhoto $
  *
  */
 
@@ -69,7 +69,7 @@ int KyraEngine_v2::o2_trySceneChange(EMCState *script) {
 	if (success) {
 		_emc->init(script, script->dataPtr);
 		_unk4 = 0;
-		_unk3 = -1;
+		_savedMouseState = -1;
 		_unk5 = 1;
 		return 0;
 	} else {

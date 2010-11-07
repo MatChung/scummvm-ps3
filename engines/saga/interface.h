@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/interface.h $
- * $Id: interface.h 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: interface.h 53773 2010-10-24 20:22:21Z h00ligan $
  *
  */
 
@@ -94,8 +94,7 @@ enum FadeModes {
 struct InterfacePanel {
 	int x;
 	int y;
-	byte *image;
-	size_t imageLength;
+	ByteArray image;
 	int imageWidth;
 	int imageHeight;
 
@@ -106,8 +105,6 @@ struct InterfacePanel {
 
 	InterfacePanel() {
 		x = y = 0;
-		image = NULL;
-		imageLength = 0;
 		imageWidth = imageHeight = 0;
 		currentButton = NULL;
 		buttonsCount = 0;
@@ -164,7 +161,7 @@ struct InterfacePanel {
 };
 
 struct Converse {
-	char *text;
+	Common::Array<char> text;
 	int strId;
 	int stringNum;
 	int textNum;
@@ -356,7 +353,6 @@ private:
 	void processStatusTextInput(Common::KeyState keystate);
 
 public:
-	void converseInit();
 	void converseClear();
 	bool converseAddText(const char *text, int strId, int replyId, byte replyFlags, int replyBit);
 	void converseDisplayText();
@@ -431,8 +427,7 @@ private:
 
 	Point _lastMousePoint;
 
-	uint16 *_inventory;
-	int _inventorySize;
+	Common::Array<uint16> _inventory;
 	int _inventoryStart;
 	int _inventoryEnd;
 	int _inventoryPos;

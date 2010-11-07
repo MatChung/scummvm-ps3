@@ -19,9 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEScaler.cpp $
- * $Id: CEScaler.cpp 48205 2010-03-08 22:14:57Z robinwatts $
+ * $Id: CEScaler.cpp 53979 2010-10-31 17:11:43Z fingolfin $
  *
  */
+
 #include "graphics/scaler/intern.h"
 #include "CEScaler.h"
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/screen_lol.h $
- * $Id: screen_lol.h 51704 2010-08-03 16:22:12Z lordhoto $
+ * $Id: screen_lol.h 53740 2010-10-23 16:01:40Z athrxx $
  *
  */
 
@@ -43,8 +43,9 @@ public:
 
 	void setScreenDim(int dim);
 	const ScreenDim *getScreenDim(int dim);
-	int curDimIndex() { return _curDimIndex; }
+	int curDimIndex() const { return _curDimIndex; }
 	void modifyScreenDim(int dim, int x, int y, int w, int h);
+	int screenDimTableCount() const { return _screenDimTableCount; }
 
 	void fprintString(const char *format, int x, int y, uint8 col1, uint8 col2, uint16 flags, ...) GCC_PRINTF(2, 8);
 	void fprintStringIntro(const char *format, int x, int y, uint8 c1, uint8 c2, uint8 c3, uint16 flags, ...) GCC_PRINTF(2, 9);

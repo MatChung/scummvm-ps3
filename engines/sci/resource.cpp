@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/resource.cpp $
- * $Id: resource.cpp 52935 2010-09-28 20:30:50Z fingolfin $
+ * $Id: resource.cpp 54077 2010-11-04 23:19:23Z thebluegr $
  *
  */
 
@@ -779,7 +779,7 @@ void ChunkResourceSource::loadResource(ResourceManager *resMan, Resource *res) {
 }
 
 void ResourceManager::addResourcesFromChunk(uint16 id) {
-	addSource(new ChunkResourceSource(Common::String::printf("Chunk %d", id), id));
+	addSource(new ChunkResourceSource(Common::String::format("Chunk %d", id), id));
 	scanNewSources();
 }
 
@@ -940,7 +940,7 @@ void ResourceManager::freeOldResources() {
 		removeFromLRU(goner);
 		goner->unalloc();
 #ifdef SCI_VERBOSE_RESMAN
-		printf("resMan-debug: LRU: Freeing %s.%03d (%d bytes)\n", getResourceTypeName(goner->type), goner->number, goner->size);
+		debug("resMan-debug: LRU: Freeing %s.%03d (%d bytes)", getResourceTypeName(goner->type), goner->number, goner->size);
 #endif
 	}
 }
@@ -1583,10 +1583,12 @@ int ResourceManager::readResourceMapSCI1(ResourceSource *map) {
 	return 0;
 }
 
-struct {
+struct MacResTag {
 	uint32 tag;
 	ResourceType type;
-} static const macResTagMap[] = {
+};
+
+static const MacResTag macResTagMap[] = {
 	{ MKID_BE('V56 '), kResourceTypeView },
 	{ MKID_BE('P56 '), kResourceTypePic },
 	{ MKID_BE('SCR '), kResourceTypeScript },
@@ -2284,7 +2286,7 @@ bool ResourceManager::hasSci1Voc900() {
 	return offset == res->size;
 }
 
-// Same function as Script::findBlock(). Slight code
+// Same function as Script::findBlockSCI0(). Slight code
 // duplication here, but this has been done to keep the resource
 // manager independent from the rest of the engine
 static byte *findSci0ExportsBlock(byte *buffer) {

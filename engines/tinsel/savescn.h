@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/savescn.h $
- * $Id: savescn.h 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: savescn.h 53991 2010-10-31 21:50:48Z fingolfin $
  *
  * Should really be called "moving actors.h"
  */
@@ -40,17 +40,7 @@ namespace Tinsel {
 
 enum {
 	SG_DESC_LEN	= 40,	// Max. saved game description length
-	MAX_SAVED_FILES	= 100,
-
-	// FIXME: Save file names in ScummVM can be longer than 8.3, overflowing the
-	// name field in savedFiles. Raising it to 256 as a preliminary fix.
-	FNAMELEN	= 256 // 8.3
-};
-
-struct SFILES {
-	char	name[FNAMELEN];
-	char	desc[SG_DESC_LEN + 2];
-	TimeDate dateTime;
+	MAX_SAVED_FILES	= 100
 };
 
 struct SAVED_DATA {

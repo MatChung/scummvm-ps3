@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/sound/soundcmd.h $
- * $Id: soundcmd.h 52500 2010-09-02 21:50:00Z thebluegr $
+ * $Id: soundcmd.h 53986 2010-10-31 20:57:50Z thebluegr $
  *
  */
 
@@ -53,7 +53,7 @@ public:
 	// Functions used for game state loading
 	void clearPlayList();
 	void syncPlayList(Common::Serializer &s);
-	void reconstructPlayList(int savegame_version);
+	void reconstructPlayList();
 
 	// Functions used for the ScummVM menus
 	void setMasterVolume(int vol);

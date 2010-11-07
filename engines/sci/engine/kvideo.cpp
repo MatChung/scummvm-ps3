@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/kvideo.cpp $
- * $Id: kvideo.cpp 52791 2010-09-18 10:55:16Z eriktorbjorn $
+ * $Id: kvideo.cpp 54004 2010-11-01 16:02:28Z fingolfin $
  *
  */
 
@@ -287,10 +287,10 @@ reg_t kPlayVMD(EngineState *s, int argc, reg_t *argv) {
 		// Looks to be setting the video size and position. Called with 4 extra integer
 		// parameters (e.g. 86, 41, 235, 106)
 	default:
-		warningMsg = Common::String::printf("PlayVMD - unsupported subop %d. Params: %d (", operation, argc);
+		warningMsg = Common::String::format("PlayVMD - unsupported subop %d. Params: %d (", operation, argc);
 
 		for (int i = 0; i < argc; i++) {
-			warningMsg +=  Common::String::printf("%04x:%04x", PRINT_REG(argv[i]));
+			warningMsg +=  Common::String::format("%04x:%04x", PRINT_REG(argv[i]));
 			warningMsg += (i == argc - 1 ? ")" : ", ");
 		}
 

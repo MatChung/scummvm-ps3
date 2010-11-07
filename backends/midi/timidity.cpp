@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/midi/timidity.cpp $
- * $Id: timidity.cpp 53395 2010-10-13 00:48:40Z lordhoto $
+ * $Id: timidity.cpp 53961 2010-10-30 21:27:42Z fingolfin $
  */
 
 /*
@@ -33,6 +33,9 @@
  *   distribution, for which it was modified by Luigi Rizzo)
  *
  */
+
+// Disable symbol overrides so that we can use system headers.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "common/scummsys.h"
 

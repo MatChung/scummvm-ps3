@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/timer_mr.cpp $
- * $Id: timer_mr.cpp 44634 2009-10-04 21:26:33Z fingolfin $
+ * $Id: timer_mr.cpp 53912 2010-10-28 23:57:24Z lordhoto $
  *
  */
 
@@ -60,7 +60,7 @@ void KyraEngine_MR::timerRunSceneScript7(int arg) {
 
 void KyraEngine_MR::timerFleaDeath(int arg) {
 	_timer->setCountdown(4, 5400);
-	saveGameState(999, "Autosave", 0);
+	saveGameStateIntern(999, "Autosave", 0);
 	_screen->hideMouse();
 	_timer->disable(4);
 	runAnimationScript("FLEADTH1.EMC", 0, 0, 1, 1);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/portdefs.h $
- * $Id: portdefs.h 29310 2007-10-28 19:14:12Z knakos $
+ * $Id: portdefs.h 54089 2010-11-05 10:31:36Z fingolfin $
  *
  */
 
@@ -69,14 +69,10 @@ char *strpbrk(const char *s, const char *accept);
 #include <string.h>
 #include <io.h>
 #include <stdarg.h>
-#include <fcntl.h>
-#include <conio.h>
-#include <malloc.h>
 #include <assert.h>
 #include <mmsystem.h>
 #include <ctype.h>
 //#include <direct.h>
-#include <time.h>
 
 #ifdef __MINGW32CE__
 	void *bsearch(const void *, const void *, size_t, size_t, int (*x) (const void *, const void *));

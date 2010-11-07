@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/util.h $
- * $Id: util.h 52988 2010-10-03 08:08:42Z strangerke $
+ * $Id: util.h 54021 2010-11-01 20:40:33Z fingolfin $
  *
  */
 
@@ -55,7 +55,6 @@ int      lastBit(byte data);
 void     gameOverMsg();
 void     reverseByte(byte *data);
 void     Error(int code, const char *format, ...) GCC_PRINTF(2, 3);
-void     Warn(const char *format, ...) GCC_PRINTF(1, 2);
 
 char    *Box(box_t, const char *, ...) GCC_PRINTF(2, 3);
 char    *strlwr(char *buffer);
