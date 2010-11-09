@@ -4,6 +4,7 @@
 
 #include "backends/base-backend.h"
 #include "sound/mixer_intern.h"
+#include <sys/types.h>
 
 class OSystem_PS3 : public BaseBackend
 {

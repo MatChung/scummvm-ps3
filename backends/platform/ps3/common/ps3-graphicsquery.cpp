@@ -1,15 +1,16 @@
 #include "../ps3.h"
 #include "../graphics/fb/fb.h"
-#include <sys/types.h>
 
 
 
 void OSystem_PS3::initSize(uint width, uint height, const Graphics::PixelFormat *format)
 {
+	printf("OSystem_PS3::initSize(%d,%d)\n",width,height);
 }
 
 void OSystem_PS3::updateScreen()
 {
+	printf("OSystem_PS3::updateScreen()\n");
 	waitFlip(); // Wait for the last flip to finish, so we can draw to the old buffer
 	//drawFrame(buffers[currentBuffer], frame++); // Draw into the unused buffer
 	flip(currentBuffer); // Flip buffer onto screen
