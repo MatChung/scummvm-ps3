@@ -12,7 +12,9 @@ MODULE_OBJS := \
 	common/ps3-system.o \
 	filesystem/ps3-fs-factory.o \
 	filesystem/ps3-fs-node.o \
+	graphics/ps3-surface.o \
 	graphics/fb/fb.o \
+	graphics/fb/simpleblit.o \
 	
 	
 # We don't use rules.mk but rather manually update OBJS and MODULE_DIRS.

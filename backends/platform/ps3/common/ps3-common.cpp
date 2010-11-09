@@ -1,58 +1,70 @@
 #include "../ps3.h"
 #include <psl1ght/lv2/timer.h>
 #include <time.h>
+#include <lv2/time.h>
 
 
 bool OSystem_PS3::pollEvent(Common::Event &event)
 {
+	//printf("OSystem_PS3::pollEvent()\n");
 	//TODO: Eventqueue
 	return false;
 }
 
 uint32 OSystem_PS3::getMillis()
 {
-	//TODO: msec timer
-	return 0;
+	//printf("OSystem_PS3::getMillis()\n");
+	return sys_time_get_system_time()/1000;
 }
 
 void OSystem_PS3::delayMillis(uint msecs)
 {
+	//printf("OSystem_PS3::delayMillis(%d)\n",msecs);
 	lv2TimerUSleep(msecs*1000);
 }
 
 OSystem::MutexRef OSystem_PS3::createMutex()
 {
+	printf("OSystem_PS3::createMutex()\n");
 	//TODO: threads
 	return NULL;
 }
 
 void OSystem_PS3::lockMutex(MutexRef mutex)
 {
+	printf("OSystem_PS3::lockMutex()\n");
 	//TODO: threads
 }
 
 void OSystem_PS3::unlockMutex(MutexRef mutex)
 {
+	printf("OSystem_PS3::unlockMutex()\n");
 	//TODO: threads
 }
 
 void OSystem_PS3::deleteMutex(MutexRef mutex)
 {
+	printf("OSystem_PS3::deleteMutex()\n");
 	//TODO: threads
 }
 
 Common::SaveFileManager *OSystem_PS3::getSavefileManager()
 {
+	printf("OSystem_PS3::getSavefileManager()\n");
 	return _savefile;
 }
 
 Audio::Mixer *OSystem_PS3::getMixer()
 {
+	printf("OSystem_PS3::getMixer()\n");
 	return _mixer;
 }
 
 void OSystem_PS3::getTimeAndDate(TimeDate &t) const
-{/*
+{
+	printf("OSystem_PS3::getTimeAndDate()\n");
+
+	/*
 	time_t rawtime;
 	struct tm * timeinfo;
 
@@ -70,10 +82,12 @@ void OSystem_PS3::getTimeAndDate(TimeDate &t) const
 
 Common::TimerManager *OSystem_PS3::getTimerManager()
 {
+	printf("OSystem_PS3::getTimerManager()\n");
 	return _timer;
 }
 
 FilesystemFactory *OSystem_PS3::getFilesystemFactory()
 {
+	printf("OSystem_PS3::getFilesystemFactory()\n");
 	return _fsFactory;
 }

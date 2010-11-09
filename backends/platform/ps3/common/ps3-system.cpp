@@ -3,6 +3,7 @@
 #include "backends/saves/default/default-saves.h"
 #include "backends/timer/default/default-timer.h"
 #include "../filesystem/ps3-fs-factory.h"
+#include "graphics/colormasks.h"
 
 Common::List<Graphics::PixelFormat> __formats;
 
@@ -79,6 +80,12 @@ void OSystem_PS3::initBackend()
 		_timer = new DefaultTimerManager();
 		printf("  ~timer create\n");
 	}
+
+	Graphics::PixelFormat pp=Graphics::PixelFormat::createFormatCLUT8();
+	Graphics::PixelFormat prgb=Graphics::createPixelFormat<565>();
+	_overlay_screen.setFormat(prgb);
+	_game_screen.setFormat(pp);
+	_mouse_screen.setFormat(pp);
 
 	printf("  OSystem::initBackend()\n");
 	OSystem::initBackend();

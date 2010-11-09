@@ -21,14 +21,14 @@ const char *_lastPathComponent(const Common::String &str)
 
 	cur++;
 
-	 printf("lastPathComponent path=%s token=%s\n", start, cur);
+	//printf("lastPathComponent path=%s token=%s\n", start, cur);
 
 	return cur;
 }
 
 Ps3FilesystemNode::Ps3FilesystemNode()
 {
-	printf("Ps3FilesystemNode::NEW FSNODE() - ");
+	//printf("Ps3FilesystemNode::NEW FSNODE() - ");
 
 	_isHere = true;
 	_isDirectory = true;
@@ -37,12 +37,12 @@ Ps3FilesystemNode::Ps3FilesystemNode()
 	_path = _homedir_;
 	_displayName = _lastPathComponent(_path);
 
-	printf("path: %s\n",_path.c_str());
+	//printf("path: %s\n",_path.c_str());
 }
 
 Ps3FilesystemNode::Ps3FilesystemNode(const Common::String &path)
 {
-	printf("Ps3FilesystemNode::NEW FSNODE(%s)\n", path.c_str());
+	//printf("Ps3FilesystemNode::NEW FSNODE(%s)\n", path.c_str());
 
 
 	if (path.empty() || path.equals("."))
@@ -78,7 +78,7 @@ Ps3FilesystemNode::Ps3FilesystemNode(const Common::String &path)
 
 Ps3FilesystemNode::Ps3FilesystemNode(const Common::String &path, bool verify)
 {
-	printf("Ps3FilesystemNode::NEW FSNODE(%s, %d)\n", path.c_str(), verify);
+	//printf("Ps3FilesystemNode::NEW FSNODE(%s, %d)\n", path.c_str(), verify);
 
 	if (path.empty() || path.equals("."))
 	{
@@ -137,11 +137,11 @@ void Ps3FilesystemNode::doverify(void)
 
 	_verified = true;
 
-	printf(" verify: %s -> ", _path.c_str());
+	//printf(" verify: %s -> ", _path.c_str());
 
 	if (_path.empty() || _path[0] != '/')
 	{
-		printf("relative path ! fixing... ");
+		//printf("relative path ! fixing... ");
 
 		_path=_homedir_+_path;
 	}
@@ -154,7 +154,7 @@ void Ps3FilesystemNode::doverify(void)
 	u32 err=0;
 	err = lv2FsOpen(_path.c_str(), LV2_O_RDONLY, &fd,0, NULL, 0);
 
-	printf("_path = %s -- fio.open -> %d,%d\n", _path.c_str(), fd,err);
+	//printf("_path = %s -- fio.open -> %d,%d\n", _path.c_str(), fd,err);
 
 	if (err == 0 || err == 0x80010012)
 	{
@@ -163,12 +163,12 @@ void Ps3FilesystemNode::doverify(void)
 		if (err == 0x80010012)
 		{
 			_isDirectory = true;
-			printf("  yes (dir)\n");
+			//printf("  yes (dir)\n");
 		}
 		else
 		{
 			_isDirectory = false;
-			printf("  yes (file)\n");
+			//printf("  yes (file)\n");
 		}
 		return;
 	}
@@ -178,13 +178,13 @@ void Ps3FilesystemNode::doverify(void)
 	_isHere = false;
 	_isDirectory = false;
 
-	printf("  no\n");
+	//printf("  no\n");
 	return;
 }
 
 AbstractFSNode *Ps3FilesystemNode::getChild(const Common::String &n) const
 {
-	printf("Ps3FilesystemNode::getChild : %s\n", n.c_str());
+	//printf("Ps3FilesystemNode::getChild : %s\n", n.c_str());
 
 	if (!_isDirectory)
 		return NULL;
@@ -195,7 +195,7 @@ AbstractFSNode *Ps3FilesystemNode::getChild(const Common::String &n) const
 bool Ps3FilesystemNode::getChildren(AbstractFSList &list, ListMode mode, bool hidden) const {
 	//TODO: honor the hidden flag
 
-	printf("Ps3FilesystemNode::getChildren(%s)\n",_path.c_str());
+	//printf("Ps3FilesystemNode::getChildren(%s)\n",_path.c_str());
 
 	if (!_isDirectory)
 		return false;
@@ -224,18 +224,18 @@ bool Ps3FilesystemNode::getChildren(AbstractFSList &list, ListMode mode, bool hi
 			{
 				//memset(&dirent,0,sizeof(dirent));
 				err = lv2FsReadDir(fd, &dirent,&dreadRes);
-				printf("   err: %d,%d\n",err,(u32)dreadRes);
+				//printf("   err: %d,%d\n",err,(u32)dreadRes);
 				if(dreadRes<1 || err!=0)
 					break;
 
 				if (dirent.d_name[0] == '.')
 				{
-					printf("   ignoring: %s\n",dirent.d_name);
+					//printf("   ignoring: %s\n",dirent.d_name);
 					continue; // ignore '.' and '..'
 				}
 				//if(strcasecmp("EBOOT.BIN",dirent.d_name)==0)
 				//{
-				//	printf("   ignoring: %s\n",dirent.d_name);
+				//	//printf("   ignoring: %s\n",dirent.d_name);
 				//	continue;
 				//}
 
@@ -263,25 +263,25 @@ bool Ps3FilesystemNode::getChildren(AbstractFSList &list, ListMode mode, bool hi
 					*/
 					Common::String newPath=_path+dirent.d_name;
 					Ps3FilesystemNode *dirEntry=new Ps3FilesystemNode(newPath);
-					printf("   child: %s\n",newPath.c_str());
+					//printf("   child: %s\n",newPath.c_str());
 					list.push_back(dirEntry);
 				}
 				else
 				{
-					printf("   ignoring: %s\n",dirent.d_name);
+					//printf("   ignoring: %s\n",dirent.d_name);
 				}
 			}
 			lv2FsCloseDir(fd);
-			printf("=====Ps3FilesystemNode::getChildren()===success\n");
+			//printf("=====Ps3FilesystemNode::getChildren()===success\n");
 			return true;
 		}
 	}
-	printf("=====Ps3FilesystemNode::getChildren()===fail\n");
+	//printf("=====Ps3FilesystemNode::getChildren()===fail\n");
 	return false;
 }
 
 AbstractFSNode *Ps3FilesystemNode::getParent() const {
-	printf("Ps3FilesystemNode::getParent : path = %s\n", _path.c_str());
+	//printf("Ps3FilesystemNode::getParent : path = %s\n", _path.c_str());
 
 	//if (_isRoot)
 	//	return new Ps3FilesystemNode(this); // FIXME : 0 ???
@@ -293,22 +293,22 @@ AbstractFSNode *Ps3FilesystemNode::getParent() const {
 	const char *end = _lastPathComponent(_path);
 
 	Common::String str(start, end - start);
-//	printf("  parent = %s\n", str.c_str());
+//	//printf("  parent = %s\n", str.c_str());
 
 	return new Ps3FilesystemNode(str, true);
 }
 
 
 Common::SeekableReadStream *Ps3FilesystemNode::createReadStream() {
-	printf("Ps3FilesystemNode::createReadStream(%s)\n", _path.c_str());
+	//printf("Ps3FilesystemNode::createReadStream(%s)\n", _path.c_str());
 	Common::SeekableReadStream *ss = StdioStream::makeFromPath(getPath().c_str(), false);
-	printf("  0x%08X\n",(u32)(u64)ss);
+	//printf("  0x%08X\n",(u32)(u64)ss);
 	return ss;
 }
 
 Common::WriteStream *Ps3FilesystemNode::createWriteStream() {
-	printf("Ps3FilesystemNode::createWriteStream(%s)\n", _path.c_str());
+	//printf("Ps3FilesystemNode::createWriteStream(%s)\n", _path.c_str());
 	Common::WriteStream *ss =  StdioStream::makeFromPath(getPath().c_str(), true);
-	printf("  0x%08X\n",(u32)(u64)ss);
+	//printf("  0x%08X\n",(u32)(u64)ss);
 	return ss;
 }

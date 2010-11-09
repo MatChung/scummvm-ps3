@@ -4,7 +4,8 @@
 
 #include "backends/base-backend.h"
 #include "sound/mixer_intern.h"
-#include <sys/types.h>
+#include "graphics/ps3-surface.h"
+#include <psl1ght/types.h>
 
 class OSystem_PS3 : public BaseBackend
 {
@@ -90,10 +91,13 @@ protected:
 	bool _use_mouse_palette;
 	bool _mouse_is_palette;
 
-	Graphics::PixelFormat _currentScreenFormat;
 	int _current_graphics_mode;
 	bool _stretch_to_full;
 	bool _aspectRatioCorrection;
+
+	PS3Texture _game_screen;
+	PS3Texture _overlay_screen;
+	PS3Texture _mouse_screen;
 
 };
 

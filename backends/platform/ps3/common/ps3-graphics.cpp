@@ -41,6 +41,6 @@ Common::List<Graphics::PixelFormat> OSystem_PS3::getSupportedFormats() const
 Graphics::PixelFormat OSystem_PS3::getScreenFormat() const
 {
 	printf("OSystem_PS3::getScreenFormat()\n");
-	return Graphics::PixelFormat::createFormatCLUT8();
+	return _game_screen.getFormat();
 }
 

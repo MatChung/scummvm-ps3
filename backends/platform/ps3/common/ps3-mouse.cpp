@@ -18,6 +18,7 @@ void OSystem_PS3::warpMouse(int x, int y)
 
 void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, int hotspotY, uint32 keycolor, int cursorTargetScale, const Graphics::PixelFormat *format)
 {
+	printf("OSystem_PS3::setMouseCursor(%d, %d, %d, %d, %d, %d, %d)\n",w,h,hotspotX,hotspotY,keycolor,cursorTargetScale,(u32)(u64)format);
 }
 
 void OSystem_PS3::disableCursorPalette(bool disable)

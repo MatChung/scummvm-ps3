@@ -12,6 +12,7 @@
 #include <rsx/gcm.h>
 #include <rsx/reality.h>
 #include <sysutil/video.h>
+#include "graphics/pixelformat.h"
 
 typedef struct {
 	int height;
@@ -34,5 +35,7 @@ void init_screen();
 void flip(s32 buffer);
 void waitFlip();
 
+void blitPalette(u32 w,u32 h,u8 *buf, u32 *pal);
+void blitRGB(u32 w,u32 h,u8 *buf,Graphics::PixelFormat &fmt);
 
 #endif /* FB_H_ */

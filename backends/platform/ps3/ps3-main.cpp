@@ -1,9 +1,9 @@
 #include "ps3.h"
 #include "base/main.h"
 #include <stdio.h>
-#include <psl1ght/lv2/timer.h>
-#include "graphics/fb/fb.h"
 #include <lv2/process.h>
+#include <lv2/time.h>
+#include <psl1ght/lv2/timer.h>
 
 OSystem *OSystem_PS3_create()
 {
@@ -16,6 +16,12 @@ OSystem *OSystem_PS3_create()
 int main(int argc, const char* argv[])
 {
 	printf("INIT!\n");
+
+	u64 usec=sys_time_get_system_time();
+	printf("usec: %ld\n",usec);
+	lv2TimerUSleep(100*1000);
+	usec=sys_time_get_system_time();
+	printf("usec: %ld\n",usec);
 
 	g_system = OSystem_PS3_create();
 	assert(g_system);
