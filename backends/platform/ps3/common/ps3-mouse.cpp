@@ -14,6 +14,7 @@ void OSystem_PS3::warpMouse(int x, int y)
 	printf("OSystem_PS3::warpMouse(%d, %d)\n",x,y);
 	_mouse_pos.x=x;
 	_mouse_pos.y=y;
+	_pad.setPosition(x,y);
 }
 
 void OSystem_PS3::setMouseCursor(const byte *buf, uint w, uint h, int hotspotX, int hotspotY, uint32 keycolor, int cursorTargetScale, const Graphics::PixelFormat *format)

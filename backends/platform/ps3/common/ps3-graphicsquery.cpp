@@ -6,6 +6,7 @@
 void OSystem_PS3::initSize(uint width, uint height, const Graphics::PixelFormat *format)
 {
 	printf("OSystem_PS3::initSize(%d,%d)\n",width,height);
+	_pad.setResolution(width,height);
 
 	Graphics::PixelFormat newFormat;
 	if(format==NULL)

@@ -4,8 +4,41 @@
 #include "backends/timer/default/default-timer.h"
 #include "../filesystem/ps3-fs-factory.h"
 #include "graphics/colormasks.h"
+#include <lv2/time.h>
+#include <psl1ght/lv2/thread.h>
+#include <unistd.h>
 
 Common::List<Graphics::PixelFormat> __formats;
+
+static void thread_func(u64 arg)
+{
+	printf("thread_func START!\n");
+	OSystem_PS3 *sys=(OSystem_PS3*)arg;
+
+	u64 c=sys_time_get_system_time();
+
+	while(sys->running())
+	{
+		u64 n=sys_time_get_system_time();
+
+		if(n-10*1000>c)//every 10ms
+		{
+			c=n;
+			sys->threadUpdate();
+		}
+		// reduce this if there are sound problems (MT32 is still too CPU heavy)
+		//sys_timer_usleep(10);
+		//sys->soundUpdate();
+	}
+
+	printf("thread_func EXIT!\n");
+	printf("thread_func EXIT!\n");
+	printf("thread_func EXIT!\n");
+
+	sys_ppu_thread_exit(0);
+}
+
+
 
 OSystem_PS3::OSystem_PS3()
 {
@@ -30,8 +63,18 @@ OSystem_PS3::OSystem_PS3()
 	//__formats.push_back(Graphics::PixelFormat(2, 5, 5, 5, 1, 11, 6, 1, 0));
 	// RGB4444 - overlay if alpha enabled
 	//__formats.push_back(Graphics::PixelFormat(2, 4, 4, 4, 4, 12, 8, 4, 0));
-}
 
+	sys_ppu_thread_t id;
+	u64 thread_arg = (u64)this;
+	u32 priority = 1500;
+	size_t stack_size = 0x100000;
+	char thread_name[] = "My Thread";
+	//opd32 opd;
+
+	opd[0]=((u64*)thread_func)[0];
+	opd[1]=((u64*)thread_func)[1];
+	sys_ppu_thread_create_ex(&id, (opd32*)opd, thread_arg, priority, stack_size, THREAD_JOINABLE, thread_name);
+}
 OSystem_PS3::~OSystem_PS3()
 {
 	printf("OSystem_PS3::~OSystem_PS3()\n");
@@ -97,3 +140,12 @@ void OSystem_PS3::quit()
 	printf("OSystem_PS3::quit()\n");
 	exit(0);
 }
+
+void OSystem_PS3::threadUpdate()
+{
+	_pad.frame();
+
+	if(_timer!=NULL)
+		((DefaultTimerManager*)_timer)->handler();
+}
+

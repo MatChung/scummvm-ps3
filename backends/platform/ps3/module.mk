@@ -2,6 +2,7 @@ MODULE := backends/platform/ps3
 
 MODULE_OBJS := \
 	ps3-main.o \
+	audio/ps3-audio.o \
 	common/ps3-common.o \
 	common/ps3-features.o \
 	common/ps3-game.o \
@@ -15,6 +16,7 @@ MODULE_OBJS := \
 	graphics/ps3-surface.o \
 	graphics/fb/fb.o \
 	graphics/fb/simpleblit.o \
+	input/ps3-pad.o \
 	
 	
 # We don't use rules.mk but rather manually update OBJS and MODULE_DIRS.

@@ -2,6 +2,7 @@
 #define PS3_H_
 
 
+#include "input/ps3-pad.h"
 #include "backends/base-backend.h"
 #include "sound/mixer_intern.h"
 #include "graphics/ps3-surface.h"
@@ -75,6 +76,8 @@ public:
 	virtual Common::TimerManager *getTimerManager();
 	FilesystemFactory *getFilesystemFactory();
 
+	bool running(){return true;};
+	void threadUpdate();
 protected:
 	Common::SaveFileManager *_savefile;
 	Audio::MixerImpl *_mixer;
@@ -99,6 +102,10 @@ protected:
 	PS3Texture _overlay_screen;
 	PS3Texture _mouse_screen;
 
+	PS3Pad _pad;
+
+	//helper for thread function
+	u32 opd[2];
 };
 
 

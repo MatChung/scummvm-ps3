@@ -6,6 +6,23 @@
 
 bool OSystem_PS3::pollEvent(Common::Event &event)
 {
+	bool ret=false;
+	ret=_pad.pollEvent(event);
+	if(ret==true)
+	{
+		//net_send("OSystem_PS3::pollEvent() got Event: %d,%d,%d\n",event.type,event.mouse.x,event.mouse.y);
+
+		if(event.type==Common::EVENT_MOUSEMOVE)
+		{
+			_mouse_pos.x=event.mouse.x;
+			_mouse_pos.y=event.mouse.y;
+			//warpMouse(event.mouse.x,event.mouse.y);
+		}
+
+		return true;
+	}
+
+	return false;
 	//printf("OSystem_PS3::pollEvent()\n");
 	//TODO: Eventqueue
 	return false;
@@ -64,7 +81,6 @@ void OSystem_PS3::getTimeAndDate(TimeDate &t) const
 {
 	printf("OSystem_PS3::getTimeAndDate()\n");
 
-	/*
 	time_t rawtime;
 	struct tm * timeinfo;
 
@@ -77,7 +93,6 @@ void OSystem_PS3::getTimeAndDate(TimeDate &t) const
 	t.tm_mon=timeinfo->tm_mon;
 	t.tm_sec=timeinfo->tm_sec;
 	t.tm_year=timeinfo->tm_year;
-	*/
 }
 
 Common::TimerManager *OSystem_PS3::getTimerManager()

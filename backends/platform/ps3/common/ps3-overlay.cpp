@@ -6,12 +6,16 @@ void OSystem_PS3::showOverlay()
 {
 	printf("OSystem_PS3::showOverlay()\n");
 	_show_overlay=true;
+
+	_pad.setResolution(_overlay_screen.getWidth(),_overlay_screen.getHeight());
 }
 
 void OSystem_PS3::hideOverlay()
 {
 	printf("OSystem_PS3::hideOverlay()\n");
 	_show_overlay=false;
+
+	_pad.setResolution(_game_screen.getWidth(),_game_screen.getHeight());
 }
 
 void OSystem_PS3::clearOverlay()
