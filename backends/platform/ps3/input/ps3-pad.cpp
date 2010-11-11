@@ -28,6 +28,7 @@
 
 PS3Pad::PS3Pad()
 {
+	printf("PS3Pad::PS3Pad()\n");
 	PadInfo padinfo;
 	ioPadInit(7);
 

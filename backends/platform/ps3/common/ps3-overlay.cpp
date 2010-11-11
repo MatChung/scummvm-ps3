@@ -41,7 +41,7 @@ void OSystem_PS3::grabOverlay(OverlayColor *buf, int pitch)
 void OSystem_PS3::copyRectToOverlay(const OverlayColor *buf, int pitch, int x, int y, int w, int h)
 {
 	printf("OSystem_PS3::copyRectToOverlay(0x%08X, %d, %d, %d, %d, %d)\n",(unsigned int)(unsigned long)buf,pitch,x,y,w,h);
-	_overlay_screen.updateBuffer(x,y,w,h,buf,pitch);
+	_overlay_screen.updateBuffer(x,y,w,h,buf,pitch*2);
 }
 
 int16 OSystem_PS3::getOverlayHeight()

@@ -80,7 +80,7 @@ Audio::Mixer *OSystem_PS3::getMixer()
 void OSystem_PS3::getTimeAndDate(TimeDate &t) const
 {
 	printf("OSystem_PS3::getTimeAndDate()\n");
-
+/*
 	time_t rawtime;
 	struct tm * timeinfo;
 
@@ -93,6 +93,7 @@ void OSystem_PS3::getTimeAndDate(TimeDate &t) const
 	t.tm_mon=timeinfo->tm_mon;
 	t.tm_sec=timeinfo->tm_sec;
 	t.tm_year=timeinfo->tm_year;
+	*/
 }
 
 Common::TimerManager *OSystem_PS3::getTimerManager()

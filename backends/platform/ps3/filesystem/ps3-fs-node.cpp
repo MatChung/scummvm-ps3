@@ -2,7 +2,7 @@
 #include "backends/fs/stdiostream.h"
 #include <psl1ght/lv2/filesystem.h>
 
-Common::String _homedir_=Common::String("/dev_hdd0/scummvm/");
+Common::String _homedir_=Common::String("/dev_hdd0/game/SCUM12000/USRDIR/");
 
 const char *_lastPathComponent(const Common::String &str)
 {

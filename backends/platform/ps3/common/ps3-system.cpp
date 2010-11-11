@@ -42,6 +42,7 @@ static void thread_func(u64 arg)
 
 OSystem_PS3::OSystem_PS3()
 {
+	printf("OSystem_PS3::OSystem_PS3()\n");
 	_savefile = NULL;
 	_mixer = NULL;
 	_timer = NULL;
@@ -145,7 +146,8 @@ void OSystem_PS3::threadUpdate()
 {
 	_pad.frame();
 
-	if(_timer!=NULL)
-		((DefaultTimerManager*)_timer)->handler();
+
+	//if(_timer!=NULL)
+	//	((DefaultTimerManager*)_timer)->handler();
 }
 

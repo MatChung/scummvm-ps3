@@ -15,7 +15,7 @@ void blitPalette(u32 w,u32 h,u8 *buf, u32 *pal)
 		for(u32 x=0;x<w;x++)
 		{
 			u32 xoff=(cx-cw+x);
-			b->ptr[yoff+xoff]=pal[buf[y*w+x]];
+			b->ptr[yoff+xoff]=pal[buf[y*w+x]]>>8;
 		}
 	}
 }
