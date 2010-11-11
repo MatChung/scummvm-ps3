@@ -48,9 +48,9 @@ void PS3Texture::setFormat(Graphics::PixelFormat &format)
 void PS3Texture::draw(u32 x,u32 y,u32 w,u32 h)
 {
 	if(_pixelFormat.bytesPerPixel==1)
-		blitPalette(_surface.w,_surface.h,_texture, _palette);
+		blitPalette(x,y,_surface.w,_surface.h,_texture, _palette);
 	else
-		blitRGB(_surface.w,_surface.h,_texture,_pixelFormat);
+		blitRGB(x,y,_surface.w,_surface.h,_texture,_pixelFormat);
 
 }
 

@@ -17,6 +17,7 @@ void OSystem_PS3::setPalette(const byte *colors, uint start, uint num)
 {
 	printf("OSystem_PS3::getSupportedGraphicsModes()\n");
 	_game_screen.updatePalette(colors,start,num);
+	_mouse_screen.updatePalette(colors,start,num);
 }
 
 void OSystem_PS3::grabPalette(byte *colors, uint start, uint num)

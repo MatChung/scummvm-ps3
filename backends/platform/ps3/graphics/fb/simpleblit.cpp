@@ -1,6 +1,6 @@
 #include "fb.h"
 
-void blitPalette(u32 w,u32 h,u8 *buf, u32 *pal)
+void blitPalette(u32 x_,u32 y_,u32 w,u32 h,u8 *buf, u32 *pal)
 {
 	buffer *b=buffers[currentBuffer];
 
@@ -11,10 +11,10 @@ void blitPalette(u32 w,u32 h,u8 *buf, u32 *pal)
 
 	for(u32 y=0;y<h;y++)
 	{
-		u32 yoff=(cy-ch+y)*b->width;
+		u32 yoff=(cy-ch+y+y_)*b->width;
 		for(u32 x=0;x<w;x++)
 		{
-			u32 xoff=(cx-cw+x);
+			u32 xoff=(cx-cw+x+x_);
 			b->ptr[yoff+xoff]=pal[buf[y*w+x]]>>8;
 		}
 	}
@@ -35,7 +35,7 @@ u32 translate(u8 *buf,Graphics::PixelFormat &fmt)
 	return r<<16|g<<8|b;
 }
 
-void blitRGB(u32 w,u32 h,u8 *buf,Graphics::PixelFormat &fmt)
+void blitRGB(u32 x_,u32 y_,u32 w,u32 h,u8 *buf,Graphics::PixelFormat &fmt)
 {
 	buffer *b=buffers[currentBuffer];
 
@@ -46,10 +46,10 @@ void blitRGB(u32 w,u32 h,u8 *buf,Graphics::PixelFormat &fmt)
 
 	for(u32 y=0;y<h;y++)
 	{
-		u32 yoff=(cy-ch+y)*b->width;
+		u32 yoff=(cy-ch+y+y_)*b->width;
 		for(u32 x=0;x<w;x++)
 		{
-			u32 xoff=(cx-cw+x);
+			u32 xoff=(cx-cw+x+x_);
 			b->ptr[yoff+xoff]=translate(&buf[(y*w+x)*fmt.bytesPerPixel],fmt);
 		}
 	}

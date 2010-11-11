@@ -35,7 +35,7 @@ void init_screen();
 void flip(s32 buffer);
 void waitFlip();
 
-void blitPalette(u32 w,u32 h,u8 *buf, u32 *pal);
-void blitRGB(u32 w,u32 h,u8 *buf,Graphics::PixelFormat &fmt);
+void blitPalette(u32 x,u32 y,u32 w,u32 h,u8 *buf, u32 *pal);
+void blitRGB(u32 x,u32 y,u32 w,u32 h,u8 *buf,Graphics::PixelFormat &fmt);
 
 #endif /* FB_H_ */
