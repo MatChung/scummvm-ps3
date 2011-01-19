@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/kernel.h $
- * $Id: kernel.h 53646 2010-10-20 17:31:29Z thebluegr $
+ * $Id: kernel.h 55163 2011-01-08 12:28:47Z thebluegr $
  *
  */
 
@@ -468,8 +468,10 @@ reg_t kMoveToFront(EngineState *s, int argc, reg_t *argv);
 reg_t kMoveToEnd(EngineState *s, int argc, reg_t *argv);
 reg_t kGetWindowsOption(EngineState *s, int argc, reg_t *argv);
 reg_t kWinHelp(EngineState *s, int argc, reg_t *argv);
-reg_t kWinDLL(EngineState *s, int argc, reg_t *argv);
-reg_t kPrintDebug(EngineState *s, int argc, reg_t *argv);
+reg_t kGetConfig(EngineState *s, int argc, reg_t *argv);
+reg_t kCelInfo(EngineState *s, int argc, reg_t *argv);
+reg_t kSetLanguage(EngineState *s, int argc, reg_t *argv);
+reg_t kScrollWindow(EngineState *s, int argc, reg_t *argv);
 #endif
 
 reg_t kDoSoundInit(EngineState *s, int argc, reg_t *argv);
@@ -487,7 +489,7 @@ reg_t kDoSoundFade(EngineState *s, int argc, reg_t *argv);
 reg_t kDoSoundGetPolyphony(EngineState *s, int argc, reg_t *argv);
 reg_t kDoSoundUpdateCues(EngineState *s, int argc, reg_t *argv);
 reg_t kDoSoundSendMidi(EngineState *s, int argc, reg_t *argv);
-reg_t kDoSoundReverb(EngineState *s, int argc, reg_t *argv);
+reg_t kDoSoundGlobalReverb(EngineState *s, int argc, reg_t *argv);
 reg_t kDoSoundSetHold(EngineState *s, int argc, reg_t *argv);
 reg_t kDoSoundDummy(EngineState *s, int argc, reg_t *argv);
 reg_t kDoSoundGetAudioCapability(EngineState *s, int argc, reg_t *argv);
@@ -543,6 +545,7 @@ reg_t kFileIOReadByte(EngineState *s, int argc, reg_t *argv);
 reg_t kFileIOWriteByte(EngineState *s, int argc, reg_t *argv);
 reg_t kFileIOReadWord(EngineState *s, int argc, reg_t *argv);
 reg_t kFileIOWriteWord(EngineState *s, int argc, reg_t *argv);
+reg_t kFileIOCreateSaveSlot(EngineState *s, int argc, reg_t *argv);
 #endif
 
 //@}

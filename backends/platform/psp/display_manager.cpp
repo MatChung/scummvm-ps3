@@ -18,8 +18,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/psp/osys_psp.cpp $
- * $Id: osys_psp.cpp 47541 2010-01-25 01:39:44Z lordhoto $
+ * $URL$
+ * $Id$
  *
  */
 
@@ -63,7 +63,7 @@ const OSystem::GraphicsMode DisplayManager::_supportedModes[] = {
 
 // Class VramAllocator -----------------------------------
 
-DECLARE_SINGLETON(VramAllocator)
+DECLARE_SINGLETON(VramAllocator);
 
 //#define __PSP_DEBUG_FUNCS__	/* For debugging the stack */
 //#define __PSP_DEBUG_PRINT__
@@ -149,6 +149,17 @@ void MasterGuRenderer::threadFunction() {
 	sceKernelSleepThreadCB();	// sleep until we get a callback
 }
 
+// Sleep on the render mutex if the rendering thread hasn't finished its work
+//
+void MasterGuRenderer::sleepUntilRenderFinished() {
+	if (!isRenderFinished()) {
+		_renderSema.take();   // sleep on the semaphore
+		_renderSema.give();
+		PSP_DEBUG_PRINT("slept on the rendering semaphore\n");
+	}
+}
+
+
 // This callback is called when the render is finished. It swaps the buffers
 int MasterGuRenderer::guCallback(int, int, void *__this) {
 
@@ -160,6 +171,7 @@ int MasterGuRenderer::guCallback(int, int, void *__this) {
 
 	_this->_renderFinished = true;	// Only this thread can set the variable to true
 
+	_this->_renderSema.give(); 		// Release render semaphore
 	return 0;
 }
 
@@ -214,7 +226,11 @@ void MasterGuRenderer::guProgramDisplayBufferSizes() {
 inline void MasterGuRenderer::guPreRender() {
 	DEBUG_ENTER_FUNC();
 
+#ifdef USE_DISPLAY_CALLBACK
+	_renderSema.take(); 		// Take the semaphore to prevent writes
+								// to the palette/screen before we're done
 	_renderFinished = false;	// set to synchronize with callback thread
+#endif
 
 #ifdef ENABLE_RENDER_MEASURE
 	_lastRenderTime = g_system->getMillis();
@@ -283,13 +299,17 @@ void DisplayManager::init() {
 	_masterGuRenderer.setupCallbackThread();
 #endif
 
+	// Init overlay since we never change the size
+	_overlay->deallocate();	
+	_overlay->setBytesPerPixel(sizeof(OverlayColor));
+	_overlay->setSize(PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT);
+	_overlay->allocate();
 }
 
 void DisplayManager::setSizeAndPixelFormat(uint width, uint height, const Graphics::PixelFormat *format) {
 	DEBUG_ENTER_FUNC();
 	PSP_DEBUG_PRINT("w[%u], h[%u], pformat[%p]\n", width, height, format);
 
-	_overlay->deallocate();
 	_screen->deallocate();
 
 	_screen->setScummvmPixelFormat(format);
@@ -297,10 +317,6 @@ void DisplayManager::setSizeAndPixelFormat(uint width, uint height, const Graphi
 	_screen->allocate();
 
 	_cursor->setScreenPaletteScummvmPixelFormat(format);
-
-	_overlay->setBytesPerPixel(sizeof(OverlayColor));
-	_overlay->setSize(PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT);
-	_overlay->allocate();
 
 	_displayParams.screenSource.width = width;
 	_displayParams.screenSource.height = height;
@@ -372,6 +388,12 @@ void DisplayManager::calculateScaleParams() {
 	_displayParams.scaleX = ((float)_displayParams.screenOutput.width) / _displayParams.screenSource.width;
 	_displayParams.scaleY = ((float)_displayParams.screenOutput.height) / _displayParams.screenSource.height;
 
+}
+
+void DisplayManager::waitUntilRenderFinished() {
+#ifdef USE_DISPLAY_CALLBACK
+	_masterGuRenderer.sleepUntilRenderFinished();
+#endif /* USE_DISPLAY_CALLBACK */
 }
 
 // return true if we really rendered or no dirty. False otherwise

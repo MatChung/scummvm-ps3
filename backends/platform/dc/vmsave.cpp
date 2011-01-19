@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/dc/vmsave.cpp $
- * $Id: vmsave.cpp 48286 2010-03-18 15:44:59Z fingolfin $
+ * $Id: vmsave.cpp 54265 2010-11-16 10:19:01Z fingolfin $
  *
  */
 
@@ -28,7 +28,7 @@
 #include "dc.h"
 #include "icon.h"
 #include <common/savefile.h>
-#include <gui/GuiManager.h>
+#include <gui/gui-manager.h>
 #include <gui/message.h>
 #include <common/zlib.h>
 

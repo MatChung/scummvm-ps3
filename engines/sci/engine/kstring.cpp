@@ -19,13 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/kstring.cpp $
- * $Id: kstring.cpp 52676 2010-09-11 13:30:42Z lskovlun $
+ * $Id: kstring.cpp 55138 2011-01-07 00:12:18Z thebluegr $
  *
  */
 
 /* String and parser handling */
 
 #include "sci/resource.h"
+#include "sci/engine/features.h"
 #include "sci/engine/state.h"
 #include "sci/engine/message.h"
 #include "sci/engine/selector.h"
@@ -110,7 +111,12 @@ reg_t kStrAt(EngineState *s, int argc, reg_t *argv) {
 			offset++;
 
 		reg_t &tmp = dest_r.reg[offset / 2];
-		if (!(offset & 1)) {
+
+		bool oddOffset = offset & 1;
+		if (g_sci->getPlatform() == Common::kPlatformAmiga)
+			oddOffset = !oddOffset;
+
+		if (!oddOffset) {
 			value = tmp.offset & 0x00ff;
 			if (argc > 2) { /* Request to modify this char */
 				tmp.offset &= 0xff00;
@@ -127,9 +133,7 @@ reg_t kStrAt(EngineState *s, int argc, reg_t *argv) {
 		}
 	}
 
-	s->r_acc = make_reg(0, value);
-
-	return s->r_acc;
+	return make_reg(0, value);
 }
 
 
@@ -211,7 +215,7 @@ reg_t kFormat(EngineState *s, int argc, reg_t *argv) {
 	Common::String source_str = g_sci->getKernel()->lookupText(position, index);
 	const char* source = source_str.c_str();
 
-	debugC(2, kDebugLevelStrings, "Formatting \"%s\"", source);
+	debugC(kDebugLevelStrings, "Formatting \"%s\"", source);
 
 
 	arguments = (uint16 *)malloc(sizeof(uint16) * argc);
@@ -616,7 +620,14 @@ reg_t kText(EngineState *s, int argc, reg_t *argv) {
 }
 
 reg_t kString(EngineState *s, int argc, reg_t *argv) {
-	switch (argv[0].toUint16()) {
+	uint16 op = argv[0].toUint16();
+
+	if (g_sci->_features->detectSci2StringFunctionType() == kSci2StringFunctionNew) {
+		if (op >= 8)	// Dup, GetData have been removed
+			op += 2;
+	}
+
+	switch (op) {
 	case 0: { // New
 		reg_t stringHandle;
 		SciString *string = s->_segMan->allocateString(&stringHandle);
@@ -695,34 +706,22 @@ reg_t kString(EngineState *s, int argc, reg_t *argv) {
 
 		// A count of -1 means fill the rest of the array
 		uint32 count = argv[5].toSint16() == -1 ? string2Size - index2 + 1 : argv[5].toUint16();
+		reg_t strAddress = argv[1];
+
+		SciString *string1 = s->_segMan->lookupString(argv[1]);
+		//SciString *string1 = !argv[1].isNull() ? s->_segMan->lookupString(argv[1]) : s->_segMan->allocateString(&strAddress);
+
+		if (string1->getSize() < index1 + count)
+			string1->setSize(index1 + count);
+
+		// Note: We're accessing from c_str() here because the
+		// string's size ignores the trailing 0 and therefore
+		// triggers an assert when doing string2[i + index2].
+		for (uint16 i = 0; i < count; i++)
+			string1->setValue(i + index1, string2[i + index2]);
 	
-		// We have a special case here for argv[1] being a system string
-		if (argv[1].segment == s->_segMan->getSysStringsSegment()) {
-			// Resize if necessary
-			const uint16 sysStringId = argv[1].toUint16();
-			SystemString *sysString = s->_segMan->getSystemString(sysStringId);
-			assert(sysString);
-			if ((uint32)sysString->_maxSize < index1 + count) {
-				free(sysString->_value);
-				sysString->_maxSize = index1 + count;
-				sysString->_value = (char *)calloc(index1 + count, sizeof(char));
-			}
-
-			strncpy(sysString->_value + index1, string2 + index2, count);
-		} else {
-			SciString *string1 = s->_segMan->lookupString(argv[1]);
-
-			if (string1->getSize() < index1 + count)
-				string1->setSize(index1 + count);
-
-			// Note: We're accessing from c_str() here because the
-			// string's size ignores the trailing 0 and therefore
-			// triggers an assert when doing string2[i + index2].
-			for (uint16 i = 0; i < count; i++)
-				string1->setValue(i + index1, string2[i + index2]);
-		}
-		
-	} return argv[1];
+		return strAddress;
+	}
 	case 7: { // Cmp
 		Common::String string1 = argv[1].isNull() ? "" : s->_segMan->getString(argv[1]);
 		Common::String string2 = argv[2].isNull() ? "" : s->_segMan->getString(argv[2]);
@@ -780,25 +779,29 @@ reg_t kString(EngineState *s, int argc, reg_t *argv) {
 		Common::String string = s->_segMan->getString(argv[1]);
 		return make_reg(0, (uint16)atoi(string.c_str()));
 	}
+	// New subops in SCI2.1 late / SCI3
+	case 14:	// unknown
+		warning("kString, subop %d", op);
+		return NULL_REG;
+	case 15: { // upper
+		Common::String string = s->_segMan->getString(argv[1]);
+		
+		string.toUppercase();
+		s->_segMan->strcpy(argv[1], string.c_str());
+		return NULL_REG;
+	}
+	case 16: { // lower
+		Common::String string = s->_segMan->getString(argv[1]);
+		
+		string.toLowercase();
+		s->_segMan->strcpy(argv[1], string.c_str());
+		return NULL_REG;
+	}
 	default:
 		error("Unknown kString subop %d", argv[0].toUint16());
 	}
 
 	return NULL_REG;
-}
-
-/**
- * Debug function, used in the demo of Shivers. It's marked as a stub
- * in the original interpreter, but it gets called by the game scripts.
- */
-reg_t kPrintDebug(EngineState *s, int argc, reg_t *argv) {
-	Common::String debugTemplate = s->_segMan->getString(argv[0]);
-	char debugString[500];
-
-	sprintf(debugString, debugTemplate.c_str(), argv[1].toUint16());
-	debugC(2, "kPrintDebug: \"%s\"\n", debugString);
-
-	return s->r_acc;
 }
 
 #endif

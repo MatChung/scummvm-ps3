@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/agi.cpp $
- * $Id: agi.cpp 54121 2010-11-07 17:16:59Z fingolfin $
+ * $Id: agi.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -27,6 +27,7 @@
 #include "common/events.h"
 #include "common/EventRecorder.h"
 #include "common/file.h"
+#include "common/memstream.h"
 #include "common/savefile.h"
 #include "common/config-manager.h"
 #include "common/debug-channels.h"

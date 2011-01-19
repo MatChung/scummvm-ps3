@@ -19,16 +19,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/saveload.cpp $
- * $Id: saveload.cpp 52791 2010-09-18 10:55:16Z eriktorbjorn $
+ * $Id: saveload.cpp 54267 2010-11-16 10:29:31Z fingolfin $
  */
 
 #include "common/config-manager.h"
 #include "common/translation.h"
 
-#include "gui/ListWidget.h"
+#include "gui/widgets/list.h"
 #include "gui/message.h"
 #include "gui/saveload.h"
 #include "gui/ThemeEval.h"
+#include "gui/gui-manager.h"
 
 #include "graphics/scaler.h"
 

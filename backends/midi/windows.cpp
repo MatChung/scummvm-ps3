@@ -19,13 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/midi/windows.cpp $
- * $Id: windows.cpp 53961 2010-10-30 21:27:42Z fingolfin $
+ * $Id: windows.cpp 54575 2010-11-29 16:35:29Z fingolfin $
  */
-
-#if defined(WIN32) && !defined(_WIN32_WCE)
 
 // Disable symbol overrides so that we can use system headers.
 #define FORBIDDEN_SYMBOL_ALLOW_ALL
+
+#include "common/scummsys.h"
+
+#if defined(WIN32) && !defined(_WIN32_WCE)
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/drives.h $
- * $Id: drives.h 45618 2009-11-02 21:57:16Z fingolfin $
+ * $Id: drives.h 54439 2010-11-23 22:26:43Z fingolfin $
  *
  * CD/drive handling functions
  */
@@ -27,7 +27,7 @@
 #ifndef TINSEL_DRIVES_H
 #define TINSEL_DRIVES_H
 
-#include "common/file.h"
+#include "common/stream.h"
 #include "tinsel/dw.h"
 #include "tinsel/coroutine.h"
 
@@ -59,12 +59,27 @@ void SetNextCD(int cdNumber);
 
 bool GotoCD();
 
-class TinselFile: public Common::File {
+class TinselFile : public Common::SeekableReadStream, public Common::ReadStreamEndian {
 private:
 	static bool _warningShown;
+	Common::SeekableReadStream *_stream;
+	bool openInternal(const Common::String &filename);
 public:
-	virtual bool open(const Common::String &filename);
+	TinselFile();
+	~TinselFile();
+	bool open(const Common::String &filename);
+	void close();
 	char getCdNumber();
+
+	bool err() const;
+	void clearErr();
+
+	bool eos() const;
+	uint32 read(void *dataPtr, uint32 dataSize);
+
+	int32 pos() const;
+	int32 size() const;
+	bool seek(int32 offset, int whence = SEEK_SET);
 };
 
 

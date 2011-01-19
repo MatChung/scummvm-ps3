@@ -19,14 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/sound/cdrom.cpp $
- * $Id: cdrom.cpp 53984 2010-10-31 20:07:14Z drmccoy $
+ * $Id: cdrom.cpp 54148 2010-11-08 23:07:42Z fingolfin $
  *
  */
 
 #include "common/endian.h"
 #include "common/str.h"
 #include "common/util.h"
-#include "sound/audiocd.h"
+
+#include "backends/audiocd/audiocd.h"
 
 #include "gob/gob.h"
 #include "gob/sound/cdrom.h"
@@ -116,7 +117,7 @@ void CDROM::play(uint32 from, uint32 to) {
 	// HSG encodes frame information into a double word:
 	// minute multiplied by 4500, plus second multiplied by 75,
 	// plus frame, minus 150
-	AudioCD.play(1, 1, from, to - from + 1);
+	g_system->getAudioCDManager()->play(1, 1, from, to - from + 1);
 	_cdPlaying = true;
 }
 
@@ -161,7 +162,7 @@ void CDROM::stopPlaying() {
 
 void CDROM::stop() {
 	_curTrackBuffer = 0;
-	AudioCD.stop();
+	g_system->getAudioCDManager()->stop();
 	_cdPlaying = false;
 }
 

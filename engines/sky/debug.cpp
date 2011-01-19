@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sky/debug.cpp $
- * $Id: debug.cpp 30238 2008-01-05 12:45:14Z dreammaster $
+ * $Id: debug.cpp 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -1103,10 +1103,11 @@ Debugger::Debugger(Logic *logic, Mouse *mouse, Screen *screen, SkyCompact *skyCo
 Debugger::~Debugger() {} // we need this here for __SYMBIAN32__
 
 void Debugger::preEnter() {
-
+	::GUI::Debugger::preEnter();
 }
 
 void Debugger::postEnter() {
+	::GUI::Debugger::postEnter();
 	_mouse->resetCursor();
 }
 

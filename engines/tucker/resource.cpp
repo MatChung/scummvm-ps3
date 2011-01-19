@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tucker/resource.cpp $
- * $Id: resource.cpp 48637 2010-04-12 09:14:17Z fingolfin $
+ * $Id: resource.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -268,7 +268,7 @@ Audio::RewindableAudioStream *CompressedSound::load(CompressedSoundType type, in
 		int soundSize = _fCompressedSound.readUint32LE();
 		if (soundSize != 0) {
 			_fCompressedSound.seek(dirOffset + dirSize * 8 + soundOffset);
-			Common::MemoryReadStream *tmp = _fCompressedSound.readStream(soundSize);
+			Common::SeekableReadStream *tmp = _fCompressedSound.readStream(soundSize);
 			if (tmp) {
 				stream = (compressedSoundFilesTable[_compressedSoundType].makeStream)(tmp, DisposeAfterUse::YES);
 			}

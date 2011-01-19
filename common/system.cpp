@@ -19,11 +19,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/system.cpp $
- * $Id: system.cpp 36135 2009-01-30 03:35:47Z fingolfin $
+ * $Id: system.cpp 54516 2010-11-28 02:12:33Z lordhoto $
  *
  */
 
+// Disable symbol overrides so that we can use system headers.
+// FIXME: Necessary for the PS2 port, should get rid of this eventually.
+#define FORBIDDEN_SYMBOL_ALLOW_ALL
+
 #include "common/system.h"
+
+#ifdef __PLAYSTATION2__
+	// for those replaced fopen/fread/etc functions
+	#include "backends/platform/ps2/fileio.h"
+
+	#define fputs(str, file)	ps2_fputs(str, file)
+	#define fflush(a)			ps2_fflush(a)
+#endif
+
+#ifdef __DS__
+	#include "backends/fs/ds/ds-fs.h"
+
+	#define fputs(str, file)	DS::std_fwrite(str, strlen(str), 1, file)
+	#define fflush(file)		DS::std_fflush(file)
+#endif
 
 OSystem *g_system = 0;
 
@@ -54,10 +73,24 @@ bool OSystem::setGraphicsMode(const char *name) {
 	return false;
 }
 
-bool OSystem::openCD(int drive) {
-	return false;
+void OSystem::fatalError() {
+	quit();
+	exit(1);
 }
 
-bool OSystem::pollCD() {
-	return false;
+void OSystem::logMessage(LogMessageType::Type type, const char *message) {
+	FILE *output = 0;
+
+	if (type == LogMessageType::kDebug)
+		output = stdout;
+	else
+		output = stderr;
+
+	fputs(message, output);
+	fflush(output);
 }
+
+Common::String OSystem::getSystemLanguage() const {
+	return "en_US";
+}
+

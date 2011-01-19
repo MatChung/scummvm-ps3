@@ -19,10 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/imagedec.cpp $
- * $Id: imagedec.cpp 44634 2009-10-04 21:26:33Z fingolfin $
+ * $Id: imagedec.cpp 54358 2010-11-19 01:37:04Z fingolfin $
  */
 
 #include "graphics/imagedec.h"
+#include "graphics/surface.h"
 
 #include "common/file.h"
 

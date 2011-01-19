@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/variables.h $
- * $Id: variables.h 47839 2010-02-03 03:25:50Z drmccoy $
+ * $Id: variables.h 55277 2011-01-17 13:37:14Z drmccoy $
  *
  */
 
@@ -146,6 +146,23 @@ private:
 	Variables *_vars;
 	uint32 _offset;
 	Variables::Type _type;
+};
+
+class VariableStack {
+public:
+	VariableStack(uint32 size);
+	~VariableStack();
+
+	void pushData(const Variables &vars, uint32 offset, uint32 size);
+	void pushInt(uint32 value);
+
+	void pop(Variables &vars, uint32 offset);
+
+private:
+	byte *_stack;
+
+	uint32 _size;
+	uint32 _position;
 };
 
 } // End of namespace Gob

@@ -19,13 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/draci/barchive.cpp $
- * $Id: barchive.cpp 50614 2010-07-03 03:48:26Z spalek $
+ * $Id: barchive.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "common/debug.h"
 #include "common/str.h"
-#include "common/stream.h"
+#include "common/memstream.h"
 
 #include "draci/barchive.h"
 #include "draci/draci.h"

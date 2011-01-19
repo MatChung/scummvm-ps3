@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/videoplayer.h $
- * $Id: videoplayer.h 52947 2010-09-30 13:02:16Z drmccoy $
+ * $Id: videoplayer.h 55264 2011-01-16 16:30:15Z drmccoy $
  *
  */
 
@@ -74,6 +74,8 @@ public:
 
 		uint32 flags; ///< Video flags.
 
+		bool switchColorMode; ///< Switch between paletted / true color modes?
+
 		int32 startFrame; ///< Frame to start playback from.
 		int32 lastFrame;  ///< Frame to stop playback at.
 		int32 endFrame;   ///< Last frame of this playback cycle.
@@ -121,7 +123,7 @@ public:
 	const Common::List<Common::Rect> *getDirtyRects(int slot = 0) const;
 
 	bool                      hasEmbeddedFile(const Common::String &fileName, int slot = 0) const;
-	Common::MemoryReadStream *getEmbeddedFile(const Common::String &fileName, int slot = 0);
+	Common::SeekableReadStream *getEmbeddedFile(const Common::String &fileName, int slot = 0);
 
 	int32 getSubtitleIndex(int slot = 0) const;
 
@@ -130,7 +132,7 @@ public:
 
 	bool copyFrame(int slot, byte *dest,
 			uint16 left, uint16 top, uint16 width, uint16 height,
-			uint16 x, uint16 y, uint16 pitch, int16 transp = -1) const;
+			uint16 x, uint16 y, uint16 pitch, uint8 bpp = 1, int16 transp = -1) const;
 
 private:
 	struct Video {

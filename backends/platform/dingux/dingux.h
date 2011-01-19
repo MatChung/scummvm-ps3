@@ -19,51 +19,26 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/dingux/dingux.h $
- * $Id: dingux.h 52309 2010-08-23 19:49:51Z djwillis $
+ * $Id: dingux.h 54584 2010-11-29 18:48:43Z lordhoto $
  *
  */
 
 #ifndef SDL_DINGUX_COMMON_H
 #define SDL_DINGUX_COMMON_H
 
-#include <SDL.h>
+#if defined(DINGUX)
 
 #include "backends/base-backend.h"
 #include "backends/platform/sdl/sdl.h"
+#include "backends/platform/sdl/posix/posix.h"
+#include "backends/graphics/dinguxsdl/dinguxsdl-graphics.h"
+#include "backends/events/dinguxsdl/dinguxsdl-events.h"
 
-#if defined(DINGUX)
-
-enum {
-	GFX_HALF = 12
-};
-
-class OSystem_SDL_Dingux : public OSystem_SDL {
+class OSystem_SDL_Dingux : public OSystem_POSIX {
 public:
-	virtual bool hasFeature(Feature f);
-	virtual void setFeatureState(Feature f, bool enable);
-	virtual bool getFeatureState(Feature f);
-	virtual int getDefaultGraphicsMode() const;
-
-	void initSize(uint w, uint h);
-	const OSystem::GraphicsMode *getSupportedGraphicsModes() const;
-	bool setGraphicsMode(const char *name);
-	bool setGraphicsMode(int mode);
-	void setGraphicsModeIntern();
-	void internUpdateScreen();
-	void showOverlay();
-	void hideOverlay();
-	bool loadGFXMode();
-	void drawMouse();
-	void undrawMouse();
-	void warpMouse(int, int);
-	void fillMouseEvent(Common::Event&, int, int);
-
-protected:
-	virtual bool remapKey(SDL_Event &ev, Common::Event &event);
+	void initBackend();
 };
 
 
-#endif
-
-#endif
-
+#endif /* DINGUX */
+#endif /* SDL_DINGUX_COMMON_H */

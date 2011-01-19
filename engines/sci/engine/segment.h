@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/segment.h $
- * $Id: segment.h 53646 2010-10-20 17:31:29Z thebluegr $
+ * $Id: segment.h 54805 2010-12-07 00:47:05Z thebluegr $
  *
  */
 
@@ -27,6 +27,8 @@
 #define SCI_ENGINE_SEGMENT_H
 
 #include "common/serializer.h"
+
+#include "sci/engine/object.h"
 #include "sci/engine/vm.h"
 #include "sci/engine/vm_types.h"	// for reg_t
 #include "sci/util.h"
@@ -62,7 +64,7 @@ enum SegmentType {
 	SEG_TYPE_CLONES = 2,
 	SEG_TYPE_LOCALS = 3,
 	SEG_TYPE_STACK = 4,
-	SEG_TYPE_SYS_STRINGS = 5,
+	// 5 used to be system strings,	now obsolete
 	SEG_TYPE_LISTS = 6,
 	SEG_TYPE_NODES = 7,
 	SEG_TYPE_HUNK = 8,
@@ -143,49 +145,6 @@ public:
 	}
 };
 
-enum {
-	SYS_STRINGS_MAX = 4,
-
-	SYS_STRING_SAVEDIR = 0,
-	SYS_STRING_PARSER_BASE = 1,
-
-	MAX_PARSER_BASE = 64
-};
-
-struct SystemString {
-	Common::String _name;
-	int _maxSize;
-	char *_value;
-};
-
-struct SystemStrings : public SegmentObj {
-	SystemString _strings[SYS_STRINGS_MAX];
-
-public:
-	SystemStrings() : SegmentObj(SEG_TYPE_SYS_STRINGS) {
-		for (int i = 0; i < SYS_STRINGS_MAX; i++) {
-			_strings[i]._maxSize = 0;
-			_strings[i]._value = 0;
-		}
-	}
-	~SystemStrings() {
-		for (int i = 0; i < SYS_STRINGS_MAX; i++) {
-			SystemString *str = &_strings[i];
-			if (!str->_name.empty()) {
-				free(str->_value);
-				str->_value = NULL;
-
-				str->_maxSize = 0;
-			}
-		}
-	}
-
-	virtual bool isValidOffset(uint16 offset) const;
-	virtual SegmentRef dereference(reg_t pointer);
-
-	virtual void saveLoadWithSerializer(Common::Serializer &ser);
-};
-
 struct LocalVariables : public SegmentObj {
 	int script_id; /**< Script ID this local variable block belongs to */
 	Common::Array<reg_t> _locals;
@@ -201,138 +160,6 @@ public:
 	virtual Common::Array<reg_t> listAllOutgoingReferences(reg_t object) const;
 
 	virtual void saveLoadWithSerializer(Common::Serializer &ser);
-};
-
-/** Clone has been marked as 'freed' */
-enum {
-	OBJECT_FLAG_FREED = (1 << 0)
-};
-
-enum infoSelectorFlags {
-	kInfoFlagClone = 0x0001,
-	kInfoFlagClass = 0x8000
-};
-
-enum ObjectOffsets {
-	kOffsetLocalVariables = -6,
-	kOffsetFunctionArea = -4,
-	kOffsetSelectorCounter = -2,
-	kOffsetSelectorSegment = 0,
-	kOffsetInfoSelectorSci0 = 4,
-	kOffsetNamePointerSci0 = 6,
-	kOffsetInfoSelectorSci11 = 14,
-	kOffsetNamePointerSci11 = 16
-};
-
-class Object {
-public:
-	Object() {
-		_offset = getSciVersion() < SCI_VERSION_1_1 ? 0 : 5;
-		_flags = 0;
-		_baseObj = 0;
-		_baseVars = 0;
-		_baseMethod = 0;
-		_methodCount = 0;
-	}
-
-	~Object() { }
-
-	reg_t getSpeciesSelector() const { return _variables[_offset]; }
-	void setSpeciesSelector(reg_t value) { _variables[_offset] = value; }
-
-	reg_t getSuperClassSelector() const { return _variables[_offset + 1]; }
-	void setSuperClassSelector(reg_t value) { _variables[_offset + 1] = value; }
-
-	reg_t getInfoSelector() const { return _variables[_offset + 2]; }
-	void setInfoSelector(reg_t value) { _variables[_offset + 2] = value; }
-
-	reg_t getNameSelector() const { return _offset + 3 < (uint16)_variables.size() ? _variables[_offset + 3] : NULL_REG; }
-	void setNameSelector(reg_t value) { _variables[_offset + 3] = value; }
-
-	reg_t getPropDictSelector() const { return _variables[2]; }
-	void setPropDictSelector(reg_t value) { _variables[2] = value; }
-
-	reg_t getClassScriptSelector() const { return _variables[4]; }
-	void setClassScriptSelector(reg_t value) { _variables[4] = value; }
-
-	Selector getVarSelector(uint16 i) const { return READ_SCI11ENDIAN_UINT16(_baseVars + i); }
-
-	reg_t getFunction(uint16 i) const {
-		uint16 offset = (getSciVersion() < SCI_VERSION_1_1) ? _methodCount + 1 + i : i * 2 + 2;
-		return make_reg(_pos.segment, READ_SCI11ENDIAN_UINT16(_baseMethod + offset));
-	}
-
-	Selector getFuncSelector(uint16 i) const {
-		uint16 offset = (getSciVersion() < SCI_VERSION_1_1) ? i : i * 2 + 1;
-		return READ_SCI11ENDIAN_UINT16(_baseMethod + offset);
-	}
-
-	/**
-	 * Determines if this object is a class and explicitly defines the
-	 * selector as a funcselector. Does NOT say anything about the object's
-	 * superclasses, i.e. failure may be returned even if one of the
-	 * superclasses defines the funcselector
-	 */
-	int funcSelectorPosition(Selector sel) const {
-		for (uint i = 0; i < _methodCount; i++)
-			if (getFuncSelector(i) == sel)
-				return i;
-
-		return -1;
-	}
-
-	/**
-	 * Determines if the object explicitly defines slc as a varselector.
-	 * Returns -1 if not found.
-	 */
-	int locateVarSelector(SegManager *segMan, Selector slc) const;
-
-	bool isClass() const { return (getInfoSelector().offset & kInfoFlagClass); }
-	const Object *getClass(SegManager *segMan) const;
-
-	void markAsFreed() { _flags |= OBJECT_FLAG_FREED; }
-	bool isFreed() const { return _flags & OBJECT_FLAG_FREED; }
-
-	uint getVarCount() const { return _variables.size(); }
-
-	void init(byte *buf, reg_t obj_pos, bool initVariables = true);
-
-	reg_t getVariable(uint var) const { return _variables[var]; }
-	reg_t &getVariableRef(uint var) { return _variables[var]; }
-
-	uint16 getMethodCount() const { return _methodCount; }
-	reg_t getPos() const { return _pos; }
-
-	void saveLoadWithSerializer(Common::Serializer &ser);
-
-	void cloneFromObject(const Object *obj) {
-		_baseObj = obj ? obj->_baseObj : NULL;
-		_baseMethod = obj ? obj->_baseMethod : NULL;
-		_baseVars = obj ? obj->_baseVars : NULL;
-	}
-
-	bool relocate(SegmentId segment, int location, size_t scriptSize);
-
-	int propertyOffsetToId(SegManager *segMan, int propertyOffset) const;
-
-	void initSpecies(SegManager *segMan, reg_t addr);
-	void initSuperClass(SegManager *segMan, reg_t addr);
-	bool initBaseObject(SegManager *segMan, reg_t addr, bool doInitSuperClass = true);
-
-	// TODO: make private
-	// Only SegManager::reconstructScripts() is left needing direct access to these
-public:
-	const byte *_baseObj; /**< base + object offset within base */
-
-private:
-	const uint16 *_baseVars; /**< Pointer to the varselector area for this object */
-	const uint16 *_baseMethod; /**< Pointer to the method selector area for this object */
-
-	Common::Array<reg_t> _variables;
-	uint16 _methodCount;
-	int _flags;
-	uint16 _offset;
-	reg_t _pos; /**< Object offset within its script; for clones, this is their base */
 };
 
 /** Data stack */

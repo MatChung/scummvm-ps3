@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/groovie/groovie.cpp $
- * $Id: groovie.cpp 52633 2010-09-08 09:37:33Z jvprat $
+ * $Id: groovie.cpp 54148 2010-11-08 23:07:42Z fingolfin $
  *
  */
 
@@ -37,6 +37,7 @@
 #include "common/events.h"
 #include "common/macresman.h"
 
+#include "backends/audiocd/audiocd.h"
 #include "engines/util.h"
 #include "graphics/fontman.h"
 #include "sound/mixer.h"
@@ -217,7 +218,7 @@ Common::Error GroovieEngine::run() {
 	// Initialize the CD
 	int cd_num = ConfMan.getInt("cdrom");
 	if (cd_num >= 0)
-		_system->openCD(cd_num);
+		_system->getAudioCDManager()->openCD(cd_num);
 
 	while (!shouldQuit()) {
 		// Give the debugger a chance to act

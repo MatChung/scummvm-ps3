@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/state.cpp $
- * $Id: state.cpp 53715 2010-10-22 22:00:27Z littleboy $
+ * $Id: state.cpp 54201 2010-11-11 14:19:44Z littleboy $
  *
  */
 
@@ -42,11 +42,11 @@ State::State(LastExpressEngine *engine) : _engine(engine), _timer(0) {
 }
 
 State::~State() {
-	delete _inventory;
-	delete _objects;
-	delete _savepoints;
-	delete _state;
-	delete _flags;
+	SAFE_DELETE(_inventory);
+	SAFE_DELETE(_objects);
+	SAFE_DELETE(_savepoints);
+	SAFE_DELETE(_state);
+	SAFE_DELETE(_flags);
 
 	// Zero passed pointers
 	_engine = NULL;

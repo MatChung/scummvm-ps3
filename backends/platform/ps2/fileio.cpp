@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/ps2/fileio.cpp $
- * $Id: fileio.cpp 53969 2010-10-30 23:53:59Z fingolfin $
+ * $Id: fileio.cpp 54343 2010-11-18 20:24:27Z fingolfin $
  *
  */
 
@@ -413,7 +413,9 @@ uint32 Ps2File::read(void *dest, uint32 len) {
 		}
 	}
 	cacheReadAhead();
+#ifdef __PS2_FILE_SEMA__
 	SignalSema(_sema);
+#endif
 	return destBuf - (uint8*)dest;
 }
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/draci/animation.cpp $
- * $Id: animation.cpp 50618 2010-07-03 05:05:28Z spalek $
+ * $Id: animation.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -30,6 +30,8 @@
 #include "draci/screen.h"
 #include "draci/sound.h"
 #include "draci/surface.h"
+
+#include "common/memstream.h"
 
 namespace Draci {
 

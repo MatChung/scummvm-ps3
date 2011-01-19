@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/anim.cpp $
- * $Id: anim.cpp 53908 2010-10-28 21:39:46Z sylvaintv $
+ * $Id: anim.cpp 54219 2010-11-12 22:31:04Z sylvaintv $
  *
  */
 
@@ -58,6 +58,7 @@ bool Animation::loadAnimation(Common::String file) {
 	uint8 *currentData = fileData + 68;
 	if (_paletteEntries) {
 		if (paletteSize) {
+			delete[] _palette;
 			_palette = new uint8[paletteSize];
 			memcpy(_palette, currentData, paletteSize);
 			currentData += paletteSize;
@@ -74,6 +75,7 @@ bool Animation::loadAnimation(Common::String file) {
 
 	if (READ_LE_UINT32(finalBuffer) == 0x12345678) {
 		uint8 *data = finalBuffer;
+		delete[] _frames;
 		_frames = new AnimationFrame[_numFrames];
 		for (int32 e = 0; e < _numFrames; e++) {
 			if (READ_LE_UINT32(data) != 0x12345678)
@@ -106,13 +108,15 @@ bool Animation::loadAnimation(Common::String file) {
 		}
 	}
 
+	_vm->resources()->purgeFileData();
 	delete[] finalBuffer;
 	return true;
 }
 
 Animation::Animation(ToonEngine *vm) : _vm(vm) {
-	_palette = 0;
-	_frames = 0;
+	_palette = NULL;
+	_numFrames = 0;
+	_frames = NULL;
 }
 
 Animation::~Animation() {

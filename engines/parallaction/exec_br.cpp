@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/exec_br.cpp $
- * $Id: exec_br.cpp 50363 2010-06-27 04:58:48Z peres001 $
+ * $Id: exec_br.cpp 55229 2011-01-13 17:26:00Z tdhs $
  *
  */
 
@@ -107,10 +107,14 @@ void Parallaction_br::clearSubtitles() {
 	if (_subtitle[0]) {
 		_gfx->hideLabel(_subtitle[0]);
 	}
+	delete _subtitle[0];
+	_subtitle[0] = 0;
 
 	if (_subtitle[1]) {
 		_gfx->hideLabel(_subtitle[1]);
 	}
+	delete _subtitle[1];
+	_subtitle[1] = 0;
 }
 
 

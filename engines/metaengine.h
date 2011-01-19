@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/metaengine.h $
- * $Id: metaengine.h 54097 2010-11-05 13:24:57Z bluddy $
+ * $Id: metaengine.h 55024 2010-12-23 13:38:37Z Bluddy $
  */
 
 #ifndef ENGINES_METAENGINE_H
@@ -231,7 +231,7 @@ private:
 	friend class Common::Singleton<SingletonBaseType>;
 
 public:
-	GameDescriptor findGameOnePluginAtATime(const Common::String &gameName, const EnginePlugin **plugin = NULL) const;
+	GameDescriptor findGameInLoadedPlugins(const Common::String &gameName, const EnginePlugin **plugin = NULL) const;
 	GameDescriptor findGame(const Common::String &gameName, const EnginePlugin **plugin = NULL) const;
 	GameList detectGames(const Common::FSList &fslist) const;
 	const EnginePlugin::List &getPlugins() const;

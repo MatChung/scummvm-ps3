@@ -19,10 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/riven_scripts.cpp $
- * $Id: riven_scripts.cpp 54107 2010-11-07 01:03:29Z fingolfin $
+ * $Id: riven_scripts.cpp 55312 2011-01-18 20:30:16Z mthreepwood $
  *
  */
 
+#include "mohawk/cursors.h"
 #include "mohawk/graphics.h"
 #include "mohawk/riven.h"
 #include "mohawk/riven_external.h"
@@ -131,8 +132,8 @@ void RivenScript::setupOpcodes() {
 		OPCODE(empty),						// Set movie rate (not used)
 		OPCODE(enableMovie),
 		// 0x20 (32 decimal)
+		OPCODE(playMovieBlocking),
 		OPCODE(playMovie),
-		OPCODE(playMovieBg),
 		OPCODE(stopMovie),
 		OPCODE(empty),						// Start a water effect (not used)
 		// 0x24 (36 decimal)
@@ -160,7 +161,7 @@ static void printTabs(byte tabs) {
 		debugN("\t");
 }
 
-void RivenScript::dumpScript(Common::StringArray varNames, Common::StringArray xNames, byte tabs) {
+void RivenScript::dumpScript(const Common::StringArray &varNames, const Common::StringArray &xNames, byte tabs) {
 	if (_stream->pos() != 0)
 		_stream->seek(0);
 
@@ -168,7 +169,7 @@ void RivenScript::dumpScript(Common::StringArray varNames, Common::StringArray x
 	dumpCommands(varNames, xNames, tabs + 1);
 }
 
-void RivenScript::dumpCommands(Common::StringArray varNames, Common::StringArray xNames, byte tabs) {
+void RivenScript::dumpCommands(const Common::StringArray &varNames, const Common::StringArray &xNames, byte tabs) {
 	uint16 commandCount = _stream->readUint16BE();
 
 	for (uint16 i = 0; i < commandCount; i++) {
@@ -344,6 +345,11 @@ void RivenScript::playScriptSLST(uint16 op, uint16 argc, uint16 *argv) {
 	// Play the requested sound list
 	_vm->_sound->playSLST(slstRecord);
 	_vm->_activatedSLST = true;
+
+	delete[] slstRecord.sound_ids;
+	delete[] slstRecord.volumes;
+	delete[] slstRecord.balances;
+	delete[] slstRecord.u2;
 }
 
 // Command 4: play local tWAV resource (twav_id, volume, block)
@@ -396,7 +402,7 @@ void RivenScript::clearSLST(uint16 op, uint16 argc, uint16 *argv) {
 // Command 13: set mouse cursor (cursor_id)
 void RivenScript::changeCursor(uint16 op, uint16 argc, uint16 *argv) {
 	debug(2, "Change to cursor %d", argv[0]);
-	_vm->_gfx->changeCursor(argv[0]);
+	_vm->_cursor->setCursor(argv[0]);
 }
 
 // Command 14: pause script execution (delay in ms, u1)
@@ -470,7 +476,7 @@ void RivenScript::changeStack(uint16 op, uint16 argc, uint16 *argv) {
 
 // Command 28: disable a movie
 void RivenScript::disableMovie(uint16 op, uint16 argc, uint16 *argv) {
-	_vm->_video->disableMovie(argv[0]);
+	_vm->_video->disableMovieRiven(argv[0]);
 }
 
 // Command 29: disable all movies
@@ -480,24 +486,24 @@ void RivenScript::disableAllMovies(uint16 op, uint16 argc, uint16 *argv) {
 
 // Command 31: enable a movie
 void RivenScript::enableMovie(uint16 op, uint16 argc, uint16 *argv) {
-	_vm->_video->enableMovie(argv[0]);
+	_vm->_video->enableMovieRiven(argv[0]);
 }
 
 // Command 32: play foreground movie - blocking (movie_id)
-void RivenScript::playMovie(uint16 op, uint16 argc, uint16 *argv) {
+void RivenScript::playMovieBlocking(uint16 op, uint16 argc, uint16 *argv) {
 	CursorMan.showMouse(false); // Hide the cursor before playing the video
-	_vm->_video->playMovieBlocking(argv[0]);
+	_vm->_video->playMovieBlockingRiven(argv[0]);
 	CursorMan.showMouse(true); // Show the cursor again when we're done ;)
 }
 
 // Command 33: play background movie - nonblocking (movie_id)
-void RivenScript::playMovieBg(uint16 op, uint16 argc, uint16 *argv) {
-	_vm->_video->playMovie(argv[0]);
+void RivenScript::playMovie(uint16 op, uint16 argc, uint16 *argv) {
+	_vm->_video->playMovieRiven(argv[0]);
 }
 
 // Command 34: stop a movie
 void RivenScript::stopMovie(uint16 op, uint16 argc, uint16 *argv) {
-	_vm->_video->stopMovie(argv[0]);
+	_vm->_video->stopMovieRiven(argv[0]);
 }
 
 // Command 36: unknown
@@ -547,12 +553,12 @@ void RivenScript::activateSLST(uint16 op, uint16 argc, uint16 *argv) {
 // Command 41: activate MLST record and play
 void RivenScript::activateMLSTAndPlay(uint16 op, uint16 argc, uint16 *argv) {
 	_vm->_video->activateMLST(argv[0], _vm->getCurCard());
-	_vm->_video->playMovie(argv[0]);
+	_vm->_video->playMovieRiven(argv[0]);
 }
 
 // Command 43: activate BLST record (card hotspot enabling lists)
 void RivenScript::activateBLST(uint16 op, uint16 argc, uint16 *argv) {
-	Common::SeekableReadStream* blst = _vm->getRawData(ID_BLST, _vm->getCurCard());
+	Common::SeekableReadStream* blst = _vm->getResource(ID_BLST, _vm->getCurCard());
 	uint16 recordCount = blst->readUint16BE();
 
 	for (uint16 i = 0; i < recordCount; i++) {
@@ -571,7 +577,7 @@ void RivenScript::activateBLST(uint16 op, uint16 argc, uint16 *argv) {
 
 // Command 44: activate FLST record (information on which SFXE resource this card should use)
 void RivenScript::activateFLST(uint16 op, uint16 argc, uint16 *argv) {
-	Common::SeekableReadStream* flst = _vm->getRawData(ID_FLST, _vm->getCurCard());
+	Common::SeekableReadStream* flst = _vm->getResource(ID_FLST, _vm->getCurCard());
 	uint16 recordCount = flst->readUint16BE();
 
 	for (uint16 i = 0; i < recordCount; i++) {

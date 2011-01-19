@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/riven_external.h $
- * $Id: riven_external.h 52735 2010-09-15 20:28:42Z mthreepwood $
+ * $Id: riven_external.h 55278 2011-01-17 16:10:48Z mthreepwood $
  *
  */
 
@@ -65,13 +65,15 @@ private:
 	void runCredits(uint16 video);
 	void runDomeCheck();
 	void runDomeButtonMovie();
-	void resetDomeSliders(uint16 bitmapId, uint16 soundId, uint16 startHotspot);
+	void resetDomeSliders(uint16 soundId, uint16 startHotspot);
 	void checkDomeSliders(uint16 resetSlidersHotspot, uint16 openDomeHotspot);
 	void checkSliderCursorChange(uint16 startHotspot);
-	void dragDomeSlider(uint16 bitmapId, uint16 soundId, uint16 resetSlidersHotspot, uint16 openDomeHotspot, uint16 startHotspot);
-	void drawDomeSliders(uint16 bitmapId, uint16 startHotspot);
+	void dragDomeSlider(uint16 soundId, uint16 resetSlidersHotspot, uint16 openDomeHotspot, uint16 startHotspot);
+	void drawDomeSliders(uint16 startHotspot);
 	void drawMarbles();
 	void setMarbleHotspots();
+	void redrawWharkNumberPuzzle(uint16 overlay, uint16 number);
+	void lowerPins();
 
 	// -----------------------------------------------------
 	// aspit (Main Menu, Books, Setup) external commands
@@ -100,6 +102,8 @@ private:
 	void xalaunchbrowser(uint16 argc, uint16 *argv);
 	void xadisablemenuintro(uint16 argc, uint16 *argv);
 	void xaenablemenuintro(uint16 argc, uint16 *argv);
+	void xademoquit(uint16 argc, uint16 *argv);
+	void xaexittomain(uint16 argc, uint16 *argv);
 
 	// -----------------------------------------------------
 	// bspit (Boiler Island) external commands
@@ -192,6 +196,8 @@ private:
 	void xjlagoon1500_alert(uint16 argc, uint16 *argv);
 	// Play the Whark Game
 	void xschool280_playwhark(uint16 argc, uint16 *argv);
+	void xjschool280_resetleft(uint16 argc, uint16 *argv); // DVD only
+	void xjschool280_resetright(uint16 argc, uint16 *argv); // DVD only
 	// jspit Demo-specific commands
 	void xjatboundary(uint16 argc, uint16 *argv);
 

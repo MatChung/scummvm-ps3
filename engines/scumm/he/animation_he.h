@@ -19,14 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/he/animation_he.h $
- * $Id: animation_he.h 49079 2010-05-18 14:17:24Z mthreepwood $
+ * $Id: animation_he.h 54434 2010-11-23 22:25:10Z fingolfin $
  *
  */
 
 #if !defined(SCUMM_HE_ANIMATION_H) && defined(ENABLE_HE)
 #define SCUMM_HE_ANIMATION_H
-
-#include "common/file.h"
 
 #include "graphics/video/smk_decoder.h"
 

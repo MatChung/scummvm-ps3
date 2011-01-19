@@ -2,7 +2,7 @@
  * Copyright (C) 2003-2005 Andreas 'Sprawl' Karlsson - Original EPOC port, ESDL
  * Copyright (C) 2003-2005 Lars 'AnotherGuest' Persson - Original EPOC port, Audio System
  * Copyright (C) 2005 Jurgen 'SumthinWicked' Braam - EPOC/CVS maintainer
- * Copyright (C) 2005-2010 The ScummVM project
+ * Copyright (C) 2005-2011 The ScummVM project
  *
  * ScummVM is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -23,7 +23,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/symbian/mmp/scummvm_base.mmp.in $
- * $Id: scummvm_base.mmp.in 52854 2010-09-22 10:27:09Z anotherguest $
+ * $Id: scummvm_base.mmp.in 55082 2010-12-31 23:04:49Z strangerke $
  *
  */
 
@@ -125,12 +125,25 @@ SOURCE	   engines\game.cpp
 SOURCE 	   engines\advanceddetector.cpp
 SOURCE 	   engines\savestate.cpp
 // backend specific includes
+SOURCE	   backends\modular-backend.cpp
+SOURCE     backends\audiocd\default\default-audiocd.cpp
+SOURCE     backends\audiocd\sdl\sdl-audiocd.cpp
+SOURCE     backends\events\sdl\sdl-events.cpp
+SOURCE     backends\events\symbiansdl\symbiansdl-events.cpp
 SOURCE	   backends\fs\abstract-fs.cpp
 SOURCE	   backends\fs\symbian\symbianstream.cpp
+SOURCE     backends\graphics\sdl\sdl-graphics.cpp
+SOURCE     backends\graphics\symbiansdl\symbiansdl-graphics.cpp
 SOURCE     backends\keymapper\action.cpp
 SOURCE     backends\keymapper\keymap.cpp
 SOURCE     backends\keymapper\keymapper.cpp
 SOURCE     backends\keymapper\remap-dialog.cpp
+SOURCE     backends\mixer\sdl\sdl-mixer.cpp
+SOURCE     backends\mixer\symbiansdl\symbiansdl-mixer.cpp
+SOURCE     backends\mutex\sdl\sdl-mutex.cpp
+SOURCE     backends\timer\sdl\sdl-timer.cpp
+SOURCE     backends\log\log.cpp
+
 // Source files for virtual keyboard
 SOURCE     backends\vkeybd\image-map.cpp
 SOURCE     backends\vkeybd\polygon.cpp
@@ -140,3 +153,4 @@ SOURCE     backends\vkeybd\virtual-keyboard.cpp
 
 // Downscaler
 SOURCE	   graphics\scaler\downscaler.cpp
+MACRO SDL_BACKEND

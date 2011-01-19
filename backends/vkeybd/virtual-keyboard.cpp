@@ -19,9 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/vkeybd/virtual-keyboard.cpp $
- * $Id: virtual-keyboard.cpp 50483 2010-06-29 06:38:00Z spalek $
+ * $Id: virtual-keyboard.cpp 54573 2010-11-29 16:18:43Z fingolfin $
  *
  */
+
+#include "common/scummsys.h"
 
 #ifdef ENABLE_VKEYBD
 

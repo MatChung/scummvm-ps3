@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/font.h $
-* $Id: font.h 53461 2010-10-14 22:27:48Z jvprat $
+* $Id: font.h 54127 2010-11-07 21:08:46Z tdhs $
 *
 */
 
@@ -33,7 +33,7 @@ namespace Toon {
 class FontRenderer {
 public:
 	FontRenderer(ToonEngine *vm);
-	~FontRenderer(void);
+	~FontRenderer();
 
 	void setFont(Animation *font);
 	void computeSize(Common::String origText, int32 *retX, int32 *retY);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/lol.h $
- * $Id: lol.h 53912 2010-10-28 23:57:24Z lordhoto $
+ * $Id: lol.h 54288 2010-11-17 12:22:08Z fingolfin $
  *
  */
 
@@ -1223,7 +1223,7 @@ private:
 
 	void assignItemToBlock(uint16 *assignedBlockObjects, int id);
 	int checkDrawObjectSpace(int itemX, int itemY, int partyX, int partyY);
-	int checkSceneForItems(uint16 *blockDrawObjects, int colour);
+	int checkSceneForItems(uint16 *blockDrawObjects, int color);
 
 	uint8 _moneyColumnHeight[5];
 	uint16 _credits;

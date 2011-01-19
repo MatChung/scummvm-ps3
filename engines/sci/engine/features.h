@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/features.h $
- * $Id: features.h 51557 2010-07-31 22:45:38Z m_kiewitz $
+ * $Id: features.h 54476 2010-11-25 14:22:09Z thebluegr $
  *
  */
 
@@ -35,6 +35,12 @@ enum MoveCountType {
 	kMoveCountUninitialized,
 	kIgnoreMoveCount,
 	kIncrementMoveCount
+};
+
+enum Sci2StringFunctionType {
+	kSci2StringFunctionUninitialized,
+	kSci2StringFunctionOld,
+	kSci2StringFunctionNew
 };
 
 class GameFeatures {
@@ -57,7 +63,7 @@ public:
 
 	/**
 	 * Autodetects the Lofs type
-	 * @return Lofs type, SCI_VERSION_0_EARLY / SCI_VERSION_1_MIDDLE / SCI_VERSION_1_1
+	 * @return Lofs type, SCI_VERSION_0_EARLY / SCI_VERSION_1_MIDDLE / SCI_VERSION_1_1 / SCI_VERSION_3
 	 */
 	SciVersion detectLofsType();
 
@@ -79,6 +85,13 @@ public:
 	 * @return Graphics functions type, SCI_VERSION_2 / SCI_VERSION_2_1
 	 */
 	SciVersion detectSci21KernelType();
+
+	/**
+	 * Autodetects the string subfunctions used in SCI2 - SCI3
+	 * @return string subfunctions type, kSci2StringFunctionOld / kSci2StringFunctionNew
+	 */
+	Sci2StringFunctionType detectSci2StringFunctionType();
+
 #endif
 
 	/**
@@ -100,6 +113,13 @@ public:
 
 	bool usesCdTrack() { return _usesCdTrack; }
 
+	/**
+	 * Checks if the alternative Windows GM MIDI soundtrack should be used. Such
+	 * soundtracks are available for the Windows CD versions of EcoQuest, Jones,
+	 * KQ5 and SQ4.
+	 */
+	bool useAltWinGMSound();
+
 private:
 	reg_t getDetectionAddr(const Common::String &objName, Selector slc, int methodNum = -1);
 
@@ -109,11 +129,13 @@ private:
 	bool autoDetectMoveCountType();
 #ifdef ENABLE_SCI32
 	bool autoDetectSci21KernelType();
+	bool autoDetectSci21StringFunctionType();
 #endif
 
 	SciVersion _doSoundType, _setCursorType, _lofsType, _gfxFunctionsType, _messageFunctionType;
 #ifdef ENABLE_SCI32
 	SciVersion _sci21KernelType;
+	Sci2StringFunctionType _sci2StringFunctionType;
 #endif
 
 	MoveCountType _moveCountType;

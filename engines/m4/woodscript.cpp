@@ -19,11 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/woodscript.cpp $
- * $Id: woodscript.cpp 54047 2010-11-03 09:44:03Z dreammaster $
+ * $Id: woodscript.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "m4/woodscript.h"
+
+#include "common/memstream.h"
 
 namespace M4 {
 

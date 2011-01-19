@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/cursor.h $
- * $Id: cursor.h 53028 2010-10-05 10:30:26Z thebluegr $
+ * $Id: cursor.h 54495 2010-11-26 12:37:24Z thebluegr $
  *
  */
 
@@ -112,6 +112,13 @@ private:
 	CursorCache _cachedCursors;
 
 	bool _isVisible;
+
+	// KQ6 Windows has different black and white cursors. If this is
+	// true (set from the sci_originalkq6wincursors ini setting), then
+	// we use these, and don't scale them by 2x like the rest of the
+	// graphics, like SSCI did. These look very ugly, which is why
+	// they aren't enabled by default.
+	bool _useOriginalKQ6WinCursors;
 };
 
 } // End of namespace Sci

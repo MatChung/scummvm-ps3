@@ -2,7 +2,7 @@
 # a list of common object files etc.
 #
 # $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/Makefile.common $
-# $Id: Makefile.common 54052 2010-11-03 22:57:42Z wjpalenstijn $
+# $Id: Makefile.common 54169 2010-11-09 20:48:23Z sev $
 
 ######################################################################
 # The default build target: just build the scummvm executable
@@ -23,10 +23,10 @@ MODULES := test tools base $(MODULES)
 # After the game specific modules follow the shared modules
 MODULES += \
 	gui \
-	sound \
 	backends \
 	engines \
 	graphics \
+	sound \
 	common \
 	po
 

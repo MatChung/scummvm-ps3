@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/smk_decoder.cpp $
- * $Id: smk_decoder.cpp 53893 2010-10-27 22:41:08Z athrxx $
+ * $Id: smk_decoder.cpp 54927 2010-12-16 01:35:13Z mthreepwood $
  *
  */
 
@@ -519,7 +519,7 @@ void SmackerDecoder::close() {
 	reset();
 }
 
-Surface *SmackerDecoder::decodeNextFrame() {
+const Surface *SmackerDecoder::decodeNextFrame() {
 	uint i;
 	uint32 chunkSize = 0;
 	uint32 dataSizeUnpacked = 0;

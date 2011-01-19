@@ -19,11 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/testbed/sound.cpp $
- * $Id: sound.cpp 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: sound.cpp 54148 2010-11-08 23:07:42Z fingolfin $
  */
 
-#include "sound/audiocd.h"
 #include "sound/softsynth/pcspk.h"
+
+#include "backends/audiocd/audiocd.h"
 
 #include "testbed/sound.h"
 
@@ -190,8 +191,8 @@ TestExitStatus SoundSubsystem::audiocdOutput() {
 
 	// Play all tracks
 	for (int i = 1; i < 5; i++) {
-		AudioCD.play(i, 1, 0, 0);
-		while (AudioCD.isPlaying()) {
+		g_system->getAudioCDManager()->play(i, 1, 0, 0);
+		while (g_system->getAudioCDManager()->isPlaying()) {
 			g_system->delayMillis(500);
 			Testsuite::writeOnScreen(Common::String::format("Playing Now: track%02d", i), pt);
 		}
@@ -200,7 +201,7 @@ TestExitStatus SoundSubsystem::audiocdOutput() {
 
 	Testsuite::clearScreen();
 	if (Testsuite::handleInteractiveInput("Were all the tracks played in order i.e 1-2-3-last ?", "Yes", "No", kOptionRight)) {
-		Testsuite::logPrintf("Error! Error in AudioCD.play() or probably sound files were not detected, try -d1 (debuglevel 1)\n");
+		Testsuite::logPrintf("Error! Error in _system->getAudioCDManager()->play() or probably sound files were not detected, try -d1 (debuglevel 1)\n");
 		passed = kTestFailed;
 	}
 

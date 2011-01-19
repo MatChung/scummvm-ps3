@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/debugger.cpp $
- * $Id: debugger.cpp 40555 2009-05-14 11:15:36Z Kirben $
+ * $Id: debugger.cpp 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -50,16 +50,6 @@ Debugger::Debugger(AGOSEngine *vm)
 	DCmd_Register("dumpimage",      WRAP_METHOD(Debugger, Cmd_dumpImage));
 	DCmd_Register("dumpscript",     WRAP_METHOD(Debugger, Cmd_dumpScript));
 
-}
-
-
-void Debugger::preEnter() {
-	//_vm->_midi.pause(1);
-}
-
-
-void Debugger::postEnter() {
-	//_vm->_midi.pause(0);
 }
 
 

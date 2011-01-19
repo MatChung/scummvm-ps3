@@ -19,14 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEgui/GUIElement.cpp $
- * $Id: GUIElement.cpp 53979 2010-10-31 17:11:43Z fingolfin $
+ * $Id: GUIElement.cpp 54572 2010-11-29 16:16:50Z fingolfin $
  *
  */
 
-// Disable symbol overrides so that we can use system headers.
-#define FORBIDDEN_SYMBOL_ALLOW_ALL
-
-#include <SDL.h>
+#include "backends/platform/sdl/sdl-sys.h"
 
 #include "Toolbar.h"
 

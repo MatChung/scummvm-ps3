@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/events.cpp $
- * $Id: events.cpp 45783 2009-11-09 22:19:21Z fingolfin $
+ * $Id: events.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * Main purpose is to process user events.
  * Also provides a couple of utility functions.
@@ -60,6 +60,8 @@ extern HPOLYGON GetTaggedPoly();
 extern bool bEnableMenu;
 
 //----------------- LOCAL GLOBAL DATA --------------------
+
+// FIXME: Avoid non-const global vars
 
 static uint32 lastUserEvent = 0;	// Time it hapenned
 static int leftEvents = 0;		// Single or double, left or right. Or escape key.
@@ -393,7 +395,7 @@ void PlayerEvent(PLR_EVENT pEvent, const Common::Point &coOrds) {
 		"PLR_JUMP", "PLR_NOEVENT"};
 	debugC(DEBUG_BASIC, kTinselDebugActions, "%s - (%d,%d)",
 		actionList[pEvent], coOrds.x, coOrds.y);
-	static uint32 lastRealAction = 0;
+	static uint32 lastRealAction = 0;	// FIXME: Avoid non-const global vars
 
 	// This stuff to allow F1 key during startup.
 	if (bEnableMenu && pEvent == PLR_MENU)

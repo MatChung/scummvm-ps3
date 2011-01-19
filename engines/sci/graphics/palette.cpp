@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/palette.cpp $
- * $Id: palette.cpp 54093 2010-11-05 12:33:07Z wjpalenstijn $
+ * $Id: palette.cpp 55086 2011-01-01 12:48:12Z thebluegr $
  *
  */
 
@@ -108,7 +108,7 @@ void GfxPalette::createFromData(byte *data, int bytesLeft, Palette *paletteOut) 
 	if (bytesLeft < 37) {
 		// This happens when loading palette of picture 0 in sq5 - the resource is broken and doesn't contain a full
 		//  palette
-		debugC(2, "GfxPalette::createFromData() - not enough bytes in resource (%d), expected palette header", bytesLeft);
+		debugC(kDebugLevelResMan, "GfxPalette::createFromData() - not enough bytes in resource (%d), expected palette header", bytesLeft);
 		return;
 	}
 	// palette formats in here are not really version exclusive, we can not use sci-version to differentiate between them
@@ -192,7 +192,7 @@ void GfxPalette::modifyAmigaPalette(byte *data) {
 	_screen->setPalette(&_sysPalette);
 }
 
-static byte blendColours(byte c1, byte c2) {
+static byte blendColors(byte c1, byte c2) {
 	// linear
 	// return (c1/2+c2/2)+((c1&1)+(c2&1))/2;
 
@@ -230,9 +230,9 @@ void GfxPalette::setEGA() {
 		_sysPalette.colors[curColor].used = 1;
 		color1 = curColor & 0x0F; color2 = curColor >> 4;
 
-		_sysPalette.colors[curColor].r = blendColours(_sysPalette.colors[color1].r, _sysPalette.colors[color2].r);
-		_sysPalette.colors[curColor].g = blendColours(_sysPalette.colors[color1].g, _sysPalette.colors[color2].g);
-		_sysPalette.colors[curColor].b = blendColours(_sysPalette.colors[color1].b, _sysPalette.colors[color2].b);
+		_sysPalette.colors[curColor].r = blendColors(_sysPalette.colors[color1].r, _sysPalette.colors[color2].r);
+		_sysPalette.colors[curColor].g = blendColors(_sysPalette.colors[color1].g, _sysPalette.colors[color2].g);
+		_sysPalette.colors[curColor].b = blendColors(_sysPalette.colors[color1].b, _sysPalette.colors[color2].b);
 	}
 	_sysPalette.timestamp = 1;
 	setOnScreen();

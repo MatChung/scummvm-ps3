@@ -1,5 +1,5 @@
 # $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/tools/module.mk $
-# $Id: module.mk 49759 2010-06-15 10:44:51Z sev $
+# $Id: module.mk 54314 2010-11-18 10:15:33Z fingolfin $
 
 MODULE := tools
 
@@ -63,7 +63,6 @@ credits:
 
 md5scumm: tools/md5table$(EXEEXT)
 	tools/md5table$(EXEEXT) --c++ < $(srcdir)/tools/scumm-md5.txt > $(srcdir)/engines/scumm/scumm-md5.h
-	cp $(srcdir)/tools/scumm-md5.txt $(srcdir)/../../web/trunk/data/scumm-md5.txt
 
 #
 # Rules which automatically and implicitly rebuild the credits and

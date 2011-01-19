@@ -19,9 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/events/default/default-events.cpp $
- * $Id: default-events.cpp 52993 2010-10-03 14:59:36Z wjpalenstijn $
+ * $Id: default-events.cpp 54573 2010-11-29 16:18:43Z fingolfin $
  *
  */
+
+#include "common/scummsys.h"
 
 #if !defined(DISABLE_DEFAULT_EVENTMANAGER)
 

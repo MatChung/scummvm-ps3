@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/symbian/src/portdefs.h $
- * $Id: portdefs.h 54005 2010-11-01 16:02:47Z fingolfin $
+ * $Id: portdefs.h 54588 2010-11-29 19:44:22Z anotherguest $
  */
 #ifndef SYMBIAN_PORTDEFS_H
 #define SYMBIAN_PORTDEFS_H
@@ -44,17 +44,6 @@
 // hack in some tricks to work around not having these fcns for Symbian
 // and we _really_ don't wanna link with any other windows LIBC library!
 #if defined(__GCC32__)
-
-	FIXME: If the following macros are ever used, then this will lead
-	to serious errors, e.g. an almost guaranteed buffer overflow
-	in Common::String::format(). Do *NOT* re-#define vsnprintf to
-	vsprintf, it will lead to disaster!
-	This shouldn't be necessary anyway, since we have
-	backends/platform/symbian/src/vsnprintf.h
-
-	#define snprintf(buf,len,args...)	sprintf(buf,args)
-	#define vsnprintf(buf,len,format,valist)	vsprintf(buf,format,valist)
-
 	// taken from public domain http://www.opensource.apple.com/darwinsource/WWDC2004/gcc_legacy-939/gcc/floatlib.c
 	#define SIGNBIT		0x80000000
 	#define HIDDEN		(1 << 23)
@@ -141,10 +130,12 @@
 // Symbian bsearch implementation is flawed
 void *scumm_bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *));
 #define bsearch	scumm_bsearch
+#define FORBIDDEN_SYMBOL_EXCEPTION_FILE
+#define FORBIDDEN_SYMBOL_EXCEPTION_fclose
+#define FORBIDDEN_SYMBOL_EXCEPTION_fopen
 
 // we cannot include SymbianOS.h everywhere, but this works too (functions code is in SymbianOS.cpp)
 namespace Symbian {
-extern void FatalError(const char *msg);
 extern char* GetExecutablePath();
 }
 #endif

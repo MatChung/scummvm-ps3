@@ -19,13 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/console.cpp $
- * $Id: console.cpp 53868 2010-10-26 22:33:49Z fingolfin $
+ * $Id: console.cpp 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
 #include "agi/agi.h"
 #include "agi/opcodes.h"
 
+#include "agi/preagi.h"
 #include "agi/preagi_mickey.h"
 #include "agi/preagi_winnie.h"
 

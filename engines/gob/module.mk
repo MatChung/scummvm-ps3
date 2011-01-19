@@ -32,6 +32,7 @@ MODULE_OBJS := \
 	inter_v2.o \
 	inter_bargon.o \
 	inter_fascin.o \
+	inter_inca2.o \
 	inter_playtoons.o \
 	inter_v3.o \
 	inter_v4.o \
@@ -69,6 +70,7 @@ MODULE_OBJS := \
 	save/saveload_v4.o \
 	save/saveload_v6.o \
 	save/saveload_fascin.o \
+	save/saveload_inca2.o \
 	save/saveload_playtoons.o \
 	save/saveconverter.o \
 	save/saveconverter_v2.o \

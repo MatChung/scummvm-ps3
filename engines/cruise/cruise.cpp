@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cruise/cruise.cpp $
- * $Id: cruise.cpp 51936 2010-08-09 10:30:40Z sev $
+ * $Id: cruise.cpp 55091 2011-01-02 14:06:42Z strangerke $
  *
  */
 
@@ -34,9 +34,6 @@
 #include "engines/util.h"
 
 #include "graphics/cursorman.h"
-
-#include "sound/mididrv.h"
-#include "sound/mixer.h"
 
 #include "cruise/cruise.h"
 #include "cruise/font.h"
@@ -101,7 +98,6 @@ Common::Error CruiseEngine::run() {
 	Cruise::changeCursor(Cruise::CURSOR_NORMAL);
 	CursorMan.showMouse(true);
 
-
 	lastTick = 0;
 	lastTickDebug = 0;
 
@@ -130,6 +126,7 @@ void CruiseEngine::initialize() {
 	// another bit of video init
 
 	readVolCnf();
+	_vm->_polyStruct = NULL;
 }
 
 void CruiseEngine::deinitialise() {

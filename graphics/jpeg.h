@@ -19,17 +19,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/jpeg.h $
- * $Id: jpeg.h 47541 2010-01-25 01:39:44Z lordhoto $
+ * $Id: jpeg.h 55301 2011-01-18 16:18:10Z mthreepwood $
  *
  */
 
 #ifndef GRAPHICS_JPEG_H
 #define GRAPHICS_JPEG_H
 
-#include "common/stream.h"
 #include "graphics/surface.h"
 
+namespace Common {
+class SeekableReadStream;
+}
+
 namespace Graphics {
+
+struct PixelFormat;
 
 #define JPEG_MAX_QUANT_TABLES 4
 #define JPEG_MAX_HUFF_TABLES 2
@@ -40,7 +45,12 @@ public:
 	~JPEG();
 
 	bool read(Common::SeekableReadStream *str);
+	bool isLoaded() const { return _numComp && _w && _h; }
+	uint16 getWidth() const { return _w; }
+	uint16 getHeight() const { return _h; }
+
 	Surface *getComponent(uint c);
+	Surface *getSurface(const PixelFormat &format);
 
 private:
 	void reset();

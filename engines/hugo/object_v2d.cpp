@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/object_v2d.cpp $
- * $Id: object_v2d.cpp 54018 2010-11-01 20:20:21Z strangerke $
+ * $Id: object_v2d.cpp 55318 2011-01-19 00:49:49Z strangerke $
  *
  */
 
@@ -52,7 +52,7 @@ ObjectHandler_v2d::ObjectHandler_v2d(HugoEngine *vm) : ObjectHandler_v1d(vm) {
 ObjectHandler_v2d::~ObjectHandler_v2d() {
 }
 
-/** 
+/**
 * Draw all objects on screen as follows:
 * 1. Sort 'FLOATING' objects in order of y2 (base of object)
 * 2. Display new object frames/positions in dib
@@ -65,7 +65,7 @@ void ObjectHandler_v2d::updateImages() {
 	int  num_objs = 0;
 	byte objindex[MAXOBJECTS];                      // Array of indeces to objects
 
-	for (int i = 0; i < _vm->_numObj; i++) {
+	for (int i = 0; i < _numObj; i++) {
 		object_t *obj = &_objects[i];
 		if ((obj->screenIndex == *_vm->_screen_p) && (obj->cycling >= ALMOST_INVISIBLE))
 			objindex[num_objs++] = i;
@@ -186,7 +186,7 @@ void ObjectHandler_v2d::moveObjects() {
 	// Perform any adjustments to velocity based on special path types
 	// and store all (visible) object baselines into the boundary file.
 	// Don't store foreground or background objects
-	for (int i = 0; i < _vm->_numObj; i++) {
+	for (int i = 0; i < _numObj; i++) {
 		object_t *obj = &_objects[i];               // Get pointer to object
 		seq_t *currImage = obj->currImagePtr;       // Get ptr to current image
 		if (obj->screenIndex == *_vm->_screen_p) {
@@ -213,7 +213,7 @@ void ObjectHandler_v2d::moveObjects() {
 				switch (obj->seqNumb) {
 				case 4:
 					if (!obj->vx) {                 // Got 4 directions
-						if (obj->vx != obj->oldvx)  { // vx just stopped
+						if (obj->vx != obj->oldvx) { // vx just stopped
 							if (dy > 0)
 								obj->currImagePtr = obj->seqList[DOWN].seqPtr;
 							else
@@ -250,14 +250,14 @@ void ObjectHandler_v2d::moveObjects() {
 				}
 			case WANDER2:
 			case WANDER:
-				if (!_vm->_rnd->getRandomNumber(3 * NORMAL_TPS)) {       // Kick on random interval
+				if (!_vm->_rnd->getRandomNumber(3 * _vm->_normalTPS)) {       // Kick on random interval
 					obj->vx = _vm->_rnd->getRandomNumber(obj->vxPath << 1) - obj->vxPath;
 					obj->vy = _vm->_rnd->getRandomNumber(obj->vyPath << 1) - obj->vyPath;
 
 					// Set first image in sequence (if multi-seq object)
 					if (obj->seqNumb > 1) {
 						if (!obj->vx && (obj->seqNumb >= 4)) {
-							if (obj->vx != obj->oldvx)  { // vx just stopped
+							if (obj->vx != obj->oldvx) { // vx just stopped
 								if (obj->vy > 0)
 									obj->currImagePtr = obj->seqList[DOWN].seqPtr;
 								else
@@ -287,8 +287,8 @@ void ObjectHandler_v2d::moveObjects() {
 	}
 
 	// Move objects, allowing for boundaries
-	for (int i = 0; i < _vm->_numObj; i++) {
-		object_t *obj = &_objects[i];                         // Get pointer to object
+	for (int i = 0; i < _numObj; i++) {
+		object_t *obj = &_objects[i];               // Get pointer to object
 		if ((obj->screenIndex == *_vm->_screen_p) && (obj->vx || obj->vy)) {
 			// Only process if it's moving
 
@@ -302,7 +302,7 @@ void ObjectHandler_v2d::moveObjects() {
 			int y2 = obj->y + currImage->y2;        // Bottom edge
 
 			if ((obj->cycling > ALMOST_INVISIBLE) && (obj->priority == FLOATING))
-				_vm->clearBoundary(x1, x2, y2);          // Clear our own boundary
+				_vm->clearBoundary(x1, x2, y2);     // Clear our own boundary
 
 			// Allowable motion wrt boundary
 			int dx = _vm->deltaX(x1, x2, obj->vx, y2);
@@ -320,7 +320,7 @@ void ObjectHandler_v2d::moveObjects() {
 			}
 
 			if ((obj->cycling > ALMOST_INVISIBLE) && (obj->priority == FLOATING))
-				_vm->storeBoundary(x1, x2, y2);          // Re-store our own boundary
+				_vm->storeBoundary(x1, x2, y2);     // Re-store our own boundary
 
 			obj->x += dx;                           // Update object position
 			obj->y += dy;
@@ -341,9 +341,9 @@ void ObjectHandler_v2d::moveObjects() {
 	}
 
 	// Clear all object baselines from the boundary file.
-	for (int i = 0; i < _vm->_numObj; i++) {
-		object_t *obj = &_objects[i];               // Get pointer to object
-		seq_t *currImage = obj->currImagePtr;       // Get ptr to current image
+	for (int i = 0; i < _numObj; i++) {
+		object_t *obj = &_objects[i];                   // Get pointer to object
+		seq_t *currImage = obj->currImagePtr;           // Get ptr to current image
 		if ((obj->screenIndex == *_vm->_screen_p) && (obj->cycling > ALMOST_INVISIBLE) && (obj->priority == FLOATING))
 			_vm->clearBoundary(obj->oldx + currImage->x1, obj->oldx + currImage->x2, obj->oldy + currImage->y2);
 	}
@@ -361,4 +361,25 @@ void ObjectHandler_v2d::moveObjects() {
 	}
 }
 
+void ObjectHandler_v2d::homeIn(int objIndex1, int objIndex2, int8 objDx, int8 objDy) {
+	// object obj1 will home in on object obj2
+	object_t *obj1 = &_objects[objIndex1];
+	object_t *obj2 = &_objects[objIndex2];
+	obj1->pathType = AUTO;
+	int dx = obj1->x + obj1->currImagePtr->x1 - obj2->x - obj2->currImagePtr->x1;
+	int dy = obj1->y + obj1->currImagePtr->y1 - obj2->y - obj2->currImagePtr->y1;
+
+	if (dx == 0)                                        // Don't EVER divide by zero!
+		dx = 1;
+	if (dy == 0)
+		dy = 1;
+
+	if (abs(dx) > abs(dy)) {
+		obj1->vx = objDx * -SIGN(dx);
+		obj1->vy = abs((objDy * dy) / dx) * -SIGN(dy);
+	} else {
+		obj1->vy = objDy * -SIGN(dy);
+		obj1->vx = abs((objDx * dx) / dy) * -SIGN(dx);
+	}
+}
 } // End of namespace Hugo

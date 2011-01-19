@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/toon.h $
-* $Id: toon.h 54123 2010-11-07 17:18:59Z tdhs $
+* $Id: toon.h 54385 2010-11-19 17:03:07Z fingolfin $
 *
 */
 
@@ -42,6 +42,10 @@
 #include "toon/text.h"
 #include "toon/audio.h"
 #include "toon/console.h"
+
+namespace Common {
+class MemoryWriteStreamDynamic;
+}
 
 #define TOON_DAT_VER_MAJ 0  // 1 byte
 #define TOON_DAT_VER_MIN 3  // 1 byte
@@ -102,10 +106,13 @@ public:
 	char **_specialInfoLine;
 
 	Common::Error run();
+	GUI::Debugger *getDebugger() { return _console; }
 	bool showMainmenu(bool &loadedGame);
 	void init();
 	bool loadToonDat();
-	char **loadTextsVariante(Common::File &in);
+	char **loadTextsVariants(Common::File &in);
+	void unloadTextsVariants(char **texts);
+	void unloadToonDat();
 	void setPaletteEntries(uint8 *palette, int32 offset, int32 num);
 	void fixPaletteEntries(uint8 *palette, int num);
 	void flushPalette();
@@ -198,6 +205,8 @@ public:
 	void playRoomMusic();
 	void waitForScriptStep();
 	void doMagnifierEffect();
+
+
 
 	bool canSaveGameStateCurrently();
 	bool canLoadGameStateCurrently();
@@ -303,9 +312,7 @@ public:
 		return _pathFinding;
 	}
 
-	Common::WriteStream *getSaveBufferStream() {
-		return _saveBufferStream;
-	}
+	Common::WriteStream *getSaveBufferStream();
 
 	bool shouldQuitGame() const {
 		return _shouldQuit;

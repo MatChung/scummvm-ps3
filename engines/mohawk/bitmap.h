@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/bitmap.h $
- * $Id: bitmap.h 47541 2010-01-25 01:39:44Z lordhoto $
+ * $Id: bitmap.h 54989 2010-12-21 18:16:37Z fuzzie $
  *
  */
 
@@ -30,11 +30,12 @@
 
 #include "common/scummsys.h"
 #include "common/stream.h"
+#include "common/array.h"
 #include "graphics/surface.h"
 
 namespace Mohawk {
 
-class ImageData;
+class MohawkSurface;
 
 enum BitmapFormat {
 	kBitsPerPixel1 = 0x0000,
@@ -60,6 +61,11 @@ enum BitmapFormat {
 	kFlag24_MAC = 0x1000 // 24 bit pixel data has been converted to MAC 32 bit format
 };
 
+enum OldBitmapFormat {
+	kOldPackLZ = 0x0020,
+	kOldDrawRLE8 = 0x0100
+};
+
 struct BitmapHeader {
 	uint16 width;
 	uint16 height;
@@ -79,34 +85,60 @@ public:
 	MohawkBitmap();
 	virtual ~MohawkBitmap();
 
-	virtual ImageData *decodeImage(Common::SeekableReadStream *stream);
-
-	// Unpack Functions
-	void unpackRaw();
-	void unpackLZ();
-	void unpackLZ1();
-	void unpackRiven();
-
-	// Draw Functions
-	void drawRaw();
-	void drawRLE8();
-	void drawRLE();
+	virtual MohawkSurface *decodeImage(Common::SeekableReadStream *stream);
+	Common::Array<MohawkSurface *> decodeImages(Common::SeekableReadStream *stream);
 
 protected:
 	BitmapHeader _header;
-	byte getBitsPerPixel();
+	virtual byte getBitsPerPixel();
+
+	void decodeImageData(Common::SeekableReadStream *stream);
 
 	// The actual LZ decoder
 	static Common::SeekableReadStream *decompressLZ(Common::SeekableReadStream *stream, uint32 uncompressedSize);
 
-private:
+	// The current data stream
 	Common::SeekableReadStream *_data;
-	Graphics::Surface *_surface;
 
+	// Create the output surface
+	Graphics::Surface *createSurface(uint16 width, uint16 height);
+
+	// Draw Functions
+	void drawRLE8(Graphics::Surface *surface, bool isLE);
+	void drawRaw(Graphics::Surface *surface);
+	void drawRLE8(Graphics::Surface *surface) { return drawRLE8(surface, false); }
+
+private:
+	// Unpack Functions
+	void unpackRaw();
+	void unpackLZ();
+	void unpackRiven();
+
+	// An unpacker
+	struct PackFunction {
+		uint16 flag;
+		const char *name;
+		void (MohawkBitmap::*func)();
+	};
+
+	// A drawer
+	struct DrawFunction {
+		uint16 flag;
+		const char *name;
+		void (MohawkBitmap::*func)(Graphics::Surface *surface);
+	};
+
+	// Unpack/Draw maps
+	const PackFunction *_packTable;
+	int _packTableSize;
+	const DrawFunction *_drawTable;
+	int _drawTableSize;
+
+	// Unpack/Draw helpers
 	const char *getPackName();
 	void unpackImage();
 	const char *getDrawName();
-	void drawImage();
+	void drawImage(Graphics::Surface *surface);
 
 	// Riven Decoding
 	void handleRivenSubcommandStream(byte count, byte *&dst);
@@ -120,7 +152,10 @@ public:
 	MystBitmap() : MohawkBitmap() {}
 	~MystBitmap() {}
 
-	ImageData *decodeImage(Common::SeekableReadStream *stream);
+	MohawkSurface *decodeImage(Common::SeekableReadStream *stream);
+
+protected:
+	byte getBitsPerPixel() { return _info.bitsPerPixel; }
 
 private:
 	struct BitmapHeader {
@@ -151,7 +186,25 @@ public:
 	OldMohawkBitmap() : MohawkBitmap() {}
 	~OldMohawkBitmap() {}
 
-	ImageData *decodeImage(Common::SeekableReadStream *stream);
+	MohawkSurface *decodeImage(Common::SeekableReadStream *stream);
+
+protected:
+	byte getBitsPerPixel() { return 8; }
+};
+
+class DOSBitmap : public MohawkBitmap {
+public:
+	DOSBitmap() : MohawkBitmap() {}
+	~DOSBitmap() {}
+
+	MohawkSurface *decodeImage(Common::SeekableReadStream *stream);
+
+protected:
+	byte getBitsPerPixel() { return ((_header.format & 0x30) >> 4) + 1; }
+
+private:
+	void expandMonochromePlane(Graphics::Surface *surface, Common::SeekableReadStream *rawStream);
+	void expandEGAPlanes(Graphics::Surface *surface, Common::SeekableReadStream *rawStream);
 };
 
 } // End of namespace Mohawk

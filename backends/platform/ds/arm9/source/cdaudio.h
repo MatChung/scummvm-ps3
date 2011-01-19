@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/ds/arm9/source/cdaudio.h $
- * $Id: cdaudio.h 50689 2010-07-05 16:11:11Z fingolfin $
+ * $Id: cdaudio.h 54318 2010-11-18 13:17:25Z fingolfin $
  *
  */
 
@@ -28,6 +28,9 @@
 
 namespace DS {
 namespace CD {
+
+// FIXME/TODO: The code in this file should be turned into a custom
+// AudioCDManager subclass, see backends/audiocd/ and common/system.h
 
 void setActive(bool active);
 void playTrack(int track, int numLoops, int startFrame, int duration);

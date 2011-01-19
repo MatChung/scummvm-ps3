@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/myst.cpp $
- * $Id: myst.cpp 54107 2010-11-07 01:03:29Z fingolfin $
+ * $Id: myst.cpp 55314 2011-01-18 21:10:58Z mthreepwood $
  *
  */
 
@@ -27,14 +27,31 @@
 #include "common/debug-channels.h"
 #include "common/translation.h"
 
+#include "mohawk/cursors.h"
 #include "mohawk/graphics.h"
 #include "mohawk/myst.h"
+#include "mohawk/myst_areas.h"
 #include "mohawk/myst_scripts.h"
-#include "mohawk/myst_saveload.h"
+#include "mohawk/myst_state.h"
 #include "mohawk/dialogs.h"
 #include "mohawk/resource.h"
 #include "mohawk/resource_cache.h"
+#include "mohawk/sound.h"
 #include "mohawk/video.h"
+
+// The stacks
+#include "mohawk/myst_stacks/channelwood.h"
+#include "mohawk/myst_stacks/credits.h"
+#include "mohawk/myst_stacks/demo.h"
+#include "mohawk/myst_stacks/dni.h"
+#include "mohawk/myst_stacks/intro.h"
+#include "mohawk/myst_stacks/makingof.h"
+#include "mohawk/myst_stacks/mechanical.h"
+#include "mohawk/myst_stacks/myst.h"
+#include "mohawk/myst_stacks/preview.h"
+#include "mohawk/myst_stacks/selenitic.h"
+#include "mohawk/myst_stacks/slides.h"
+#include "mohawk/myst_stacks/stoneship.h"
 
 namespace Mohawk {
 
@@ -50,11 +67,8 @@ MohawkEngine_Myst::MohawkEngine_Myst(OSystem *syst, const MohawkGameDescription 
 	DebugMan.addDebugChannel(kDebugHelp, "Help", "Track Help File (HELP) Parsing");
 	DebugMan.addDebugChannel(kDebugCache, "Cache", "Track Resource Cache Accesses");
 
-	_zipMode = false;
-	_transitionsEnabled = false;
-
 	// Engine tweaks
-	// Disabling this makes engine behaviour as per
+	// Disabling this makes engine behavior as per
 	// original, including bugs, missing bits etc. :)
 	_tweaksEnabled = true;
 
@@ -63,9 +77,21 @@ MohawkEngine_Myst::MohawkEngine_Myst(OSystem *syst, const MohawkGameDescription 
 	_curCard = 0;
 	_needsUpdate = false;
 	_curResource = -1;
+	_hoverResource = 0;
+	_dragResource = 0;
+
+	_gfx = NULL;
+	_console = NULL;
+	_scriptParser = NULL;
+	_varStore = NULL;
+	_gameState = NULL;
+	_loadDialog = NULL;
+	_optionsDialog = NULL;
 
 	_cursorHintCount = 0;
 	_cursorHints = NULL;
+
+	_prevStack = NULL;
 
 	_view.conditionalImageCount = 0;
 	_view.conditionalImages = NULL;
@@ -74,8 +100,6 @@ MohawkEngine_Myst::MohawkEngine_Myst(OSystem *syst, const MohawkGameDescription 
 	_view.scriptResCount = 0;
 	_view.scriptResources = NULL;
 
-	_scriptParser->disableInitOpcodes();
-
 	if ((getFeatures() & GF_ME) && getPlatform() == Common::kPlatformMacintosh) {
 		const Common::FSNode gameDataDir(ConfMan.get("path"));
 		SearchMan.addSubDirectoryMatching(gameDataDir, "CD Data");
@@ -83,21 +107,31 @@ MohawkEngine_Myst::MohawkEngine_Myst(OSystem *syst, const MohawkGameDescription 
 }
 
 MohawkEngine_Myst::~MohawkEngine_Myst() {
+	DebugMan.clearAllDebugChannels();
+
 	delete _gfx;
 	delete _console;
 	delete _scriptParser;
 	delete _varStore;
-	delete _saveLoad;
+	delete _gameState;
 	delete _loadDialog;
 	delete _optionsDialog;
+	delete _prevStack;
+	delete _rnd;
+
+	delete[] _cursorHints;
+
 	delete[] _view.conditionalImages;
 	delete[] _view.scriptResources;
-	delete[] _cursorHints;
+
+	for (uint32 i = 0; i < _resources.size(); i++)
+		delete _resources[i];
+
 	_resources.clear();
 }
 
 // Uses cached data objects in preference to disk access
-Common::SeekableReadStream *MohawkEngine_Myst::getRawData(uint32 tag, uint16 id) {
+Common::SeekableReadStream *MohawkEngine_Myst::getResource(uint32 tag, uint16 id) {
 	Common::SeekableReadStream *ret = _cache.search(tag, id);
 
 	if (ret)
@@ -105,7 +139,7 @@ Common::SeekableReadStream *MohawkEngine_Myst::getRawData(uint32 tag, uint16 id)
 
 	for (uint32 i = 0; i < _mhk.size(); i++)
 		if (_mhk[i]->hasResource(tag, id)) {
-			ret = _mhk[i]->getRawData(tag, id);
+			ret = _mhk[i]->getResource(tag, id);
 			_cache.add(tag, id, ret);
 			return ret;
 		}
@@ -121,19 +155,19 @@ void MohawkEngine_Myst::cachePreload(uint32 tag, uint16 id) {
 	for (uint32 i = 0; i < _mhk.size(); i++) {
 		// Check for MJMP in Myst ME
 		if ((getFeatures() & GF_ME) && tag == ID_MSND && _mhk[i]->hasResource(ID_MJMP, id)) {
-			Common::SeekableReadStream *tempData = _mhk[i]->getRawData(ID_MJMP, id);
+			Common::SeekableReadStream *tempData = _mhk[i]->getResource(ID_MJMP, id);
 			uint16 msndId = tempData->readUint16LE();
 			delete tempData;
 
 			// We've found where the real MSND data is, so go get that
-			tempData = _mhk[i]->getRawData(tag, msndId);
+			tempData = _mhk[i]->getResource(tag, msndId);
 			_cache.add(tag, id, tempData);
 			delete tempData;
 			return;
 		}
 
 		if (_mhk[i]->hasResource(tag, id)) {
-			Common::SeekableReadStream *tempData = _mhk[i]->getRawData(tag, id);
+			Common::SeekableReadStream *tempData = _mhk[i]->getResource(tag, id);
 			_cache.add(tag, id, tempData);
 			delete tempData;
 			return;
@@ -162,7 +196,9 @@ static const char *mystFiles[] = {
 // Mechanical Stack Movie "sstairs" referenced in executable, but not used?
 
 // NOTE: cl1wg1.mov etc. found in the root directory in versions of Myst
-// Original are duplicates of those in /qtw/myst directory and thus not necessary.
+// Original are duplicates of those in qtw/myst directory and thus not necessary.
+// However, this *is* a problem for Myst ME Mac. Right now it will use the qtw/myst
+// video, but this is most likely going to fail for the standalone Mac version.
 
 // The following movies are not referenced in RLST or hardcoded into the executables.
 // It is likely they are unused:
@@ -170,12 +206,13 @@ static const char *mystFiles[] = {
 // qtw/myst/gar4wbf1.mov:	gar4wbf2.mov has two butterflies instead of one
 // qtw/myst/libelev.mov:	libup.mov is basically the same with sound
 
-Common::String MohawkEngine_Myst::wrapMovieFilename(Common::String movieName, uint16 stack) {
+Common::String MohawkEngine_Myst::wrapMovieFilename(const Common::String &movieName, uint16 stack) {
 	// The Macintosh release of Myst ME stores its videos in a different folder
-	if ((getFeatures() & GF_ME) && getPlatform() == Common::kPlatformMacintosh)
+	// WORKAROUND: The gear rotation videos are not in the CD Data folder. See above comments.
+	if ((getFeatures() & GF_ME) && getPlatform() == Common::kPlatformMacintosh && !movieName.matchString("cl1wg?"))
 		return Common::String("CD Data/m/") + movieName + ".mov";
 
-	const char* prefix;
+	Common::String prefix;
 
 	switch (stack) {
 	case kIntroStack:
@@ -204,7 +241,7 @@ Common::String MohawkEngine_Myst::wrapMovieFilename(Common::String movieName, ui
 		prefix = "stone/";
 		break;
 	default:
-		prefix = ""; // Masterpiece Edition Only Movies
+		// Masterpiece Edition Only Movies
 		break;
 	}
 
@@ -217,38 +254,35 @@ Common::Error MohawkEngine_Myst::run() {
 	_gfx = new MystGraphics(this);
 	_console = new MystConsole(this);
 	_varStore = new MystVar(this);
-	_saveLoad = new MystSaveLoad(this, _saveFileMan);
-	_scriptParser = new MystScriptParser(this);
+	_gameState = new MystGameState(this, _saveFileMan);
 	_loadDialog = new GUI::SaveLoadChooser(_("Load game:"), _("Load"));
 	_loadDialog->setSaveMode(false);
 	_optionsDialog = new MystOptionsDialog(this);
-
-	// Start us on the first stack.
-	if (getGameType() == GType_MAKINGOF)
-		changeToStack(kMakingOfStack);
-	else if (getFeatures() & GF_DEMO)
-		changeToStack(kDemoStack);
-	else
-		changeToStack(kIntroStack);
-
-	if (getFeatures() & GF_DEMO)
-		changeToCard(2000);
-	else
-		changeToCard(1);
+	_cursor = new MystCursorManager(this);
+	_rnd = new Common::RandomSource();
 
 	// Load game from launcher/command line if requested
-	if (ConfMan.hasKey("save_slot") && !(getFeatures() & GF_DEMO)) {
+	if (ConfMan.hasKey("save_slot") && canLoadGameStateCurrently()) {
 		uint32 gameToLoad = ConfMan.getInt("save_slot");
-		Common::StringArray savedGamesList = _saveLoad->generateSaveGameList();
+		Common::StringArray savedGamesList = _gameState->generateSaveGameList();
 		if (gameToLoad > savedGamesList.size())
 			error ("Could not find saved game");
-		_saveLoad->loadGame(savedGamesList[gameToLoad]);
+		_gameState->load(savedGamesList[gameToLoad]);
+	} else {
+		// Start us on the first stack.
+		if (getGameType() == GType_MAKINGOF)
+			changeToStack(kMakingOfStack, 1, 0, 0);
+		else if (getFeatures() & GF_DEMO)
+			changeToStack(kDemoStack, 2000, 0, 0);
+		else
+			changeToStack(kIntroStack, 1, 0, 0);
 	}
 
 	// Load Help System (Masterpiece Edition Only)
 	if (getFeatures() & GF_ME) {
 		MohawkArchive *mhk = new MohawkArchive();
-		mhk->open("help.dat");
+		if (!mhk->open("help.dat"))
+			error("Could not load help.dat");
 		_mhk.push_back(mhk);
 	}
 
@@ -256,40 +290,44 @@ Common::Error MohawkEngine_Myst::run() {
 	loadHelp(10000);
 
 	// Set the cursor
-	_gfx->changeCursor(_currentCursor);
-	_gfx->showCursor();
+	_cursor->setCursor(_currentCursor);
 
 	Common::Event event;
 	while (!shouldQuit()) {
 		// Update any background videos
-		_needsUpdate = _video->updateBackgroundMovies();
-		_scriptParser->runPersistentOpcodes();
-
-		// Run animations...
-		for (uint16 i = 0; i < _resources.size(); i++)
-			_resources[i]->handleAnimation();
+		_needsUpdate = _video->updateMovies();
+		_scriptParser->runPersistentScripts();
 
 		while (_eventMan->pollEvent(event)) {
 			switch (event.type) {
-			case Common::EVENT_MOUSEMOVE:
-				_mousePos = event.mouse;
+			case Common::EVENT_MOUSEMOVE: {
 				_needsUpdate = true;
+				_mouse = event.mouse;
+				bool mouseClicked = _system->getEventManager()->getButtonState() & 1;
+
+				// Keep the same resource when dragging
+				if (!mouseClicked) {
+					checkCurrentResource();
+				}
+				if (_curResource >= 0 && _resources[_curResource]->isEnabled() && mouseClicked) {
+					debug(2, "Sending mouse move event to resource %d", _curResource);
+					_resources[_curResource]->handleMouseDrag(event.mouse);
+				}
+				break;
+			}
+			case Common::EVENT_LBUTTONUP:
+				_mouse = event.mouse;
+				if (_curResource >= 0 && _resources[_curResource]->isEnabled()) {
+					debug(2, "Sending mouse up event to resource %d", _curResource);
+					_resources[_curResource]->handleMouseUp(event.mouse);
+				}
 				checkCurrentResource();
 				break;
-			case Common::EVENT_LBUTTONUP:
-				if (_curResource >= 0) {
-					debug(2, "Sending mouse up event to resource %d\n", _curResource);
-					_resources[_curResource]->handleMouseUp();
-				}
-
-				for (uint16 i = 0; i < _resources.size(); i++)
-					if (_resources[i]->isEnabled())
-						_resources[i]->drawDataToScreen();
-				break;
 			case Common::EVENT_LBUTTONDOWN:
-				if (_curResource >= 0) {
-					debug(2, "Sending mouse up event to resource %d\n", _curResource);
-					_resources[_curResource]->handleMouseDown();
+				_mouse = event.mouse;
+				if (_curResource >= 0 && _resources[_curResource]->isEnabled()) {
+					debug(2, "Sending mouse up event to resource %d", _curResource);
+					_resources[_curResource]->handleMouseDown(event.mouse);
 				}
 				break;
 			case Common::EVENT_KEYDOWN:
@@ -332,10 +370,102 @@ Common::Error MohawkEngine_Myst::run() {
 	return Common::kNoError;
 }
 
-void MohawkEngine_Myst::changeToStack(uint16 stack) {
+bool MohawkEngine_Myst::skippableWait(uint32 duration) {
+	uint32 end = _system->getMillis() + duration;
+	bool skipped = false;
+
+	while (_system->getMillis() < end && !skipped) {
+		Common::Event event;
+		while (_system->getEventManager()->pollEvent(event)) {
+			switch (event.type) {
+			case Common::EVENT_LBUTTONUP:
+				skipped = true;
+				break;
+			case Common::EVENT_KEYDOWN:
+				switch (event.kbd.keycode) {
+				case Common::KEYCODE_SPACE:
+					pauseGame();
+					break;
+				case Common::KEYCODE_ESCAPE:
+					skipped = true;
+					break;
+				default:
+					break;
+			}
+			default:
+				break;
+			}
+		}
+
+		// Cut down on CPU usage
+		_system->delayMillis(10);
+	}
+
+	return skipped;
+}
+
+void MohawkEngine_Myst::changeToStack(uint16 stack, uint16 card, uint16 linkSrcSound, uint16 linkDstSound) {
 	debug(2, "changeToStack(%d)", stack);
 
 	_curStack = stack;
+
+	_sound->stopSound();
+	_sound->stopBackgroundMyst();
+	if (linkSrcSound)
+		_sound->playSoundBlocking(linkSrcSound);
+
+	// Delete the previous stack and move the current stack to the previous one
+	// There's probably a better way to do this, but the script classes shouldn't
+	// take up much memory.
+	delete _prevStack;
+	_prevStack = _scriptParser;
+
+	switch (_curStack) {
+	case kChannelwoodStack:
+		_gameState->_globals.currentAge = 4;
+		_scriptParser = new MystScriptParser_Channelwood(this);
+		break;
+	case kCreditsStack:
+		_scriptParser = new MystScriptParser_Credits(this);
+		break;
+	case kDemoStack:
+		_scriptParser = new MystScriptParser_Demo(this);
+		break;
+	case kDniStack:
+		_gameState->_globals.currentAge = 6;
+		_scriptParser = new MystScriptParser_Dni(this);
+		break;
+	case kIntroStack:
+		_scriptParser = new MystScriptParser_Intro(this);
+		break;
+	case kMakingOfStack:
+		_scriptParser = new MystScriptParser_MakingOf(this);
+		break;
+	case kMechanicalStack:
+		_gameState->_globals.currentAge = 3;
+		_scriptParser = new MystScriptParser_Mechanical(this);
+		break;
+	case kMystStack:
+		_gameState->_globals.currentAge = 2;
+		_scriptParser = new MystScriptParser_Myst(this);
+		break;
+	case kDemoPreviewStack:
+		_scriptParser = new MystScriptParser_Preview(this);
+		break;
+	case kSeleniticStack:
+		_gameState->_globals.currentAge = 0;
+		_scriptParser = new MystScriptParser_Selenitic(this);
+		break;
+	case kDemoSlidesStack:
+		_scriptParser = new MystScriptParser_Slides(this);
+		break;
+	case kStoneshipStack:
+		_gameState->_globals.currentAge = 1;
+		_scriptParser = new MystScriptParser_Stoneship(this);
+		break;
+	default:
+		error("Unknown Myst stack");
+	}
 
 	// If the array is empty, add a new one. Otherwise, delete the first
 	// entry which is the stack file (the second, if there, is the help file).
@@ -346,20 +476,94 @@ void MohawkEngine_Myst::changeToStack(uint16 stack) {
 		_mhk[0] = new MohawkArchive();
 	}
 
-	_mhk[0]->open(mystFiles[_curStack]);
+	if (!_mhk[0]->open(mystFiles[_curStack]))
+		error("Could not open %s", mystFiles[_curStack]);
 
 	if (getPlatform() == Common::kPlatformMacintosh)
 		_gfx->loadExternalPictureFile(_curStack);
 
 	_runExitScript = false;
 
+	// Clear the resource cache and the image cache
 	_cache.clear();
+	_gfx->clearCache();
+
+	// Play Flyby Entry Movie on Masterpiece Edition. The Macintosh version is currently hooked
+	// up to the Cinepak versions of the video (the 'c' suffix) until the SVQ1 decoder is completed.
+	const char *flyby = 0;
+	if (getFeatures() & GF_ME) {
+		switch (_curStack) {
+		case kSeleniticStack:
+			if (getPlatform() == Common::kPlatformMacintosh)
+				flyby = "FLY_SEc";
+			else
+				flyby = "selenitic flyby";
+			break;
+		case kStoneshipStack:
+			if (getPlatform() == Common::kPlatformMacintosh)
+				flyby = "FLY_STc";
+			else
+				flyby = "stoneship flyby";
+			break;
+		// Myst Flyby Movie not used in Original Masterpiece Edition Engine
+		case kMystStack:
+			if (_tweaksEnabled) {
+				if (getPlatform() == Common::kPlatformMacintosh)
+					flyby = "FLY_MYc";
+				else
+					flyby = "myst flyby";
+			}
+			break;
+		case kMechanicalStack:
+			if (getPlatform() == Common::kPlatformMacintosh)
+				flyby = "FLY_MEc";
+			else
+				flyby = "mech age flyby";
+			break;
+		case kChannelwoodStack:
+			if (getPlatform() == Common::kPlatformMacintosh)
+				flyby = "FLY_CHc";
+			else
+				flyby = "channelwood flyby";
+			break;
+		default:
+			break;
+		}
+
+		if (flyby)
+			_video->playMovieBlockingCentered(wrapMovieFilename(flyby, kMasterpieceOnly));
+	}
+
+	changeToCard(card, true);
+
+	if (linkDstSound)
+		_sound->playSoundBlocking(linkDstSound);
 }
 
-void MohawkEngine_Myst::changeToCard(uint16 card) {
+uint16 MohawkEngine_Myst::getCardBackgroundId() {
+	uint16 imageToDraw = 0;
+
+	if (_view.conditionalImageCount == 0)
+		imageToDraw = _view.mainImage;
+	else {
+		for (uint16 i = 0; i < _view.conditionalImageCount; i++) {
+			uint16 varValue = _scriptParser->getVar(_view.conditionalImages[i].var);
+			if (varValue < _view.conditionalImages[i].numStates)
+				imageToDraw = _view.conditionalImages[i].values[varValue];
+		}
+	}
+
+	return imageToDraw;
+}
+
+void MohawkEngine_Myst::drawCardBackground() {
+	_gfx->copyImageToBackBuffer(getCardBackgroundId(), Common::Rect(0, 0, 544, 333));
+}
+
+void MohawkEngine_Myst::changeToCard(uint16 card, bool updateScreen) {
 	debug(2, "changeToCard(%d)", card);
 
-	_scriptParser->disableInitOpcodes();
+	_scriptParser->disablePersistentScripts();
 
 	_video->stopVideos();
 
@@ -371,7 +575,9 @@ void MohawkEngine_Myst::changeToCard(uint16 card) {
 
 	unloadCard();
 
+	// Clear the resource cache and image cache
 	_cache.clear();
+	_gfx->clearCache();
 
 	_curCard = card;
 
@@ -381,22 +587,14 @@ void MohawkEngine_Myst::changeToCard(uint16 card) {
 	loadCursorHints();
 
 	// Handle images
-	if (_view.conditionalImageCount != 0) {
-		for (uint16 i = 0; i < _view.conditionalImageCount; i++) {
-			if (_varStore->getVar(_view.conditionalImages[i].var) < _view.conditionalImages[i].numStates)
-				_gfx->copyImageToScreen(_view.conditionalImages[i].values[_varStore->getVar(_view.conditionalImages[i].var)], Common::Rect(0, 0, 544, 333));
-			else
-				warning("Conditional image %d variable %d: %d exceeds maximum state of %d", i, _view.conditionalImages[i].var, _varStore->getVar(_view.conditionalImages[i].var), _view.conditionalImages[i].numStates-1);
-		}
-	} else if (_view.mainImage != 0)
-		_gfx->copyImageToScreen(_view.mainImage, Common::Rect(0, 0, 544, 333));
+	drawCardBackground();
 
 	// Handle sound
 	int16 soundAction = 0;
 	uint16 soundActionVolume = 0;
 
 	if (_view.sound == kMystSoundActionConditional) {
-		uint16 soundVarValue = _varStore->getVar(_view.soundVar);
+		uint16 soundVarValue = _scriptParser->getVar(_view.soundVar);
 		if (soundVarValue >= _view.soundCount)
 			warning("Conditional sound variable outside range");
 		else {
@@ -408,39 +606,46 @@ void MohawkEngine_Myst::changeToCard(uint16 card) {
 		soundActionVolume = _view.soundVolume;
 	}
 
-	// NOTE: Mixer only has 8-bit channel volume granularity,
-	// Myst uses 16-bit? Or is part of this balance?
-	soundActionVolume = (byte)(soundActionVolume / 255);
-
 	if (soundAction == kMystSoundActionContinue)
 		debug(2, "Continuing with current sound");
 	else if (soundAction == kMystSoundActionChangeVolume) {
 		debug(2, "Continuing with current sound, changing volume");
-		// TODO: Implement Volume Control..
+		_sound->changeBackgroundVolumeMyst(soundActionVolume);
 	} else if (soundAction == kMystSoundActionStop) {
 		debug(2, "Stopping sound");
-		_sound->stopSound();
+		_sound->stopBackgroundMyst();
 	} else if (soundAction > 0) {
 		debug(2, "Playing new sound %d", soundAction);
-		_sound->stopSound();
-		// TODO: Need to keep sound handle and add function to change volume of
-		// looped running sound for kMystSoundActionChangeVolume type
-
-		// NOTE: All sounds are looped when played via the sound section of the
-		// VIEW resources.
-		_sound->playSound(soundAction, soundActionVolume, true);
+		_sound->replaceBackgroundMyst(soundAction, soundActionVolume);
 	} else {
 		error("Unknown sound action %d", soundAction);
 	}
 
-	// TODO: Handle Script Resources
+	if (_view.flags & kMystZipDestination)
+		_gameState->addZipDest(_curStack, card);
 
 	// Run the entrance script (if present)
 	runInitScript();
 
+	// Update the images of each area too
+	drawResourceImages();
+
+	for (uint16 i = 0; i < _resources.size(); i++)
+		_resources[i]->handleCardChange();
+
+	// TODO: Handle Script Resources
+
 	// Make sure we have the right cursor showing
+	_dragResource = 0;
+	_hoverResource = 0;
 	_curResource = -1;
 	checkCurrentResource();
+
+	// Make sure the screen is updated
+	if (updateScreen) {
+		_gfx->copyBackBufferToScreen(Common::Rect(544, 333));
+		_system->updateScreen();
+	}
 
 	// Debug: Show resource rects
 	if (_showResourceRects)
@@ -450,8 +655,7 @@ void MohawkEngine_Myst::changeToCard(uint16 card) {
 void MohawkEngine_Myst::drawResourceRects() {
 	for (uint16 i = 0; i < _resources.size(); i++) {
 		_resources[i]->getRect().debugPrint(0);
-		if (_resources[i]->getRect().isValidRect())
-			_gfx->drawRect(_resources[i]->getRect(), _resources[i]->isEnabled());
+		_resources[i]->drawBoundingRect();
 	}
 
 	_system->updateScreen();
@@ -460,18 +664,25 @@ void MohawkEngine_Myst::drawResourceRects() {
 void MohawkEngine_Myst::checkCurrentResource() {
 	// See what resource we're over
 	bool foundResource = false;
+	const Common::Point &mouse = _system->getEventManager()->getMousePos();
+
+	// Tell previous resource the mouse is no longer hovering it
+	if (_hoverResource && !_hoverResource->contains(mouse)) {
+		_hoverResource->handleMouseLeave();
+		_hoverResource = 0;
+	}
 
 	for (uint16 i = 0; i < _resources.size(); i++)
-		if (_resources[i]->isEnabled() && _resources[i]->contains(_system->getEventManager()->getMousePos())) {
-			if (_curResource != i) {
-				if (_curResource != -1)
-					_resources[_curResource]->handleMouseLeave();
-				_resources[i]->handleMouseEnter();
+		if (_resources[i]->contains(mouse)) {
+			if (_hoverResource != _resources[i] && _resources[i]->type == kMystHoverArea) {
+				_hoverResource = static_cast<MystResourceType13 *>(_resources[i]);
+				_hoverResource->handleMouseEnter();
 			}
 
-			_curResource = i;
-			foundResource = true;
-			break;
+			if (!foundResource && _resources[i]->canBecomeActive()) {
+				_curResource = i;
+				foundResource = true;
+			}
 		}
 
 	// Set the resource to none if we're not over any
@@ -481,10 +692,19 @@ void MohawkEngine_Myst::checkCurrentResource() {
 	checkCursorHints();
 }
 
+MystResource *MohawkEngine_Myst::updateCurrentResource() {
+	checkCurrentResource();
+
+	if (_curResource >= 0)
+		return _resources[_curResource];
+	else
+		return 0;
+}
+
 void MohawkEngine_Myst::loadCard() {
 	debugC(kDebugView, "Loading Card View:");
 
-	Common::SeekableReadStream *viewStream = getRawData(ID_VIEW, _curCard);
+	Common::SeekableReadStream *viewStream = getResource(ID_VIEW, _curCard);
 
 	// Card Flags
 	_view.flags = viewStream->readUint16LE();
@@ -684,44 +904,11 @@ void MohawkEngine_Myst::runInitScript() {
 
 	debugC(kDebugINIT, "Running INIT script");
 
-	Common::SeekableReadStream *initStream = getRawData(ID_INIT, _view.init);
-
-	uint16 scriptCount = initStream->readUint16LE();
-
-	debugC(kDebugINIT, "\tOpcode Count: %d", scriptCount);
-
-	MystScriptEntry *scripts = new MystScriptEntry[scriptCount];
-
-	for (uint16 i = 0; i < scriptCount; i++) {
-		// TODO: u0 is likely variable reference for boolean to
-		// determine whether or not to execute opcode
-		uint16 u0 = initStream->readUint16LE();
-		scripts[i].opcode = initStream->readUint16LE();
-		// If variable indicates not to execute opcode, rewrite to NOP
-		//if (!_varStore->getVar(u0))
-		//	scripts[i].opcode = 0xFFFF;
-		scripts[i].var = initStream->readUint16LE();
-		scripts[i].numValues = initStream->readUint16LE();
-		scripts[i].values = new uint16[scripts[i].numValues];
-
-		debugC(kDebugINIT, "\tu0: %d", u0);
-		debugC(kDebugINIT, "\tOpcode %d: %s", i, _scriptParser->getOpcodeDesc(scripts[i].opcode));
-		debugC(kDebugINIT, "\t\tUses Variable %d", scripts[i].var);
-		debugC(kDebugINIT, "\t\tHas %d Arguments:", scripts[i].numValues);
-
-		for (uint16 j = 0; j < scripts[i].numValues; j++) {
-			scripts[i].values[j] = initStream->readUint16LE();
-			debugC(kDebugINIT, "\t\tArgument %d: %d", j, scripts[i].values[j]);
-		}
-	}
-
+	Common::SeekableReadStream *initStream = getResource(ID_INIT, _view.init);
+	MystScript script = _scriptParser->readScript(initStream, kMystScriptInit);
 	delete initStream;
 
-	_scriptParser->runScript(scriptCount, scripts);
-
-	for (uint16 i = 0; i < scriptCount; i++)
-		delete[] scripts[i].values;
-	delete[] scripts;
+	_scriptParser->runScript(script);
 }
 
 void MohawkEngine_Myst::runExitScript() {
@@ -732,49 +919,11 @@ void MohawkEngine_Myst::runExitScript() {
 
 	debugC(kDebugEXIT, "Running EXIT script");
 
-	Common::SeekableReadStream *exitStream = getRawData(ID_EXIT, _view.exit);
-
-	uint16 scriptCount = exitStream->readUint16LE();
-
-	debugC(kDebugEXIT, "\tOpcode Count: %d", scriptCount);
-
-	MystScriptEntry *scripts = new MystScriptEntry[scriptCount];
-
-	for (uint16 i = 0; i < scriptCount; i++) {
-		// TODO: u0 is likely variable reference for boolean to
-		// to determine whether or not to execute opcode (i.e. door
-		// close noises only when door is open).
-		uint16 u0 = exitStream->readUint16LE();
-		scripts[i].opcode = exitStream->readUint16LE();
-		// If variable indicates not to execute opcode, rewrite to NOP
-		//if (!_varStore->getVar(u0))
-		//	scripts[i].opcode = 0xFFFF;
-		scripts[i].var = exitStream->readUint16LE();
-		scripts[i].numValues = exitStream->readUint16LE();
-		scripts[i].values = new uint16[scripts[i].numValues];
-
-		debugC(kDebugEXIT, "\tu0: %d", u0);
-		debugC(kDebugEXIT, "\tOpcode %d: %s", i, _scriptParser->getOpcodeDesc(scripts[i].opcode));
-		debugC(kDebugEXIT, "\t\tUses Variable %d", scripts[i].var);
-		debugC(kDebugEXIT, "\t\tHas %d Arguments:", scripts[i].numValues);
-
-		for (uint16 j = 0; j < scripts[i].numValues; j++) {
-			scripts[i].values[j] = exitStream->readUint16LE();
-			debugC(kDebugEXIT, "\t\tArgument %d: %d", j, scripts[i].values[j]);
-		}
-
-		uint16 u1 = exitStream->readUint16LE();
-		if (u1 != 1)
-			warning("Myst EXIT u1 not 1");
-	}
-
+	Common::SeekableReadStream *exitStream = getResource(ID_EXIT, _view.exit);
+	MystScript script = _scriptParser->readScript(exitStream, kMystScriptExit);
 	delete exitStream;
 
-	_scriptParser->runScript(scriptCount, scripts);
-
-	for (uint16 i = 0; i < scriptCount; i++)
-		delete[] scripts[i].values;
-	delete[] scripts;
+	_scriptParser->runScript(script);
 }
 
 void MohawkEngine_Myst::loadHelp(uint16 id) {
@@ -791,7 +940,7 @@ void MohawkEngine_Myst::loadHelp(uint16 id) {
 
 	debugC(kDebugHelp, "Loading Help System Data");
 
-	Common::SeekableReadStream *helpStream = getRawData(ID_HELP, id);
+	Common::SeekableReadStream *helpStream = getResource(ID_HELP, id);
 
 	uint16 count = helpStream->readUint16LE();
 	uint16 *u0 = new uint16[count];
@@ -833,7 +982,7 @@ void MohawkEngine_Myst::loadCursorHints() {
 
 	debugC(kDebugHint, "Loading Cursor Hints:");
 
-	Common::SeekableReadStream *hintStream = getRawData(ID_HINT, _curCard);
+	Common::SeekableReadStream *hintStream = getResource(ID_HINT, _curCard);
 	_cursorHintCount = hintStream->readUint16LE();
 	debugC(kDebugHint, "Cursor Hint Count: %d", _cursorHintCount);
 	_cursorHints = new MystCursorHint[_cursorHintCount];
@@ -868,18 +1017,24 @@ void MohawkEngine_Myst::loadCursorHints() {
 
 void MohawkEngine_Myst::setMainCursor(uint16 cursor) {
 	_currentCursor = _mainCursor = cursor;
-	_gfx->changeCursor(_currentCursor);
+	_cursor->setCursor(_currentCursor);
 }
 
 void MohawkEngine_Myst::checkCursorHints() {
-	if (!_view.hint)
+	if (!_view.hint) {
+		// Default to the main cursor when no hints are present
+		if (_currentCursor != _mainCursor) {
+			_currentCursor = _mainCursor;
+			_cursor->setCursor(_currentCursor);
+		}
 		return;
+	}
 
 	// Check all the cursor hints to see if we're in a hotspot that contains a hint.
 	for (uint16 i = 0; i < _cursorHintCount; i++)
 		if (_cursorHints[i].id == _curResource && _resources[_cursorHints[i].id]->isEnabled()) {
 			if (_cursorHints[i].cursor == -1) {
-				uint16 var_value = _varStore->getVar(_cursorHints[i].variableHint.var);
+				uint16 var_value = _scriptParser->getVar(_cursorHints[i].variableHint.var);
 
 				if (var_value >= _cursorHints[i].variableHint.numStates)
 					warning("Variable %d Out of Range in variable HINT Resource %d", _cursorHints[i].variableHint.var, i);
@@ -887,7 +1042,7 @@ void MohawkEngine_Myst::checkCursorHints() {
 					_currentCursor = _cursorHints[i].variableHint.values[var_value];
 					if (_currentCursor == 0)
 						_currentCursor = _mainCursor;
-					_gfx->changeCursor(_currentCursor);
+					_cursor->setCursor(_currentCursor);
 				}
 			} else if (_currentCursor != _cursorHints[i].cursor) {
 				if (_cursorHints[i].cursor == 0)
@@ -895,14 +1050,14 @@ void MohawkEngine_Myst::checkCursorHints() {
 				else
 					_currentCursor = _cursorHints[i].cursor;
 
-				_gfx->changeCursor(_currentCursor);
+				_cursor->setCursor(_currentCursor);
 			}
 			return;
 		}
 
 	if (_currentCursor != _mainCursor) {
 		_currentCursor = _mainCursor;
-		_gfx->changeCursor(_currentCursor);
+		_cursor->setCursor(_currentCursor);
 	}
 }
 
@@ -913,42 +1068,68 @@ void MohawkEngine_Myst::setResourceEnabled(uint16 resourceId, bool enable) {
 		warning("Attempt to change unknown resource enable state");
 }
 
-static MystResource *loadResource(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent) {
-	uint16 type = rlstStream->readUint16LE();
+void MohawkEngine_Myst::drawResourceImages() {
+	for (uint16 i = 0; i < _resources.size(); i++)
+		if (_resources[i]->isDrawSubimages())
+			_resources[i]->drawDataToScreen();
+}
+
+void MohawkEngine_Myst::redrawResource(MystResourceType8 *resource, bool update) {
+	resource->drawConditionalDataToScreen(_scriptParser->getVar(resource->getType8Var()), update);
+}
+
+void MohawkEngine_Myst::redrawArea(uint16 var, bool update) {
+	for (uint16 i = 0; i < _resources.size(); i++)
+		if (_resources[i]->type == kMystConditionalImage && _resources[i]->getType8Var() == var)
+			redrawResource(static_cast<MystResourceType8 *>(_resources[i]), update);
+}
+
+MystResource *MohawkEngine_Myst::loadResource(Common::SeekableReadStream *rlstStream, MystResource *parent) {
+	MystResource *resource = 0;
+	ResourceType type = static_cast<ResourceType>(rlstStream->readUint16LE());
 
 	debugC(kDebugResource, "\tType: %d", type);
 	debugC(kDebugResource, "\tSub_Record: %d", (parent == NULL) ? 0 : 1);
 
 	switch (type) {
-	case kMystForwardResource:
-	case kMystLeftResource:
-	case kMystRightResource:
-	case kMystDownResource:
-	case kMystUpResource:
-	case 14: // TODO: kMystBackwardResource?
-		return new MystResource(vm, rlstStream, parent);
-	case kMystActionResource:
-		return new MystResourceType5(vm, rlstStream, parent);
-	case kMystVideoResource:
-		return new MystResourceType6(vm, rlstStream, parent);
-	case kMystSwitchResource:
-		return new MystResourceType7(vm, rlstStream, parent);
-	case 8:
-		return new MystResourceType8(vm, rlstStream, parent);
-	case 10:
-		return new MystResourceType10(vm, rlstStream, parent);
-	case 11:
-		return new MystResourceType11(vm, rlstStream, parent);
-	case 12:
-		return new MystResourceType12(vm, rlstStream, parent);
-	case 13:
-		return new MystResourceType13(vm, rlstStream, parent);
+	case kMystAction:
+		resource =  new MystResourceType5(this, rlstStream, parent);
+		break;
+	case kMystVideo:
+		resource =  new MystResourceType6(this, rlstStream, parent);
+		break;
+	case kMystSwitch:
+		resource =  new MystResourceType7(this, rlstStream, parent);
+		break;
+	case kMystConditionalImage:
+		resource =  new MystResourceType8(this, rlstStream, parent);
+		break;
+	case kMystSlider:
+		resource =  new MystResourceType10(this, rlstStream, parent);
+		break;
+	case kMystDragArea:
+		resource =  new MystResourceType11(this, rlstStream, parent);
+		break;
+	case kMystVideoInfo:
+		resource =  new MystResourceType12(this, rlstStream, parent);
+		break;
+	case kMystHoverArea:
+		resource =  new MystResourceType13(this, rlstStream, parent);
+		break;
 	default:
-		error ("Unknown/Unhandled MystResource type %d", type);
+		resource = new MystResource(this, rlstStream, parent);
+		break;
 	}
+
+	resource->type = type;
+
+	return resource;
 }
 
 void MohawkEngine_Myst::loadResources() {
+	for (uint32 i = 0; i < _resources.size(); i++)
+		delete _resources[i];
+
 	_resources.clear();
 
 	if (!_view.rlst) {
@@ -956,644 +1137,16 @@ void MohawkEngine_Myst::loadResources() {
 		return;
 	}
 
-	Common::SeekableReadStream *rlstStream = getRawData(ID_RLST, _view.rlst);
+	Common::SeekableReadStream *rlstStream = getResource(ID_RLST, _view.rlst);
 	uint16 resourceCount = rlstStream->readUint16LE();
 	debugC(kDebugResource, "RLST Resource Count: %d", resourceCount);
 
 	for (uint16 i = 0; i < resourceCount; i++) {
 		debugC(kDebugResource, "Resource #%d:", i);
-		_resources.push_back(loadResource(this, rlstStream, NULL));
+		_resources.push_back(loadResource(rlstStream, NULL));
 	}
+
 	delete rlstStream;
-}
-
-MystResource::MystResource(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent) {
-	_vm = vm;
-	_parent = parent;
-
-	if (parent == NULL) {
-		_flags = rlstStream->readUint16LE();
-		_rect.left = rlstStream->readSint16LE();
-		_rect.top = rlstStream->readSint16LE();
-
-		if (_rect.top == -1) {
-			warning("Invalid _rect.top of -1 found - clamping to 0");
-			_rect.top = 0;
-		}
-
-		_rect.right = rlstStream->readSint16LE();
-		_rect.bottom = rlstStream->readSint16LE();
-		_dest = rlstStream->readUint16LE();
-	} else {
-		_flags = parent->_flags;
-		_rect.left = parent->_rect.left;
-		_rect.top = parent->_rect.top;
-		_rect.right = parent->_rect.right;
-		_rect.bottom = parent->_rect.bottom;
-		_dest = parent->_dest;
-	}
-
-	debugC(kDebugResource, "\tflags: 0x%04X", _flags);
-	debugC(kDebugResource, "\tleft: %d", _rect.left);
-	debugC(kDebugResource, "\ttop: %d", _rect.top);
-	debugC(kDebugResource, "\tright: %d", _rect.right);
-	debugC(kDebugResource, "\tbottom: %d", _rect.bottom);
-	debugC(kDebugResource, "\tdest: %d", _dest);
-
-	// Default Enable based on flags...
-	if (_vm->_zipMode)
-		_enabled = (_flags & kMystZipModeEnableFlag) != 0 ||
-		           (_flags & kMystHotspotEnableFlag) != 0 ||
-		           (_flags & kMystSubimageEnableFlag) != 0;
-	else
-		_enabled = (_flags & kMystZipModeEnableFlag) == 0 &&
-		           ((_flags & kMystHotspotEnableFlag) != 0 ||
-		            (_flags & kMystSubimageEnableFlag) != 0);
-}
-
-void MystResource::handleMouseUp() {
-	if (_dest != 0)
-		_vm->changeToCard(_dest);
-	else
-		warning("Movement type resource with null destination at position (%d, %d), (%d, %d)", _rect.left, _rect.top, _rect.right, _rect.bottom);
-}
-
-MystResourceType5::MystResourceType5(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent) : MystResource(vm, rlstStream, parent) {
-	debugC(kDebugResource, "\tResource Type 5 Script:");
-
-	_scriptCount = rlstStream->readUint16LE();
-
-	debugC(kDebugResource, "\tOpcode Count: %d", _scriptCount);
-
-	if (_scriptCount == 0)
-		return;
-
-	_scripts = new MystScriptEntry[_scriptCount];
-	for (uint16 i = 0; i < _scriptCount; i++) {
-		_scripts[i].opcode = rlstStream->readUint16LE();
-		_scripts[i].var = rlstStream->readUint16LE();
-		_scripts[i].numValues = rlstStream->readUint16LE();
-		_scripts[i].values = new uint16[_scripts[i].numValues];
-
-		debugC(kDebugResource, "\tOpcode %d: %s", i, _vm->_scriptParser->getOpcodeDesc(_scripts[i].opcode));
-		debugC(kDebugResource, "\t\tUses Variable %d", _scripts[i].var);
-		debugC(kDebugResource, "\t\tHas %d Arguments:", _scripts[i].numValues);
-
-		for (uint16 j = 0; j < _scripts[i].numValues; j++) {
-			_scripts[i].values[j] = rlstStream->readUint16LE();
-			debugC(kDebugResource, "\t\tArgument %d: %d", j, _scripts[i].values[j]);
-		}
-	}
-}
-
-void MystResourceType5::handleMouseUp() {
-	_vm->_scriptParser->runScript(_scriptCount, _scripts, this);
-}
-
-// In Myst/Making of Myst, the paths are hardcoded ala Windows style without extension. Convert them.
-Common::String MystResourceType6::convertMystVideoName(Common::String name) {
-	Common::String temp;
-
-	for (uint32 i = 1; i < name.size(); i++) {
-		if (name[i] == '\\')
-			temp += '/';
-		else
-			temp += name[i];
-	}
-
-	return temp + ".mov";
-}
-
-MystResourceType6::MystResourceType6(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent) : MystResourceType5(vm, rlstStream, parent) {
-	char c = 0;
-
-	do {
-		c = rlstStream->readByte();
-		_videoFile += c;
-	} while (c);
-
-	rlstStream->skip(_videoFile.size() & 1);
-
-	// Trim method does not remove extra trailing nulls
-	while (_videoFile.size() != 0 && _videoFile.lastChar() == 0)
-		_videoFile.deleteLastChar();
-
-	_videoFile = convertMystVideoName(_videoFile);
-
-	// Position values require modulus 10000 to keep in sane range.
-	_left = rlstStream->readUint16LE() % 10000;
-	_top = rlstStream->readUint16LE() % 10000;
-	_loop = rlstStream->readUint16LE();
-	_u0 = rlstStream->readUint16LE();
-	_playBlocking = rlstStream->readUint16LE();
-	_playOnCardChange = rlstStream->readUint16LE();
-	_u3 = rlstStream->readUint16LE();
-
-	if (_u0 != 1)
-		warning("Type 6 _u0 != 1");
-	if (_u3 != 0)
-		warning("Type 6 _u3 != 0");
-
-	debugC(kDebugResource, "\tvideoFile: \"%s\"", _videoFile.c_str());
-	debugC(kDebugResource, "\tleft: %d", _left);
-	debugC(kDebugResource, "\ttop: %d", _top);
-	debugC(kDebugResource, "\tloop: %d", _loop);
-	debugC(kDebugResource, "\tu0: %d", _u0);
-	debugC(kDebugResource, "\tplayBlocking: %d", _playBlocking);
-	debugC(kDebugResource, "\tplayOnCardChange: %d", _playOnCardChange);
-	debugC(kDebugResource, "\tu3: %d", _u3);
-
-	_videoRunning = false;
-}
-
-void MystResourceType6::handleAnimation() {
-	// TODO: Implement Code to allow _playOnCardChange when set
-	//       and trigger by Opcode 9 when clear
-
-	if (!_videoRunning) {
-		// NOTE: The left and top coordinates are often incorrect and do not make sense.
-		// We use the rect coordinates here instead.
-
-		if (_playBlocking)
-			_vm->_video->playMovie(_videoFile, _rect.left, _rect.top);
-		else
-			_vm->_video->playBackgroundMovie(_videoFile, _rect.left, _rect.top, _loop);
-
-		_videoRunning = true;
-	}
-}
-
-MystResourceType7::MystResourceType7(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent) : MystResource(vm, rlstStream, parent) {
-	_var7 = rlstStream->readUint16LE();
-	_numSubResources = rlstStream->readUint16LE();
-	debugC(kDebugResource, "\tvar7: %d", _var7);
-	debugC(kDebugResource, "\tnumSubResources: %d", _numSubResources);
-
-	for (uint16 i = 0; i < _numSubResources; i++)
-		_subResources.push_back(loadResource(vm, rlstStream, this));
-}
-
-// TODO: All these functions to switch subresource are very similar.
-//       Find way to share code (function pointer pass?)
-void MystResourceType7::drawDataToScreen() {
-	if (_var7 == 0xFFFF) {
-		if (_numSubResources == 1)
-			_subResources[0]->drawDataToScreen();
-		else if (_numSubResources != 0)
-			warning("Type 7 Resource with _numSubResources of %d, but no control variable", _numSubResources);
-	} else {
-		uint16 varValue = _vm->_varStore->getVar(_var7);
-
-		if (_numSubResources == 1 && varValue != 0)
-			_subResources[0]->drawDataToScreen();
-		else if (_numSubResources != 0) {
-			if (varValue < _numSubResources)
-				_subResources[varValue]->drawDataToScreen();
-			else
-				warning("Type 7 Resource Var %d: %d exceeds number of sub resources %d", _var7, varValue, _numSubResources);
-		}
-	}
-}
-
-void MystResourceType7::handleAnimation() {
-	if (_var7 == 0xFFFF) {
-		if (_numSubResources == 1)
-			_subResources[0]->handleAnimation();
-		else if (_numSubResources != 0)
-			warning("Type 7 Resource with _numSubResources of %d, but no control variable", _numSubResources);
-	} else {
-		uint16 varValue = _vm->_varStore->getVar(_var7);
-
-		if (_numSubResources == 1 && varValue != 0)
-			_subResources[0]->handleAnimation();
-		else if (_numSubResources != 0) {
-			if (varValue < _numSubResources)
-				_subResources[varValue]->handleAnimation();
-			else
-				warning("Type 7 Resource Var %d: %d exceeds number of sub resources %d", _var7, varValue, _numSubResources);
-		}
-	}
-}
-
-void MystResourceType7::handleMouseUp() {
-	if (_var7 == 0xFFFF) {
-		if (_numSubResources == 1)
-			_subResources[0]->handleMouseUp();
-		else if (_numSubResources != 0)
-			warning("Type 7 Resource with _numSubResources of %d, but no control variable", _numSubResources);
-	} else {
-		uint16 varValue = _vm->_varStore->getVar(_var7);
-
-		if (_numSubResources == 1 && varValue != 0)
-			_subResources[0]->handleMouseUp();
-		else if (_numSubResources != 0) {
-			if (varValue < _numSubResources)
-				_subResources[varValue]->handleMouseUp();
-			else
-				warning("Type 7 Resource Var %d: %d exceeds number of sub resources %d", _var7, varValue, _numSubResources);
-		}
-	}
-}
-
-void MystResourceType7::handleMouseDown() {
-	if (_var7 == 0xFFFF) {
-		if (_numSubResources == 1)
-			_subResources[0]->handleMouseDown();
-		else if (_numSubResources != 0)
-			warning("Type 7 Resource with _numSubResources of %d, but no control variable", _numSubResources);
-	} else {
-		uint16 varValue = _vm->_varStore->getVar(_var7);
-
-		if (_numSubResources == 1 && varValue != 0)
-			_subResources[0]->handleMouseDown();
-		else if (_numSubResources != 0) {
-			if (varValue < _numSubResources)
-				_subResources[varValue]->handleMouseDown();
-			else
-				warning("Type 7 Resource Var %d: %d exceeds number of sub resources %d", _var7, varValue, _numSubResources);
-		}
-	}
-}
-
-void MystResourceType7::handleMouseEnter() {
-	if (_var7 == 0xFFFF) {
-		if (_numSubResources == 1)
-			_subResources[0]->handleMouseEnter();
-		else if (_numSubResources != 0)
-			warning("Type 7 Resource with _numSubResources of %d, but no control variable", _numSubResources);
-	} else {
-		uint16 varValue = _vm->_varStore->getVar(_var7);
-
-		if (_numSubResources == 1 && varValue != 0)
-			_subResources[0]->handleMouseEnter();
-		else if (_numSubResources != 0) {
-			if (varValue < _numSubResources)
-				_subResources[varValue]->handleMouseEnter();
-			else
-				warning("Type 7 Resource Var %d: %d exceeds number of sub resources %d", _var7, varValue, _numSubResources);
-		}
-	}
-}
-
-void MystResourceType7::handleMouseLeave() {
-	if (_var7 == 0xFFFF) {
-		if (_numSubResources == 1)
-			_subResources[0]->handleMouseLeave();
-		else if (_numSubResources != 0)
-			warning("Type 7 Resource with _numSubResources of %d, but no control variable", _numSubResources);
-	} else {
-		uint16 varValue = _vm->_varStore->getVar(_var7);
-
-		if (_numSubResources == 1 && varValue != 0)
-			_subResources[0]->handleMouseLeave();
-		else if (_numSubResources != 0) {
-			if (varValue < _numSubResources)
-				_subResources[varValue]->handleMouseLeave();
-			else
-				warning("Type 7 Resource Var %d: %d exceeds number of sub resources %d", _var7, varValue, _numSubResources);
-		}
-	}
-}
-
-MystResourceType8::MystResourceType8(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent) : MystResourceType7(vm, rlstStream, parent) {
-	_var8 = rlstStream->readUint16LE();
-	_numSubImages = rlstStream->readUint16LE();
-	debugC(kDebugResource, "\tvar8: %d", _var8);
-	debugC(kDebugResource, "\tnumSubImages: %d", _numSubImages);
-
-	_subImages = new MystResourceType8::SubImage[_numSubImages];
-	for (uint16 i = 0; i < _numSubImages; i++) {
-		debugC(kDebugResource, "\tSubimage %d:", i);
-
-		_subImages[i].wdib = rlstStream->readUint16LE();
-		_subImages[i].rect.left = rlstStream->readSint16LE();
-
-		if (_subImages[i].rect.left != -1) {
-			_subImages[i].rect.top = rlstStream->readSint16LE();
-			_subImages[i].rect.right = rlstStream->readSint16LE();
-			_subImages[i].rect.bottom = rlstStream->readSint16LE();
-		} else {
-			_subImages[i].rect.top = 0;
-			_subImages[i].rect.right = 0;
-			_subImages[i].rect.bottom = 0;
-		}
-
-		debugC(kDebugResource, "\twdib: %d", _subImages[i].wdib);
-		debugC(kDebugResource, "\tleft: %d", _subImages[i].rect.left);
-		debugC(kDebugResource, "\ttop: %d", _subImages[i].rect.top);
-		debugC(kDebugResource, "\tright: %d", _subImages[i].rect.right);
-		debugC(kDebugResource, "\tbottom: %d", _subImages[i].rect.bottom);
-	}
-}
-
-void MystResourceType8::drawDataToScreen() {
-	// Need to call overidden Type 7 function to ensure
-	// switch section is processed correctly.
-	MystResourceType7::drawDataToScreen();
-
-	bool drawSubImage = false;
-	int16 subImageId = 0;
-
-	if (_var8 == 0xFFFF) {
-		if (_numSubImages == 1) {
-			subImageId = 0;
-			drawSubImage = true;
-		} else if (_numSubImages != 0)
-			warning("Type 8 Resource with _numSubImages of %d, but no control variable", _numSubImages);
-	} else {
-		uint16 varValue = _vm->_varStore->getVar(_var8);
-
-		if (_numSubImages == 1 && varValue != 0) {
-			subImageId = 0;
-			drawSubImage = true;
-		} else if (_numSubImages != 0) {
-			if (varValue < _numSubImages) {
-				subImageId = varValue;
-				drawSubImage = true;
-			} else
-				warning("Type 8 Image Var %d: %d exceeds number of subImages %d", _var8, varValue, _numSubImages);
-		}
-	}
-
-	if (drawSubImage) {
-		uint16 imageToDraw = 0;
-
-		if (_subImages[subImageId].wdib == 0xFFFF) {
-			// TODO: Think the reason for problematic screen updates in some rects is that they
-			//       are these -1 cases.
-			// They need to be redrawn i.e. if the Myst marker switches are changed, but I don't think
-			// the rects are valid. This does not matter in the original engine as the screen update redraws
-			// the VIEW images, followed by the RLST resource images, and -1 for the WDIB is interpreted as
-			// "Do Not Draw Image" i.e so the VIEW image is shown through.. We need to fix screen update
-			// to do this same behaviour.
-			if (_vm->_view.conditionalImageCount == 0)
-				imageToDraw = _vm->_view.mainImage;
-			else {
-				for (uint16 i = 0; i < _vm->_view.conditionalImageCount; i++)
-					if (_vm->_varStore->getVar(_vm->_view.conditionalImages[i].var) < _vm->_view.conditionalImages[i].numStates)
-						imageToDraw = _vm->_view.conditionalImages[i].values[_vm->_varStore->getVar(_vm->_view.conditionalImages[i].var)];
-			}
-		} else
-			imageToDraw = _subImages[subImageId].wdib;
-
-		if (_subImages[subImageId].rect.left == -1)
-			_vm->_gfx->copyImageSectionToScreen(imageToDraw, _rect, _rect);
-			//vm->_gfx->copyImageToScreen(imageToDraw, Common::Rect(0, 0, 544, 333));
-		// TODO: Think this is the case when the image is full screen.. need to modify graphics to add functions for returning size of image.
-		// This is not right either...
-		//else if (_rect.width() != _subImages[draw_subimage_id].rect.width() || _rect.height() != _subImages[draw_subimage_id].rect.height())
-		// HACK: Hardcode cases of this until general rule can be ascertained
-		//       These cases seem to have the source rect in the wdib with an vertical i.e. top+X, bottom+X where X is a constant, but could
-		//       be negative, translations, when in fact both the source and dest should be equal...
-		//else if ((vm->getCurStack() == kSeleniticStack   && vm->getCurCard() == 1155 && tmp == 1) || // X=
-		//        (vm->getCurStack() == kSeleniticStack   && vm->getCurCard() == 1225 && tmp == 1) || // X=
-		//        (vm->getCurStack() == kMystStack        && vm->getCurCard() == 4247 && tmp == 0) || // X=
-		//        (vm->getCurStack() == kChannelwoodStack && vm->getCurCard() == 3161 && tmp == 0))   // X=
-		//	vm->_gfx->copyImageSectionToScreen(imageToDraw, _rect, _rect);
-		//    // TODO: Small vertical movement remains on change. Suspect off by one error from these to real
-		//	//        solution.
-		else
-			_vm->_gfx->copyImageSectionToScreen(imageToDraw, _subImages[subImageId].rect, _rect);
-	}
-}
-
-uint16 MystResourceType8::getType8Var() {
-	return _var8;
-}
-
-// No MystResourceType9!
-
-MystResourceType10::MystResourceType10(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent) : MystResourceType8(vm, rlstStream, parent) {
-	_kind = rlstStream->readUint16LE();
-	// NOTE: l,r,t,b differs from standard l,t,r,b order
-	_rect10.left = rlstStream->readUint16LE();
-	_rect10.right = rlstStream->readUint16LE();
-	_rect10.top = rlstStream->readUint16LE();
-	_rect10.bottom = rlstStream->readUint16LE();
-	_u0 = rlstStream->readUint16LE();
-	_u1 = rlstStream->readUint16LE();
-	_mouseDownOpcode = rlstStream->readUint16LE();
-	_mouseDragOpcode = rlstStream->readUint16LE();
-	_mouseUpOpcode = rlstStream->readUint16LE();
-
-	// TODO: Need to work out meaning of kind...
-	debugC(kDebugResource, "\tkind: %d", _kind);
-	debugC(kDebugResource, "\trect10.left: %d", _rect10.left);
-	debugC(kDebugResource, "\trect10.right: %d", _rect10.right);
-	debugC(kDebugResource, "\trect10.top: %d", _rect10.top);
-	debugC(kDebugResource, "\trect10.bottom: %d", _rect10.bottom);
-	debugC(kDebugResource, "\tu0: %d", _u0);
-	debugC(kDebugResource, "\tu1: %d", _u1);
-	debugC(kDebugResource, "\t_mouseDownOpcode: %d", _mouseDownOpcode);
-	debugC(kDebugResource, "\t_mouseDragOpcode: %d", _mouseDragOpcode);
-	debugC(kDebugResource, "\t_mouseUpOpcode: %d", _mouseUpOpcode);
-
-	// TODO: Think that u0 and u1 are unused in Type 10
-	if (_u0)
-		warning("Type 10 u0 non-zero");
-	if (_u1)
-		warning("Type 10 u1 non-zero");
-
-	// TODO: Not sure about order of Mouse Down, Mouse Drag and Mouse Up
-	//       Or whether this is slightly different...
-	debugCN(kDebugResource, "Type 10 _mouseDownOpcode: %d\n", _mouseDownOpcode);
-	debugCN(kDebugResource, "Type 10 _mouseDragOpcode: %d\n", _mouseDragOpcode);
-	debugCN(kDebugResource, "Type 10 _mouseUpOpcode: %d\n", _mouseUpOpcode);
-
-	for (byte i = 0; i < 4; i++) {
-		debugC(kDebugResource, "\tList %d:", i);
-
-		_lists[i].listCount = rlstStream->readUint16LE();
-		debugC(kDebugResource, "\t%d values", _lists[i].listCount);
-
-		_lists[i].list = new uint16[_lists[i].listCount];
-		for (uint16 j = 0; j < _lists[i].listCount; j++) {
-			_lists[i].list[j] = rlstStream->readUint16LE();
-			debugC(kDebugResource, "\tValue %d: %d", j, _lists[i].list[j]);
-		}
-	}
-
-	warning("TODO: Card contains Type 10 Resource - Function not yet implemented");
-}
-
-void MystResourceType10::handleMouseUp() {
-	// TODO
-}
-
-MystResourceType11::MystResourceType11(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent) : MystResourceType8(vm, rlstStream, parent) {
-	_kind = rlstStream->readUint16LE();
-	// NOTE: l,r,t,b differs from standard l,t,r,b order
-	_rect11.left = rlstStream->readUint16LE();
-	_rect11.right = rlstStream->readUint16LE();
-	_rect11.top = rlstStream->readUint16LE();
-	_rect11.bottom = rlstStream->readUint16LE();
-	_u0 = rlstStream->readUint16LE();
-	_u1 = rlstStream->readUint16LE();
-	_mouseDownOpcode = rlstStream->readUint16LE();
-	_mouseDragOpcode = rlstStream->readUint16LE();
-	_mouseUpOpcode = rlstStream->readUint16LE();
-
-	debugC(kDebugResource, "\tkind: %d", _kind);
-	debugC(kDebugResource, "\trect11.left: %d", _rect11.left);
-	debugC(kDebugResource, "\trect11.right: %d", _rect11.right);
-	debugC(kDebugResource, "\trect11.top: %d", _rect11.top);
-	debugC(kDebugResource, "\trect11.bottom: %d", _rect11.bottom);
-	debugC(kDebugResource, "\tu0: %d", _u0);
-	debugC(kDebugResource, "\tu1: %d", _u1);
-	debugC(kDebugResource, "\t_mouseDownOpcode: %d", _mouseDownOpcode);
-	debugC(kDebugResource, "\t_mouseDragOpcode: %d", _mouseDragOpcode);
-	debugC(kDebugResource, "\t_mouseUpOpcode: %d", _mouseUpOpcode);
-
-	// TODO: Think that u0 and u1 are unused in Type 11
-	if (_u0)
-		warning("Type 11 u0 non-zero");
-	if (_u1)
-		warning("Type 11 u1 non-zero");
-
-	// TODO: Not sure about order of Mouse Down, Mouse Drag and Mouse Up
-	//       Or whether this is slightly different...
-	debugCN(kDebugResource, "Type 11 _mouseDownOpcode: %d\n", _mouseDownOpcode);
-	debugCN(kDebugResource, "Type 11 _mouseDragOpcode: %d\n", _mouseDragOpcode);
-	debugCN(kDebugResource, "Type 11 _mouseUpOpcode: %d\n", _mouseUpOpcode);
-
-	for (byte i = 0; i < 3; i++) {
-		debugC(kDebugResource, "\tList %d:", i);
-
-		_lists[i].listCount = rlstStream->readUint16LE();
-		debugC(kDebugResource, "\t%d values", _lists[i].listCount);
-
-		_lists[i].list = new uint16[_lists[i].listCount];
-		for (uint16 j = 0; j < _lists[i].listCount; j++) {
-			_lists[i].list[j] = rlstStream->readUint16LE();
-			debugC(kDebugResource, "\tValue %d: %d", j, _lists[i].list[j]);
-		}
-	}
-
-	warning("TODO: Card contains Type 11 Resource - Function not yet implemented");
-}
-
-void MystResourceType11::handleMouseUp() {
-	// TODO
-
-	// HACK: Myst Card 4059 (Fireplace Code Book) to usuable state
-	if (_mouseDownOpcode == 191) {
-		uint16 tmp = _vm->_varStore->getVar(0);
-		if (tmp > 0)
-			_vm->_varStore->setVar(0, tmp - 1);
-	} else if (_mouseDownOpcode == 190) {
-		_vm->_varStore->setVar(0, _vm->_varStore->getVar(0) + 1);
-	}
-}
-
-MystResourceType12::MystResourceType12(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent) : MystResourceType8(vm, rlstStream, parent) {
-	_kind = rlstStream->readUint16LE();
-	// NOTE: l,r,t,b differs from standard l,t,r,b order
-	_rect11.left = rlstStream->readUint16LE();
-	_rect11.right = rlstStream->readUint16LE();
-	_rect11.top = rlstStream->readUint16LE();
-	_rect11.bottom = rlstStream->readUint16LE();
-	_state0Frame = rlstStream->readUint16LE();
-	_state1Frame = rlstStream->readUint16LE();
-	_mouseDownOpcode = rlstStream->readUint16LE();
-	_mouseDragOpcode = rlstStream->readUint16LE();
-	_mouseUpOpcode = rlstStream->readUint16LE();
-
-	debugC(kDebugResource, "\tkind: %d", _kind);
-	debugC(kDebugResource, "\trect11.left: %d", _rect11.left);
-	debugC(kDebugResource, "\trect11.right: %d", _rect11.right);
-	debugC(kDebugResource, "\trect11.top: %d", _rect11.top);
-	debugC(kDebugResource, "\trect11.bottom: %d", _rect11.bottom);
-	debugC(kDebugResource, "\t_state0Frame: %d", _state0Frame);
-	debugC(kDebugResource, "\t_state1Frame: %d", _state1Frame);
-	debugC(kDebugResource, "\t_mouseDownOpcode: %d", _mouseDownOpcode);
-	debugC(kDebugResource, "\t_mouseDragOpcode: %d", _mouseDragOpcode);
-	debugC(kDebugResource, "\t_mouseUpOpcode: %d", _mouseUpOpcode);
-
-	// TODO: Think that u0 and u1 are animation frames to be
-	//       drawn for var == 0 and var == 1
-	debugCN(kDebugResource, "Type 12 _state0Frame: %d\n", _state0Frame);
-	debugCN(kDebugResource, "Type 12 _state1Frame: %d\n", _state1Frame);
-
-	// TODO: Not sure about order of Mouse Down, Mouse Drag and Mouse Up
-	//       Or whether this is slightly different...
-	debugCN(kDebugResource, "Type 12 _mouseDownOpcode: %d\n", _mouseDownOpcode);
-	debugCN(kDebugResource, "Type 12 _mouseDragOpcode: %d\n", _mouseDragOpcode);
-	debugCN(kDebugResource, "Type 12 _mouseUpOpcode: %d\n", _mouseUpOpcode);
-
-	for (byte i = 0; i < 3; i++) {
-		debugC(kDebugResource, "\tList %d:", i);
-
-		_lists[i].listCount = rlstStream->readUint16LE();
-		debugC(kDebugResource, "\t%d values", _lists[i].listCount);
-
-		_lists[i].list = new uint16[_lists[i].listCount];
-		for (uint16 j = 0; j < _lists[i].listCount; j++) {
-			_lists[i].list[j] = rlstStream->readUint16LE();
-			debugC(kDebugResource, "\tValue %d: %d", j, _lists[i].list[j]);
-		}
-	}
-
-	warning("TODO: Card contains Type 12, Type 11 section Resource - Function not yet implemented");
-
-	_numFrames = rlstStream->readUint16LE();
-	_firstFrame = rlstStream->readUint16LE();
-	uint16 frameWidth = rlstStream->readUint16LE();
-	uint16 frameHeight = rlstStream->readUint16LE();
-	_frameRect.left = rlstStream->readUint16LE();
-	_frameRect.top = rlstStream->readUint16LE();
-
-	_frameRect.right = _frameRect.left + frameWidth;
-	_frameRect.bottom = _frameRect.top + frameHeight;
-
-	debugC(kDebugResource, "\t_numFrames: %d", _numFrames);
-	debugC(kDebugResource, "\t_firstFrame: %d", _firstFrame);
-	debugC(kDebugResource, "\tframeWidth: %d", frameWidth);
-	debugC(kDebugResource, "\tframeHeight: %d", frameHeight);
-	debugC(kDebugResource, "\t_frameRect.left: %d", _frameRect.left);
-	debugC(kDebugResource, "\t_frameRect.top: %d", _frameRect.top);
-	debugC(kDebugResource, "\t_frameRect.right: %d", _frameRect.right);
-	debugC(kDebugResource, "\t_frameRect.bottom: %d", _frameRect.bottom);
-
-	_doAnimation = false;
-}
-
-void MystResourceType12::handleAnimation() {
-	// TODO: Probably not final version. Variable/Type 11 Controlled?
-	if (_doAnimation) {
-		_vm->_gfx->copyImageToScreen(_currentFrame++, _frameRect);
-		if ((_currentFrame - _firstFrame) >= _numFrames)
-			_doAnimation = false;
-	}
-}
-
-void MystResourceType12::handleMouseUp() {
-	// HACK/TODO: Trigger Animation on Mouse Click. Probably not final version. Variable/Type 11 Controlled?
-	_currentFrame = _firstFrame;
-	_doAnimation = true;
-}
-
-MystResourceType13::MystResourceType13(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent) : MystResource(vm, rlstStream, parent) {
-	_enterOpcode = rlstStream->readUint16LE();
-	_leaveOpcode = rlstStream->readUint16LE();
-
-	debugC(kDebugResource, "\t_enterOpcode: %d", _enterOpcode);
-	debugC(kDebugResource, "\t_leaveOpcode: %d", _leaveOpcode);
-}
-
-void MystResourceType13::handleMouseEnter() {
-	// Pass along the enter opcode (with no parameters) to the script parser
-	_vm->_scriptParser->runOpcode(_enterOpcode);
-}
-
-void MystResourceType13::handleMouseLeave() {
-	// Pass along the leave opcode (with no parameters) to the script parser
-	_vm->_scriptParser->runOpcode(_leaveOpcode);
-}
-
-void MystResourceType13::handleMouseUp() {
-	// Type 13 Resources do nothing on Mouse Clicks.
-	// This is required to override the inherited default
-	// i.e. MystResource::handleMouseUp
 }
 
 void MohawkEngine_Myst::runLoadDialog() {
@@ -1601,21 +1154,39 @@ void MohawkEngine_Myst::runLoadDialog() {
 }
 
 Common::Error MohawkEngine_Myst::loadGameState(int slot) {
-	if (_saveLoad->loadGame(_saveLoad->generateSaveGameList()[slot])) {
-		changeToStack(kIntroStack);
-		changeToCard(5);
+	if (_gameState->load(_gameState->generateSaveGameList()[slot]))
 		return Common::kNoError;
-	} else
-		return Common::kUnknownError;
+
+	return Common::kUnknownError;
 }
 
 Common::Error MohawkEngine_Myst::saveGameState(int slot, const char *desc) {
-	Common::StringArray saveList = _saveLoad->generateSaveGameList();
+	Common::StringArray saveList = _gameState->generateSaveGameList();
 
 	if ((uint)slot < saveList.size())
-		_saveLoad->deleteSave(saveList[slot]);
+		_gameState->deleteSave(saveList[slot]);
 
-	return _saveLoad->saveGame(Common::String(desc)) ? Common::kNoError : Common::kUnknownError;
+	return _gameState->save(Common::String(desc)) ? Common::kNoError : Common::kUnknownError;
+}
+
+bool MohawkEngine_Myst::canLoadGameStateCurrently() {
+	// No loading in the demo/makingof
+	return !(getFeatures() & GF_DEMO) && getGameType() != GType_MAKINGOF;
+}
+
+bool MohawkEngine_Myst::canSaveGameStateCurrently() {
+	// There's a limited number of stacks the game can save in
+	switch (_curStack) {
+	case kChannelwoodStack:
+	case kDniStack:
+	case kMechanicalStack:
+	case kMystStack:
+	case kSeleniticStack:
+	case kStoneshipStack:
+		return true;
+	}
+
+	return false;
 }
 
 } // End of namespace Mohawk

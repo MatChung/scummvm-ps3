@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/drascula/console.cpp $
- * $Id: console.cpp 49870 2010-06-15 17:14:38Z wjpalenstijn $
+ * $Id: console.cpp 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -34,12 +34,6 @@ Console::Console(DrasculaEngine *vm) : GUI::Debugger(), _vm(vm) {
 }
 
 Console::~Console() {
-}
-
-void Console::preEnter() {
-}
-
-void Console::postEnter() {
 }
 
 bool Console::Cmd_Room(int argc, const char **argv) {

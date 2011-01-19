@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/entity.h $
- * $Id: entity.h 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: entity.h 54270 2010-11-16 14:06:59Z littleboy $
  *
  */
 
@@ -29,6 +29,8 @@
 #include "lastexpress/shared.h"
 
 #include "lastexpress/game/sound.h"
+
+#include "lastexpress/helpers.h"
 
 #include "common/array.h"
 #include "common/func.h"
@@ -493,11 +495,8 @@ public:
 		}
 
 		void clear() {
-			for (int i = 0; i < 4; i++) {
-				if (parameters[i])
-					delete parameters[i];
-				parameters[i] = NULL;
-			}
+			for (int i = 0; i < 4; i++)
+				SAFE_DELETE(parameters[i]);
 		}
 
 		// Serializable
@@ -570,6 +569,8 @@ public:
 			sequence2 = NULL;
 			sequence3 = NULL;
 		}
+
+		~EntityCallData();
 
 		/**
 		 * Convert this object into a string representation.

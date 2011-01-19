@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/data/cursor.cpp $
- * $Id: cursor.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: cursor.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -27,6 +27,7 @@
 
 #include "lastexpress/lastexpress.h"
 
+#include "common/stream.h"
 #include "common/system.h"
 #include "graphics/cursorman.h"
 
@@ -41,7 +42,7 @@ bool Cursor::load(Common::SeekableReadStream *stream) {
 		return false;
 
 	// Load the whole file to memory
-	Common::MemoryReadStream *data = stream->readStream((uint32) stream->size());
+	Common::SeekableReadStream *data = stream->readStream((uint32) stream->size());
 	delete stream;
 	if (!data)
 		return false;

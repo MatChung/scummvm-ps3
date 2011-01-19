@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/object_v1w.cpp $
- * $Id: object_v1w.cpp 54018 2010-11-01 20:20:21Z strangerke $
+ * $Id: object_v1w.cpp 55318 2011-01-19 00:49:49Z strangerke $
  *
  */
 
@@ -46,7 +46,7 @@
 
 namespace Hugo {
 
-ObjectHandler_v1w::ObjectHandler_v1w(HugoEngine *vm) : ObjectHandler(vm) {
+ObjectHandler_v1w::ObjectHandler_v1w(HugoEngine *vm) : ObjectHandler_v3d(vm) {
 }
 
 ObjectHandler_v1w::~ObjectHandler_v1w() {
@@ -65,7 +65,7 @@ void ObjectHandler_v1w::updateImages() {
 	int  num_objs = 0;
 	byte objindex[MAXOBJECTS];                      // Array of indeces to objects
 
-	for (int i = 0; i < _vm->_numObj; i++) {
+	for (int i = 0; i < _numObj; i++) {
 		object_t *obj = &_objects[i];
 		if ((obj->screenIndex == *_vm->_screen_p) && (obj->cycling >= ALMOST_INVISIBLE))
 			objindex[num_objs++] = i;
@@ -183,7 +183,7 @@ void ObjectHandler_v1w::moveObjects() {
 	// Perform any adjustments to velocity based on special path types
 	// and store all (visible) object baselines into the boundary file.
 	// Don't store foreground or background objects
-	for (int i = 0; i < _vm->_numObj; i++) {
+	for (int i = 0; i < _numObj; i++) {
 		object_t *obj = &_objects[i];               // Get pointer to object
 		seq_t *currImage = obj->currImagePtr;       // Get ptr to current image
 		if (obj->screenIndex == *_vm->_screen_p) {
@@ -210,7 +210,7 @@ void ObjectHandler_v1w::moveObjects() {
 				switch (obj->seqNumb) {
 				case 4:
 					if (!obj->vx) {                 // Got 4 directions
-						if (obj->vx != obj->oldvx)  { // vx just stopped
+						if (obj->vx != obj->oldvx) { // vx just stopped
 							if (dy >= 0)
 								obj->currImagePtr = obj->seqList[DOWN].seqPtr;
 							else
@@ -247,14 +247,14 @@ void ObjectHandler_v1w::moveObjects() {
 				}
 			case WANDER2:
 			case WANDER:
-				if (!_vm->_rnd->getRandomNumber(3 * NORMAL_TPS)) {       // Kick on random interval
+				if (!_vm->_rnd->getRandomNumber(3 * _vm->_normalTPS)) {       // Kick on random interval
 					obj->vx = _vm->_rnd->getRandomNumber(obj->vxPath << 1) - obj->vxPath;
 					obj->vy = _vm->_rnd->getRandomNumber(obj->vyPath << 1) - obj->vyPath;
 
 					// Set first image in sequence (if multi-seq object)
 					if (obj->seqNumb > 1) {
 						if (!obj->vx && (obj->seqNumb >= 4)) {
-							if (obj->vx != obj->oldvx)  { // vx just stopped
+							if (obj->vx != obj->oldvx) { // vx just stopped
 								if (obj->vy > 0)
 									obj->currImagePtr = obj->seqList[DOWN].seqPtr;
 								else
@@ -284,7 +284,7 @@ void ObjectHandler_v1w::moveObjects() {
 	}
 
 	// Move objects, allowing for boundaries
-	for (int i = 0; i < _vm->_numObj; i++) {
+	for (int i = 0; i < _numObj; i++) {
 		object_t *obj = &_objects[i];                         // Get pointer to object
 		if ((obj->screenIndex == *_vm->_screen_p) && (obj->vx || obj->vy)) {
 			// Only process if it's moving
@@ -338,7 +338,7 @@ void ObjectHandler_v1w::moveObjects() {
 	}
 
 	// Clear all object baselines from the boundary file.
-	for (int i = 0; i < _vm->_numObj; i++) {
+	for (int i = 0; i < _numObj; i++) {
 		object_t *obj = &_objects[i];               // Get pointer to object
 		seq_t *currImage = obj->currImagePtr;       // Get ptr to current image
 		if ((obj->screenIndex == *_vm->_screen_p) && (obj->cycling > ALMOST_INVISIBLE) && (obj->priority == FLOATING))
@@ -363,23 +363,23 @@ void ObjectHandler_v1w::moveObjects() {
 * the assumption for now that the first obj is always the HERO) to the object
 * number of the swapped image
 */
-void ObjectHandler_v1w::swapImages(int objNumb1, int objNumb2) {
-	debugC(1, kDebugObject, "swapImages(%d, %d)", objNumb1, objNumb2);
+void ObjectHandler_v1w::swapImages(int objIndex1, int objIndex2) {
+	debugC(1, kDebugObject, "swapImages(%d, %d)", objIndex1, objIndex2);
 
-	saveSeq(&_objects[objNumb1]);
+	saveSeq(&_objects[objIndex1]);
 
 	seqList_t tmpSeqList[MAX_SEQUENCES];
 	int seqListSize = sizeof(seqList_t) * MAX_SEQUENCES;
 
-	memcpy(tmpSeqList, _objects[objNumb1].seqList, seqListSize);
-	memcpy(_objects[objNumb1].seqList, _objects[objNumb2].seqList, seqListSize);
-	memcpy(_objects[objNumb2].seqList, tmpSeqList, seqListSize);
-	restoreSeq(&_objects[objNumb1]);
-	_objects[objNumb2].currImagePtr = _objects[objNumb2].seqList[0].seqPtr;
-	_vm->_heroImage = (_vm->_heroImage == HERO) ? objNumb2 : HERO;
+	memmove(tmpSeqList, _objects[objIndex1].seqList, seqListSize);
+	memmove(_objects[objIndex1].seqList, _objects[objIndex2].seqList, seqListSize);
+	memmove(_objects[objIndex2].seqList, tmpSeqList, seqListSize);
+	restoreSeq(&_objects[objIndex1]);
+	_objects[objIndex2].currImagePtr = _objects[objIndex2].seqList[0].seqPtr;
+	_vm->_heroImage = (_vm->_heroImage == HERO) ? objIndex2 : HERO;
 
 	// Make sure baseline stays constant
-	_objects[objNumb1].y += _objects[objNumb2].currImagePtr->y2 - _objects[objNumb1].currImagePtr->y2;
+	_objects[objIndex1].y += _objects[objIndex2].currImagePtr->y2 - _objects[objIndex1].currImagePtr->y2;
 }
 
 } // End of namespace Hugo

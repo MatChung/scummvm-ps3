@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/he/animation_he.cpp $
- * $Id: animation_he.cpp 49079 2010-05-18 14:17:24Z mthreepwood $
+ * $Id: animation_he.cpp 54927 2010-12-16 01:35:13Z mthreepwood $
  *
  */
 
@@ -68,7 +68,7 @@ void MoviePlayer::copyFrameToBuffer(byte *dst, int dstType, uint x, uint y, uint
 	uint h = getHeight();
 	uint w = getWidth();
 
-	Graphics::Surface *surface = decodeNextFrame();
+	const Graphics::Surface *surface = decodeNextFrame();
 	byte *src = (byte *)surface->pixels;
 
 	if (hasDirtyPalette())

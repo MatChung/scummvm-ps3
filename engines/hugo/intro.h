@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/intro.h $
- * $Id: intro.h 53674 2010-10-21 17:09:57Z strangerke $
+ * $Id: intro.h 55126 2011-01-05 22:28:37Z strangerke $
  *
  */
 
@@ -32,6 +32,7 @@
 
 #ifndef INTRO_H
 #define INTRO_H
+#include "graphics/fonts/winfont.h"
 
 namespace Hugo {
 
@@ -44,6 +45,9 @@ enum seqTextIntro {
 class IntroHandler {
 public:
 	IntroHandler(HugoEngine *vm);
+	Graphics::Surface surf;
+	Graphics::WinFont font;
+
 	virtual ~IntroHandler();
 
 	virtual void preNewGame() = 0;

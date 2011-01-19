@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/sound/drivers/mididriver.h $
- * $Id: mididriver.h 52802 2010-09-19 11:44:07Z thebluegr $
+ * $Id: mididriver.h 54483 2010-11-25 22:17:23Z thebluegr $
  *
  */
 
@@ -79,10 +79,10 @@ enum {
 class MidiPlayer : public MidiDriver {
 protected:
 	MidiDriver *_driver;
-	byte _reverb;
+	int8 _reverb;
 
 public:
-	MidiPlayer(SciVersion version) : _driver(0), _reverb(0), _version(version) { }
+	MidiPlayer(SciVersion version) : _driver(0), _reverb(-1), _version(version) { }
 
 	int open() {
 		ResourceManager *resMan = g_sci->getResMan();	// HACK
@@ -111,8 +111,10 @@ public:
 		return _driver ? _driver->property(MIDI_PROP_MASTER_VOLUME, 0xffff) : 0;
 	}
 
-	virtual byte getReverb() const { return _reverb; }
-	virtual void setReverb(byte reverb) { _reverb = reverb; }
+	// Returns the current reverb, or -1 when no reverb is active
+	int8 getReverb() const { return _reverb; }
+	// Sets the current reverb, used mainly in MT-32
+	virtual void setReverb(int8 reverb) { _reverb = reverb; }
 
 	virtual void playSwitch(bool play) {
 		if (!play) {

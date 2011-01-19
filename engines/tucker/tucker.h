@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tucker/tucker.h $
- * $Id: tucker.h 53484 2010-10-15 12:48:19Z fingolfin $
+ * $Id: tucker.h 55197 2011-01-10 22:20:51Z lordhoto $
  *
  */
 
@@ -38,6 +38,12 @@
 #include "sound/mixer.h"
 
 #include "engines/engine.h"
+
+#include "tucker/console.h"
+
+namespace Audio {
+class RewindableAudioStream;
+} // End of namespace Audio
 
 /**
  * This is the namespace of the Tucker engine.
@@ -275,6 +281,7 @@ public:
 	virtual Common::Error run();
 	virtual bool hasFeature(EngineFeature f) const;
 	virtual void syncSoundSettings();
+	GUI::Debugger *getDebugger() { return _console; }
 
 protected:
 
@@ -565,6 +572,8 @@ protected:
 	virtual Common::Error saveGameState(int num, const char *description);
 	virtual bool canLoadGameStateCurrently();
 	virtual bool canSaveGameStateCurrently();
+
+	TuckerConsole *_console;
 
 	void handleIntroSequence();
 	void handleCreditsSequence();

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/plugins/psp/psp-provider.h $
- * $Id: psp-provider.h 54052 2010-11-03 22:57:42Z wjpalenstijn $
+ * $Id: psp-provider.h 54584 2010-11-29 18:48:43Z lordhoto $
  *
  */
 

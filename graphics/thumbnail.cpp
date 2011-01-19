@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/thumbnail.cpp $
- * $Id: thumbnail.cpp 51668 2010-08-02 22:28:30Z lordhoto $
+ * $Id: thumbnail.cpp 54358 2010-11-19 01:37:04Z fingolfin $
  */
 
 #include "graphics/thumbnail.h"
@@ -27,6 +27,7 @@
 #include "graphics/colormasks.h"
 #include "common/endian.h"
 #include "common/system.h"
+#include "common/stream.h"
 
 namespace Graphics {
 

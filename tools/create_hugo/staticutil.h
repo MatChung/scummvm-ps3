@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/tools/create_hugo/staticutil.h $
- * $Id: staticutil.h 52421 2010-08-28 07:42:54Z drmccoy $
+ * $Id: staticutil.h 54202 2010-11-11 15:01:57Z strangerke $
  *
  */
 
@@ -33,19 +33,14 @@
 #ifndef STATICUTIL_H
 #define STATICUTIL_H
 
-#define NUM_UTIL_TEXT 8
+#define NUM_UTIL_TEXT 1
 
-const char *textUtil[NUM_UTIL_TEXT] = {
-	"\n\nPlease read the supplied 'technote' file which may contain information on this problem.",
-	"File not found: ",
-	"Unable to write file.\nDisk full or perhaps read-only?\n",
-	"Bad data file format:\n",
-	"Insufficient memory to run game.\n",
-	"Sound missing from sound file:\n",
-	"An error has occurred.\n",
+const char *textUtil_v1w[NUM_UTIL_TEXT] = {
 	"I'm afraid all you can do at this point is:\n\n-  Load a saved game (Ctrl+L)\n-  Start a new game (Ctrl+N)\n-  Quit! (Alt+F4)"
-//	"No timers available, try again later.\n",
-//	"Unable to find or load VBX file:\n"
+};
+
+const char *textUtil_v1d[NUM_UTIL_TEXT] = {
+	"I'm afraid all you can do\nat this point is restore\na saved game or quit!"
 };
 
 #endif //STATICENGINE_H

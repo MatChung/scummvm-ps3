@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/he/script_v72he.cpp $
- * $Id: script_v72he.cpp 53739 2010-10-23 15:47:23Z fingolfin $
+ * $Id: script_v72he.cpp 54434 2010-11-23 22:25:10Z fingolfin $
  *
  */
 
@@ -1412,12 +1412,7 @@ void ScummEngine_v72he::o72_openFile() {
 			if (!_saveFileMan->listSavefiles(filename).empty()) {
 				_hInFileTable[slot] = _saveFileMan->openForLoading(filename);
 			} else {
-				Common::File *f = new Common::File();
-				f->open(filename);
-				if (!f->isOpen())
-					delete f;
-				else
-					_hInFileTable[slot] = f;
+				_hInFileTable[slot] = SearchMan.createReadStreamForMember(filename);
 			}
 			break;
 		case 2:

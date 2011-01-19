@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cruise/debugger.h $
- * $Id: debugger.h 36259 2009-02-11 10:03:01Z dreammaster $
+ * $Id: debugger.h 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -35,7 +35,7 @@ public:
 	Debugger();
 	virtual ~Debugger() {}  // we need this for __SYMBIAN32__ archaic gcc/UIQ
 
-protected:
+private:
 	bool cmd_hotspots(int argc, const char **argv);
 	bool cmd_items(int argc, const char **argv);
 };

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/agi.h $
- * $Id: agi.h 53868 2010-10-26 22:33:49Z fingolfin $
+ * $Id: agi.h 55124 2011-01-05 13:04:08Z fingolfin $
  *
  */
 
@@ -1010,10 +1010,6 @@ public:
 
 	// Text
 public:
-	#define MAXWORDLEN 24
-
-	typedef Common::String String;
-
 	int messageBox(const char *);
 	int selectionBox(const char *, const char **);
 	void closeWindow();
@@ -1044,8 +1040,8 @@ private:
 	char **_predictiveDictLine;
 	int32 _predictiveDictLineCount;
 	char *_predictiveDictActLine;
-	String _currentCode;
-	String _currentWord;
+	Common::String _currentCode;
+	Common::String _currentWord;
 	int _wordNumber;
 	bool _predictiveDialogRunning;
 public:

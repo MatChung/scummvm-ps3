@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/character.cpp $
-* $Id: character.cpp 54011 2010-11-01 16:04:47Z fingolfin $
+* $Id: character.cpp 54549 2010-11-28 20:53:57Z eriktorbjorn $
 *
 */
 
@@ -31,19 +31,21 @@
 namespace Toon {
 
 Character::Character(ToonEngine *vm) : _vm(vm) {
-	_animationInstance = 0;
-	_shadowAnimationInstance = 0;
-	_shadowAnim = 0;
+	_animationInstance = NULL;
+	_shadowAnimationInstance = NULL;
 	_x = 0;
 	_y = 0;
 	_z = 0;
 	_finalX = 0;
 	_finalY = 0;
-	_specialAnim = 0;
 	_sceneAnimationId = -1;
-	_idleAnim = 0;
-	_walkAnim = 0;
-	_talkAnim = 0;
+
+	_walkAnim = NULL;
+	_idleAnim = NULL;
+	_talkAnim = NULL;
+	_shadowAnim = NULL;
+	_specialAnim = NULL;
+
 	_facing = 0;
 	_flags = 0;
 	_animFlags = 0;
@@ -64,15 +66,77 @@ Character::Character(ToonEngine *vm) : _vm(vm) {
 }
 
 Character::~Character(void) {
+	delete _animationInstance;
+	delete _shadowAnimationInstance;
+
+	delete _walkAnim;
+	delete _idleAnim;
+	delete _talkAnim;
+	delete _shadowAnim;
+	delete _specialAnim;
 }
 
 void Character::init() {
+}
 
+void Character::forceFacing( int32 facing ) {
+	debugC(4, kDebugCharacter, "forceFacing(%d)", facing);
+	_facing = facing;
 }
 
 void Character::setFacing(int32 facing) {
 	debugC(4, kDebugCharacter, "setFacing(%d)", facing);
+
+	if (facing == _facing)
+		return;
+
+	if (_blockingWalk) {
+		_flags |= 2;
+
+		int32 dir = 0;
+
+		_lastWalkTime = _vm->getSystem()->getMillis();
+		if ((_facing - facing + 8) % 8 > (facing - _facing + 8) % 8)
+			dir = 1;
+		else 
+			dir = -1;
+
+		while (_facing != facing) {
+
+			int32 elapsedTime = _vm->getOldMilli() - _lastWalkTime;
+			while (elapsedTime > _vm->getTickLength() * 3 && _facing != facing) {
+				_facing += dir;
+
+				while (_facing >= 8)
+					_facing -= 8;
+				while (_facing < 0)
+					_facing += 8;
+
+				elapsedTime -= _vm->getTickLength() * 3;
+				_lastWalkTime = _vm->getOldMilli();
+			}
+
+			if	(_currentPathNode == 0)
+				playStandingAnim();
+			else
+				playWalkAnim(0,0);
+			_vm->doFrame();
+		};
+
+		_flags &= ~2;
+	}
+
+
 	_facing = facing;
+}
+
+void Character::forcePosition(int32 x, int32 y) {
+
+	debugC(5, kDebugCharacter, "forcePosition(%d, %d)", x, y);
+
+	setPosition(x,y);
+	_finalX = x;
+	_finalY = y;
 }
 
 void Character::setPosition(int32 x, int32 y) {
@@ -119,10 +183,12 @@ bool Character::walkTo(int32 newPosX, int32 newPosY) {
 		_currentPathNodeCount = _vm->getPathFinding()->getPathNodeCount();
 		_currentPathNode = 0;
 		stopSpecialAnim();
-		_flags |= 0x1;
+	
 		_lastWalkTime = _vm->getSystem()->getMillis();
 
 		_numPixelToWalk = 0;
+
+		_flags |= 0x1;
 
 		if (_blockingWalk) {
 			while ((_x != newPosX || _y != newPosY) && _currentPathNode < _currentPathNodeCount && !_vm->shouldQuitGame()) {
@@ -133,6 +199,8 @@ bool Character::walkTo(int32 newPosX, int32 newPosY) {
 					setFacing(getFacingFromDirection(dx, dy));
 					playWalkAnim(0, 0);
 				}
+
+				
 
 				// in 1/1000 pixels
 				_numPixelToWalk += _speed * (_vm->getSystem()->getMillis() - _lastWalkTime) * _scale / 1024;
@@ -202,27 +270,21 @@ int32 Character::getFacing() {
 
 bool Character::loadWalkAnimation(Common::String animName) {
 	debugC(1, kDebugCharacter, "loadWalkAnimation(%s)", animName.c_str());
-	if (_walkAnim)
-		delete _walkAnim;
-
+	delete _walkAnim;
 	_walkAnim = new Animation(_vm);
 	return _walkAnim->loadAnimation(animName);
 }
 
 bool Character::loadIdleAnimation(Common::String animName) {
 	debugC(1, kDebugCharacter, "loadIdleAnimation(%s)", animName.c_str());
-	if (_idleAnim)
-		delete _idleAnim;
-
+	delete _idleAnim;
 	_idleAnim = new Animation(_vm);
 	return _idleAnim->loadAnimation(animName);
 }
 
 bool Character::loadTalkAnimation(Common::String animName) {
 	debugC(1, kDebugCharacter, "loadTalkAnimation(%s)", animName.c_str());
-	if (_talkAnim)
-		delete _talkAnim;
-
+	delete _talkAnim;
 	_talkAnim = new Animation(_vm);
 	return _talkAnim->loadAnimation(animName);
 }
@@ -232,7 +294,6 @@ bool Character::setupPalette() {
 }
 
 void Character::playStandingAnim() {
-
 }
 
 void Character::updateTimers(int32 relativeAdd) {
@@ -245,7 +306,7 @@ void Character::stopSpecialAnim() {
 // Strangerke - Commented (not used)
 #if 0
 	if (_animSpecialId != _animSpecialDefaultId)
-		delete anim
+		delete anim;
 #endif
 	if (_animScriptId != -1)
 		_vm->getSceneAnimationScript(_animScriptId)->_frozenForConversation = false;
@@ -918,10 +979,12 @@ const SpecialCharacterAnimation *Character::getSpecialAnimation(int32 characterI
 bool Character::loadShadowAnimation(Common::String animName) {
 	debugC(1, kDebugCharacter, "loadShadowAnimation(%s)", animName.c_str());
 
+	delete _shadowAnim;
 	_shadowAnim = new Animation(_vm);
 	if (!_shadowAnim->loadAnimation(animName))
 		return false;
 
+	delete _shadowAnimationInstance;
 	_shadowAnimationInstance = _vm->getAnimationManager()->createNewInstance(kAnimationCharacter);
 	_vm->getAnimationManager()->addInstance(_shadowAnimationInstance);
 	_shadowAnimationInstance->setAnimation(_shadowAnim);
@@ -967,7 +1030,7 @@ void Character::playAnim(int32 animId, int32 unused, int32 flags) {
 		_flags |= 1;
 
 		// wait for the character to be ready
-		while (_animScriptId != -1 && _animationInstance->getFrame() > 0 && (_specialAnim && _animationInstance->getAnimation() != _specialAnim)) {
+		while (_animScriptId != -1 && _animationInstance && _animationInstance->getFrame() > 0 && (_specialAnim && _animationInstance->getAnimation() != _specialAnim)) {
 			_vm->simpleUpdate(false);
 		}
 	}
@@ -979,8 +1042,7 @@ void Character::playAnim(int32 animId, int32 unused, int32 flags) {
 
 	_animFlags |= flags;
 
-	if (_specialAnim)
-		delete _specialAnim;
+	delete _specialAnim;
 	_specialAnim = new Animation(_vm);
 	_specialAnim->loadAnimation(animName);
 

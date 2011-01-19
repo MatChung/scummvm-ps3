@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/palette.h $
- * $Id: palette.h 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: palette.h 54286 2010-11-17 12:13:23Z fingolfin $
  *
  * Palette Allocator Definitions
  */
@@ -90,7 +90,6 @@ struct PALQ {
 	bool bFading;		// Whether or not fading
 	COLORREF palRGB[MAX_COLOURS];	// actual palette colours
 };
-typedef PALQ *PPALQ;
 
 #define	PALETTE_MOVED	0x8000	// when this bit is set in the "posInDAC"
 				// field - the palette entry has moved
@@ -123,6 +122,8 @@ void UpdateDACqueue(		// places a palette in the video DAC queue
 	int numColours,		// number of colours in palette
 	COLORREF *pColours);	// list of RGB tripples
 
+void UpdateDACqueue(int posInDAC, COLORREF color);
+
 PALQ *AllocPalette(		// allocate a new palette
 	SCNHANDLE hNewPal);	// palette to allocate
 
@@ -144,7 +145,7 @@ COLORREF GetBgndColour();	// returns current background colour
 void SetBgndColour(		// sets current background colour
 	COLORREF colour);	// colour to set the background to
 
-void FadingPalette(PPALQ pPalQ, bool bFading);
+void FadingPalette(PALQ *pPalQ, bool bFading);
 
 void CreateTranslucentPalette(SCNHANDLE BackPal);
 

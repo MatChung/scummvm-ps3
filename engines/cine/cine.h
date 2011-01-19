@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cine/cine.h $
- * $Id: cine.h 54115 2010-11-07 15:02:41Z tdhs $
+ * $Id: cine.h 55071 2010-12-31 09:14:49Z tdhs $
  *
  */
 
@@ -217,9 +217,10 @@ enum {
 };
 
 enum {
-	kCineDebugScript = 1 << 0,
-	kCineDebugPart   = 1 << 1,
-	kCineDebugSound  = 1 << 2
+	kCineDebugScript    = 1 << 0,
+	kCineDebugPart      = 1 << 1,
+	kCineDebugSound     = 1 << 2,
+	kCineDebugCollision = 1 << 3
 };
 
 enum {

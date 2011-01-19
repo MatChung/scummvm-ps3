@@ -19,10 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/vkeybd/virtual-keyboard-parser.cpp $
- * $Id: virtual-keyboard-parser.cpp 53479 2010-10-15 12:19:13Z fingolfin $
+ * $Id: virtual-keyboard-parser.cpp 54573 2010-11-29 16:18:43Z fingolfin $
  *
  */
 
+#include "common/scummsys.h"
 
 #ifdef ENABLE_VKEYBD
 
@@ -34,6 +35,7 @@
 #include "common/system.h"
 #include "common/archive.h"
 #include "common/tokenizer.h"
+#include "common/stream.h"
 
 #include "graphics/imagedec.h"
 

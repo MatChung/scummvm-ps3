@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/kernel.cpp $
- * $Id: kernel.cpp 54037 2010-11-02 09:49:47Z fingolfin $
+ * $Id: kernel.cpp 55176 2011-01-08 23:14:11Z thebluegr $
  *
  */
 
@@ -102,7 +102,7 @@ int Kernel::findSelector(const char *selectorName) const {
 			return pos;
 	}
 
-	debugC(2, kDebugLevelVM, "Could not map '%s' to any selector", selectorName);
+	debugC(kDebugLevelVM, "Could not map '%s' to any selector", selectorName);
 
 	return -1;
 }
@@ -384,7 +384,6 @@ uint16 Kernel::findRegType(reg_t reg) {
 		break;
 	case SEG_TYPE_LOCALS:
 	case SEG_TYPE_STACK:
-	case SEG_TYPE_SYS_STRINGS:
 	case SEG_TYPE_DYNMEM:
 	case SEG_TYPE_HUNK:
 #ifdef ENABLE_SCI32
@@ -663,7 +662,7 @@ void Kernel::mapFunctions() {
 		}
 	} // for all functions requesting to be mapped
 
-	debugC(2, kDebugLevelVM, "Handled %d/%d kernel functions, mapping %d and ignoring %d.",
+	debugC(kDebugLevelVM, "Handled %d/%d kernel functions, mapping %d and ignoring %d.",
 				mapped + ignored, _kernelNames.size(), mapped, ignored);
 
 	return;
@@ -828,15 +827,21 @@ void Kernel::setKernelNamesSci2() {
 
 void Kernel::setKernelNamesSci21(GameFeatures *features) {
 	// Some SCI games use a modified SCI2 kernel table instead of the
-	// SCI2.1 kernel table. The GK2 demo does this as well as at least
-	// one version of KQ7 (1.4). We detect which version to use based on
+	// SCI2.1 kernel table. We detect which version to use based on
 	// how kDoSound is called from Sound::play().
+	// Known games that use this:
+	// GK2 demo
+	// KQ7 1.4
+	// PQ4 SWAT demo
+	// LSL6
+	// PQ4CD
+	// QFG4CD
 
 	// This is interesting because they all have the same interpreter
 	// version (2.100.002), yet they would not be compatible with other
 	// games of the same interpreter.
 
-	if (features->detectSci21KernelType() == SCI_VERSION_2) {
+	if (getSciVersion() != SCI_VERSION_3 && features->detectSci21KernelType() == SCI_VERSION_2) {
 		_kernelNames = Common::StringArray(sci2_default_knames, kKernelEntriesGk2Demo);
 		// OnMe is IsOnMe here, but they should be compatible
 		_kernelNames[0x23] = "Robot"; // Graph in SCI2
@@ -910,6 +915,13 @@ void script_adjust_opcode_formats() {
 		g_opcode_formats[op_self][0] = Script_Word;
 		g_opcode_formats[op_call][1] = Script_Word;
 		g_opcode_formats[op_callb][1] = Script_Word;
+	}
+
+	if (getSciVersion() >= SCI_VERSION_3) {
+		// TODO: There are also opcodes in
+		// here to get the superclass, and possibly the species too.
+		g_opcode_formats[0x4d/2][0] = Script_None;
+		g_opcode_formats[0x4e/2][0] = Script_None;
 	}
 #endif
 }

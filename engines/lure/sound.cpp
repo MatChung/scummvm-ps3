@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lure/sound.cpp $
- * $Id: sound.cpp 52736 2010-09-15 22:00:20Z lordhoto $
+ * $Id: sound.cpp 54258 2010-11-16 08:23:13Z fingolfin $
  *
  */
 
@@ -34,7 +34,7 @@
 #include "common/endian.h"
 #include "sound/midiparser.h"
 
-DECLARE_SINGLETON(Lure::SoundManager)
+DECLARE_SINGLETON(Lure::SoundManager);
 
 namespace Lure {
 

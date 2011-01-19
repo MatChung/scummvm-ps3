@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/sprite.cpp $
- * $Id: sprite.cpp 53779 2010-10-24 22:17:44Z h00ligan $
+ * $Id: sprite.cpp 54441 2010-11-23 22:27:20Z fingolfin $
  *
  */
 
@@ -122,7 +122,7 @@ void Sprite::loadList(int resourceId, SpriteList &spriteList) {
 		spritePointer += offset;
 
 		if (bigHeader) {
-			MemoryReadStreamEndian readS2(spritePointer, 8, _spriteContext->isBigEndian());
+			Common::MemoryReadStreamEndian readS2(spritePointer, 8, _spriteContext->isBigEndian());
 
 			spriteInfo->xAlign = readS2.readSint16();
 			spriteInfo->yAlign = readS2.readSint16();
@@ -132,7 +132,7 @@ void Sprite::loadList(int resourceId, SpriteList &spriteList) {
 
 			spriteDataPointer = spritePointer + readS2.pos();
 		} else {
-			MemoryReadStreamEndian readS2(spritePointer, 4);
+			Common::MemoryReadStreamEndian readS2(spritePointer, 4, false);
 
 			spriteInfo->xAlign = readS2.readSByte();
 			spriteInfo->yAlign = readS2.readSByte();
@@ -438,7 +438,7 @@ void Sprite::decodeRLEBuffer(const byte *inputBuffer, size_t inLength, size_t ou
 
 	memset(outPointer, 0, _decodeBuf.size());
 
-	MemoryReadStream readS(inputBuffer, inLength);
+	Common::MemoryReadStream readS(inputBuffer, inLength);
 
 	while (!readS.eos() && (outPointer < outPointerEnd)) {
 		bg_runcount = readS.readByte();

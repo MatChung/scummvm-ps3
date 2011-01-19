@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/hotspot.h $
-* $Id: hotspot.h 53096 2010-10-09 10:29:11Z salty-horse $
+* $Id: hotspot.h 54127 2010-11-07 21:08:46Z tdhs $
 *
 */
 
@@ -51,7 +51,7 @@ private:
 class Hotspots {
 public:
 	Hotspots(ToonEngine *vm);
-	~Hotspots(void);
+	~Hotspots();
 
 	bool LoadRif(Common::String rifName, Common::String additionalRifName);
 	int32 Find(int32 x, int32 y);

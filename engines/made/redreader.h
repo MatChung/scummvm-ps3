@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/made/redreader.h $
- * $Id: redreader.h 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: redreader.h 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -34,8 +34,8 @@ namespace Made {
 
 class RedReader {
 public:
-	Common::MemoryReadStream *load(const char *redFilename, const char *filename);
-	static Common::MemoryReadStream *loadFromRed(const char *redFilename, const char *filename);
+	Common::SeekableReadStream *load(const char *redFilename, const char *filename);
+	static Common::SeekableReadStream *loadFromRed(const char *redFilename, const char *filename);
 private:
 	struct FileEntry {
 		uint32 compSize, origSize;

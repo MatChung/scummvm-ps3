@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/android/android.cpp $
- * $Id: android.cpp 53801 2010-10-25 07:27:05Z anguslees $
+ * $Id: android.cpp 54339 2010-11-18 19:12:14Z lordhoto $
  *
  */
 
@@ -299,6 +299,7 @@ public:
 	virtual void getTimeAndDate(TimeDate &t) const;
 	virtual Common::TimerManager *getTimerManager();
 	virtual FilesystemFactory *getFilesystemFactory();
+	virtual void logMessage(LogMessageType::Type type, const char *message);
 	virtual void addSysArchivesToSearchSet(Common::SearchSet &s, int priority = 0);
 };
 
@@ -1266,6 +1267,23 @@ void OSystem_Android::addSysArchivesToSearchSet(Common::SearchSet &s,
 	}
 }
 
+void OSystem_Android::logMessage(LogMessageType::Type type, const char *message) {
+	switch (type) {
+	case LogMessageType::kDebug:
+		BaseBackend::logMessage(type, message);
+		break;
+
+	case LogMessageType::kWarning:
+		__android_log_write(ANDROID_LOG_WARN, "ScummVM", message);
+		break;
+
+	case LogMessageType::kError:
+		// FIXME: From the name it looks like this will also quit the program.
+		// This shouldn't do that though.
+		__android_log_assert("Fatal error", "ScummVM", "%s", message);
+		break;
+	}
+}
 
 static jint ScummVM_scummVMMain(JNIEnv* env, jobject self, jobjectArray args) {
 	OSystem_Android* cpp_obj = OSystem_Android::fromJavaObject(env, self);

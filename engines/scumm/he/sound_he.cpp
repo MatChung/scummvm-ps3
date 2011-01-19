@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/he/sound_he.cpp $
- * $Id: sound_he.cpp 53562 2010-10-18 04:25:53Z Kirben $
+ * $Id: sound_he.cpp 54435 2010-11-23 22:25:36Z fingolfin $
  *
  */
 
@@ -32,11 +32,11 @@
 #include "scumm/util.h"
 
 #include "common/config-manager.h"
+#include "common/memstream.h"
 #include "common/timer.h"
 #include "common/util.h"
 
 #include "sound/decoders/adpcm.h"
-#include "sound/audiocd.h"
 #include "sound/decoders/flac.h"
 #include "sound/mididrv.h"
 #include "sound/mixer.h"

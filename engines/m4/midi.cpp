@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/midi.cpp $
- * $Id: midi.cpp 49613 2010-06-12 23:53:26Z dreammaster $
+ * $Id: midi.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -28,7 +28,7 @@
 
 #include "m4/m4.h"
 #include "m4/midi.h"
-#include "common/stream.h"
+#include "common/memstream.h"
 
 namespace M4 {
 

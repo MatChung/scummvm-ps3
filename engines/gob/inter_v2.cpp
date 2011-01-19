@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/inter_v2.cpp $
- * $Id: inter_v2.cpp 53984 2010-10-31 20:07:14Z drmccoy $
+ * $Id: inter_v2.cpp 55296 2011-01-18 11:52:24Z drmccoy $
  *
  */
 
@@ -609,47 +609,33 @@ void Inter_v2::o2_switchTotSub() {
 }
 
 void Inter_v2::o2_pushVars() {
-	byte count;
-	int16 varOff;
-
-	count = _vm->_game->_script->readByte();
-	for (int i = 0; i < count; i++, _varStackPos++) {
+	uint8 count = _vm->_game->_script->readByte();
+	for (int i = 0; i < count; i++) {
 		if ((_vm->_game->_script->peekByte() == 25) ||
 				(_vm->_game->_script->peekByte() == 28)) {
 
-			varOff = _vm->_game->_script->readVarIndex();
+			int16 varOff = _vm->_game->_script->readVarIndex();
 			_vm->_game->_script->skip(1);
 
-			_variables->copyTo(varOff, _varStack + _varStackPos, _vm->_global->_inter_animDataSize * 4);
-
-			_varStackPos += _vm->_global->_inter_animDataSize * 4;
-			_varStack[_varStackPos] = _vm->_global->_inter_animDataSize * 4;
+			_varStack.pushData(*_variables, varOff, _vm->_global->_inter_animDataSize * 4);
 
 		} else {
-			int32 n = _vm->_game->_script->getResultInt();
+			int16 value;
 
-			if (_vm->_game->_script->evalExpr(&varOff) != 20)
-				n = 0;
+			if (_vm->_game->_script->evalExpr(&value) != 20)
+				value = 0;
 
-			memcpy(_varStack + _varStackPos, &n, 4);
-			_varStackPos += 4;
-			_varStack[_varStackPos] = 4;
+			_varStack.pushInt((uint16)value);
 		}
 	}
 }
 
 void Inter_v2::o2_popVars() {
-	byte count;
-	int16 varOff;
-	int16 size;
-
-	count = _vm->_game->_script->readByte();
+	uint8 count = _vm->_game->_script->readByte();
 	for (int i = 0; i < count; i++) {
-		varOff = _vm->_game->_script->readVarIndex();
-		size = _varStack[--_varStackPos];
+		int16 varOff = _vm->_game->_script->readVarIndex();
 
-		_varStackPos -= size;
-		_variables->copyFrom(varOff, _varStack + _varStackPos, size);
+		_varStack.pop(*_variables, varOff);
 	}
 }
 
@@ -1233,18 +1219,6 @@ bool Inter_v2::o2_removeHotspot(OpFuncParams &params) {
 }
 
 bool Inter_v2::o2_goblinFunc(OpFuncParams &params) {
-	// TODO: In Inca 2, this is the big SpaceShoot0rz()-Opcode.
-	// It's not yet implemented, so we fudge our way through
-	// and pretend we've won.
-	if (_vm->getGameType() == kGameTypeInca2) {
-		_vm->_game->_script->skip(4);
-		uint16 resVar = _vm->_game->_script->readUint16();
-		_vm->_game->_script->skip(4);
-
-		WRITE_VAR(resVar, 1);
-		return false;
-	}
-
 	OpGobParams gobParams;
 	int16 cmd;
 
@@ -1385,7 +1359,7 @@ bool Inter_v2::o2_readData(OpFuncParams &params) {
 
 	WRITE_VAR(1, 1);
 	Common::SeekableReadStream *stream = _vm->_dataIO->getFile(file);
-	if (!file)
+	if (!stream)
 		return false;
 
 	_vm->_draw->animateCursor(4);

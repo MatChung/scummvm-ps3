@@ -21,7 +21,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/configure $
-# $Id: configure 54114 2010-11-07 12:09:53Z hkz $
+# $Id: configure 55149 2011-01-07 16:25:05Z marcus_c $
 
 # Save the current environment variables for next runs
 SAVED_CONFIGFLAGS=$@
@@ -132,6 +132,8 @@ _png=auto
 _theoradec=auto
 _fluidsynth=auto
 _16bit=auto
+_opengl=auto
+_opengles=auto
 _readline=auto
 # Default option behaviour yes/no
 _debug_build=auto
@@ -740,6 +742,9 @@ Optional Libraries:
   --with-mpeg2-prefix=DIR  Prefix where libmpeg2 is installed (optional)
   --enable-mpeg2           enable mpeg2 codec for cutscenes [no]
 
+  --with-opengl-prefix=DIR Prefix where OpenGL (ES) is installed (optional)
+  --disable-opengl         disable OpenGL (ES) support [autodetect]
+
   --disable-indeo3         disable Indeo3 decoder [autodetect]
 
   --with-png-prefix=DIR    Prefix where libpng is installed (optional)
@@ -809,6 +814,8 @@ for ac_option in $@; do
 	--disable-fluidsynth)     _fluidsynth=no  ;;
 	--enable-readline)        _readline=yes   ;;
 	--disable-readline)       _readline=no    ;;
+	--enable-opengl)          _opengl=yes     ;;
+	--disable-opengl)         _opengl=no      ;;
 	--enable-verbose-build)   _verbose_build=yes ;;
 	--enable-plugins)         _dynamic_modules=yes ;;
 	--default-dynamic)        _plugins_default=dynamic ;;
@@ -881,6 +888,11 @@ for ac_option in $@; do
 		arg=`echo $ac_option | cut -d '=' -f 2`
 		READLINE_CFLAGS="-I$arg/include"
 		READLINE_LIBS="-L$arg/lib"
+		;;
+	--with-opengl-prefix=*)
+		arg=`echo $ac_option | cut -d '=' -f 2`
+		OPENGL_CFLAGS="-I$arg/include"
+		OPENGL_LIBS="-L$arg/lib"
 		;;
 	--backend=*)
 		_backend=`echo $ac_option | cut -d '=' -f 2`
@@ -1464,6 +1476,7 @@ case $_host_os in
 		# We have to use 'long' for our 4 byte typedef because AmigaOS already typedefs (u)int32
 		# as (unsigned) long, and consequently we'd get a compiler error otherwise.
 		type_4_byte='long'
+		add_line_to_config_mk 'AMIGAOS = 1'
 		;;
 	android)
 		CXXFLAGS="$CXXFLAGS -Os -msoft-float -mtune=xscale -march=armv5te -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5TE__"
@@ -1551,11 +1564,13 @@ case $_host_os in
 			CXXFLAGS="$CXXFLAGS $(getconf LFS_CFLAGS 2>/dev/null)"
 		fi
 		_unix=yes
+		DEFINES="$DEFINES -DLUA_USE_POSIX"
 		;;
 	mingw*)
 		DEFINES="$DEFINES -DWIN32 -D__USE_MINGW_ANSI_STDIO=0"
 		LIBS="$LIBS -lmingw32 -lwinmm"
 		OBJS="$OBJS scummvmico.o"
+		add_line_to_config_mk 'WIN32 = 1'
 		;;
 	mint*)
 		DEFINES="$DEFINES -DSYSTEM_NOT_SUPPORTING_D_TYPE"
@@ -2078,6 +2093,7 @@ define_in_config_h_if_yes $_need_memalign 'SCUMM_NEED_ALIGNMENT'
 
 if test "$_unix" = yes ; then
 	DEFINES="$DEFINES -DUNIX"
+	add_line_to_config_mk 'UNIX = 1'
 fi
 
 #
@@ -2124,16 +2140,16 @@ _mak_plugins='
 DYNAMIC_MODULES		:= 1
 PLUGIN_PREFIX		:=
 PLUGIN_SUFFIX		:= .plg
-PLUGIN_EXTRA_DEPS	= $(abspath $(srcdir)/backends/platform/dc/plugin.x $(srcdir)/backends/platform/dc/plugin.syms) $(EXECUTABLE)
+PLUGIN_EXTRA_DEPS	= $(abspath $(srcdir)/backends/platform/dc/plugin.x $(srcdir)/backends/platform/dc/plugin.syms) $(EXECUTABLE) backends/platform/dc/plugin_head.o
 CXXFLAGS			+= -DDYNAMIC_MODULES
-PLUGIN_LDFLAGS		= -ml -m4-single-only -nostartfiles -Wl,-q,-T$(srcdir)/backends/platform/dc/plugin.x,--just-symbols,$(EXECUTABLE),--retain-symbols-file,$(srcdir)/backends/platform/dc/plugin.syms -L$(ronindir)/lib
+PLUGIN_LDFLAGS		= -ml -m4-single-only -nostartfiles -Wl,-q,-T$(srcdir)/backends/platform/dc/plugin.x,--just-symbols,$(EXECUTABLE),--retain-symbols-file,$(srcdir)/backends/platform/dc/plugin.syms -L$(ronindir)/lib backends/platform/dc/plugin_head.o
 PRE_OBJS_FLAGS		:= -Wl,--whole-archive
 POST_OBJS_FLAGS		:= -Wl,--no-whole-archive
 '
 		;;
 	ds)
 		_elf_loader=yes
-		DEFINES="$DEFINES -DARM_TARGET -DELF_LOADER_CXA_ATEXIT -DONE_PLUGIN_AT_A_TIME"
+		DEFINES="$DEFINES -DARM_TARGET -DELF_LOADER_CXA_ATEXIT -DUNCACHED_PLUGINS -DELF_NO_MEM_MANAGER"
 _mak_plugins='
 PLUGIN_LDFLAGS		+= -Wl,-T$(srcdir)/backends/plugins/ds/plugin.ld -mthumb-interwork -mno-fpu
 '
@@ -2157,7 +2173,7 @@ POST_OBJS_FLAGS := -Wl,-no-whole-archive
 		;;
 	gamecube | wii)
 		_elf_loader=yes
-		DEFINES="$DEFINES -DPPC_TARGET -DELF_LOADER_CXA_ATEXIT -DONE_PLUGIN_AT_A_TIME"
+		DEFINES="$DEFINES -DPPC_TARGET -DELF_LOADER_CXA_ATEXIT -DUNCACHED_PLUGINS"
 _mak_plugins='
 PLUGIN_LDFLAGS		+= -Wl,-T$(srcdir)/backends/plugins/wii/plugin.ld
 '
@@ -2224,7 +2240,7 @@ PLUGIN_LDFLAGS		+= -mno-crt0 $(PS2SDK)/ee/startup/crt0.o -Wl,-T$(srcdir)/backend
 		;;
 	psp)
 		_elf_loader=yes
-		DEFINES="$DEFINES -DMIPS_TARGET"
+		DEFINES="$DEFINES -DMIPS_TARGET -DUNCACHED_PLUGINS"
 _mak_plugins='
 LDFLAGS				+= -Wl,-T$(srcdir)/backends/plugins/psp/main_prog.ld
 PLUGIN_LDFLAGS		+= -Wl,-T$(srcdir)/backends/plugins/psp/plugin.ld -lstdc++ -lc
@@ -2626,6 +2642,90 @@ define_in_config_h_if_yes "$_readline" 'USE_READLINE'
 define_in_config_h_if_yes "$_text_console" 'USE_TEXT_CONSOLE'
 
 #
+# Check for OpenGL (ES)
+#
+echocheck "OpenGL"
+if test "$_opengl" = auto ; then
+	_opengl=no
+	if test "$_backend" = "sdl" ; then
+		# Try different header filenames
+		# 1) GL/gl.h         This is usually used on POSIX and Windows systems
+		# 2) OpenGL/gl.h     This is used on Mac OS X
+		# 3) GLES/gl.h       This is used for OpenGL ES 1.x
+		for i in "GL/gl.h" "OpenGL/gl.h" "GLES/gl.h"; do
+			# Test the current header for OpenGL
+			cat > $TMPC << EOF
+#include <$i>
+int main(void) { return GL_VERSION_1_1; }
+EOF
+			cc_check $DEFINES $OPENGL_CFLAGS $OPENGL_LIBS && _opengl=yes && break
+
+			# Test the current header for OpenGL ES
+			cat > $TMPC << EOF
+#include <$i>
+int main(void) { return GL_OES_VERSION_1_1; }
+EOF
+			cc_check $DEFINES $OPENGL_CFLAGS $OPENGL_LIBS && _opengl=yes && _opengles=yes && break
+		done
+	fi
+fi
+if test "$_opengl" = yes ; then
+	# Our simple test case
+	cat > $TMPC << EOF
+int main(void) { return 0; }
+EOF
+
+	_opengl=no
+	# Try different library names
+	if test "$_opengles" = "yes" ; then
+		# 1) GLES_CM    This is usually used for OpenGL ES 1.1 (Common profile)
+		# 2) GLESv1_CM  This is used by the Windows Mali OpenGL ES 1.1 Emulator
+		# 3) glesv1     This is used by the Linux Mali OpenGL ES 1.1 Emulator
+		_opengles=no
+		for lib in "-lGLES_CM" "-lGLESv1_CM" "-lglesv1"; do
+			if cc_check_no_clean $DEFINES $OPENGL_CFLAGS $OPENGL_LIBS $lib
+				then
+				_opengl=yes
+				_opengles=yes
+				OPENGL_LIBS="$OPENGL_LIBS $lib"
+				break
+			fi
+		done
+	else
+		# 1) -framework OpenGL  This is used on Mac OS X
+		# 2) GL                 This is usually used on POSIX systems
+		# 3) opengl32           This is used on Windows
+		#
+		# We try "-framework OpenGL" first here to assure it will always be
+		# picked up by the configure script on Mac OS X, even when a libGL
+		# exists.
+		for lib in "-framework OpenGL" "-lGL" "-lopengl32"; do
+			if cc_check_no_clean $DEFINES $OPENGL_CFLAGS $OPENGL_LIBS $lib
+				then
+				_opengl=yes
+				OPENGL_LIBS="$OPENGL_LIBS $lib"
+				break
+			fi
+		done
+	fi
+	cc_check_clean
+
+	if test "$_opengl" = yes ; then
+		LIBS="$LIBS $OPENGL_LIBS"
+		INCLUDES="$INCLUDES $OPENGL_CFLAGS"
+	fi
+fi
+
+if test "$_opengles" = "yes" ; then
+	echo "yes (OpenGL ES)"
+else
+	echo "$_opengl"
+fi
+
+define_in_config_if_yes "$_opengl" "USE_OPENGL"
+define_in_config_if_yes "$_opengles" "USE_GLES"
+
+#
 # Check for nasm
 #
 if test "$_have_x86" = yes ; then
@@ -2846,12 +2946,14 @@ case $_backend in
 		INCLUDES="$INCLUDES `$_sdlconfig --prefix="$_sdlpath" --cflags`"
 		LIBS="$LIBS `$_sdlconfig --prefix="$_sdlpath" --libs`"
 		LDFLAGS="$LDFLAGS"
+		DEFINES="$DEFINES -DSDL_BACKEND"
 		;;
 	gph)
 		find_sdlconfig
 		INCLUDES="$INCLUDES `$_sdlconfig --prefix="$_sdlpath" --cflags`"
 		LIBS="$LIBS `$_sdlconfig --prefix="$_sdlpath" --libs`"
 		LDFLAGS="$LDFLAGS"
+		DEFINES="$DEFINES -DSDL_BACKEND"
 		;;
 	iphone)
 		OBJCFLAGS="$OBJCFLAGS --std=c99"
@@ -2921,6 +3023,7 @@ case $_backend in
 	wince)
 		INCLUDES="$INCLUDES "'-I$(srcdir) -I$(srcdir)/backends/platform/wince -I$(srcdir)/engines -I$(srcdir)/backends/platform/wince/missing/gcc -I$(srcdir)/backends/platform/wince/CEgui -I$(srcdir)/backends/platform/wince/CEkeys'
 		LIBS="$LIBS -static -lSDL"
+		DEFINES="$DEFINES -DSDL_BACKEND"
 		;;
 	*)
 		echo "support for $_backend backend not implemented in configure script yet"

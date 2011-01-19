@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/keyboard.h $
- * $Id: keyboard.h 48120 2010-02-23 22:50:28Z fingolfin $
+ * $Id: keyboard.h 54555 2010-11-28 22:12:11Z thebluegr $
  *
  */
 
@@ -27,6 +27,15 @@
 #define COMMON_KEYBOARD_H
 
 #include "common/scummsys.h"
+
+#if defined(__amigaos4__)
+// KEYCODE_LESS and KEYCODE_GREATER are already defined in AmigaOS, inside
+// include/include_h/intuition/intuition.h (bug #3121350)
+#if defined(KEYCODE_LESS) && defined(KEYCODE_GREATER)
+#undef KEYCODE_LESS
+#undef KEYCODE_GREATER
+#endif
+#endif
 
 namespace Common {
 
@@ -281,7 +290,7 @@ struct KeyState {
 	 * you can write
 	 *    if (keystate.flags & KBD_CTRL) { ... }
 	 */
-	bool hasFlags(byte f) {
+	bool hasFlags(byte f) const {
 		return f == (flags & ~(KBD_NUM|KBD_CAPS|KBD_SCRL));
 	}
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/file_v3d.cpp $
- * $Id: file_v3d.cpp 54018 2010-11-01 20:20:21Z strangerke $
+ * $Id: file_v3d.cpp 54979 2010-12-20 17:40:19Z strangerke $
  *
  */
 
@@ -63,16 +63,17 @@ void FileManager_v3d::readBackground(int screenIndex) {
 	sceneBlock.ob_off = _sceneryArchive1.readUint32LE();
 	sceneBlock.ob_len = _sceneryArchive1.readUint32LE();
 
-	seq_t dummySeq;                                 // Image sequence structure for Read_pcx
+	seq_t *dummySeq;                                // Image sequence structure for Read_pcx
 	if (screenIndex < 20) {
 		_sceneryArchive1.seek(sceneBlock.scene_off, SEEK_SET);
 		// Read the image into dummy seq and static dib_a
-		readPCX(_sceneryArchive1, &dummySeq, _vm->_screen->getFrontBuffer(), true, _vm->_screenNames[screenIndex]);
+		dummySeq = readPCX(_sceneryArchive1, 0, _vm->_screen->getFrontBuffer(), true, _vm->_screenNames[screenIndex]);
 	} else {
 		_sceneryArchive2.seek(sceneBlock.scene_off, SEEK_SET);
 		// Read the image into dummy seq and static dib_a
-		readPCX(_sceneryArchive2, &dummySeq, _vm->_screen->getFrontBuffer(), true, _vm->_screenNames[screenIndex]);
+		dummySeq = readPCX(_sceneryArchive2, 0, _vm->_screen->getFrontBuffer(), true, _vm->_screenNames[screenIndex]);
 	}
+	free(dummySeq);
 }
 
 /**
@@ -82,13 +83,13 @@ void FileManager_v3d::openDatabaseFiles() {
 	debugC(1, kDebugFile, "openDatabaseFiles");
 
 	if (!_stringArchive.open(STRING_FILE))
-		Utils::Error(FILE_ERR, "%s", STRING_FILE);
+		error("File not found: %s", STRING_FILE);
 	if (!_sceneryArchive1.open("scenery1.dat"))
-		Utils::Error(FILE_ERR, "%s", "scenery1.dat");
+		error("File not found: scenery1.dat");
 	if (!_sceneryArchive2.open("scenery2.dat"))
-		Utils::Error(FILE_ERR, "%s", "scenery2.dat");
+		error("File not found: scenery2.dat");
 	if (!_objectsArchive.open(OBJECTS_FILE))
-		Utils::Error(FILE_ERR, "%s", OBJECTS_FILE);
+		error("File not found: %s", OBJECTS_FILE);
 }
 
 /**
@@ -139,7 +140,7 @@ void FileManager_v3d::readOverlay(int screenNum, image_pt image, ovl_t overlayTy
 			i = sceneBlock.ob_len;
 			break;
 		default:
-			Utils::Error(FILE_ERR, "%s", "Bad ovl_type");
+			error("Bad overlayType: %d", overlayType);
 			break;
 		}
 		if (i == 0) {
@@ -153,7 +154,7 @@ void FileManager_v3d::readOverlay(int screenNum, image_pt image, ovl_t overlayTy
 		do {
 			int8 data = _sceneryArchive1.readByte();// Read a code byte
 			if ((byte)data == 0x80)                 // Noop
-				k = k;
+				;
 			else if (data >= 0) {                   // Copy next data+1 literally
 				for (i = 0; i <= (byte)data; i++, k++)
 					*tmpImage++ = _sceneryArchive1.readByte();
@@ -179,7 +180,7 @@ void FileManager_v3d::readOverlay(int screenNum, image_pt image, ovl_t overlayTy
 			i = sceneBlock.ob_len;
 			break;
 		default:
-			Utils::Error(FILE_ERR, "%s", "Bad ovl_type");
+			error("Bad overlayType: %d", overlayType);
 			break;
 		}
 		if (i == 0) {
@@ -193,7 +194,7 @@ void FileManager_v3d::readOverlay(int screenNum, image_pt image, ovl_t overlayTy
 		do {
 			int8 data = _sceneryArchive2.readByte();// Read a code byte
 			if ((byte)data == 0x80)                 // Noop
-				k = k;
+				;
 			else if (data >= 0) {                   // Copy next data+1 literally
 				for (i = 0; i <= (byte)data; i++, k++)
 					*tmpImage++ = _sceneryArchive2.readByte();

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/sound.h $
- * $Id: sound.h 53881 2010-10-27 19:19:38Z littleboy $
+ * $Id: sound.h 54241 2010-11-15 12:48:54Z littleboy $
  *
  */
 
@@ -71,7 +71,10 @@
 
 #include "lastexpress/shared.h"
 
+#include "lastexpress/helpers.h"
+
 #include "common/list.h"
+#include "common/mutex.h"
 #include "common/system.h"
 #include "common/serializer.h"
 
@@ -169,7 +172,7 @@ public:
 
 	// Sound playing
 	void playSound(EntityIndex entity, Common::String filename, FlagType flag = kFlagInvalid, byte a4 = 0);
-	SoundType playSoundWithSubtitles(Common::String filename, FlagType flag, EntityIndex entity, byte a4 = 0);
+	bool playSoundWithSubtitles(Common::String filename, FlagType flag, EntityIndex entity, byte a4 = 0);
 	void playSoundEvent(EntityIndex entity, byte action, byte a3 = 0);
 	void playDialog(EntityIndex entity, EntityIndex entityDialog, FlagType flag, byte a4);
 	void playSteam(CityIndex index);
@@ -284,6 +287,14 @@ private:
 
 			isStreamed = false;
 		}
+
+		~SoundEntry() {
+			// Entries that have been queued would have their streamed disposed automatically
+			if (!isStreamed)
+				SAFE_DELETE(stream);
+
+			//delete subtitle;
+		}
 	};
 
 	// Engine
@@ -296,6 +307,8 @@ private:
 	// Sound stream
 	StreamedSound *_soundStream;
 
+	Common::Mutex _mutex;
+
 	// Unknown data
 	uint32 _data0;
 	uint32 _data1;
@@ -303,7 +316,6 @@ private:
 	uint32 _flag;
 
 	// Filters
-
 	int32 _buffer[2940];    ///< Static sound buffer
 
 	// Compartment warnings by Mertens or Coudert
@@ -327,7 +339,7 @@ private:
 
 	void updateEntry(SoundEntry *entry, uint value) const;
 	void updateEntryState(SoundEntry *entry) const ;
-	void resetEntry(SoundEntry *entry) const;
+	void resetEntry(SoundEntry *entry);
 	void removeEntry(SoundEntry *entry);
 
 	// Subtitles

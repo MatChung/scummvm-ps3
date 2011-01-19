@@ -10,6 +10,7 @@ MODULE_OBJS := \
 	fonts/newfont_big.o \
 	fonts/newfont.o \
 	fonts/scummfont.o \
+	fonts/winfont.o \
 	iff.o \
 	imagedec.o \
 	jpeg.o \
@@ -30,7 +31,9 @@ MODULE_OBJS := \
 	video/qt_decoder.o \
 	video/smk_decoder.o \
 	video/video_decoder.o \
+	video/codecs/cdtoons.o \
 	video/codecs/cinepak.o \
+	video/codecs/indeo3.o \
 	video/codecs/mjpeg.o \
 	video/codecs/msrle.o \
 	video/codecs/msvideo1.o \
@@ -38,7 +41,7 @@ MODULE_OBJS := \
 	video/codecs/qtrle.o \
 	video/codecs/rpza.o \
 	video/codecs/smc.o \
-	video/codecs/indeo3.o
+	video/codecs/truemotion1.o
 
 ifdef USE_SCALERS
 MODULE_OBJS += \

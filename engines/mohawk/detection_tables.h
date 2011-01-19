@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/detection_tables.h $
- * $Id: detection_tables.h 50776 2010-07-09 22:10:22Z mthreepwood $
+ * $Id: detection_tables.h 55252 2011-01-15 18:39:29Z fuzzie $
  *
  */
 
@@ -386,13 +386,72 @@ static const MohawkGameDescription gameDescriptions[] = {
 		0,
 	},
 
-#ifdef DETECT_BRODERBUND_TITLES
+	{
+		{
+			"cstime",
+			"",
+			AD_ENTRY1("signin.mhk", "410b4ce8d1a8702971e4d1ffba9b965d"),
+			Common::EN_ANY,
+			Common::kPlatformWindows,
+			ADGF_NO_FLAGS,
+			Common::GUIO_NONE
+		},
+		GType_CSTIME,
+		GF_HASMIDI,
+		0
+	},
+
 	{
 		{
 			"zoombini",
 			"",
 			AD_ENTRY1("ZOOMBINI.MHK", "98b758fec55104c096cfd129048be9a6"),
 			Common::EN_ANY,
+			Common::kPlatformWindows,
+			ADGF_NO_FLAGS,
+			Common::GUIO_NONE
+		},
+		GType_ZOOMBINI,
+		GF_HASMIDI,
+		0
+	},
+
+	{
+		{
+			"zoombini",
+			"",
+			AD_ENTRY1("ZOOMBINI.MHK", "0672f65c40dd065840c896e41c13f980"),
+			Common::EN_ANY,
+			Common::kPlatformWindows,
+			ADGF_NO_FLAGS,
+			Common::GUIO_NONE
+		},
+		GType_ZOOMBINI,
+		GF_HASMIDI,
+		0
+	},
+
+	{
+		{
+			"zoombini",
+			"",
+			AD_ENTRY1("ZOOMBINI.MHK", "6ae0bdf791266b1fe3d4fabbf44c3faa"),
+			Common::DE_DEU,
+			Common::kPlatformWindows,
+			ADGF_NO_FLAGS,
+			Common::GUIO_NONE
+		},
+		GType_ZOOMBINI,
+		GF_HASMIDI,
+		0
+	},
+
+	{
+		{
+			"zoombini",
+			"",
+			AD_ENTRY1("ZOOMBINI.MHK", "8231e58525143ccf6e8b747df34b139f"),
+			Common::FR_FRA,
 			Common::kPlatformWindows,
 			ADGF_NO_FLAGS,
 			Common::GUIO_NONE
@@ -449,15 +508,30 @@ static const MohawkGameDescription gameDescriptions[] = {
 
 	{
 		{
-			"maggiess",
+			"maggiesfa",
 			"",
-			AD_ENTRY1("MAGGIESS.MHK", "08f75fc8c0390e68fdada5ddb35d0355"),
+			AD_ENTRY1("Outline", "b7dc6e65fa9e80784a5bb8b557aa37c4"),
 			Common::EN_ANY,
 			Common::kPlatformWindows,
 			ADGF_NO_FLAGS,
 			Common::GUIO_NONE
 		},
-		GType_MAGGIESS,
+		GType_LIVINGBOOKSV3,
+		0,
+		0
+	},
+
+	{
+		{
+			"maggiesfa",
+			"",
+			AD_ENTRY1("BookOutline", "1ce006d7daaa26cf61040203856b88f1"),
+			Common::EN_ANY,
+			Common::kPlatformMacintosh,
+			ADGF_NO_FLAGS,
+			Common::GUIO_NONE
+		},
+		GType_LIVINGBOOKSV3,
 		0,
 		0
 	},
@@ -490,7 +564,7 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_JAMESMATH,
 		GF_HASMIDI,
-		1
+		0
 	},
 
 	{
@@ -518,9 +592,9 @@ static const MohawkGameDescription gameDescriptions[] = {
 			ADGF_NO_FLAGS,
 			Common::GUIO_NONE
 		},
-		GType_LIVINGBOOKSV3,
+		GType_LIVINGBOOKSV2,
 		0,
-		0
+		"GREEN.EXE"
 	},
 
 	// 32-bit version of the previous entry
@@ -534,9 +608,55 @@ static const MohawkGameDescription gameDescriptions[] = {
 			ADGF_NO_FLAGS,
 			Common::GUIO_NONE
 		},
-		GType_LIVINGBOOKSV3,
+		GType_LIVINGBOOKSV2,
 		0,
-		0
+		"GREEN32.EXE"
+	},
+
+	{
+		{
+			"greeneggs",
+			"",
+			AD_ENTRY1("BookOutline", "5500fa72a6d112b4b3d3573b26a31820"),
+			Common::EN_ANY,
+			Common::kPlatformMacintosh,
+			ADGF_NO_FLAGS,
+			Common::GUIO_NONE
+		},
+		GType_LIVINGBOOKSV2,
+		0,
+		"Green Eggs and Ham"
+	},
+
+	{
+		{
+			"seussabc",
+			"",
+			AD_ENTRY1("ABC.LB", "1d56a9351974a7a70ace5274a4570b72"),
+			Common::EN_ANY,
+			Common::kPlatformWindows,
+			ADGF_NO_FLAGS,
+			Common::GUIO_NONE
+		},
+		GType_LIVINGBOOKSV2,
+		0,
+		"ABC.EXE"
+	},
+
+	// 32-bit version of the previous entry
+	{
+		{
+			"seussabc",
+			"",
+			AD_ENTRY1("ABC32.LB", "1d56a9351974a7a70ace5274a4570b72"),
+			Common::EN_ANY,
+			Common::kPlatformWindows,
+			ADGF_NO_FLAGS,
+			Common::GUIO_NONE
+		},
+		GType_LIVINGBOOKSV2,
+		0,
+		"ABC32.EXE"
 	},
 
 	{
@@ -590,6 +710,21 @@ static const MohawkGameDescription gameDescriptions[] = {
 	{
 		{
 			"tortoise",
+			"",
+			AD_ENTRY1("TORTOISE.512", "dfcf7bff3d0f187832c9897497efde0e"),
+			Common::EN_ANY,
+			Common::kPlatformWindows,
+			ADGF_NO_FLAGS,
+			Common::GUIO_NONE
+		},
+		GType_LIVINGBOOKSV1,
+		0,
+		"TORTOISE.EXE"
+	},
+
+	{
+		{
+			"tortoise",
 			"Demo v1.0",
 			AD_ENTRY1("TORTOISE.512", "75d9a2f8339e423604a0c6e8177600a6"),
 			Common::EN_ANY,
@@ -599,7 +734,7 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_LIVINGBOOKSV1,
 		GF_DEMO,
-		0
+		"TORTOISE.EXE"
 	},
 
 	{
@@ -614,7 +749,7 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_LIVINGBOOKSV1,
 		GF_DEMO,
-		0
+		"TORTOISE.EXE"
 	},
 
 	{
@@ -629,7 +764,7 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_LIVINGBOOKSV1,
 		GF_DEMO,
-		0
+		"Living Books Player"
 	},
 
 	{
@@ -643,8 +778,8 @@ static const MohawkGameDescription gameDescriptions[] = {
 			Common::GUIO_NONE
 		},
 		GType_LIVINGBOOKSV1,
-		0,
-		0
+		GF_LB_10,
+		"ARTHUR.EXE"
 	},
 
 	{
@@ -658,8 +793,8 @@ static const MohawkGameDescription gameDescriptions[] = {
 			Common::GUIO_NONE
 		},
 		GType_LIVINGBOOKSV1,
-		GF_DEMO,
-		0
+		GF_DEMO | GF_LB_10,
+		"ARTHUR.EXE"
 	},
 
 	{
@@ -674,7 +809,7 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_LIVINGBOOKSV1,
 		GF_DEMO,
-		0
+		"ARTHUR.EXE"
 	},
 
 	{
@@ -688,8 +823,8 @@ static const MohawkGameDescription gameDescriptions[] = {
 			Common::GUIO_NONE
 		},
 		GType_LIVINGBOOKSV1,
-		GF_DEMO,
-		0
+		GF_DEMO | GF_LB_10,
+		"Arthur's Teacher Trouble"
 	},
 
 	{
@@ -704,7 +839,7 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_LIVINGBOOKSV1,
 		GF_DEMO,
-		0
+		"Living Books Player"
 	},
 
 	{
@@ -718,8 +853,8 @@ static const MohawkGameDescription gameDescriptions[] = {
 			Common::GUIO_NONE
 		},
 		GType_LIVINGBOOKSV1,
-		GF_DEMO,
-		0
+		GF_DEMO | GF_LB_10,
+		"GRANDMA.EXE"
 	},
 
 	{
@@ -734,7 +869,7 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_LIVINGBOOKSV1,
 		GF_DEMO,
-		0
+		"GRANDMA.EXE"
 	},
 
 	{
@@ -748,8 +883,8 @@ static const MohawkGameDescription gameDescriptions[] = {
 			Common::GUIO_NONE
 		},
 		GType_LIVINGBOOKSV1,
-		GF_DEMO,
-		0
+		GF_DEMO | GF_LB_10,
+		"Just Grandma and Me"
 	},
 
 	{
@@ -764,7 +899,7 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_LIVINGBOOKSV1,
 		GF_DEMO,
-		0
+		"Living Books Player"
 	},
 
 	{
@@ -779,7 +914,7 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_LIVINGBOOKSV1,
 		GF_DEMO,
-		0
+		"RUFF.EXE"
 	},
 
 	{
@@ -794,7 +929,7 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_LIVINGBOOKSV1,
 		GF_DEMO,
-		0
+		"Living Books Player"
 	},
 
 	{
@@ -809,7 +944,7 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_LIVINGBOOKSV1,
 		GF_DEMO,
-		0
+		"NEWKID.EXE"
 	},
 
 	{
@@ -824,7 +959,7 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_LIVINGBOOKSV1,
 		GF_DEMO,
-		0
+		"NEWKID.EXE"
 	},
 
 	{
@@ -839,7 +974,7 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_LIVINGBOOKSV1,
 		GF_DEMO,
-		0
+		"Living Books Player"
 	},
 
 	{
@@ -852,9 +987,9 @@ static const MohawkGameDescription gameDescriptions[] = {
 			ADGF_NO_FLAGS,
 			Common::GUIO_NONE
 		},
-		GType_LIVINGBOOKSV3,
+		GType_LIVINGBOOKSV2,
 		0,
-		0
+		"RACE.EXE"
 	},
 
 	// 32-bit version of the previous entry
@@ -868,9 +1003,9 @@ static const MohawkGameDescription gameDescriptions[] = {
 			ADGF_NO_FLAGS,
 			Common::GUIO_NONE
 		},
-		GType_LIVINGBOOKSV3,
+		GType_LIVINGBOOKSV2,
 		0,
-		0
+		"RACE32.EXE"
 	},
 
 	{
@@ -885,7 +1020,7 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_LIVINGBOOKSV1,
 		GF_DEMO,
-		0
+		"BIRTHDAY.EXE"
 	},
 
 	{
@@ -900,7 +1035,7 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_LIVINGBOOKSV1,
 		GF_DEMO,
-		0
+		"Living Books Player"
 	},
 
 	{
@@ -915,7 +1050,7 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_LIVINGBOOKSV1,
 		0,
-		0
+		"MONSTER.EXE"
 	},
 
 	{
@@ -930,9 +1065,38 @@ static const MohawkGameDescription gameDescriptions[] = {
 		},
 		GType_LIVINGBOOKSV1,
 		0,
-		0
+		"Little Monster at School"
 	},
-#endif
+
+	{
+		{
+			"rugrats",
+			"",
+			AD_ENTRY1("outline", "525be248363fe27d50d750632c1e759e"),
+			Common::EN_ANY,
+			Common::kPlatformWindows,
+			ADGF_NO_FLAGS,
+			Common::GUIO_NONE
+		},
+		GType_LIVINGBOOKSV3,
+		0,
+		0,
+	},
+
+	{
+		{
+			"rugrats",
+			"",
+			AD_ENTRY1("BookOutline", "54a324ee6f8260258bff7043a05b0004"),
+			Common::EN_ANY,
+			Common::kPlatformMacintosh,
+			ADGF_NO_FLAGS,
+			Common::GUIO_NONE
+		},
+		GType_LIVINGBOOKSV3,
+		0,
+		0,
+	},
 
 	{ AD_TABLE_END_MARKER, 0, 0, 0 }
 };

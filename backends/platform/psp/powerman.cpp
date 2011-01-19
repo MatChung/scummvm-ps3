@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/psp/powerman.cpp $
- * $Id: powerman.cpp 53160 2010-10-12 02:18:11Z jvprat $
+ * $Id: powerman.cpp 54258 2010-11-16 08:23:13Z fingolfin $
  *
  */
 
@@ -33,7 +33,7 @@
 //#define __PSP_DEBUG_PRINT__
 #include "backends/platform/psp/trace.h"
 
-DECLARE_SINGLETON(PowerManager)
+DECLARE_SINGLETON(PowerManager);
 
 // Function to debug the Power Manager (we have no output to screen)
 inline void PowerManager::debugPM() {

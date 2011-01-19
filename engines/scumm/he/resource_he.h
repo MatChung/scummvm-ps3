@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/he/resource_he.h $
- * $Id: resource_he.h 53739 2010-10-23 15:47:23Z fingolfin $
+ * $Id: resource_he.h 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -147,9 +147,6 @@ public:
 	bool _arg_raw;
 	Common::String _fileName;
 	CachedCursor _cursorCache[MAX_CACHED_CURSORS];
-
-	typedef Common::MemoryReadStream MemoryReadStream;
-
 };
 
 class Win32ResExtractor : public ResExtractor {

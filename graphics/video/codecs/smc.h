@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/codecs/smc.h $
- * $Id: smc.h 49165 2010-05-23 18:33:55Z mthreepwood $
+ * $Id: smc.h 55095 2011-01-02 14:57:49Z fuzzie $
  *
  */
 
@@ -40,9 +40,9 @@ enum {
 class SMCDecoder : public Codec {
 public:
 	SMCDecoder(uint16 width, uint16 height);
-	~SMCDecoder() { delete _surface; }
+	~SMCDecoder();
 
-	Surface *decodeImage(Common::SeekableReadStream *stream);
+	const Surface *decodeImage(Common::SeekableReadStream *stream);
 	PixelFormat getPixelFormat() const { return PixelFormat::createFormatCLUT8(); }
 
 private:

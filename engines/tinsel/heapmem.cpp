@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/heapmem.cpp $
- * $Id: heapmem.cpp 54011 2010-11-01 16:04:47Z fingolfin $
+ * $Id: heapmem.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * This file contains the handle based Memory Manager code.
  */
@@ -56,6 +56,9 @@ struct MEM_NODE {
 // This could probably be reduced somewhat
 // If the memory is not enough, the engine throws an "Out of memory" error in handle.cpp inside LockMem()
 static const uint32 MemoryPoolSize[3] = {5 * 1024 * 1024, 5 * 1024 * 1024, 10 * 1024 * 1024};
+
+// FIXME: Avoid non-const global vars
+
 
 // list of all memory nodes
 MEM_NODE mnodeList[NUM_MNODES];

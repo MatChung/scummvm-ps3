@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/music.h $
- * $Id: music.h 53779 2010-10-24 22:17:44Z h00ligan $
+ * $Id: music.h 54147 2010-11-08 22:53:36Z fingolfin $
  *
  */
 
@@ -28,9 +28,9 @@
 #ifndef SAGA_MUSIC_H
 #define SAGA_MUSIC_H
 
-#include "sound/audiocd.h"
 #include "sound/mididrv.h"
 #include "sound/midiparser.h"
+#include "sound/mixer.h"
 #include "sound/decoders/mp3.h"
 #include "sound/decoders/vorbis.h"
 #include "sound/decoders/flac.h"

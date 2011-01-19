@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/seg_manager.h $
- * $Id: seg_manager.h 51572 2010-08-01 11:10:14Z thebluegr $
+ * $Id: seg_manager.h 54925 2010-12-15 23:35:21Z thebluegr $
  *
  */
 
@@ -90,11 +90,6 @@ public:
 	 * @param script_nr		number of the script to deallocate
 	 */
 	void deallocateScript(int script_nr);
-
-	/**
-	 * Reconstructs scripts. Used when restoring saved games
-	 */
-	void reconstructScripts(EngineState *s);
 
 	/**
 	 * Reconstructs the stack. Used when restoring saved games
@@ -443,22 +438,8 @@ public:
 	void setClassOffset(int index, reg_t offset) { _classTable[index].reg = offset;	}
 	void resizeClassTable(uint32 size) { _classTable.resize(size); }
 
-	/**
-	 * Obtains the system strings segment ID
-	 */
-	SegmentId getSysStringsSegment() { return _sysStringsSegId; }
-
-	/**
-	 * Get a pointer to the system string with the specified index,
-	 * or NULL if that index is invalid.
-	 *
-	 * This method is currently only used by kString().
-	 */
-	SystemString *getSystemString(uint idx) const {
-		if (idx >= SYS_STRINGS_MAX)
-			return NULL;
-		return &_sysStrings->_strings[idx];
-	}
+	reg_t getSaveDirPtr() const { return _saveDirPtr; }
+	reg_t getParserPtr() const { return _parserPtr; }
 
 #ifdef ENABLE_SCI32
 	SciArray<reg_t> *allocateArray(reg_t *addr);
@@ -485,9 +466,9 @@ private:
 	SegmentId _nodesSegId; ///< ID of the (a) node segment
 	SegmentId _hunksSegId; ///< ID of the (a) hunk segment
 
-	/* System strings */
-	SegmentId _sysStringsSegId;
-	SystemStrings *_sysStrings;
+	// Statically allocated memory for system strings
+	reg_t _saveDirPtr;
+	reg_t _parserPtr;
 
 #ifdef ENABLE_SCI32
 	SegmentId _arraysSegId;
@@ -496,7 +477,7 @@ private:
 
 private:
 	SegmentObj *allocSegment(SegmentObj *mem, SegmentId *segid);
-	int deallocate(SegmentId seg, bool recursive);
+	void deallocate(SegmentId seg, bool recursive);
 	void createClassTable();
 
 	SegmentId findFreeSegment() const;

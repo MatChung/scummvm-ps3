@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/console.h $
- * $Id: console.h 48458 2010-04-01 16:11:29Z eriktorbjorn $
+ * $Id: console.h 54815 2010-12-07 18:54:21Z fingolfin $
  */
 
 #ifndef	SWORD2_CONSOLE_H
@@ -82,11 +82,12 @@ public:
 	void buildDebugText();
 	void drawDebugGraphics();
 
-protected:
-	Sword2Engine *_vm;
-
+private:
 	virtual void preEnter();
 	virtual void postEnter();
+
+private:
+	Sword2Engine *_vm;
 
 	// Commands
 	bool Cmd_Mem(int argc, const char **argv);

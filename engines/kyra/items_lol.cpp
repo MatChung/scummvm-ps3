@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/items_lol.cpp $
- * $Id: items_lol.cpp 53926 2010-10-29 18:57:19Z athrxx $
+ * $Id: items_lol.cpp 54288 2010-11-17 12:22:08Z fingolfin $
  *
  */
 
@@ -521,10 +521,10 @@ int LoLEngine::checkDrawObjectSpace(int itemX, int itemY, int partyX, int partyY
 	return a + b;
 }
 
-int LoLEngine::checkSceneForItems(uint16 *blockDrawObjects, int colour) {
+int LoLEngine::checkSceneForItems(uint16 *blockDrawObjects, int color) {
 	while (*blockDrawObjects) {
 		if (!(*blockDrawObjects & 0x8000)) {
-			if (!--colour)
+			if (!--color)
 				return *blockDrawObjects;
 		}
 

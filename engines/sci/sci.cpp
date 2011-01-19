@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/sci.cpp $
- * $Id: sci.cpp 54090 2010-11-05 10:53:37Z thebluegr $
+ * $Id: sci.cpp 55022 2010-12-23 12:54:47Z thebluegr $
  *
  */
 
@@ -39,6 +39,7 @@
 
 #include "sci/engine/features.h"
 #include "sci/engine/message.h"
+#include "sci/engine/object.h"
 #include "sci/engine/state.h"
 #include "sci/engine/kernel.h"
 #include "sci/engine/script.h"	// for script_adjust_opcode_formats
@@ -128,9 +129,10 @@ SciEngine::SciEngine(OSystem *syst, const ADGameDescription *desc, SciGameId gam
 	SearchMan.addSubDirectoryMatching(gameDataDir, "seq");	// SEQ movie files for DOS versions
 	SearchMan.addSubDirectoryMatching(gameDataDir, "robot");	// robot movie files
 	SearchMan.addSubDirectoryMatching(gameDataDir, "robots");	// robot movie files
-	SearchMan.addSubDirectoryMatching(gameDataDir, "movie");	// vmd movie files
-	SearchMan.addSubDirectoryMatching(gameDataDir, "movies");	// vmd movie files
-	SearchMan.addSubDirectoryMatching(gameDataDir, "vmd");	// vmd movie files
+	SearchMan.addSubDirectoryMatching(gameDataDir, "movie");	// VMD movie files
+	SearchMan.addSubDirectoryMatching(gameDataDir, "movies");	// VMD movie files
+	SearchMan.addSubDirectoryMatching(gameDataDir, "vmd");	// VMD movie files
+	SearchMan.addSubDirectoryMatching(gameDataDir, "duk");	// Duck movie files in Phantasmagoria 2
 
 	// Add the patches directory, except for KQ6CD; The patches folder in some versions of KQ6CD
 	// is for the demo of Phantasmagoria, included in the disk
@@ -182,6 +184,7 @@ Common::Error SciEngine::run() {
 	// Assign default values to the config manager, in case settings are missing
 	ConfMan.registerDefault("sci_originalsaveload", "false");
 	ConfMan.registerDefault("native_fb01", "false");
+	ConfMan.registerDefault("windows_cursors", "false");	// Windows cursors for KQ6 Windows
 
 	_resMan = new ResourceManager();
 	assert(_resMan);
@@ -249,6 +252,7 @@ Common::Error SciEngine::run() {
 	_soundCmd = new SoundCommandParser(_resMan, segMan, _kernel, _audio, _features->detectDoSoundType());
 
 	syncSoundSettings();
+	syncIngameAudioOptions();
 
 	// Initialize all graphics related subsystems
 	initGraphics();
@@ -432,6 +436,8 @@ void SciEngine::patchGameSaveRestore(SegManager *segMan) {
 	const Object *gameObject = segMan->getObject(_gameObjectAddress);
 	const uint16 gameMethodCount = gameObject->getMethodCount();
 	const Object *gameSuperObject = segMan->getObject(_gameSuperClassAddress);
+	if (!gameSuperObject)
+		gameSuperObject = gameObject;	// happens in KQ5CD, when loading saved games before r54510
 	const uint16 gameSuperMethodCount = gameSuperObject->getMethodCount();
 	reg_t methodAddress;
 	const uint16 kernelCount = _kernel->getKernelNamesSize();
@@ -657,10 +663,14 @@ void SciEngine::runGame() {
 	if (DebugMan.isDebugChannelEnabled(kDebugLevelOnStartup))
 		_console->attach();
 
+	g_sci->getEngineState()->_syncedAudioOptions = false;
+
 	do {
 		_gamestate->_executionStackPosChanged = false;
 		run_vm(_gamestate);
 		exitGame();
+
+		g_sci->getEngineState()->_syncedAudioOptions = true;
 
 		if (_gamestate->abortScriptProcessing == kAbortRestartGame) {
 			_gamestate->_segMan->resetSegMan();
@@ -678,6 +688,9 @@ void SciEngine::runGame() {
 			patchGameSaveRestore(_gamestate->_segMan);
 			_gamestate->shrinkStackToBase();
 			_gamestate->abortScriptProcessing = kAbortNone;
+
+			syncSoundSettings();
+			syncIngameAudioOptions();
 		} else {
 			break;	// exit loop
 		}
@@ -735,6 +748,10 @@ Common::Platform SciEngine::getPlatform() const {
 
 bool SciEngine::isDemo() const {
 	return _gameDescription->flags & ADGF_DEMO;
+}
+
+bool SciEngine::isCD() const {
+	return _gameDescription->flags & ADGF_CD;
 }
 
 bool SciEngine::hasMacIconBar() const {
@@ -795,6 +812,33 @@ void SciEngine::syncSoundSettings() {
 	if (_gamestate && g_sci->_soundCmd) {
 		int vol =  (soundVolumeMusic + 1) * MUSIC_MASTERVOLUME_MAX / Audio::Mixer::kMaxMixerVolume;
 		g_sci->_soundCmd->setMasterVolume(vol);
+	}
+}
+
+void SciEngine::syncIngameAudioOptions() {
+	// Now, sync the in-game speech/subtitles settings for SCI1.1 CD games
+	if (isCD() && getSciVersion() == SCI_VERSION_1_1) {
+		bool subtitlesOn = ConfMan.getBool("subtitles");
+		bool speechOn = !ConfMan.getBool("speech_mute");
+
+		if (subtitlesOn && !speechOn) {
+			_gamestate->variables[VAR_GLOBAL][90] = make_reg(0, 1);	// subtitles
+		} else if (!subtitlesOn && speechOn) {
+			_gamestate->variables[VAR_GLOBAL][90] = make_reg(0, 2);	// speech
+		} else if (subtitlesOn && speechOn) {
+			// Is it a game that supports simultaneous speech and subtitles?
+			if (getGameId() == GID_SQ4 
+				|| getGameId() == GID_FREDDYPHARKAS
+				// TODO: The following need script patches for simultaneous speech and subtitles
+				//|| getGameId() == GID_KQ6
+				//|| getGameId() == GID_LAURABOW2
+				) {
+				_gamestate->variables[VAR_GLOBAL][90] = make_reg(0, 3);	// speech + subtitles
+			} else {
+				// Game does not support speech and subtitles, set it to speech
+				_gamestate->variables[VAR_GLOBAL][90] = make_reg(0, 2);	// speech
+			}
+		}
 	}
 }
 

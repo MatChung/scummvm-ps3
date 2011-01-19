@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/audio.h $
- * $Id: audio.h 53928 2010-10-29 22:00:31Z sylvaintv $
+ * $Id: audio.h 54223 2010-11-13 02:44:34Z sylvaintv $
  *
  */
 
@@ -37,7 +37,7 @@ class AudioManager;
 class AudioStreamInstance : public Audio::AudioStream {
 
 public:
-	AudioStreamInstance(AudioManager *man, Audio::Mixer *mixer, Common::SeekableReadStream *stream, bool looping = false);
+	AudioStreamInstance(AudioManager *man, Audio::Mixer *mixer, Common::SeekableReadStream *stream, bool looping = false, bool deleteFileStreamAtEnd = false);
 	~AudioStreamInstance();
 	void play(bool fade = false, Audio::Mixer::SoundType soundType = Audio::Mixer::kMusicSoundType);
 	void stop(bool fade = false);
@@ -92,6 +92,7 @@ protected:
 	bool _looping;
 	int32 _volume;
 	int32 _musicAttenuation;
+	bool _deleteFileStream;
 };
 
 class AudioStreamPackage {
@@ -124,7 +125,7 @@ public:
 	void removeInstance(AudioStreamInstance *inst); // called by destructor
 
 	AudioManager(ToonEngine *vm, Audio::Mixer *mixer);
-	~AudioManager(void);
+	~AudioManager();
 
 	bool voiceStillPlaying();
 

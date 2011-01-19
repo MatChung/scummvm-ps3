@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cruise/sound.cpp $
- * $Id: sound.cpp 48637 2010-04-12 09:14:17Z fingolfin $
+ * $Id: sound.cpp 54408 2010-11-21 12:05:15Z tdhs $
  *
  */
 
@@ -40,6 +40,7 @@ class PCSoundDriver {
 public:
 	typedef void (*UpdateCallback)(void *);
 
+	PCSoundDriver() { _upCb = NULL, _upRef = NULL, _musicVolume = 0, _sfxVolume = 0; }
 	virtual ~PCSoundDriver() {}
 
 	virtual void setupChannel(int channel, const byte *data, int instrument, int volume) = 0;

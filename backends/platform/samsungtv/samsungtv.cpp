@@ -19,24 +19,39 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/samsungtv/samsungtv.cpp $
- * $Id: samsungtv.cpp 49388 2010-06-02 00:52:57Z fingolfin $
+ * $Id: samsungtv.cpp 54584 2010-11-29 18:48:43Z lordhoto $
  *
  */
 
 #include "backends/platform/samsungtv/samsungtv.h"
+#include "backends/events/samsungtvsdl/samsungtvsdl-events.h"
 
 #if defined(SAMSUNGTV)
 
+OSystem_SDL_SamsungTV::OSystem_SDL_SamsungTV()
+	:
+	OSystem_POSIX("/dtv/usb/sda1/.scummvmrc") {
+}
+
 bool OSystem_SDL_SamsungTV::hasFeature(Feature f) {
 	return
-		(f == kFeatureAspectRatioCorrection) ||
-		(f == kFeatureCursorHasPalette);
+		(f == OSystem::kFeatureAspectRatioCorrection) ||
+		(f == OSystem::kFeatureCursorHasPalette);
+}
+
+void OSystem_SDL_SamsungTV::initBackend() {
+	// Create the events manager
+	if (_eventSource == 0)
+		_eventSource = new SamsungTVSdlEventSource();
+
+	// Call parent implementation of this method
+	OSystem_SDL::initBackend();
 }
 
 void OSystem_SDL_SamsungTV::setFeatureState(Feature f, bool enable) {
 	switch (f) {
-	case kFeatureAspectRatioCorrection:
-		setAspectRatioCorrection(enable);
+	case OSystem::kFeatureAspectRatioCorrection:
+		_graphicsManager->setFeatureState(f, enable);
 		break;
 	default:
 		break;
@@ -44,11 +59,9 @@ void OSystem_SDL_SamsungTV::setFeatureState(Feature f, bool enable) {
 }
 
 bool OSystem_SDL_SamsungTV::getFeatureState(Feature f) {
-	assert (_transactionMode == kTransactionNone);
-
 	switch (f) {
-	case kFeatureAspectRatioCorrection:
-		return _videoMode.aspectRatioCorrection;
+	case OSystem::kFeatureAspectRatioCorrection:
+		return _graphicsManager->getFeatureState(f);
 	default:
 		return false;
 	}

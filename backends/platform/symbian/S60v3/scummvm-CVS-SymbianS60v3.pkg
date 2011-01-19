@@ -18,7 +18,7 @@
 ; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 ;
 ; $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/symbian/S60v3/scummvm-CVS-SymbianS60v3.pkg $
-; $Id: scummvm-CVS-SymbianS60v3.pkg 52882 2010-09-25 14:59:24Z anotherguest $
+; $Id: scummvm-CVS-SymbianS60v3.pkg 54378 2010-11-19 13:23:33Z anotherguest $
 ;
 ;
 
@@ -36,7 +36,7 @@
 :"ScummVM"
 
 ; UID is the app's UID
-#{"ScummVM S60v3"},(0xA0000657),1,13,0
+#{"ScummVM S60v3"},(0xA0000657),1,30,0
 
 ;Supports Series 60 v 3.0
 [0x101F7961], 0, 0, 0, {"Series60ProductID"}

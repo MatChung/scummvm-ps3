@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/mareels.cpp $
- * $Id: mareels.cpp 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: mareels.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * Functions to set up moving actors' reels.
  */
@@ -47,6 +47,8 @@ struct SCIdataStruct {
 	int	direction;
 	SCNHANDLE reels[4];
 };
+
+// FIXME: Avoid non-const global vars
 
 static SCIdataStruct SCIdata[MAX_SCRENTRIES];
 

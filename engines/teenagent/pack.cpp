@@ -19,12 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/teenagent/pack.cpp $
- * $Id: pack.cpp 48831 2010-04-28 19:50:28Z megath $
+ * $Id: pack.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  */
 
 #include "teenagent/pack.h"
 #include "common/util.h"
 #include "common/debug.h"
+#include "common/memstream.h"
+#include "common/substream.h"
 
 namespace TeenAgent {
 

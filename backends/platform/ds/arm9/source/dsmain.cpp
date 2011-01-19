@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/ds/arm9/source/dsmain.cpp $
- * $Id: dsmain.cpp 54052 2010-11-03 22:57:42Z wjpalenstijn $
+ * $Id: dsmain.cpp 54325 2010-11-18 17:01:30Z fingolfin $
  *
  */
 
@@ -70,6 +70,9 @@
 // - Memory size for ite
 // - Try discworld?
 
+
+// Disable symbol overrides for FILE
+#define FORBIDDEN_SYMBOL_EXCEPTION_FILE
 
 
 
@@ -2785,7 +2788,7 @@ bool getIndyFightState() {
 // Fast Ram
 ///////////////////
 
-#define FAST_RAM_SIZE (24000)
+#define FAST_RAM_SIZE (22500)
 #define ITCM_DATA	__attribute__((section(".itcm")))
 
 u8 *fastRamPointer;

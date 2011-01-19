@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/sound/midiparser.h $
- * $Id: midiparser.h 49996 2010-06-18 02:25:11Z lordhoto $
+ * $Id: midiparser.h 54460 2010-11-24 15:12:43Z thebluegr $
  *
  */
 
@@ -383,7 +383,7 @@ public:
 	void stopPlaying();
 
 	bool setTrack(int track);
-	bool jumpToTick(uint32 tick, bool fireEvents = false, bool stopNotes = true);
+	bool jumpToTick(uint32 tick, bool fireEvents = false, bool stopNotes = true, bool dontSendNoteOn = false);
 
 	uint32 getPPQN() { return _ppqn; }
 	virtual uint32 getTick() { return _position._play_tick; }

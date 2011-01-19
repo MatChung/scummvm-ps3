@@ -19,13 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/resources.cpp $
- * $Id: resources.cpp 53984 2010-10-31 20:07:14Z drmccoy $
+ * $Id: resources.cpp 55286 2011-01-18 06:30:47Z drmccoy $
  *
  */
 
 #include "common/util.h"
 #include "common/endian.h"
-#include "common/stream.h"
+#include "common/memstream.h"
 
 #include "gob/gob.h"
 #include "gob/resources.h"
@@ -71,7 +71,7 @@ int16 Resource::getHeight() const {
 	return _height;
 }
 
-Common::MemoryReadStream *Resource::stream() const {
+Common::SeekableReadStream *Resource::stream() const {
 	return _stream;
 }
 
@@ -95,7 +95,7 @@ int32 TextItem::getSize() const {
 	return _size;
 }
 
-Common::MemoryReadStream *TextItem::stream() const {
+Common::SeekableReadStream *TextItem::stream() const {
 	return _stream;
 }
 
@@ -172,12 +172,12 @@ bool Resources::load(const Common::String &fileName) {
 	if (!hasTOTRes && !hasEXTRes)
 		return false;
 
-	if (hasTOTRes) {
-		if (!loadTOTTextTable(_fileBase)) {
-			unload();
-			return false;
-		}
+	if (!loadTOTTextTable(_fileBase)) {
+		unload();
+		return false;
+	}
 
+	if (hasTOTRes) {
 		if (!loadIMFile()) {
 			unload();
 			return false;

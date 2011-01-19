@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/dialogs.cpp $
- * $Id: dialogs.cpp 52538 2010-09-05 00:48:38Z mthreepwood $
+ * $Id: dialogs.cpp 55185 2011-01-09 15:31:08Z bgk $
  *
  */
 
@@ -28,20 +28,20 @@
 #include "mohawk/riven.h"
 #include "mohawk/dialogs.h"
 
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 #include "common/savefile.h"
 #include "common/translation.h"
 
 namespace Mohawk {
 
 // This used to have GUI::Dialog("MohawkDummyDialog"), but that doesn't work with the gui branch merge :P (Sorry, Tanoku!)
-InfoDialog::InfoDialog(MohawkEngine *vm, Common::String message) : _vm(vm), GUI::Dialog(0, 0, 1, 1), _message(message) {
+InfoDialog::InfoDialog(MohawkEngine *vm, const Common::String &message) : _vm(vm), GUI::Dialog(0, 0, 1, 1), _message(message) {
 	_backgroundType = GUI::ThemeEngine::kDialogBackgroundSpecial;
 
 	_text = new GUI::StaticTextWidget(this, 4, 4, 10, 10, _message, Graphics::kTextAlignCenter);
 }
 
-void InfoDialog::setInfoText(Common::String message) {
+void InfoDialog::setInfoText(const Common::String &message) {
 	_message = message;
 	_text->setLabel(_message);
 }
@@ -61,7 +61,7 @@ void InfoDialog::reflowLayout() {
 	_text->setSize(_w - 8, _h);
 }
 
-PauseDialog::PauseDialog(MohawkEngine *vm, Common::String message) : InfoDialog(vm, message) {
+PauseDialog::PauseDialog(MohawkEngine *vm, const Common::String &message) : InfoDialog(vm, message) {
 }
 
 void PauseDialog::handleKeyDown(Common::KeyState state) {
@@ -91,17 +91,17 @@ MystOptionsDialog::~MystOptionsDialog() {
 void MystOptionsDialog::open() {
 	Dialog::open();
 
-	_zipModeCheckbox->setState(_vm->_zipMode);
-	_transitionsCheckbox->setState(_vm->_transitionsEnabled);
+	_zipModeCheckbox->setState(_vm->_gameState->_globals.zipMode);
+	_transitionsCheckbox->setState(_vm->_gameState->_globals.transitions);
 }
 
 void MystOptionsDialog::handleCommand(GUI::CommandSender *sender, uint32 cmd, uint32 data) {
 	switch (cmd) {
 	case kZipCmd:
-		_vm->_zipMode = _zipModeCheckbox->getState();
+		_vm->_gameState->_globals.zipMode = _zipModeCheckbox->getState();
 		break;
 	case kTransCmd:
-		_vm->_transitionsEnabled = _transitionsCheckbox->getState();
+		_vm->_gameState->_globals.transitions = _transitionsCheckbox->getState();
 		break;
 	case GUI::kCloseCmd:
 		close();

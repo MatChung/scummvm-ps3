@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/state.h $
- * $Id: state.h 53974 2010-10-31 01:45:24Z thebluegr $
+ * $Id: state.h 55046 2010-12-26 15:28:02Z thebluegr $
  *
  */
 
@@ -113,6 +113,31 @@ public:
 	bool isOpen() const;
 };
 
+enum VideoFlags {
+	kNone            = 0,
+	kDoubled         = 1 << 0,
+	kDropFrames      = 1 << 1,
+	kBlackLines      = 1 << 2,
+	kUnkBit3         = 1 << 3,
+	kGammaBoost      = 1 << 4,
+	kHoldBlackFrame  = 1 << 5,
+	kHoldLastFrame   = 1 << 6,
+	kUnkBit7         = 1 << 7,
+	kStretch         = 1 << 8
+};
+
+struct VideoState {
+	Common::String fileName;
+	uint16 x;
+	uint16 y;
+	uint16 flags;
+
+	void reset() {
+		fileName = "";
+		x = y = flags = 0;
+	}
+};
+
 struct EngineState : public Common::Serializable {
 public:
 	EngineState(SegManager *segMan);
@@ -134,6 +159,7 @@ public:
 	uint32 _throttleCounter; /**< total times kAnimate was invoked */
 	uint32 _throttleLastTime; /**< last time kAnimate was invoked */
 	bool _throttleTrigger;
+	bool _gameIsBenchmarking;
 
 	/* Kernel File IO stuff */
 
@@ -197,7 +223,6 @@ public:
 
 	int gcCountDown; /**< Number of kernel calls until next gc */
 
-public:
 	MessageState *_msgState;
 
 	// MemorySegment provides access to a 256-byte block of memory that remains
@@ -207,6 +232,9 @@ public:
 	};
 	uint _memorySegmentSize;
 	byte _memorySegment[kMemorySegmentMax];
+
+	VideoState _videoState;
+	bool _syncedAudioOptions;
 
 	/**
 	 * Resets the engine state.

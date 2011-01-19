@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/preagi_winnie.cpp $
- * $Id: preagi_winnie.cpp 46942 2010-01-03 20:15:44Z sev $
+ * $Id: preagi_winnie.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -30,6 +30,7 @@
 #include "graphics/cursorman.h"
 
 #include "common/events.h"
+#include "common/memstream.h"
 #include "common/savefile.h"
 
 namespace Agi {

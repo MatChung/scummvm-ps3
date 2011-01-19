@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/sound/audio.cpp $
- * $Id: audio.cpp 51327 2010-07-26 18:13:35Z mthreepwood $
+ * $Id: audio.cpp 55023 2010-12-23 13:11:10Z thebluegr $
  *
  */
 
@@ -29,10 +29,12 @@
 #include "sci/engine/seg_manager.h"
 #include "sci/sound/audio.h"
 
+#include "backends/audiocd/audiocd.h"
+
 #include "common/file.h"
+#include "common/memstream.h"
 #include "common/system.h"
 
-#include "sound/audiocd.h"
 #include "sound/audiostream.h"
 #include "sound/decoders/aiff.h"
 #include "sound/decoders/flac.h"
@@ -241,6 +243,20 @@ static byte *readSOLAudio(Common::SeekableReadStream *audioStream, uint32 &size,
 	return buffer;
 }
 
+// FIXME: This doesn't work correctly yet, perhaps there are differences in the
+// way the audio in robot files is handled
+Audio::RewindableAudioStream *AudioPlayer::getRobotAudioStream(byte *buffer) {
+	const uint16 rbtHeaderSize = 19;	// TODO: is this right?
+	const uint16 rbtAudioRate = 22050;	// Seems to be hardcoded for all Robot videos
+	byte audioFlags = *(buffer + 6);
+	byte flags = 0;
+	uint32 audioSize = READ_LE_UINT16(buffer + 15) - rbtHeaderSize;
+
+	Common::MemoryReadStream dataStream(buffer + rbtHeaderSize - 1, audioSize, DisposeAfterUse::NO);
+	byte *data = readSOLAudio(&dataStream, audioSize, audioFlags, flags);
+	return Audio::makeRawStream(data, audioSize, rbtAudioRate, flags);
+}
+
 Audio::RewindableAudioStream *AudioPlayer::getAudioStream(uint32 number, uint32 volume, int *sampleLen) {
 	Audio::SeekableAudioStream *audioSeekStream = 0;
 	Audio::RewindableAudioStream *audioStream = 0;
@@ -280,7 +296,7 @@ Audio::RewindableAudioStream *AudioPlayer::getAudioStream(uint32 number, uint32 
 		// additional buffer here. MP3/OGG/FLAC decompression works on-the-fly
 		// instead.
 		memcpy(compressedData, audioRes->data, audioRes->size);
-		Common::MemoryReadStream *compressedStream = new Common::MemoryReadStream(compressedData, audioRes->size, DisposeAfterUse::YES);
+		Common::SeekableReadStream *compressedStream = new Common::MemoryReadStream(compressedData, audioRes->size, DisposeAfterUse::YES);
 		
 		switch (audioCompressionType) {
 		case MKID_BE('MP3 '):
@@ -314,7 +330,7 @@ Audio::RewindableAudioStream *AudioPlayer::getAudioStream(uint32 number, uint32 
 			}
 		} else if (audioRes->size > 4 && READ_BE_UINT32(audioRes->data) == MKID_BE('RIFF')) {
 			// WAVE detected
-			Common::MemoryReadStream *waveStream = new Common::MemoryReadStream(audioRes->data, audioRes->size, DisposeAfterUse::NO);
+			Common::SeekableReadStream *waveStream = new Common::MemoryReadStream(audioRes->data, audioRes->size, DisposeAfterUse::NO);
 
 			// Calculate samplelen from WAVE header
 			int waveSize = 0, waveRate = 0;
@@ -326,7 +342,7 @@ Audio::RewindableAudioStream *AudioPlayer::getAudioStream(uint32 number, uint32 
 			audioStream = Audio::makeWAVStream(waveStream, DisposeAfterUse::YES);
 		} else if (audioRes->size > 4 && READ_BE_UINT32(audioRes->data) == MKID_BE('FORM')) {
 			// AIFF detected
-			Common::MemoryReadStream *waveStream = new Common::MemoryReadStream(audioRes->data, audioRes->size, DisposeAfterUse::NO);
+			Common::SeekableReadStream *waveStream = new Common::MemoryReadStream(audioRes->data, audioRes->size, DisposeAfterUse::NO);
 
 			// Calculate samplelen from AIFF header
 			int waveSize = 0, waveRate = 0;
@@ -339,7 +355,7 @@ Audio::RewindableAudioStream *AudioPlayer::getAudioStream(uint32 number, uint32 
 		} else if (audioRes->size > 14 && READ_BE_UINT16(audioRes->data) == 1 && READ_BE_UINT16(audioRes->data + 2) == 1
 				&& READ_BE_UINT16(audioRes->data + 4) == 5 && READ_BE_UINT32(audioRes->data + 10) == 0x00018051) {
 			// Mac snd detected
-			Common::MemoryReadStream *sndStream = new Common::MemoryReadStream(audioRes->data, audioRes->size, DisposeAfterUse::NO);
+			Common::SeekableReadStream *sndStream = new Common::MemoryReadStream(audioRes->data, audioRes->size, DisposeAfterUse::NO);
 
 			audioSeekStream = Audio::makeMacSndStream(sndStream, DisposeAfterUse::YES);
 		} else {
@@ -413,7 +429,7 @@ int AudioPlayer::audioCdPlay(int track, int start, int duration) {
 
 		// Subtract one from track. KQ6 starts at track 1, while ScummVM
 		// ignores the data track and considers track 2 to be track 1.
-		AudioCD.play(track - 1, 1, start, duration);
+		g_system->getAudioCDManager()->play(track - 1, 1, start, duration);
 		return 1;
 	} else {
 		// Jones in the Fast Lane CD Audio format
@@ -436,7 +452,7 @@ int AudioPlayer::audioCdPlay(int track, int start, int duration) {
 
 			// Jones uses the track as the resource value in the map
 			if (res == track) {
-				AudioCD.play(1, 1, startFrame, length);
+				g_system->getAudioCDManager()->play(1, 1, startFrame, length);
 				_audioCdStart = g_system->getMillis();
 				break;
 			}
@@ -450,16 +466,16 @@ int AudioPlayer::audioCdPlay(int track, int start, int duration) {
 
 void AudioPlayer::audioCdStop() {
 	_audioCdStart = 0;
-	AudioCD.stop();
+	g_system->getAudioCDManager()->stop();
 }
 
 void AudioPlayer::audioCdUpdate() {
-	AudioCD.updateCD();
+	g_system->getAudioCDManager()->update();
 }
 
 int AudioPlayer::audioCdPosition() {
 	// Return -1 if the sample is done playing. Converting to frames to compare.
-	if (((g_system->getMillis() - _audioCdStart) * 75 / 1000) >= (uint32)AudioCD.getStatus().duration)
+	if (((g_system->getMillis() - _audioCdStart) * 75 / 1000) >= (uint32)g_system->getAudioCDManager()->getStatus().duration)
 		return -1;
 
 	// Return the position otherwise (in ticks).

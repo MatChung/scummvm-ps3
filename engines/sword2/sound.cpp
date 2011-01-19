@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/sound.cpp $
- * $Id: sound.cpp 53997 2010-11-01 11:25:11Z eriktorbjorn $
+ * $Id: sound.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  */
 
 // ---------------------------------------------------------------------------
@@ -37,6 +37,7 @@
 
 
 #include "common/file.h"
+#include "common/memstream.h"
 #include "common/system.h"
 
 #include "sword2/sword2.h"

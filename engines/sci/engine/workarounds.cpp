@@ -19,11 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/workarounds.cpp $
- * $Id: workarounds.cpp 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: workarounds.cpp 55218 2011-01-12 23:53:14Z thebluegr $
  *
  */
 
 #include "sci/engine/kernel.h"
+#include "sci/engine/object.h"
 #include "sci/engine/state.h"
 #include "sci/engine/vm.h"
 #include "sci/engine/workarounds.h"
@@ -117,6 +118,7 @@ const SciWorkaroundEntry uninitializedReadWorkarounds[] = {
 	{ GID_HOYLE1,          4,   104,  0,   "GinRummyCardList", "calcRuns",       -1,    4, { WORKAROUND_FAKE,   0 } }, // Gin Rummy / right when the game starts
 	{ GID_HOYLE1,          5,   204,  0,            "tableau", "checkRuns",      -1,    2, { WORKAROUND_FAKE,   0 } }, // Cribbage / during the game
 	{ GID_HOYLE1,          3,    16,  0,                   "", "export 0",    0x37c,    3, { WORKAROUND_FAKE,   0 } }, // Hearts / during the game - bug #3052359
+	{ GID_HOYLE1,         -1,   997,  0,            "MenuBar", "doit",           -1,    0, { WORKAROUND_FAKE,   0 } }, // When changing game speed settings - bug #3108012
 	{ GID_HOYLE3,         -1,     0,  1,          "Character", "say",            -1,   -1, { WORKAROUND_FAKE,   0 } }, // when starting checkers or dominoes, first time a character says something - temps 504 and 505
 	{ GID_HOYLE3,         -1,   700,  0,           "gcWindow", "open",           -1,   -1, { WORKAROUND_FAKE,   0 } }, // when entering control menu
 	{ GID_HOYLE3,        100,   100,  0,        "dominoHand2", "cue",            -1,    1, { WORKAROUND_FAKE,   0 } }, // while playing domino - bug #3036918
@@ -170,11 +172,14 @@ const SciWorkaroundEntry uninitializedReadWorkarounds[] = {
 	{ GID_QFG1,           -1,   210,  0,          "Encounter", "init",        0xbd0,    0, { WORKAROUND_FAKE,   0 } }, // hq1: going to the brigands hideout
 	{ GID_QFG1,           -1,   210,  0,          "Encounter", "init",        0xbe4,    0, { WORKAROUND_FAKE,   0 } }, // qfg1: going to the brigands hideout
 	{ GID_QFG1VGA,        16,    16,  0,        "lassoFailed", "changeState",    -1,   -1, { WORKAROUND_FAKE,   0 } }, // qfg1vga: casting the "fetch" spell in the screen with the flowers, temps 0 and 1 - bug #3053268
+	{ GID_QFG1VGA,        -1,   210,  0,          "Encounter", "init",        0xcee,    0, { WORKAROUND_FAKE,   0 } }, // qfg1vga: going to the brigands hideout - bug #3109299
+	{ GID_QFG1VGA,        -1,   210,  0,          "Encounter", "init",        0xce7,    0, { WORKAROUND_FAKE,   0 } }, // qfg1vga: going to room 92
 	{ GID_QFG2,           -1,    71,  0,        "theInvSheet", "doit",           -1,    1, { WORKAROUND_FAKE,   0 } }, // accessing the inventory
 	{ GID_QFG2,           -1,   701, -1,              "Alley", "at",             -1,    0, { WORKAROUND_FAKE,   0 } }, // when walking inside the alleys in the town - bug #3035835 & #3038367
 	{ GID_QFG2,           -1,   990,  0,            "Restore", "doit",           -1,  364, { WORKAROUND_FAKE,   0 } }, // when pressing enter in restore dialog w/o any saved games present
 	{ GID_QFG2,          260,   260,  0,             "abdulS", "changeState",0x2d22,   -1, { WORKAROUND_FAKE,   0 } }, // During the thief's first mission (in the house), just before Abdul is about to enter the house (where you have to hide in the wardrobe), bug #3039891, temps 1 and 2
 	{ GID_QFG2,          260,   260,  0,            "jabbarS", "changeState",0x2d22,   -1, { WORKAROUND_FAKE,   0 } }, // During the thief's first mission (in the house), just before Jabbar is about to enter the house (where you have to hide in the wardrobe), bug #3040469, temps 1 and 2
+	{ GID_QFG2,          500,   500,  0,   "lightNextCandleS", "changeState",    -1,   -1, { WORKAROUND_FAKE,   0 } }, // Inside the last room, while Ad Avis performs the ritual to summon the genie - bug #3148418
 	{ GID_QFG3,          510,   510,  0,         "awardPrize", "changeState",    -1,    0, { WORKAROUND_FAKE,   0 } }, // Simbani warrior challenge, after throwing the spears and retrieving the ring - bug #3049435
 	{ GID_QFG3,          140,   140,  0,              "rm140", "init",       0x1008,    0, { WORKAROUND_FAKE,   0 } }, // when importing a character and selecting the previous profession - bug #3040460
 	{ GID_QFG3,          330,   330, -1,             "Teller", "doChild",        -1,   -1, { WORKAROUND_FAKE,   0 } }, // when talking to King Rajah about "Rajah" (bug #3036390, temp 1) or "Tarna" (temp 0), or when clicking on yourself and saying "Greet" (bug #3039774, temp 1)
@@ -186,6 +191,12 @@ const SciWorkaroundEntry uninitializedReadWorkarounds[] = {
 	{ GID_QFG4,           -1,    15, -1,     "charInitScreen", "dispatchEvent",  -1,    5, { WORKAROUND_FAKE,   0 } }, // floppy version, when viewing the character screen
 	{ GID_QFG4,           -1, 64917, -1,       "controlPlane", "setBitmap",      -1,    3, { WORKAROUND_FAKE,   0 } }, // floppy version, when entering the game menu
 	{ GID_QFG4,           -1, 64917, -1,              "Plane", "setBitmap",      -1,    3, { WORKAROUND_FAKE,   0 } }, // floppy version, happen sometimes in fights
+	{ GID_RAMA,           12, 64950, -1,   "InterfaceFeature", "handleEvent",    -1,    0, { WORKAROUND_FAKE,   0 } }, // Demo, right when it starts
+	{ GID_RAMA,           12, 64950, -1,      "hiliteOptText", "handleEvent",    -1,    0, { WORKAROUND_FAKE,   0 } }, // Demo, right when it starts
+	{ GID_RAMA,           12, 64950, -1,               "View", "handleEvent",    -1,    0, { WORKAROUND_FAKE,   0 } }, // Demo, right when it starts
+	{ GID_SHIVERS,        -1,   952,  0,       "SoundManager", "stop",           -1,    2, { WORKAROUND_FAKE,   0 } }, // Just after Sierra logo
+	{ GID_SHIVERS,        -1, 64950,  0,            "Feature", "handleEvent",    -1,    0, { WORKAROUND_FAKE,   0 } }, // When clicking on the locked door at the beginning
+	{ GID_SHIVERS,        -1, 64950,  0,               "View", "handleEvent",    -1,    0, { WORKAROUND_FAKE,   0 } }, // When clicking on the gargoyle eye at the beginning
 	{ GID_SQ1,           103,   103,  0,               "hand", "internalEvent",  -1,   -1, { WORKAROUND_FAKE,   0 } }, // Spanish (and maybe early versions?) only: when moving cursor over input pad, temps 1 and 2
 	{ GID_SQ1,            -1,   703,  0,                   "", "export 1",       -1,    0, { WORKAROUND_FAKE,   0 } }, // sub that's called from several objects while on sarien battle cruiser
 	{ GID_SQ1,            -1,   703,  0,         "firePulsar", "changeState", 0x18a,    0, { WORKAROUND_FAKE,   0 } }, // export 1, but called locally (when shooting at aliens)
@@ -327,6 +338,7 @@ const SciWorkaroundEntry kGraphFillBoxForeground_workarounds[] = {
 
 //    gameID,           room,script,lvl,          object-name, method-name,    call,index,                workaround
 const SciWorkaroundEntry kGraphFillBoxAny_workarounds[] = {
+	{ GID_ECOQUEST2,     100,   333,  0,        "showEcorder", "changeState",    -1,    0, { WORKAROUND_STILLCALL, 0 } }, // necessary workaround for our ecorder script patch, because there isn't enough space to patch the function
 	{ GID_SQ4,            -1,   818,  0,     "iconTextSwitch", "show",           -1,    0, { WORKAROUND_STILLCALL, 0 } }, // CD: game menu "text/speech" display - parameter 5 is missing, but the right color number is on the stack
 	SCI_WORKAROUNDENTRY_TERMINATOR
 };
@@ -339,6 +351,7 @@ const SciWorkaroundEntry kGraphRedrawBox_workarounds[] = {
 	{ GID_SQ4,           410,   410,  0,       "swimAfterEgo", "changeState",    -1,    0, { WORKAROUND_STILLCALL, 0 } }, // skateOrama when "swimming" in the air - accidental additional parameter specified
 	{ GID_SQ4,           411,   411,  0,       "swimAndShoot", "changeState",    -1,    0, { WORKAROUND_STILLCALL, 0 } }, // skateOrama when "swimming" in the air - accidental additional parameter specified
 	{ GID_SQ4,           150,   150,  0,        "laserScript", "changeState",  0xb2,    0, { WORKAROUND_STILLCALL, 0 } }, // when visiting the pedestral where Roger Jr. is trapped, before trashing the brain icon in the programming chapter, accidental additional parameter specified - bug #3094235
+	{ GID_SQ4,           150,   150,  0,        "laserScript", "changeState",  0x16,    0, { WORKAROUND_STILLCALL, 0 } }, // same as above, for the German version - bug #3116892
 	{ GID_SQ4,            -1,   704,  0,           "shootEgo", "changeState",    -1,    0, { WORKAROUND_STILLCALL, 0 } }, // When shot by Droid in Super Computer Maze (Rooms 500, 505, 510...) - accidental additional parameter specified
 	{ GID_KQ5,            -1,   981,  0,           "myWindow",     "dispose",    -1,    0, { WORKAROUND_STILLCALL, 0 } }, // Happens in the floppy version, when closing any dialog box, accidental additional parameter specified - bug #3036331
 	{ GID_KQ5,            -1,   995,  0,               "invW",        "doit",    -1,    0, { WORKAROUND_STILLCALL, 0 } }, // Happens in the floppy version, when closing the inventory window, accidental additional parameter specified
@@ -348,6 +361,7 @@ const SciWorkaroundEntry kGraphRedrawBox_workarounds[] = {
 
 //    gameID,           room,script,lvl,          object-name, method-name,    call,index,                workaround
 const SciWorkaroundEntry kGraphUpdateBox_workarounds[] = {
+	{ GID_ECOQUEST2,     100,   333,  0,        "showEcorder", "changeState",    -1,    0, { WORKAROUND_STILLCALL, 0 } }, // necessary workaround for our ecorder script patch, because there isn't enough space to patch the function
 	{ GID_PQ3,           202,   202,  0,            "MapEdit", "movePt",         -1,    0, { WORKAROUND_STILLCALL, 0 } }, // when plotting crimes, gets called with 2 extra parameters - bug #3038077
 	{ GID_PQ3,           202,   202,  0,            "MapEdit",  "addPt",         -1,    0, { WORKAROUND_STILLCALL, 0 } }, // when plotting crimes, gets called with 2 extra parameters - bug #3038077
 	SCI_WORKAROUNDENTRY_TERMINATOR
@@ -364,6 +378,12 @@ const SciWorkaroundEntry kIsObject_workarounds[] = {
 //    gameID,           room,script,lvl,          object-name, method-name,    call,index,                workaround
 const SciWorkaroundEntry kMemory_workarounds[] = {
 	{ GID_LAURABOW2,      -1,   999,  0,                   "", "export 6",       -1,    0, { WORKAROUND_FAKE,    0 } }, // during the intro, when exiting the train, talking to Mr. Augustini, etc. - bug #3034490
+	SCI_WORKAROUNDENTRY_TERMINATOR
+};
+
+//    gameID,           room,script,lvl,          object-name, method-name,    call,index,                workaround
+const SciWorkaroundEntry kMoveCursor_workarounds[] = {
+	{ GID_KQ5,            -1,   937,  0,            "IconBar", "handleEvent",    -1,    0, { WORKAROUND_IGNORE,  0 } }, // when pressing escape to open the menu, gets called with one parameter instead of 2 - bug #3156472
 	SCI_WORKAROUNDENTRY_TERMINATOR
 };
 
@@ -434,6 +454,15 @@ const SciWorkaroundEntry kUnLoad_workarounds[] = {
 };
 
 SciWorkaroundSolution trackOriginAndFindWorkaround(int index, const SciWorkaroundEntry *workaroundList, SciTrackOriginReply *trackOrigin) {
+	// HACK for SCI3: Temporarily ignore this
+	if (getSciVersion() == SCI_VERSION_3) {
+		warning("SCI3 HACK: trackOriginAndFindWorkaround() called, ignoring");
+		SciWorkaroundSolution sci3IgnoreForNow;
+		sci3IgnoreForNow.type = WORKAROUND_FAKE;
+		sci3IgnoreForNow.value = 0;
+		return sci3IgnoreForNow;
+	}
+
 	EngineState *state = g_sci->getEngineState();
 	ExecStack *lastCall = state->xs;
 	Script *local_script = state->_segMan->getScriptIfLoaded(lastCall->local_segment);
@@ -476,12 +505,22 @@ SciWorkaroundSolution trackOriginAndFindWorkaround(int index, const SciWorkaroun
 		do {
 			workaround = workaroundList;
 			while (workaround->methodName) {
+				bool objectNameMatches = (workaround->objectName == NULL) || 
+										 (workaround->objectName == g_sci->getSciLanguageString(searchObjectName.c_str(), K_LANG_ENGLISH));
+
+				// Special case: in the fanmade Russian translation of SQ4, all
+				// of the object names have been deleted or renamed to Russian,
+				// thus we disable checking of the object name. Fixes bug #3155550.
+				if (g_sci->getLanguage() == Common::RU_RUS && g_sci->getGameId() == GID_SQ4)
+					objectNameMatches = true;
+
 				if (workaround->gameId == gameId
 						&& ((workaround->scriptNr == -1) || (workaround->scriptNr == curScriptNr))
 						&& ((workaround->roomNr == -1) || (workaround->roomNr == curRoomNumber))
 						&& ((workaround->inheritanceLevel == -1) || (workaround->inheritanceLevel == inheritanceLevel))
-						&& ((workaround->objectName == NULL) || (workaround->objectName == searchObjectName))
-						&& workaround->methodName == curMethodName && workaround->localCallOffset == lastCall->debugLocalCallOffset
+						&& objectNameMatches
+						&& workaround->methodName == g_sci->getSciLanguageString(curMethodName.c_str(), K_LANG_ENGLISH)
+						&& workaround->localCallOffset == lastCall->debugLocalCallOffset
 						&& ((workaround->index == -1) || (workaround->index == index))) {
 					// Workaround found
 					return workaround->newValue;

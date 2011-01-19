@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/testbed/config.h $
- * $Id: config.h 52973 2010-10-02 01:05:16Z sud03r $
+ * $Id: config.h 54264 2010-11-16 10:11:57Z fingolfin $
  */
 
 #ifndef TESTBED_CONFIG_H
@@ -31,7 +31,7 @@
 #include "common/str-array.h"
 #include "common/tokenizer.h"
 
-#include "gui/ListWidget.h"
+#include "gui/widgets/list.h"
 #include "gui/options.h"
 #include "gui/ThemeEngine.h"
 

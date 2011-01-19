@@ -19,207 +19,146 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/myst_scripts.h $
- * $Id: myst_scripts.h 47541 2010-01-25 01:39:44Z lordhoto $
+ * $Id: myst_scripts.h 55304 2011-01-18 17:42:34Z mthreepwood $
  *
  */
 
 #ifndef MYST_SCRIPTS_H
 #define MYST_SCRIPTS_H
 
+#include "common/ptr.h"
 #include "common/scummsys.h"
 #include "common/util.h"
+
+#include "mohawk/myst_state.h"
 
 namespace Mohawk {
 
 #define DECLARE_OPCODE(x) void x(uint16 op, uint16 var, uint16 argc, uint16 *argv)
 
 class MohawkEngine_Myst;
-struct MystScriptEntry;
+class MystResource;
+
+enum MystScriptType {
+	kMystScriptNone,
+	kMystScriptNormal,
+	kMystScriptInit,
+	kMystScriptExit
+};
+
+struct MystScriptEntry {
+	MystScriptEntry();
+	~MystScriptEntry();
+
+	MystScriptType type;
+	uint16 resourceId;
+	uint16 opcode;
+	uint16 var;
+	uint16 argc;
+	uint16 *argv;
+	uint16 u1;
+};
+
+typedef Common::SharedPtr<Common::Array<MystScriptEntry> > MystScript;
 
 class MystScriptParser {
 public:
 	MystScriptParser(MohawkEngine_Myst *vm);
-	~MystScriptParser();
+	virtual ~MystScriptParser();
 
-	void runScript(uint16 scriptCount, MystScriptEntry *scripts, MystResource* invokingResource = NULL);
+	void runScript(MystScript script, MystResource *invokingResource = NULL);
 	void runOpcode(uint16 op, uint16 var = 0, uint16 argc = 0, uint16 *argv = NULL);
-	const char *getOpcodeDesc(uint16 op);
+	const Common::String getOpcodeDesc(uint16 op);
+	MystScript readScript(Common::SeekableReadStream *stream, MystScriptType type);
+	void setInvokingResource(MystResource *resource) { _invokingResource = resource; }
 
-	void disableInitOpcodes();
-	void runPersistentOpcodes();
+	virtual void disablePersistentScripts() = 0;
+	virtual void runPersistentScripts() = 0;
 
-private:
+	virtual uint16 getVar(uint16 var);
+	virtual void toggleVar(uint16 var);
+	virtual bool setVarValue(uint16 var, uint16 value);
+
+	void animatedUpdate(uint16 argc, uint16 *argv, uint16 delay);
+
+	DECLARE_OPCODE(unknown);
+
+	// Common opcodes
+	DECLARE_OPCODE(o_toggleVar);
+	DECLARE_OPCODE(o_setVar);
+	DECLARE_OPCODE(o_changeCardSwitch);
+	DECLARE_OPCODE(o_takePage);
+	DECLARE_OPCODE(o_redrawCard);
+	DECLARE_OPCODE(o_goToDest);
+	DECLARE_OPCODE(o_triggerMovie);
+	DECLARE_OPCODE(o_toggleVarNoRedraw);
+	DECLARE_OPCODE(o_drawAreaState);
+	DECLARE_OPCODE(o_redrawAreaForVar);
+	DECLARE_OPCODE(o_changeCardDirectional);
+	DECLARE_OPCODE(o_changeCardPush);
+	DECLARE_OPCODE(o_changeCardPop);
+	DECLARE_OPCODE(o_enableAreas);
+	DECLARE_OPCODE(o_disableAreas);
+	DECLARE_OPCODE(o_directionalUpdate);
+	DECLARE_OPCODE(o_toggleAreasActivation);
+	DECLARE_OPCODE(o_playSound);
+	DECLARE_OPCODE(o_stopSoundBackground);
+	DECLARE_OPCODE(o_playSoundBlocking);
+	DECLARE_OPCODE(o_copyBackBufferToScreen);
+	DECLARE_OPCODE(o_copyImageToBackBuffer);
+	DECLARE_OPCODE(o_changeBackgroundSound);
+	DECLARE_OPCODE(o_soundPlaySwitch);
+	DECLARE_OPCODE(o_copyImageToScreen);
+	DECLARE_OPCODE(o_soundResumeBackground);
+	DECLARE_OPCODE(o_changeCard);
+	DECLARE_OPCODE(o_drawImageChangeCard);
+	DECLARE_OPCODE(o_changeMainCursor);
+	DECLARE_OPCODE(o_hideCursor);
+	DECLARE_OPCODE(o_showCursor);
+	DECLARE_OPCODE(o_delay);
+	DECLARE_OPCODE(o_changeStack);
+	DECLARE_OPCODE(o_changeCardPlaySoundDirectional);
+	DECLARE_OPCODE(o_directionalUpdatePlaySound);
+	DECLARE_OPCODE(o_saveMainCursor);
+	DECLARE_OPCODE(o_restoreMainCursor);
+	DECLARE_OPCODE(o_soundWaitStop);
+
+	// Used in multiple stacks
+	DECLARE_OPCODE(o_quit);
+
+	DECLARE_OPCODE(NOP);
+
+protected:
 	MohawkEngine_Myst *_vm;
+	MystGameState::Globals &_globals;
 
 	typedef void (MystScriptParser::*OpcodeProcMyst)(uint16 op, uint16 var, uint16 argc, uint16* argv);
 
 	struct MystOpcode {
+		MystOpcode(uint16 o, OpcodeProcMyst p, const char *d) : op(o), proc(p), desc(d) {}
+
 		uint16 op;
 		OpcodeProcMyst proc;
 		const char *desc;
 	};
 
-	const MystOpcode *_opcodes;
-	void setupOpcodes();
+	Common::Array<MystOpcode*> _opcodes;
+
 	MystResource *_invokingResource;
-	uint16 _opcodeCount;
 
+	uint16 _savedCardId;
+	uint16 _savedCursorId;
+	int16 _tempVar; // Generic temp var used by the scripts
+	uint32 _startTime; // Generic start time used by the scripts
+
+	static const uint8 _stackMap[];
+	static const uint16 _startCard[];
+
+	void setupCommonOpcodes();
 	void varUnusedCheck(uint16 op, uint16 var);
-
-	void opcode_200_run();
-	void opcode_200_disable();
-	void opcode_201_run();
-	void opcode_201_disable();
-	void opcode_202_run();
-	void opcode_202_disable();
-	void opcode_203_run();
-	void opcode_203_disable();
-	void opcode_204_run();
-	void opcode_204_disable();
-	void opcode_205_run();
-	void opcode_205_disable();
-	void opcode_206_run();
-	void opcode_206_disable();
-	void opcode_209_run();
-	void opcode_209_disable();
-	void opcode_210_run();
-	void opcode_210_disable();
-	void opcode_211_run();
-	void opcode_211_disable();
-	void opcode_212_run();
-	void opcode_212_disable();
-
-	DECLARE_OPCODE(unknown);
-
-	DECLARE_OPCODE(toggleBoolean);
-	DECLARE_OPCODE(setVar);
-	DECLARE_OPCODE(altDest);
-	DECLARE_OPCODE(takePage);
-	DECLARE_OPCODE(opcode_4);
-	DECLARE_OPCODE(opcode_6);
-	DECLARE_OPCODE(opcode_7);
-	DECLARE_OPCODE(opcode_8);
-	DECLARE_OPCODE(opcode_9);
-	DECLARE_OPCODE(opcode_14);
-	DECLARE_OPCODE(dropPage);
-	DECLARE_OPCODE(opcode_16);
-	DECLARE_OPCODE(opcode_17);
-	DECLARE_OPCODE(opcode_18);
-	DECLARE_OPCODE(enableHotspots);
-	DECLARE_OPCODE(disableHotspots);
-	DECLARE_OPCODE(opcode_21);
-	DECLARE_OPCODE(opcode_22);
-	DECLARE_OPCODE(opcode_23);
-	DECLARE_OPCODE(playSound);
-	DECLARE_OPCODE(opcode_26);
-	DECLARE_OPCODE(playSoundBlocking);
-	DECLARE_OPCODE(opcode_28);
-	DECLARE_OPCODE(opcode_29_33);
-	DECLARE_OPCODE(opcode_30);
-	DECLARE_OPCODE(opcode_31);
-	DECLARE_OPCODE(opcode_32);
-	DECLARE_OPCODE(opcode_34);
-	DECLARE_OPCODE(opcode_35);
-	DECLARE_OPCODE(changeCursor);
-	DECLARE_OPCODE(hideCursor);
-	DECLARE_OPCODE(showCursor);
-	DECLARE_OPCODE(opcode_39);
-	DECLARE_OPCODE(changeStack);
-	DECLARE_OPCODE(opcode_41);
-	DECLARE_OPCODE(opcode_42);
-	DECLARE_OPCODE(opcode_43);
-	DECLARE_OPCODE(opcode_44);
-	DECLARE_OPCODE(opcode_46);
-
-	DECLARE_OPCODE(opcode_100);
-	DECLARE_OPCODE(opcode_101);
-	DECLARE_OPCODE(opcode_102);
-	DECLARE_OPCODE(opcode_103);
-	DECLARE_OPCODE(opcode_104);
-	DECLARE_OPCODE(opcode_105);
-	DECLARE_OPCODE(opcode_106);
-	DECLARE_OPCODE(opcode_107);
-	DECLARE_OPCODE(opcode_108);
-	DECLARE_OPCODE(opcode_109);
-	DECLARE_OPCODE(opcode_110);
-	DECLARE_OPCODE(opcode_111);
-	DECLARE_OPCODE(opcode_112);
-	DECLARE_OPCODE(opcode_113);
-	DECLARE_OPCODE(opcode_114);
-	DECLARE_OPCODE(opcode_115);
-	DECLARE_OPCODE(opcode_116);
-	DECLARE_OPCODE(opcode_117);
-	DECLARE_OPCODE(opcode_118);
-	DECLARE_OPCODE(opcode_119);
-	DECLARE_OPCODE(opcode_120);
-	DECLARE_OPCODE(opcode_121);
-	DECLARE_OPCODE(opcode_122);
-	DECLARE_OPCODE(opcode_123);
-	DECLARE_OPCODE(opcode_124);
-	DECLARE_OPCODE(opcode_125);
-	DECLARE_OPCODE(opcode_126);
-	DECLARE_OPCODE(opcode_127);
-	DECLARE_OPCODE(opcode_128);
-	DECLARE_OPCODE(opcode_129);
-	DECLARE_OPCODE(opcode_130);
-	DECLARE_OPCODE(opcode_131);
-	DECLARE_OPCODE(opcode_132);
-	DECLARE_OPCODE(opcode_133);
-	DECLARE_OPCODE(opcode_147);
-	DECLARE_OPCODE(opcode_164);
-	DECLARE_OPCODE(opcode_169);
-	DECLARE_OPCODE(opcode_181);
-	DECLARE_OPCODE(opcode_182);
-	DECLARE_OPCODE(opcode_183);
-	DECLARE_OPCODE(opcode_184);
-	DECLARE_OPCODE(opcode_185);
-	DECLARE_OPCODE(opcode_196);
-	DECLARE_OPCODE(opcode_197);
-	DECLARE_OPCODE(opcode_198);
-	DECLARE_OPCODE(opcode_199);
-
-	DECLARE_OPCODE(opcode_200);
-	DECLARE_OPCODE(opcode_201);
-	DECLARE_OPCODE(opcode_202);
-	DECLARE_OPCODE(opcode_203);
-	DECLARE_OPCODE(opcode_204);
-	DECLARE_OPCODE(opcode_205);
-	DECLARE_OPCODE(opcode_206);
-	DECLARE_OPCODE(opcode_207);
-	DECLARE_OPCODE(opcode_208);
-	DECLARE_OPCODE(opcode_209);
-	DECLARE_OPCODE(opcode_210);
-	DECLARE_OPCODE(opcode_211);
-	DECLARE_OPCODE(opcode_212);
-	DECLARE_OPCODE(opcode_213);
-	DECLARE_OPCODE(opcode_214);
-	DECLARE_OPCODE(opcode_215);
-	DECLARE_OPCODE(opcode_216);
-	DECLARE_OPCODE(opcode_217);
-	DECLARE_OPCODE(opcode_218);
-	DECLARE_OPCODE(opcode_219);
-	DECLARE_OPCODE(opcode_220);
-	DECLARE_OPCODE(opcode_221);
-	DECLARE_OPCODE(opcode_222);
-	DECLARE_OPCODE(opcode_298);
-	DECLARE_OPCODE(opcode_299);
-
-	DECLARE_OPCODE(opcode_300);
-	DECLARE_OPCODE(opcode_301);
-	DECLARE_OPCODE(opcode_302);
-	DECLARE_OPCODE(opcode_303);
-	DECLARE_OPCODE(opcode_304);
-	DECLARE_OPCODE(opcode_305);
-	DECLARE_OPCODE(opcode_306);
-	DECLARE_OPCODE(opcode_307);
-	DECLARE_OPCODE(opcode_308);
-	DECLARE_OPCODE(opcode_309);
-	DECLARE_OPCODE(opcode_312);
-
-	DECLARE_OPCODE(NOP);
 };
 
-}
+} // End of namespace Mohawk
 
 #undef DECLARE_OPCODE
 

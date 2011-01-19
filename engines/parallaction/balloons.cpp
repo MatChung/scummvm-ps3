@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/balloons.cpp $
- * $Id: balloons.cpp 53146 2010-10-11 17:07:34Z lordhoto $
+ * $Id: balloons.cpp 55220 2011-01-13 01:39:05Z tdhs $
  *
  */
 
@@ -694,6 +694,7 @@ int BalloonManager_br::setLocationBalloon(const char *text, bool endGame) {
 	balloon->obj = _vm->_gfx->registerBalloon(new SurfaceToFrames(balloon->surface), 0);
 	balloon->obj->x = 5;
 	balloon->obj->y = 5;
+	balloon->obj->transparentKey = BALLOON_TRANSPARENT_COLOR_BR;
 
 	return 0;
 }

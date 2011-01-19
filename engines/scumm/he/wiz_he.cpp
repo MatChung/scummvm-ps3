@@ -19,12 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/he/wiz_he.cpp $
- * $Id: wiz_he.cpp 53552 2010-10-17 12:44:56Z Kirben $
+ * $Id: wiz_he.cpp 54434 2010-11-23 22:25:10Z fingolfin $
  *
  */
 
 #ifdef ENABLE_HE
 
+#include "common/archive.h"
 #include "common/system.h"
 #include "graphics/cursorman.h"
 #include "graphics/primitives.h"
@@ -2374,12 +2375,7 @@ void Wiz::processWizImage(const WizParameters *params) {
 			if (!_vm->_saveFileMan->listSavefiles(filename).empty()) {
 				f = _vm->_saveFileMan->openForLoading(filename);
 			} else {
-				Common::File *nf = new Common::File();
-				nf->open(filename);
-				if (!nf->isOpen())
-					delete nf;
-				else
-					f = nf;
+				f = SearchMan.createReadStreamForMember(filename);
 			}
 
 			if (f) {

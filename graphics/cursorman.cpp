@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/cursorman.cpp $
- * $Id: cursorman.cpp 48254 2010-03-13 21:55:49Z lordhoto $
+ * $Id: cursorman.cpp 54258 2010-11-16 08:23:13Z fingolfin $
  */
 
 #include "graphics/cursorman.h"
@@ -27,7 +27,7 @@
 #include "common/system.h"
 #include "common/stack.h"
 
-DECLARE_SINGLETON(Graphics::CursorManager)
+DECLARE_SINGLETON(Graphics::CursorManager);
 
 namespace Graphics {
 

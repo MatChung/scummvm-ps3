@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/inter_v6.cpp $
- * $Id: inter_v6.cpp 53984 2010-10-31 20:07:14Z drmccoy $
+ * $Id: inter_v6.cpp 55264 2011-01-16 16:30:15Z drmccoy $
  *
  */
 
@@ -234,14 +234,15 @@ bool Inter_v6::o6_loadCursor(OpFuncParams &params) {
 		int16 framesCount = _vm->_vidPlayer->getFrameCount(vmdSlot);
 
 		for (int i = 0; i < framesCount; i++) {
-			props.startFrame = i;
-			props.lastFrame  = i;
+			props.startFrame   = i;
+			props.lastFrame    = i;
+			props.waitEndFrame = false;
 
 			_vm->_vidPlayer->play(vmdSlot, props);
 			_vm->_vidPlayer->copyFrame(vmdSlot, _vm->_draw->_cursorSprites->getData(),
 					0, 0, _vm->_draw->_cursorWidth, _vm->_draw->_cursorWidth,
 					(start + i) * _vm->_draw->_cursorWidth, 0,
-					_vm->_draw->_cursorSprites->getWidth());
+					_vm->_draw->_cursorSprites->getWidth() * 2, 2);
 		}
 
 		_vm->_vidPlayer->closeVideo(vmdSlot);

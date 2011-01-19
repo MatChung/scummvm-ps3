@@ -19,12 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/draw_fascin.cpp $
- * $Id: draw_fascin.cpp 52947 2010-09-30 13:02:16Z drmccoy $
+ * $Id: draw_fascin.cpp 54724 2010-12-01 21:08:47Z strangerke $
  *
  */
-
-//#include "common/endian.h"
-//#include "graphics/cursorman.h"
 
 #include "gob/draw.h"
 #include "gob/game.h"
@@ -411,7 +408,6 @@ void Draw_Fascination::drawWin(int16 fct) {
 		break;
 
 	case DRAW_LOADSPRITE:  // 5 - Uncompress and load a sprite
-		// TODO: check the implementation, currently dirty cut and paste of DRAW_SPRITE code
 		resource = _vm->_game->_resources->getResource((_spriteLeft & 0x3FFF),
 				&_spriteRight, &_spriteBottom);
 

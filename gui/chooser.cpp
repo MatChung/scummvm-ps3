@@ -19,14 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/chooser.cpp $
- * $Id: chooser.cpp 49774 2010-06-15 10:52:35Z sev $
+ * $Id: chooser.cpp 54265 2010-11-16 10:19:01Z fingolfin $
  */
 
 #include "common/system.h"
 #include "common/translation.h"
 #include "gui/chooser.h"
-#include "gui/GuiManager.h"
-#include "gui/ListWidget.h"
+#include "gui/gui-manager.h"
+#include "gui/widgets/list.h"
 
 namespace GUI {
 

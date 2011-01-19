@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/hugo.h $
- * $Id: hugo.h 54117 2010-11-07 15:04:47Z tdhs $
+ * $Id: hugo.h 55292 2011-01-18 09:16:52Z strangerke $
  *
  */
 
@@ -29,12 +29,14 @@
 #include "engines/engine.h"
 #include "common/file.h"
 #include "hugo/console.h"
+#include "hugo/menu.h"
 
 // This include is here temporarily while the engine is being refactored.
 #include "hugo/game.h"
+#include "hugo/file.h"
 
 #define HUGO_DAT_VER_MAJ 0                          // 1 byte
-#define HUGO_DAT_VER_MIN 27                         // 1 byte
+#define HUGO_DAT_VER_MIN 40                         // 1 byte
 #define DATAALIGNMENT    4
 #define EDGE             10                         // Closest object can get to edge of screen
 #define EDGE2            (EDGE * 2)                 // Push object further back on edge collision
@@ -53,8 +55,13 @@ class RandomSource;
  * - Hugo's House of Horror
  * - Whodunit?
  * - Jungle of Doom
+ * - Hugo's Horrific Adventure
+ * - Hugo's Mystery Adventure
+ * - Hugo's Amazon Adventure
  */
 namespace Hugo {
+
+static const int kSavegameVersion = 2;
 
 enum GameType {
 	kGameTypeNone  = 0,
@@ -81,7 +88,8 @@ enum HugoDebugChannels {
 	kDebugFile      = 1 <<  5,
 	kDebugRoute     = 1 <<  6,
 	kDebugInventory = 1 <<  7,
-	kDebugObject    = 1 <<  8
+	kDebugObject    = 1 <<  8,
+	kDebugMusic     = 1 <<  9
 };
 
 enum HugoGameFeatures {
@@ -111,6 +119,8 @@ public:
 	HugoEngine(OSystem *syst, const HugoGameDescription *gd);
 	~HugoEngine();
 
+	OSystem *_system;
+
 	byte   _numVariant;
 	byte   _gameVariant;
 	byte   _maxInvent;
@@ -119,6 +129,9 @@ public:
 	int8   _soundTest;
 	int8   _tunesNbr;
 	uint16 _numScreens;
+	int8   _normalTPS;                              // Number of ticks (frames) per second.
+	                                                //8 for Win versions, 9 for DOS versions
+
 
 	object_t *_hero;
 	byte  *_screen_p;
@@ -134,7 +147,6 @@ public:
 	char  **_textIntro;
 	char  **_textMouse;
 	char  **_textParser;
-	char  **_textSchedule;
 	char  **_textUtil;
 	char  ***_arrayNouns;
 	char  ***_arrayVerbs;
@@ -155,7 +167,6 @@ public:
 	uint16    _look;
 	uint16    _take;
 	uint16    _drop;
-	uint16    _numObj;
 
 	GUI::Debugger *getDebugger() { return _console; }
 
@@ -164,13 +175,14 @@ public:
 	const char *_episode;
 	const char *_picDir;
 
-	Common::String _initFilename, _saveFilename;
+	Common::String _saveFilename;
 
 	command_t _statusLine;
 	command_t _scoreLine;
 
 	const HugoGameDescription *_gameDescription;
 	uint32 getFeatures() const;
+	const char *getGameId() const;
 
 	GameType getGameType() const;
 	Common::Platform getPlatform() const;
@@ -182,9 +194,30 @@ public:
 		return *s_Engine;
 	}
 
+	bool canLoadGameStateCurrently();
+	bool canSaveGameStateCurrently();
+	bool loadHugoDat();
+
+	char *useBG(char *name);
+
+	int  deltaX(int x1, int x2, int vx, int y);
+	int  deltaY(int x1, int x2, int vy, int y);
+
+	int8 getTPS();
+
 	void initGame(const HugoGameDescription *gd);
 	void initGamePart(const HugoGameDescription *gd);
-	bool loadHugoDat();
+	void boundaryCollision(object_t *obj);
+	void clearBoundary(int x1, int x2, int y);
+	void clearScreenBoundary(int x1, int x2, int y);
+	void endGame();
+	void initStatus();
+	void readScreenFiles(int screen);
+	void screenActions(int screen);
+	void setNewScreen(int screen);
+	void shutdown();
+	void storeBoundary(int x1, int x2, int y);
+	void syncSoundSettings();
 
 	int getMouseX() const {
 		return _mouseX;
@@ -192,22 +225,6 @@ public:
 	int getMouseY() const {
 		return _mouseY;
 	}
-
-	void boundaryCollision(object_t *obj);
-	void clearBoundary(int x1, int x2, int y);
-	void endGame();
-	void initStatus();
-	void readObjectImages();
-	void readScreenFiles(int screen);
-	void screenActions(int screen);
-	void setNewScreen(int screen);
-	void shutdown();
-	void storeBoundary(int x1, int x2, int y);
-
-	char *useBG(char *name);
-
-	int deltaX(int x1, int x2, int vx, int y);
-	int deltaY(int x1, int x2, int vy, int y);
 
 	overlay_t &getBoundaryOverlay() {
 		return _boundary;
@@ -242,6 +259,17 @@ public:
 	byte getIntroSize() {
 		return _introXSize;
 	}
+	Common::Error saveGameState(int slot, const char *desc) {
+		return (_file->saveGame(slot, desc) ? Common::kWritingFailed : Common::kNoError);
+	}
+
+	Common::Error loadGameState(int slot) {
+		return (_file->restoreGame(slot) ? Common::kReadingFailed : Common::kNoError);
+	}
+
+	bool hasFeature(EngineFeature f) const {
+		return (f == kSupportsRTL) || (f == kSupportsLoadingDuringRuntime) || (f == kSupportsSavingDuringRuntime);
+	}
 
 	FileManager *_file;
 	Scheduler *_scheduler;
@@ -253,6 +281,8 @@ public:
 	SoundHandler *_sound;
 	IntroHandler *_intro;
 	ObjectHandler *_object;
+
+	TopMenu *_topMenu;
 
 protected:
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/tinlib.cpp $
- * $Id: tinlib.cpp 53936 2010-10-30 00:34:41Z fingolfin $
+ * $Id: tinlib.cpp 54286 2010-11-17 12:13:23Z fingolfin $
  *
  * Glitter library functions.
  *
@@ -122,6 +122,8 @@ SCNHANDLE GetSceneHandle();
 
 //----------------- GLOBAL GLOBAL DATA --------------------
 
+// FIXME: Avoid non-const global vars
+
 bool bEnableMenu;
 
 static bool bInstantScroll = false;
@@ -172,7 +174,7 @@ enum MASTER_LIB_CODES {
 	HIGHEST_LIBCODE
 };
 
-const MASTER_LIB_CODES DW1DEMO_CODES[] = {
+static const MASTER_LIB_CODES DW1DEMO_CODES[] = {
 	ACTORREF, ACTORXPOS, ACTORYPOS, ADDTOPIC, ADDINV1, ADDINV2, AUXSCALE, BACKGROUND,
 	CAMERA, CONTROL, CONVERSATION, CONVTOPIC, HIGHEST_LIBCODE, CURSORXPOS, CURSORYPOS,
 	DECCONVW, DECCURSOR, DECTAGFONT, DECINVW, DECINV1, DECINV2, DECLEAD, DELICON,
@@ -186,7 +188,7 @@ const MASTER_LIB_CODES DW1DEMO_CODES[] = {
 	WALKTAG, RANDOM, TIMER
 };
 
-const MASTER_LIB_CODES DW1_CODES[] = {
+static const MASTER_LIB_CODES DW1_CODES[] = {
 	ACTORATTR, ACTORDIRECTION, ACTORREF, ACTORSCALE, ACTORXPOS,
 	ACTORYPOS, ADDTOPIC, ADDINV1, ADDINV2, ADDOPENINV, AUXSCALE,
 	BACKGROUND, CAMERA, CLOSEINVENTORY, CONTROL, CONVERSATION,
@@ -213,7 +215,7 @@ const MASTER_LIB_CODES DW1_CODES[] = {
 	HIGHEST_LIBCODE
 };
 
-const MASTER_LIB_CODES DW2DEMO_CODES[] = {
+static const MASTER_LIB_CODES DW2DEMO_CODES[] = {
 	ACTORBRIGHTNESS, ACTORDIRECTION, ACTORPALETTE, ACTORPRIORITY, 
 	ACTORREF, ACTORRGB, ACTORSCALE, ACTORXPOS, ACTORYPOS,
 	ADDHIGHLIGHT, ADDINV, ADDINV1, ADDINV2, ADDOPENINV, ADDTOPIC,
@@ -250,7 +252,7 @@ const MASTER_LIB_CODES DW2DEMO_CODES[] = {
 	HIGHEST_LIBCODE
 };
 
-const MASTER_LIB_CODES DW2_CODES[] = {
+static const MASTER_LIB_CODES DW2_CODES[] = {
 	ACTORBRIGHTNESS, ACTORDIRECTION, ACTORPALETTE, ACTORPRIORITY,
 	ACTORREF, ACTORRGB, ACTORSCALE, ACTORXPOS, ACTORYPOS,
 	ADDHIGHLIGHT, ADDINV, ADDINV1, ADDINV2, ADDOPENINV, ADDTOPIC,
@@ -292,6 +294,8 @@ const MASTER_LIB_CODES DW2_CODES[] = {
 
 //----------------- LOCAL GLOBAL DATA --------------------
 
+// FIXME: Avoid non-const global vars
+
 // Saved cursor co-ordinates for control(on) to restore cursor position
 // as it was at control(off).
 // They are global so that MoveCursor(..) has a net effect if it
@@ -303,8 +307,6 @@ static uint32 lastValue = 0;	// used by RandomFn()
 static int scrollNumber = 0;	// used by scroll()
 
 static bool bNotPointedRunning = false;	// Used in Printobj and PrintObjPointed
-
-static COLORREF s_talkfontColor = 0;
 
 //----------------- FORWARD REFERENCES --------------------
 
@@ -427,9 +429,8 @@ static void ScrollMonitorProcess(CORO_PARAM, const void *param) {
  * Poke supplied colour into the DAC queue.
  */
 void SetTextPal(COLORREF col) {
-	s_talkfontColor = col;
 	SetTalkColourRef(col);
-	UpdateDACqueue(TalkColour(), 1, &s_talkfontColor);
+	UpdateDACqueue(TalkColour(), col);
 }
 
 /**
@@ -2588,7 +2589,7 @@ static void Scroll(CORO_PARAM, EXTREME extreme, int xp, int yp, int xIter, int y
 				PlayfieldGetPos(FIELD_WORLD, &Loffset, &Toffset);
 			} while (Loffset != _ctx->x || Toffset != _ctx->y);
 		} else if (TinselV2 && myEscape) {
-			static SCROLL_MONITOR sm;
+			SCROLL_MONITOR sm;
 
 			// Scroll is escapable even though we're not waiting for it
 			sm.x = _ctx->x;

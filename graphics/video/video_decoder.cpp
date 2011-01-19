@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/video_decoder.cpp $
- * $Id: video_decoder.cpp 51725 2010-08-04 08:25:05Z fingolfin $
+ * $Id: video_decoder.cpp 55239 2011-01-14 13:01:57Z mthreepwood $
  *
  */
 
@@ -50,7 +50,7 @@ uint32 VideoDecoder::getElapsedTime() const {
 }
 
 void VideoDecoder::setSystemPalette() {
-	byte *vidPalette = getPalette();
+	const byte *vidPalette = getPalette();
 	byte *sysPalette = new byte[256 * 4];
 
 	for (uint16 i = 0; i < 256; i++) {
@@ -100,6 +100,11 @@ void VideoDecoder::pauseVideo(bool pause) {
 	}
 }
 
+void VideoDecoder::resetPauseStartTime() {
+	if (isPaused())
+		_pauseStartTime = g_system->getMillis();
+}
+
 uint32 FixedRateVideoDecoder::getTimeToNextFrame() const {
 	if (endOfVideo() || _curFrame < 0)
 		return 0;
@@ -119,6 +124,18 @@ uint32 FixedRateVideoDecoder::getFrameBeginTime(uint32 frame) const {
 	Common::Rational beginTime = frame * 1000;
 	beginTime /= getFrameRate();
 	return beginTime.toInt();
+}
+
+VideoTimestamp::VideoTimestamp() : _units(0), _scale(1) {
+}
+
+VideoTimestamp::VideoTimestamp(uint units, uint scale) : _units(units), _scale(scale) {
+	assert(_scale);
+}
+
+uint VideoTimestamp::getUnitsInScale(uint scale) const {
+	assert(scale);
+	return (_scale == scale) ? _units : _units * scale / _scale;
 }
 
 } // End of namespace Graphics

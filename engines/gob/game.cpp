@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/game.cpp $
- * $Id: game.cpp 53492 2010-10-15 13:55:46Z drmccoy $
+ * $Id: game.cpp 55295 2011-01-18 11:51:45Z drmccoy $
  *
  */
 
@@ -324,6 +324,10 @@ void Game::playTot(int16 skipPlay) {
 				WRITE_VAR(14, _vm->_global->_soundFlags);
 				WRITE_VAR(15, _vm->_global->_fakeVideoMode);
 				WRITE_VAR(16, _vm->_global->_language);
+
+				// WORKAROUND: Inca2 seems to depend on that variable to be cleared
+				if (_vm->getGameType() == kGameTypeInca2)
+					WRITE_VAR(59, 0);
 			}
 
 			_vm->_inter->callSub(2);

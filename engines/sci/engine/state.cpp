@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/state.cpp $
- * $Id: state.cpp 52474 2010-08-31 15:50:46Z m_kiewitz $
+ * $Id: state.cpp 55046 2010-12-26 15:28:02Z thebluegr $
  *
  */
 
@@ -106,6 +106,7 @@ void EngineState::reset(bool isRestoring) {
 	_throttleCounter = 0;
 	_throttleLastTime = 0;
 	_throttleTrigger = false;
+	_gameIsBenchmarking = false;
 
 	_lastSaveVirtualId = SAVEGAMEID_OFFICIALRANGE_START;
 	_lastSaveNewId = 0;
@@ -116,6 +117,9 @@ void EngineState::reset(bool isRestoring) {
 
 	scriptStepCounter = 0;
 	scriptGCInterval = GC_INTERVAL;
+
+	_videoState.reset();
+	_syncedAudioOptions = false;
 }
 
 void EngineState::speedThrottler(uint32 neededSleep) {
@@ -307,9 +311,8 @@ Common::String SciEngine::strSplit(const char *str, const char *sep) {
 	kLanguage lang = getSciLanguage();
 	kLanguage subLang = K_LANG_NONE;
 
-	if (SELECTOR(subtitleLang) != -1) {
+	if (SELECTOR(subtitleLang) != -1)
 		subLang = (kLanguage)readSelectorValue(_gamestate->_segMan, _gameObjectAddress, SELECTOR(subtitleLang));
-	}
 
 	kLanguage secondLang;
 	Common::String retval = getSciLanguageString(str, lang, &secondLang);

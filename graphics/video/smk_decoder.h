@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/smk_decoder.h $
- * $Id: smk_decoder.h 53091 2010-10-09 00:17:55Z sylvaintv $
+ * $Id: smk_decoder.h 54928 2010-12-16 01:41:11Z mthreepwood $
  *
  */
 
@@ -65,9 +65,9 @@ public:
 	uint16 getHeight() const { return _surface->h; }
 	uint32 getFrameCount() const { return _frameCount; }
 	uint32 getElapsedTime() const;
-	Surface *decodeNextFrame();
+	const Surface *decodeNextFrame();
 	PixelFormat getPixelFormat() const { return PixelFormat::createFormatCLUT8(); }
-	byte *getPalette() { _dirtyPalette = false; return _palette; }
+	const byte *getPalette() { _dirtyPalette = false; return _palette; }
 	bool hasDirtyPalette() const { return _dirtyPalette; }
 	virtual void handleAudioTrack(byte track, uint32 chunkSize, uint32 unpackedSize);
 

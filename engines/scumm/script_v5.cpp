@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/script_v5.cpp $
- * $Id: script_v5.cpp 53574 2010-10-18 18:56:40Z fingolfin $
+ * $Id: script_v5.cpp 54872 2010-12-11 23:51:50Z athrxx $
  *
  */
 
@@ -2308,6 +2308,10 @@ void ScummEngine_v5::o5_verbOps() {
 			break;
 		case 9:		// SO_VERB_NEW
 			slot = getVerbSlot(verb, 0);
+
+			if (_game.platform == Common::kPlatformFMTowns && _game.version == 3 && slot)
+				continue;
+			
 			if (slot == 0) {
 				for (slot = 1; slot < _numVerbs; slot++) {
 					if (_verbs[slot].verbid == 0)

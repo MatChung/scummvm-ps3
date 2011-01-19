@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/widget.h $
- * $Id: widget.h 51217 2010-07-23 19:36:47Z sev $
+ * $Id: widget.h 55099 2011-01-03 12:23:50Z sev $
  */
 
 #ifndef GUI_WIDGET_H
@@ -196,6 +196,36 @@ public:
 
 protected:
 	void drawWidget();
+};
+
+/* PicButtonWidget */
+class PicButtonWidget : public Widget, public CommandSender {
+	friend class Dialog;	// Needed for the hotkey handling
+protected:
+	uint32	_cmd;
+	uint8	_hotkey;
+public:
+	PicButtonWidget(GuiObject *boss, int x, int y, int w, int h, const char *tooltip = 0, uint32 cmd = 0, uint8 hotkey = 0);
+	PicButtonWidget(GuiObject *boss, const Common::String &name, const char *tooltip = 0, uint32 cmd = 0, uint8 hotkey = 0);
+
+	void setCmd(uint32 cmd)				{ _cmd = cmd; }
+	uint32 getCmd() const				{ return _cmd; }
+
+	void setGfx(const Graphics::Surface *gfx);
+
+	void useAlpha(int alpha) { _alpha = alpha; }
+	void useThemeTransparency(bool enable) { _transparency = enable; }
+
+	void handleMouseUp(int x, int y, int button, int clickCount);
+	void handleMouseEntered(int button)	{ setFlags(WIDGET_HILITED); draw(); }
+	void handleMouseLeft(int button)	{ clearFlags(WIDGET_HILITED); draw(); }
+
+protected:
+	void drawWidget();
+
+	Graphics::Surface _gfx;
+	int _alpha;
+	bool _transparency;
 };
 
 /* CheckboxWidget */

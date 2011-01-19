@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/videoplayer.cpp $
- * $Id: videoplayer.cpp 53984 2010-10-31 20:07:14Z drmccoy $
+ * $Id: videoplayer.cpp 55275 2011-01-17 09:48:42Z drmccoy $
  *
  */
 
@@ -37,7 +37,7 @@
 namespace Gob {
 
 VideoPlayer::Properties::Properties() : type(kVideoTypeTry), sprite(Draw::kFrontSurface),
-	x(-1), y(-1), width(-1), height(-1), flags(kFlagFrontSurface),
+	x(-1), y(-1), width(-1), height(-1), flags(kFlagFrontSurface), switchColorMode(false),
 	startFrame(-1), lastFrame(-1), endFrame(-1), forceSeek(false),
 	breakKey(kShortKeyEscape), palCmd(8), palStart(0), palEnd(255), palFrame(-1),
 	fade(false), waitEndFrame(true), canceled(false) {
@@ -112,6 +112,15 @@ int VideoPlayer::openVideo(bool primary, const Common::String &file, Properties 
 		if (!(video->decoder = openVideo(file, properties)))
 			return -1;
 
+		if (video->decoder->isPaletted() != !_vm->isTrueColor()) {
+			if (!properties.switchColorMode)
+				return -1;
+
+			_vm->setTrueColor(!video->decoder->isPaletted());
+
+			video->decoder->colorModeChanged();
+		}
+
 		// Set the filename
 		video->fileName = file;
 
@@ -151,29 +160,31 @@ int VideoPlayer::openVideo(bool primary, const Common::String &file, Properties 
 				properties.sprite = -1;
 				video->surface.reset();
 				video->decoder->setSurfaceMemory();
-				video->decoder->setXY(0, 0);
+				properties.x = properties.y = 0;
 			} else {
 				video->surface = _vm->_draw->_spritesArray[properties.sprite];
 				video->decoder->setSurfaceMemory(video->surface->getData(),
 						video->surface->getWidth(), video->surface->getHeight(), video->surface->getBPP());
 
 				if (!ownSurf || (ownSurf && screenSize)) {
-					if ((properties.x >= 0) || (properties.y >= 0))
-						video->decoder->setXY((properties.x < 0) ? 0xFFFF : properties.x,
-						                      (properties.y < 0) ? 0xFFFF : properties.y);
-					else
-						video->decoder->setXY();
+					if ((properties.x >= 0) || (properties.y >= 0)) {
+						properties.x = (properties.x < 0) ? 0xFFFF : properties.x;
+						properties.y = (properties.y < 0) ? 0xFFFF : properties.y;
+					} else
+						properties.x = properties.y = -1;
 				} else
-					video->decoder->setXY(0, 0);
+					properties.x = properties.y = 0;
 			}
 
 		} else {
 			properties.sprite = -1;
 			video->surface.reset();
 			video->decoder->setSurfaceMemory();
-			video->decoder->setXY(0, 0);
+			properties.x = properties.y = 0;
 		}
 	}
+
+	video->decoder->setXY(properties.x, properties.y);
 
 	if (primary)
 		_needBlit = (properties.flags & kFlagUseBackSurfaceContent) && (properties.sprite == Draw::kFrontSurface);
@@ -325,7 +336,7 @@ bool VideoPlayer::playFrame(int slot, Properties &properties) {
 			_vm->_draw->forceBlit();
 	}
 
-	Graphics::Surface *surface = video->decoder->decodeNextFrame();
+	const Graphics::Surface *surface = video->decoder->decodeNextFrame();
 
 	WRITE_VAR(11, video->decoder->getCurFrame());
 
@@ -500,7 +511,7 @@ bool VideoPlayer::hasEmbeddedFile(const Common::String &fileName, int slot) cons
 	return video->decoder->hasEmbeddedFile(fileName);
 }
 
-Common::MemoryReadStream *VideoPlayer::getEmbeddedFile(const Common::String &fileName, int slot) {
+Common::SeekableReadStream *VideoPlayer::getEmbeddedFile(const Common::String &fileName, int slot) {
 	const Video *video = getVideoBySlot(slot);
 	if (!video)
 		return 0;
@@ -554,7 +565,7 @@ void VideoPlayer::writeVideoInfo(const Common::String &file, int16 varX, int16 v
 
 bool VideoPlayer::copyFrame(int slot, byte *dest,
 		uint16 left, uint16 top, uint16 width, uint16 height,
-		uint16 x, uint16 y, uint16 pitch, int16 transp) const {
+		uint16 x, uint16 y, uint16 pitch, uint8 bpp, int16 transp) const {
 
 	const Video *video = getVideoBySlot(slot);
 	if (!video)
@@ -563,6 +574,8 @@ bool VideoPlayer::copyFrame(int slot, byte *dest,
 	const Graphics::Surface *surface = video->decoder->getSurface();
 	if (!surface)
 		return false;
+
+	assert(surface->bytesPerPixel == bpp);
 
 	int32 w = MIN<int32>(width , surface->w);
 	int32 h = MIN<int32>(height, surface->h);
@@ -576,7 +589,7 @@ bool VideoPlayer::copyFrame(int slot, byte *dest,
 		if ((x == 0) && (left == 0) && (pitch == surface->pitch) && (width == surface->w)) {
 			// Dimensions fit, we can copy everything at once
 
-			memcpy(dst, src, w * h);
+			memcpy(dst, src, w * h * bpp);
 			return true;
 		}
 
@@ -586,7 +599,7 @@ bool VideoPlayer::copyFrame(int slot, byte *dest,
 			const byte *srcRow = src;
 						byte *dstRow = dst;
 
-			memcpy(dstRow, srcRow, w);
+			memcpy(dstRow, srcRow, w * bpp);
 
 			src += surface->pitch;
 			dst +=          pitch;
@@ -596,6 +609,8 @@ bool VideoPlayer::copyFrame(int slot, byte *dest,
 	}
 
 	// Copy pixel-by-pixel
+
+	assert(bpp == 1);
 
 	while (h-- > 0) {
 		const byte *srcRow = src;
@@ -740,7 +755,7 @@ Graphics::CoktelDecoder *VideoPlayer::openVideo(const Common::String &file, Prop
 }
 
 void VideoPlayer::copyPalette(const Video &video, int16 palStart, int16 palEnd) {
-	if (!video.decoder->hasPalette())
+	if (!video.decoder->hasPalette() || !video.decoder->isPaletted())
 		return;
 
 	if (palStart < 0)

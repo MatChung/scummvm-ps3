@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/sword25.cpp $
- * $Id: sword25.cpp 53901 2010-10-28 09:51:56Z dreammaster $
+ * $Id: sword25.cpp 54184 2010-11-10 04:30:24Z tdhs $
  *
  */
 
@@ -61,9 +61,13 @@ Sword25Engine::Sword25Engine(OSystem *syst, const ADGameDescription *gameDesc):
 	DebugMan.addDebugChannel(kDebugScript, "Script", "Script debug level");
 	DebugMan.addDebugChannel(kDebugScript, "Scripts", "Script debug level");
 	DebugMan.addDebugChannel(kDebugSound, "Sound", "Sound debug level");
+
+	_console = new Sword25Console(this);
 }
 
 Sword25Engine::~Sword25Engine() {
+	DebugMan.clearAllDebugChannels();
+	delete _console;
 }
 
 Common::Error Sword25Engine::run() {

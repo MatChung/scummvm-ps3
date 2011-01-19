@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/wince-sdl.h $
- * $Id: wince-sdl.h 48229 2010-03-10 21:01:44Z fingolfin $
+ * $Id: wince-sdl.h 54543 2010-11-28 18:18:15Z fingolfin $
  *
  */
 
@@ -71,8 +71,8 @@ public:
 	// Overloaded from OSystem
 	void engineInit();
 	void getTimeAndDate(TimeDate &t) const;
-	virtual Common::SeekableReadStream *createConfigReadStream();
-	virtual Common::WriteStream *createConfigWriteStream();
+
+	virtual Common::String getDefaultConfigFileName();
 
 
 	// Overloaded from SDL_Common (FIXME)
@@ -130,8 +130,6 @@ protected:
 	bool setGraphicsMode(int mode);
 	//int getGraphicsMode() const;
 	int getDefaultGraphicsMode() const;
-
-	bool openCD(int drive);
 
 	bool hasFeature(Feature f);
 	void setFeatureState(Feature f, bool enable);

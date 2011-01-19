@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/introproc_saga2.cpp $
- * $Id: introproc_saga2.cpp 49080 2010-05-18 14:57:02Z thebluegr $
+ * $Id: introproc_saga2.cpp 54927 2010-12-16 01:35:13Z mthreepwood $
  *
  */
 
@@ -103,7 +103,7 @@ void Scene::playMovie(const char *filename) {
 
 	while (!_vm->shouldQuit() && !smkDecoder->endOfVideo() && !skipVideo) {
 		if (smkDecoder->needsUpdate()) {
-			Graphics::Surface *frame = smkDecoder->decodeNextFrame();
+			const Graphics::Surface *frame = smkDecoder->decodeNextFrame();
 			if (frame) {
 				_vm->_system->copyRectToScreen((byte *)frame->pixels, frame->pitch, x, y, frame->w, frame->h);
 

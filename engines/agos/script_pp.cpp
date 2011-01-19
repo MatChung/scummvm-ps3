@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/script_pp.cpp $
- * $Id: script_pp.cpp 54084 2010-11-05 03:30:45Z Kirben $
+ * $Id: script_pp.cpp 54288 2010-11-17 12:22:08Z fingolfin $
  *
  */
 
@@ -281,7 +281,7 @@ void AGOSEngine_PuzzlePack::setupOpcodes() {
 		OPCODE(opp_setPathValues),
 		OPCODE(off_restartClock),
 		OPCODE(opp_pauseClock),
-		OPCODE(off_setColour),
+		OPCODE(off_setColor),
 	};
 
 	_opcodesPuzzlePack = opcodes;

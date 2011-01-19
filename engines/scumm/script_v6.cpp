@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/script_v6.cpp $
- * $Id: script_v6.cpp 53729 2010-10-23 06:27:16Z Kirben $
+ * $Id: script_v6.cpp 55091 2011-01-02 14:06:42Z strangerke $
  *
  */
 
@@ -41,9 +41,6 @@
 #include "scumm/sound.h"
 #include "scumm/util.h"
 #include "scumm/verbs.h"
-
-#include "sound/mididrv.h"
-#include "sound/mixer.h"
 
 namespace Scumm {
 
@@ -381,15 +378,17 @@ ScummEngine_v6::ArrayHeader *ScummEngine_v6::getArray(int array) {
 	if (!ah)
 		return 0;
 
-	// Workaround for a long standing bug where we saved array headers in native
-	// endianness, instead of a fixed endianness. We now always store the
-	// dimensions in little endian byte order. But to stay compatible with older
-	// savegames, we try to detect savegames which were created on a big endian
-	// system and convert them to the proper little endian format on the fly.
-	if ((FROM_LE_16(ah->dim1) & 0xF000) || (FROM_LE_16(ah->dim2) & 0xF000) || (FROM_LE_16(ah->type) & 0xFF00)) {
-		SWAP16(ah->dim1);
-		SWAP16(ah->dim2);
-		SWAP16(ah->type);
+	if (_game.heversion == 0) {
+		// Workaround for a long standing bug where we saved array headers in native
+		// endianness, instead of a fixed endianness. We now always store the
+		// dimensions in little endian byte order. But to stay compatible with older
+		// savegames, we try to detect savegames which were created on a big endian
+		// system and convert them to the proper little endian format on the fly.
+		if ((FROM_LE_16(ah->dim1) & 0xF000) || (FROM_LE_16(ah->dim2) & 0xF000) || (FROM_LE_16(ah->type) & 0xFF00)) {
+			SWAP16(ah->dim1);
+			SWAP16(ah->dim2);
+			SWAP16(ah->type);
+		}
 	}
 
 	return ah;

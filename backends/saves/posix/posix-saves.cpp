@@ -19,9 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/saves/posix/posix-saves.cpp $
- * $Id: posix-saves.cpp 45777 2009-11-09 14:43:05Z aquadran $
+ * $Id: posix-saves.cpp 54573 2010-11-29 16:18:43Z fingolfin $
  *
  */
+
+#include "common/scummsys.h"
 
 #if defined(UNIX) && !defined(DISABLE_DEFAULT_SAVEFILEMANAGER)
 

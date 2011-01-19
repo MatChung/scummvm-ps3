@@ -19,67 +19,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/ds/arm9/source/gbampsave.h $
- * $Id: gbampsave.h 50741 2010-07-07 23:22:53Z fingolfin $
+ * $Id: gbampsave.h 54584 2010-11-29 18:48:43Z lordhoto $
  *
  */
 
 #ifndef _GBAMPSAVE_H_
 #define _GBAMPSAVE_H_
 
-#include "common/system.h"
 #include "common/savefile.h"
-#include "backends/fs/ds/ds-fs.h"
-
-#define SAVE_BUFFER_SIZE 100000
-
-class GBAMPSaveFile : public Common::InSaveFile, public Common::OutSaveFile {
-	DS::fileHandle *handle;
-	char buffer[SAVE_BUFFER_SIZE];
-	int bufferPos;
-	int saveSize;
-	int flushed;
-
-public:
-	GBAMPSaveFile(char *name, bool saveOrLoad);
-	virtual ~GBAMPSaveFile();
-
-	virtual uint32 read(void *buf, uint32 size);
-	virtual uint32 write(const void *buf, uint32 size);
-
-	virtual bool eos() const;
-	virtual bool skip(uint32 bytes);
-
-	virtual int32 pos() const;
-	virtual int32 size() const;
-	virtual bool seek(int32 pos, int whence);
-
-	void flushSaveBuffer();
-
-	virtual bool isOpen() const {
-		return handle != 0;
-	}
-};
-
 
 class GBAMPSaveFileManager : public Common::SaveFileManager {
 public:
-	GBAMPSaveFileManager();
-	~GBAMPSaveFileManager();
+	virtual Common::OutSaveFile *openForSaving(const Common::String &filename);
+	virtual Common::InSaveFile *openForLoading(const Common::String &filename);
 
-//	static GBAMPSaveFileManager *instance() { return instancePtr; }
-
-	GBAMPSaveFile *openSavefile(const char *filename, bool saveOrLoad);
-
-	virtual Common::OutSaveFile *openForSaving(const Common::String &filename) { return openSavefile(filename.c_str(), true); }
-	virtual Common::InSaveFile *openForLoading(const Common::String &filename) { return openSavefile(filename.c_str(), false); }
-
-	virtual bool removeSavefile(const Common::String &filename) { return false; } // TODO: Implement this
+	virtual bool removeSavefile(const Common::String &filename);
 	virtual Common::StringArray listSavefiles(const Common::String &pattern);
-
-	void deleteFile(const Common::String &name);
-	void listFiles();
-
-	const char *getSavePath() const;
 };
 
 #endif

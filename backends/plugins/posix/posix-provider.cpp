@@ -19,9 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/plugins/posix/posix-provider.cpp $
- * $Id: posix-provider.cpp 34716 2008-10-02 16:58:59Z fingolfin $
+ * $Id: posix-provider.cpp 55061 2010-12-29 15:25:21Z Bluddy $
  *
  */
+
+#include "common/scummsys.h"
 
 #if defined(DYNAMIC_MODULES) && defined(UNIX)
 
@@ -35,7 +37,6 @@
 class POSIXPlugin : public DynamicPlugin {
 protected:
 	void *_dlHandle;
-	Common::String _filename;
 
 	virtual VoidFunc findSymbol(const char *symbol) {
 		void *func = dlsym(_dlHandle, symbol);
@@ -54,7 +55,7 @@ protected:
 
 public:
 	POSIXPlugin(const Common::String &filename)
-		: _dlHandle(0), _filename(filename) {}
+		: DynamicPlugin(filename), _dlHandle(0) {}
 
 	bool loadPlugin() {
 		assert(!_dlHandle);

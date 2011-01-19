@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/inter_v1.cpp $
- * $Id: inter_v1.cpp 54061 2010-11-04 06:28:51Z tdhs $
+ * $Id: inter_v1.cpp 55287 2011-01-18 07:02:42Z drmccoy $
  *
  */
 
@@ -831,7 +831,7 @@ bool Inter_v1::o1_if(OpFuncParams &params) {
 
 		_vm->_game->_script->skip(_vm->_game->_script->peekUint16(2) + 2);
 
-		debugC(5, kDebugGameFlow, "cmd = %d", (int16) _vm->_game->_script->peekByte());
+		debugC(6, kDebugGameFlow, "cmd = %d", (int16) _vm->_game->_script->peekByte());
 
 		cmd = _vm->_game->_script->readByte() >> 4;
 		if (cmd != 12)
@@ -841,7 +841,7 @@ bool Inter_v1::o1_if(OpFuncParams &params) {
 	} else {
 		_vm->_game->_script->skip(_vm->_game->_script->peekUint16(2) + 2);
 
-		debugC(5, kDebugGameFlow, "cmd = %d", (int16) _vm->_game->_script->peekByte());
+		debugC(6, kDebugGameFlow, "cmd = %d", (int16) _vm->_game->_script->peekByte());
 
 		cmd = _vm->_game->_script->readByte() >> 4;
 		if (cmd != 12)

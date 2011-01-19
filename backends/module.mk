@@ -2,17 +2,36 @@ MODULE := backends
 
 MODULE_OBJS := \
 	base-backend.o \
+	modular-backend.o \
+	audiocd/default/default-audiocd.o \
+	audiocd/sdl/sdl-audiocd.o \
 	events/default/default-events.o \
+	events/dinguxsdl/dinguxsdl-events.o \
+	events/gp2xsdl/gp2xsdl-events.o \
+	events/linuxmotosdl/linuxmotosdl-events.o \
+	events/samsungtvsdl/samsungtvsdl-events.o \
+	events/sdl/sdl-events.o \
+	events/symbiansdl/symbiansdl-events.o \
 	fs/abstract-fs.o \
 	fs/stdiostream.o \
 	fs/amigaos4/amigaos4-fs-factory.o \
 	fs/posix/posix-fs-factory.o \
 	fs/symbian/symbian-fs-factory.o \
 	fs/windows/windows-fs-factory.o \
+	graphics/dinguxsdl/dinguxsdl-graphics.o \
+	graphics/gp2xsdl/gp2xsdl-graphics.o \
+	graphics/linuxmotosdl/linuxmotosdl-graphics.o \
+	graphics/opengl/glerrorcheck.o \
+	graphics/opengl/gltexture.o \
+	graphics/opengl/opengl-graphics.o \
+	graphics/openglsdl/openglsdl-graphics.o \
+	graphics/sdl/sdl-graphics.o \
+	graphics/symbiansdl/symbiansdl-graphics.o \
 	keymapper/action.o \
 	keymapper/keymap.o \
 	keymapper/keymapper.o \
 	keymapper/remap-dialog.o \
+	log/log.o \
 	midi/alsa.o \
 	midi/camd.o \
 	midi/coreaudio.o \
@@ -22,12 +41,17 @@ MODULE_OBJS := \
 	midi/timidity.o \
 	midi/dmedia.o \
 	midi/windows.o \
+	mixer/doublebuffersdl/doublebuffersdl-mixer.o \
+	mixer/sdl/sdl-mixer.o \
+	mixer/symbiansdl/symbiansdl-mixer.o \
+	mutex/sdl/sdl-mutex.o \
 	plugins/elf/elf-loader.o \
 	plugins/elf/mips-loader.o \
 	plugins/elf/shorts-segment-manager.o \
 	plugins/elf/ppc-loader.o \
 	plugins/elf/arm-loader.o \
 	plugins/elf/elf-provider.o \
+	plugins/elf/memory-manager.o \
 	plugins/elf/version.o \
 	plugins/posix/posix-provider.o \
 	plugins/sdl/sdl-provider.o \
@@ -36,6 +60,7 @@ MODULE_OBJS := \
 	saves/default/default-saves.o \
 	saves/posix/posix-saves.o \
 	timer/default/default-timer.o \
+	timer/sdl/sdl-timer.o \
 	vkeybd/image-map.o \
 	vkeybd/polygon.o \
 	vkeybd/virtual-keyboard.o \

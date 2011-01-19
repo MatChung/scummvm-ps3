@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/globals.h $
- * $Id: globals.h 54034 2010-11-02 00:15:18Z dreammaster $
+ * $Id: globals.h 54563 2010-11-28 23:39:02Z fingolfin $
  *
  */
 
@@ -30,9 +30,12 @@
 #include "common/array.h"
 #include "common/hashmap.h"
 #include "common/rect.h"
-#include "common/file.h"
 #include "common/list.h"
 #include "common/ptr.h"
+
+namespace Common {
+class SeekableReadStream;
+}
 
 namespace M4 {
 

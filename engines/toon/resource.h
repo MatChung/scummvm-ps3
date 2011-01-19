@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/resource.h $
-* $Id: resource.h 53098 2010-10-09 11:11:26Z lordhoto $
+* $Id: resource.h 54219 2010-11-12 22:31:04Z sylvaintv $
 *
 */
 
@@ -58,8 +58,6 @@ protected:
 	uint32 _numFiles;
 	Common::Array<File> _files;
 	Common::File *_fileHandle;
-
-
 };
 
 class ToonEngine;
@@ -67,15 +65,17 @@ class ToonEngine;
 class Resources {
 public:
 	Resources(ToonEngine *vm);
+	~Resources();
 	void openPackage(Common::String file, bool preloadEntirePackage);
 	void closePackage(Common::String fileName);
 	Common::SeekableReadStream *openFile(Common::String file);
-	uint8 *getFileData(Common::String fileName, uint32 *fileSize);
+	uint8 *getFileData(Common::String fileName, uint32 *fileSize); // this memory must be copied to your own structures!
+	void purgeFileData();
 
 protected:
 	ToonEngine *_vm;
+	Common::Array<uint8 *> _allocatedFileData;
 	Common::Array<PakFile *> _pakFiles;
-
 };
 
 } // End of namespace Toon

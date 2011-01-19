@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/music.cpp $
- * $Id: music.cpp 54011 2010-11-01 16:04:47Z fingolfin $
+ * $Id: music.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -30,10 +30,13 @@
 #include "sound/audiostream.h"
 #include "sound/mididrv.h"
 #include "sound/midiparser.h"
-#include "sound/audiocd.h"
 #include "sound/decoders/adpcm.h"
+
+#include "backends/audiocd/audiocd.h"
+
 #include "common/config-manager.h"
 #include "common/file.h"
+#include "common/memstream.h"
 
 #include "tinsel/config.h"
 #include "tinsel/sound.h"
@@ -59,6 +62,8 @@ struct SOUND_BUFFER {
 	uint8 *pDat;		// pointer to actual buffer
 	uint32 size;		// size of the buffer
 };
+
+// FIXME: Avoid non-const global vars
 
 // get set when music driver is installed
 //static MDI_DRIVER *mDriver;
@@ -166,7 +171,7 @@ bool PlayMidiSequence(uint32 dwFileOffset, bool bLoop) {
 	}
 
 	// the index and length of the last tune loaded
-	static uint32 dwLastMidiIndex = 0;
+	static uint32 dwLastMidiIndex = 0;	// FIXME: Avoid non-const global vars
 	//static uint32 dwLastSeqLen;
 
 	uint32 dwSeqLen = 0;	// length of the sequence
@@ -191,11 +196,11 @@ bool PlayMidiSequence(uint32 dwFileOffset, bool bLoop) {
 				currentLoop = bLoop;
 
 				// try to play track, but don't fall back to a true CD
-				AudioCD.play(track, bLoop ? -1 : 1, 0, 0, true);
+				g_system->getAudioCDManager()->play(track, bLoop ? -1 : 1, 0, 0, true);
 
 				// Check if an enhanced audio track is being played.
 				// If it is, stop here and don't load a MIDI track
-				if (AudioCD.isPlaying()) {
+				if (g_system->getAudioCDManager()->isPlaying()) {
 					return true;
 				}
 			}
@@ -270,7 +275,7 @@ bool PlayMidiSequence(uint32 dwFileOffset, bool bLoop) {
  */
 bool MidiPlaying() {
 	if (_vm->getFeatures() & GF_ENHANCED_AUDIO_SUPPORT) {
-		if (AudioCD.isPlaying())
+		if (g_system->getAudioCDManager()->isPlaying())
 			return true;
 	}
 	return _vm->_midiMusic->isPlaying();
@@ -284,7 +289,7 @@ bool StopMidi() {
 	currentLoop = false;
 
 	if (_vm->getFeatures() & GF_ENHANCED_AUDIO_SUPPORT) {
-		AudioCD.stop();
+		g_system->getAudioCDManager()->stop();
 	}
 
 	_vm->_midiMusic->stop();
@@ -306,7 +311,7 @@ int GetMidiVolume() {
 void SetMidiVolume(int vol) {
 	assert(vol >= 0 && vol <= Audio::Mixer::kMaxChannelVolume);
 
-	static int priorVolMusic = 0;
+	static int priorVolMusic = 0;	// FIXME: Avoid non-const global vars
 
 	if (vol == 0 && priorVolMusic == 0)	{
 		// Nothing to do
@@ -831,7 +836,7 @@ bool PCMMusicPlayer::getNextChunk() {
 	uint32 sampleOffset, sampleLength, sampleCLength;
 	Common::File file;
 	byte *buffer;
-	Common::MemoryReadStream *sampleStream;
+	Common::SeekableReadStream *sampleStream;
 
 	switch (_state) {
 	case S_NEW:

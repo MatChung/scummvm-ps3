@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/vm.cpp $
- * $Id: vm.cpp 54037 2010-11-02 09:49:47Z fingolfin $
+ * $Id: vm.cpp 55250 2011-01-15 12:18:13Z thebluegr $
  *
  */
 
@@ -34,6 +34,7 @@
 #include "sci/engine/features.h"
 #include "sci/engine/state.h"
 #include "sci/engine/kernel.h"
+#include "sci/engine/object.h"
 #include "sci/engine/script.h"
 #include "sci/engine/seg_manager.h"
 #include "sci/engine/selector.h"	// for SELECTOR
@@ -94,7 +95,7 @@ static ExecStack *add_exec_stack_varselector(Common::List<ExecStack> &execStack,
 
 // validation functionality
 
-static reg_t &validate_property(Object *obj, int index) {
+static reg_t &validate_property(EngineState *s, Object *obj, int index) {
 	// A static dummy reg_t, which we return if obj or index turn out to be
 	// invalid. Note that we cannot just return NULL_REG, because client code
 	// may modify the value of the returned reg_t.
@@ -105,10 +106,15 @@ static reg_t &validate_property(Object *obj, int index) {
 	if (!obj)
 		error("validate_property: Sending to disposed object");
 
+	if (getSciVersion() == SCI_VERSION_3)
+		index = obj->locateVarSelector(s->_segMan, index);
+	else
+		index >>= 1;
+
 	if (index < 0 || (uint)index >= obj->getVarCount()) {
 		// This is same way sierra does it and there are some games, that contain such scripts like
 		//  iceman script 998 (fred::canBeHere, executed right at the start)
-		debugC(2, kDebugLevelVM, "[VM] Invalid property #%d (out of [0..%d]) requested!",
+		debugC(kDebugLevelVM, "[VM] Invalid property #%d (out of [0..%d]) requested!",
 			index, obj->getVarCount());
 		return dummyReg;
 	}
@@ -159,8 +165,8 @@ static bool validate_variable(reg_t *r, reg_t *stack_base, int type, int max, in
 				error("%s. [VM] Access would be outside even of the stack (%d); access denied", txt.c_str(), total_offset);
 				return false;
 			} else {
-				debugC(2, kDebugLevelVM, "%s", txt.c_str());
-				debugC(2, kDebugLevelVM, "[VM] Access within stack boundaries; access granted.");
+				debugC(kDebugLevelVM, "%s", txt.c_str());
+				debugC(kDebugLevelVM, "[VM] Access within stack boundaries; access granted.");
 				return true;
 			}
 		}
@@ -229,7 +235,7 @@ static reg_t validate_read_var(reg_t *r, reg_t *stack_base, int type, int max, i
 			case VAR_PARAM:
 				// Out-of-bounds read for a parameter that goes onto stack and hits an uninitialized temp
 				//  We return 0 currently in that case
-				debugC(2, kDebugLevelVM, "[VM] Read for a parameter goes out-of-bounds, onto the stack and gets uninitialized temp");
+				debugC(kDebugLevelVM, "[VM] Read for a parameter goes out-of-bounds, onto the stack and gets uninitialized temp");
 				return NULL_REG;
 			default:
 				break;
@@ -280,6 +286,13 @@ static void validate_write_var(reg_t *r, reg_t *stack_base, int type, int max, i
 			value.segment = 0;
 
 		r[index] = value;
+
+		// If the game is trying to change its speech/subtitle settings, apply the ScummVM audio
+		// options first, if they haven't been applied yet
+		if (type == VAR_GLOBAL && index == 90 && !g_sci->getEngineState()->_syncedAudioOptions) {
+			g_sci->syncIngameAudioOptions();
+			g_sci->getEngineState()->_syncedAudioOptions = true;
+		}
 	}
 }
 
@@ -323,7 +336,11 @@ ExecStack *execute_method(EngineState *s, uint16 script, uint16 pubfunct, StackP
 		scr = s->_segMan->getScript(seg);
 	}
 
-	const int temp = scr->validateExportFunc(pubfunct);
+	int temp = scr->validateExportFunc(pubfunct, false);
+
+	if (getSciVersion() == SCI_VERSION_3)
+		temp += scr->getCodeBlockOffset();
+
 	if (!temp) {
 #ifdef ENABLE_SCI32
 		// HACK: Temporarily switch to a warning in SCI32 games until we can figure out why Torin has
@@ -378,18 +395,13 @@ struct CallsStruct {
 };
 
 bool SciEngine::checkSelectorBreakpoint(BreakpointType breakpointType, reg_t send_obj, int selector) {
-	char method_name[256];
+	Common::String methodName = _gamestate->_segMan->getObjectName(send_obj);
+	methodName += ("::" + getKernel()->getSelectorName(selector));
 
-	sprintf(method_name, "%s::%s", _gamestate->_segMan->getObjectName(send_obj), getKernel()->getSelectorName(selector).c_str());
-
-	Common::List<Breakpoint>::const_iterator bp;
-	for (bp = _debugState._breakpoints.begin(); bp != _debugState._breakpoints.end(); ++bp) {
-		int cmplen = bp->name.size();
-		if (bp->name.lastChar() != ':')
-			cmplen = 256;
-
-		if (bp->type == breakpointType && !strncmp(bp->name.c_str(), method_name, cmplen)) {
-			_console->DebugPrintf("Break on %s (in [%04x:%04x])\n", method_name, PRINT_REG(send_obj));
+	Common::List<Breakpoint>::const_iterator bpIter;
+	for (bpIter = _debugState._breakpoints.begin(); bpIter != _debugState._breakpoints.end(); ++bpIter) {
+		if ((*bpIter).type == breakpointType && (*bpIter).name == methodName) {
+			_console->DebugPrintf("Break on %s (in [%04x:%04x])\n", methodName.c_str(), PRINT_REG(send_obj));
 			_debugState.debugging = true;
 			_debugState.breakpointWasHit = true;
 			return true;
@@ -630,7 +642,6 @@ static reg_t pointer_add(EngineState *s, reg_t base, int offset) {
 	case SEG_TYPE_DYNMEM:
 		base.offset += offset;
 		return base;
-
 	default:
 		// FIXME: Changed this to warning, because iceman does this during dancing with girl.
 		// Investigate why that is so and either fix the underlying issue or implement a more
@@ -884,6 +895,22 @@ int readPMachineInstruction(const byte *src, byte &extOpcode, int16 opparams[4])
 		case Script_Invalid:
 		default:
 			error("opcode %02x: Invalid", extOpcode);
+		}
+	}
+
+	// Special handling of the op_line opcode
+	if (opcode == op_pushSelf) {
+		// Compensate for a bug in non-Sierra compilers, which seem to generate
+		// pushSelf instructions with the low bit set. This makes the following
+		// heuristic fail and leads to endless loops and crashes. Our
+		// interpretation of this seems correct, as other SCI tools, like for
+		// example SCI Viewer, have issues with these scripts (e.g. script 999
+		// in Circus Quest). Fixes bug #3038686.
+		if (!(extOpcode & 1) || g_sci->getGameId() == GID_FANMADE) {
+			// op_pushSelf: no adjustment necessary
+		} else {
+			// Debug opcode op_file, skip null-terminated string (file name)
+			while (src[offset++]) {}
 		}
 	}
 
@@ -1552,7 +1579,19 @@ void run_vm(EngineState *s) {
 
 		case 0x26: // (38)
 		case 0x27: // (39)
-			error("Dummy opcode 0x%x called", opcode);	// should never happen
+			if (getSciVersion() == SCI_VERSION_3) {
+				if (extOpcode == 0x4c)
+					s->r_acc = obj->getInfoSelector();
+				else if (extOpcode == 0x4d)
+					PUSH32(obj->getInfoSelector());
+				else if (extOpcode == 0x4e)
+					s->r_acc = obj->getSuperClassSelector();	// TODO: is this correct?
+				// TODO: There are also opcodes in
+				// here to get the superclass, and possibly the species too.
+				else
+					error("Dummy opcode 0x%x called", opcode);	// should never happen
+			} else
+				error("Dummy opcode 0x%x called", opcode);	// should never happen
 			break;
 
 		case op_class: // 0x28 (40)
@@ -1650,27 +1689,27 @@ void run_vm(EngineState *s) {
 
 		case op_pToa: // 0x31 (49)
 			// Property To Accumulator
-			s->r_acc = validate_property(obj, (opparams[0] >> 1));
+			s->r_acc = validate_property(s, obj, opparams[0]);
 			break;
 
 		case op_aTop: // 0x32 (50)
 			// Accumulator To Property
-			validate_property(obj, (opparams[0] >> 1)) = s->r_acc;
+			validate_property(s, obj, opparams[0]) = s->r_acc;
 			break;
 
 		case op_pTos: // 0x33 (51)
 			// Property To Stack
-			PUSH32(validate_property(obj, opparams[0] >> 1));
+			PUSH32(validate_property(s, obj, opparams[0]));
 			break;
 
 		case op_sTop: // 0x34 (52)
 			// Stack To Property
-			validate_property(obj, (opparams[0] >> 1)) = POP32();
+			validate_property(s, obj, opparams[0]) = POP32();
 			break;
 
 		case op_ipToa: { // 0x35 (53)
 			// Increment Property and copy To Accumulator
-			reg_t &opProperty = validate_property(obj, opparams[0] >> 1);
+			reg_t &opProperty = validate_property(s, obj, opparams[0]);
 			uint16 valueProperty;
 			if (validate_unsignedInteger(opProperty, valueProperty))
 				s->r_acc = make_reg(0, valueProperty + 1);
@@ -1682,7 +1721,7 @@ void run_vm(EngineState *s) {
 
 		case op_dpToa: { // 0x36 (54)
 			// Decrement Property and copy To Accumulator
-			reg_t &opProperty = validate_property(obj, opparams[0] >> 1);
+			reg_t &opProperty = validate_property(s, obj, opparams[0]);
 			uint16 valueProperty;
 			if (validate_unsignedInteger(opProperty, valueProperty))
 				s->r_acc = make_reg(0, valueProperty - 1);
@@ -1694,7 +1733,7 @@ void run_vm(EngineState *s) {
 
 		case op_ipTos: { // 0x37 (55)
 			// Increment Property and push to Stack
-			reg_t &opProperty = validate_property(obj, opparams[0] >> 1);
+			reg_t &opProperty = validate_property(s, obj, opparams[0]);
 			uint16 valueProperty;
 			if (validate_unsignedInteger(opProperty, valueProperty))
 				valueProperty++;
@@ -1707,7 +1746,7 @@ void run_vm(EngineState *s) {
 
 		case op_dpTos: { // 0x38 (56)
 			// Decrement Property and push to Stack
-			reg_t &opProperty = validate_property(obj, opparams[0] >> 1);
+			reg_t &opProperty = validate_property(s, obj, opparams[0]);
 			uint16 valueProperty;
 			if (validate_unsignedInteger(opProperty, valueProperty))
 				valueProperty--;
@@ -1723,19 +1762,27 @@ void run_vm(EngineState *s) {
 			s->r_acc.segment = s->xs->addr.pc.segment;
 
 			switch (g_sci->_features->detectLofsType()) {
-			case SCI_VERSION_1_1:
-				s->r_acc.offset = opparams[0] + local_script->getScriptSize();
+			case SCI_VERSION_0_EARLY:
+				s->r_acc.offset = s->xs->addr.pc.offset + opparams[0];
 				break;
 			case SCI_VERSION_1_MIDDLE:
 				s->r_acc.offset = opparams[0];
 				break;
+			case SCI_VERSION_1_1:
+				s->r_acc.offset = opparams[0] + local_script->getScriptSize();
+				break;
+			case SCI_VERSION_3:
+				// In theory this can break if the variant with a one-byte argument is
+				// used. For now, assume it doesn't happen.
+				s->r_acc.offset = local_script->relocateOffsetSci3(s->xs->addr.pc.offset-2);
+				break;
 			default:
-				s->r_acc.offset = s->xs->addr.pc.offset + opparams[0];
+				error("Unknown lofs type");
 			}
 
 			if (s->r_acc.offset >= scr->getBufSize()) {
 				error("VM: lofsa operation overflowed: %04x:%04x beyond end"
-				          " of script (at %04x)\n", PRINT_REG(s->r_acc), scr->getBufSize());
+				          " of script (at %04x)", PRINT_REG(s->r_acc), scr->getBufSize());
 			}
 			break;
 
@@ -1744,14 +1791,20 @@ void run_vm(EngineState *s) {
 			r_temp.segment = s->xs->addr.pc.segment;
 
 			switch (g_sci->_features->detectLofsType()) {
-			case SCI_VERSION_1_1:
-				r_temp.offset = opparams[0] + local_script->getScriptSize();
+			case SCI_VERSION_0_EARLY:
+				r_temp.offset = s->xs->addr.pc.offset + opparams[0];
 				break;
 			case SCI_VERSION_1_MIDDLE:
 				r_temp.offset = opparams[0];
 				break;
+			case SCI_VERSION_1_1:
+				r_temp.offset = opparams[0] + local_script->getScriptSize();
+				break;
+			case SCI_VERSION_3:
+				r_temp.offset = opparams[0];
+				break;
 			default:
-				r_temp.offset = s->xs->addr.pc.offset + opparams[0];
+				error("Unknown lofs type");
 			}
 
 			if (r_temp.offset >= scr->getBufSize()) {
@@ -1774,12 +1827,16 @@ void run_vm(EngineState *s) {
 			break;
 
 		case op_pushSelf: // 0x3e (62)
-			if (!(extOpcode & 1)) {
+			// Compensate for a bug in non-Sierra compilers, which seem to generate
+			// pushSelf instructions with the low bit set. This makes the following
+			// heuristic fail and leads to endless loops and crashes. Our
+			// interpretation of this seems correct, as other SCI tools, like for
+			// example SCI Viewer, have issues with these scripts (e.g. script 999
+			// in Circus Quest). Fixes bug #3038686.
+			if (!(extOpcode & 1) || g_sci->getGameId() == GID_FANMADE) {
 				PUSH32(s->xs->objp);
 			} else {
-				// Debug opcode op_file, skip null-terminated string (file name)
-				const byte *code_buf = scr->getBuf();
-				while (code_buf[s->xs->addr.pc.offset++]) ;
+				// Debug opcode op_file
 			}
 			break;
 

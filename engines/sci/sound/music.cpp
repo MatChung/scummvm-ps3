@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/sound/music.cpp $
- * $Id: music.cpp 53613 2010-10-19 14:53:39Z m_kiewitz $
+ * $Id: music.cpp 55247 2011-01-15 09:28:42Z thebluegr $
  *
  */
 
@@ -36,10 +36,12 @@
 #include "sci/sound/midiparser_sci.h"
 #include "sci/sound/music.h"
 
+//#define DISABLE_REMAPPING
+
 namespace Sci {
 
 SciMusic::SciMusic(SciVersion soundVersion)
-	: _soundVersion(soundVersion), _soundOn(true), _masterVolume(0) {
+	: _soundVersion(soundVersion), _soundOn(true), _masterVolume(0), _globalReverb(0) {
 
 	// Reserve some space in the playlist, to avoid expensive insertion
 	// operations
@@ -116,6 +118,8 @@ void SciMusic::init() {
 	// remapping).
 	_driverFirstChannel = _pMidiDrv->getFirstChannel();
 	_driverLastChannel = _pMidiDrv->getLastChannel();
+	if (getSciVersion() <= SCI_VERSION_0_LATE)
+		_globalReverb = _pMidiDrv->getReverb();	// Init global reverb for SCI0
 }
 
 void SciMusic::miditimerCallback(void *p) {
@@ -225,9 +229,36 @@ MusicEntry *SciMusic::getActiveSci0MusicSlot() {
 	return highestPrioritySlot;
 }
 
-void SciMusic::setReverb(byte reverb) {
+void SciMusic::setGlobalReverb(int8 reverb) {
 	Common::StackLock lock(_mutex);
-	_pMidiDrv->setReverb(reverb);
+	if (reverb != 127) {
+		// Set global reverb normally
+		_globalReverb = reverb;
+
+		// Check the reverb of the active song...
+		const MusicList::iterator end = _playList.end();
+		for (MusicList::iterator i = _playList.begin(); i != end; ++i) {
+			if ((*i)->status == kSoundPlaying) {
+				if ((*i)->reverb == 127)			// Active song has no reverb
+					_pMidiDrv->setReverb(reverb);	// Set the global reverb
+				break;
+			}
+		}
+	} else {
+		// Set reverb of the active song
+		const MusicList::iterator end = _playList.end();
+		for (MusicList::iterator i = _playList.begin(); i != end; ++i) {
+			if ((*i)->status == kSoundPlaying) {
+				_pMidiDrv->setReverb((*i)->reverb);	// Set the song's reverb
+				break;
+			}
+		}
+	}
+}
+
+byte SciMusic::getCurrentReverb() {
+	Common::StackLock lock(_mutex);
+	return _pMidiDrv->getReverb();
 }
 
 static bool musicEntryCompare(const MusicEntry *l, const MusicEntry *r) {
@@ -288,6 +319,7 @@ void SciMusic::soundInitSnd(MusicEntry *pSnd) {
 
 			pSnd->pMidiParser->mainThreadBegin();
 			pSnd->pMidiParser->loadMusic(track, pSnd, channelFilterMask, _soundVersion);
+			pSnd->reverb = pSnd->pMidiParser->getSongReverb();
 			pSnd->pMidiParser->mainThreadEnd();
 			_mutex.unlock();
 		}
@@ -297,6 +329,10 @@ void SciMusic::soundInitSnd(MusicEntry *pSnd) {
 // This one checks, if requested channel is available -> in that case give
 // caller that channel. Otherwise look for an unused one
 int16 SciMusic::tryToOwnChannel(MusicEntry *caller, int16 bestChannel) {
+#ifdef DISABLE_REMAPPING
+	return bestChannel;
+#endif
+
 	// Don't even try this for SCI0
 	if (_soundVersion <= SCI_VERSION_0_LATE)
 		return bestChannel;
@@ -307,7 +343,7 @@ int16 SciMusic::tryToOwnChannel(MusicEntry *caller, int16 bestChannel) {
 	}
 	// otherwise look for unused channel
 	for (int channelNr = _driverFirstChannel; channelNr < 15; channelNr++) {
-		if (channelNr == 9) // never map to channel 9 (precussion)
+		if (channelNr == 9) // never map to channel 9 (percussion)
 			continue;
 		if (!_usedChannel[channelNr]) {
 			_usedChannel[channelNr] = caller;
@@ -395,7 +431,7 @@ void SciMusic::soundPlay(MusicEntry *pSnd) {
 			_mutex.lock();
 			pSnd->pMidiParser->mainThreadBegin();
 			pSnd->pMidiParser->tryToOwnChannels();
-			if (pSnd->status == kSoundStopped)
+			if (pSnd->status != kSoundPaused)
 				pSnd->pMidiParser->sendInitCommands();
 			pSnd->pMidiParser->setVolume(pSnd->volume);
 			if (pSnd->status == kSoundStopped) {
@@ -406,7 +442,7 @@ void SciMusic::soundPlay(MusicEntry *pSnd) {
 				uint16 prevLoop = pSnd->loop;
 				pSnd->loop = 0;
 				// Fast forward to the last position and perform associated events when loading
-				pSnd->pMidiParser->jumpToTick(pSnd->ticker, true);
+				pSnd->pMidiParser->jumpToTick(pSnd->ticker, true, true, true);
 				// Restore looping
 				pSnd->loop = prevLoop;
 			}
@@ -656,6 +692,7 @@ MusicEntry::MusicEntry() {
 	loop = 0;
 	volume = MUSIC_VOLUME_DEFAULT;
 	hold = -1;
+	reverb = -1;
 
 	pauseCounter = 0;
 	sampleLoopCounter = 0;

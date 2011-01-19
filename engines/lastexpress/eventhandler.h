@@ -19,15 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/eventhandler.h $
- * $Id: eventhandler.h 53588 2010-10-18 21:03:28Z littleboy $
+ * $Id: eventhandler.h 54356 2010-11-19 00:49:16Z fingolfin $
  *
  */
 
 #ifndef LASTEXPRESS_EVENTHANDLER_H
 #define LASTEXPRESS_EVENTHANDLER_H
 
-#include "common/EventRecorder.h"
 #include "common/func.h"
+#include "common/events.h"
 
 namespace LastExpress {
 

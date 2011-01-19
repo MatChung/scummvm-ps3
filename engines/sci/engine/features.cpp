@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/features.cpp $
- * $Id: features.cpp 52514 2010-09-04 08:51:10Z m_kiewitz $
+ * $Id: features.cpp 54476 2010-11-25 14:22:09Z thebluegr $
  *
  */
 
@@ -40,16 +40,16 @@ GameFeatures::GameFeatures(SegManager *segMan, Kernel *kernel) : _segMan(segMan)
 	_gfxFunctionsType = SCI_VERSION_NONE;
 	_messageFunctionType = SCI_VERSION_NONE;
 	_moveCountType = kMoveCountUninitialized;
-
 #ifdef ENABLE_SCI32
 	_sci21KernelType = SCI_VERSION_NONE;
+	_sci2StringFunctionType = kSci2StringFunctionUninitialized;
 #endif
 	_usesCdTrack = Common::File::exists("cdaudio.map");
 }
 
 reg_t GameFeatures::getDetectionAddr(const Common::String &objName, Selector slc, int methodNum) {
 	// Get address of target object
-	reg_t objAddr = _segMan->findObjectByName(objName);
+	reg_t objAddr = _segMan->findObjectByName(objName, 0);
 	reg_t addr;
 
 	if (objAddr.isNull()) {
@@ -270,8 +270,17 @@ SciVersion GameFeatures::detectLofsType() {
 			return _lofsType;
 		}
 
-		if (getSciVersion() >= SCI_VERSION_1_1) {
+		if (getSciVersion() >= SCI_VERSION_1_1 && getSciVersion() <= SCI_VERSION_2_1) {
+			// SCI1.1 type, i.e. we compensate for the fact that the heap is attached
+			// to the end of the script
 			_lofsType = SCI_VERSION_1_1;
+			return _lofsType;
+		}
+
+		if (getSciVersion() == SCI_VERSION_3) {
+			// SCI3 type, same as pre-SCI1.1, really, as there is no separate heap
+			// resource
+			_lofsType = SCI_VERSION_3;
 			return _lofsType;
 		}
 
@@ -519,6 +528,65 @@ SciVersion GameFeatures::detectSci21KernelType() {
 	}
 	return _sci21KernelType;
 }
+
+Sci2StringFunctionType GameFeatures::detectSci2StringFunctionType() {
+	if (_sci2StringFunctionType == kSci2StringFunctionUninitialized) {
+		if (getSciVersion() <= SCI_VERSION_1_1) {
+			error("detectSci21StringFunctionType() called from SCI1.1 or earlier");
+		} else if (getSciVersion() == SCI_VERSION_2) {
+			// SCI2 games are always using the old type
+			_sci2StringFunctionType = kSci2StringFunctionOld;
+		} else if (getSciVersion() == SCI_VERSION_3) {
+			// SCI3 games are always using the new type
+			_sci2StringFunctionType = kSci2StringFunctionNew;
+		} else {	// SCI2.1
+			if (!autoDetectSci21StringFunctionType())
+				_sci2StringFunctionType = kSci2StringFunctionOld;
+			else
+				_sci2StringFunctionType = kSci2StringFunctionNew;
+		}
+	}
+
+	debugC(1, kDebugLevelVM, "Detected SCI2 kString type: %s", (_sci2StringFunctionType == kSci2StringFunctionOld) ? "old" : "new");
+
+	return _sci2StringFunctionType;
+}
+
+bool GameFeatures::autoDetectSci21StringFunctionType() {
+	// Look up the script address
+	reg_t addr = getDetectionAddr("Str", SELECTOR(size));
+
+	if (!addr.segment)
+		return false;
+
+	uint16 offset = addr.offset;
+	Script *script = _segMan->getScript(addr.segment);
+
+	while (true) {
+		int16 opparams[4];
+		byte extOpcode;
+		byte opcode;
+		offset += readPMachineInstruction(script->getBuf(offset), extOpcode, opparams);
+		opcode = extOpcode >> 1;
+
+		// Check for end of script
+		if (opcode == op_ret || offset >= script->getBufSize())
+			break;
+
+		if (opcode == op_callk) {
+			uint16 kFuncNum = opparams[0];
+
+			// SCI2.1 games which use the new kString functions call kString(8).
+			// Earlier ones call the callKernel script function, but not kString
+			// directly
+			if (_kernel->getKernelName(kFuncNum) == "String")
+				return true;
+		}
+	}
+
+	return false;	// not found a call to kString
+}
+
 #endif
 
 bool GameFeatures::autoDetectMoveCountType() {
@@ -564,6 +632,9 @@ MoveCountType GameFeatures::detectMoveCountType() {
 		// SCI0/SCI01 games always increment move count
 		if (getSciVersion() <= SCI_VERSION_01) {
 			_moveCountType = kIncrementMoveCount;
+		} else if (getSciVersion() >= SCI_VERSION_1_1) {
+			// SCI1.1 and newer games always ignore move count
+			_moveCountType = kIgnoreMoveCount;
 		} else {
 			if (!autoDetectMoveCountType()) {
 				error("Move count autodetection failed");
@@ -575,6 +646,19 @@ MoveCountType GameFeatures::detectMoveCountType() {
 	}
 
 	return _moveCountType;
+}
+
+bool GameFeatures::useAltWinGMSound() {
+	if (g_sci && g_sci->getPlatform() == Common::kPlatformWindows && g_sci->isCD()) {
+		SciGameId id = g_sci->getGameId();
+		return (id == GID_ECOQUEST ||
+				id == GID_JONES ||
+				id == GID_KQ5 ||
+				//id == GID_FREDDYPHARKAS ||	// Has alternate tracks, but handles them differently
+				id == GID_SQ4);
+	} else {
+		return false;
+	}
 }
 
 } // End of namespace Sci

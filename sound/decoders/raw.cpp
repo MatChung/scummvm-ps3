@@ -19,12 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/sound/decoders/raw.cpp $
- * $Id: raw.cpp 48921 2010-05-03 18:32:26Z lordhoto $
+ * $Id: raw.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "common/endian.h"
-#include "common/stream.h"
+#include "common/memstream.h"
 
 #include "sound/audiostream.h"
 #include "sound/mixer.h"

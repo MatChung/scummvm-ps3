@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/screen.h $
- * $Id: screen.h 48692 2010-04-17 17:23:30Z eriktorbjorn $
+ * $Id: screen.h 54385 2010-11-19 17:03:07Z fingolfin $
  */
 
 #ifndef	SWORD2_SCREEN_H
@@ -192,19 +192,8 @@ struct Parallax {
 		return 4;
 	}
 
-	void read(byte *addr) {
-		Common::MemoryReadStream readS(addr, size());
-
-		w = readS.readUint16LE();
-		h = readS.readUint16LE();
-	}
-
-	void write(byte *addr) {
-		Common::MemoryWriteStream writeS(addr, size());
-
-		writeS.writeUint16LE(w);
-		writeS.writeUint16LE(h);
-	}
+	void read(byte *addr);
+	void write(byte *addr);
 };
 
 class Screen {

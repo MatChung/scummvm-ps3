@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/save/saveload.h $
- * $Id: saveload.h 47845 2010-02-03 09:32:16Z drmccoy $
+ * $Id: saveload.h 55298 2011-01-18 11:53:21Z drmccoy $
  *
  */
 
@@ -334,6 +334,44 @@ protected:
 	SaveFile *getSaveFile(const char *fileName);
 };
 
+/** Save/Load class for Inca 2. */
+class SaveLoad_Inca2 : public SaveLoad {
+public:
+	SaveLoad_Inca2(GobEngine *vm, const char *targetName);
+	virtual ~SaveLoad_Inca2();
+
+	SaveMode getSaveMode(const char *fileName) const;
+
+protected:
+	struct SaveFile {
+		const char *sourceName;
+		SaveMode mode;
+		SaveHandler *handler;
+		const char *description;
+	};
+
+	/** Handles the voice language info file. */
+	class VoiceHandler : public SaveHandler {
+	public:
+		VoiceHandler(GobEngine *vm);
+		~VoiceHandler();
+
+		int32 getSize();
+		bool load(int16 dataVar, int32 size, int32 offset);
+		bool save(int16 dataVar, int32 size, int32 offset);
+	};
+
+	static SaveFile _saveFiles[];
+
+	VoiceHandler *_voiceHandler;
+
+	SaveHandler *getHandler(const char *fileName) const;
+	const char *getDescription(const char *fileName) const;
+
+	const SaveFile *getSaveFile(const char *fileName) const;
+	SaveFile *getSaveFile(const char *fileName);
+};
+
 /** Save/Load class for Woodruff. */
 class SaveLoad_v4 : public SaveLoad {
 public:
@@ -517,9 +555,30 @@ protected:
 		void refreshProps();
 	};
 
+	/** Handles the autosave. */
+	class AutoHandler : public SaveHandler {
+	public:
+		AutoHandler(GobEngine *vm, const Common::String &target);
+		~AutoHandler();
+
+		int32 getSize();
+		bool load(int16 dataVar, int32 size, int32 offset);
+		bool save(int16 dataVar, int32 size, int32 offset);
+
+	private:
+		class File : public SlotFileStatic {
+		public:
+			File(GobEngine *vm, const Common::String &base);
+			~File();
+		};
+
+		File _file;
+	};
+
 	static SaveFile _saveFiles[];
 
 	GameHandler *_gameHandler;
+	AutoHandler *_autoHandler;
 
 	SaveHandler *getHandler(const char *fileName) const;
 	const char *getDescription(const char *fileName) const;

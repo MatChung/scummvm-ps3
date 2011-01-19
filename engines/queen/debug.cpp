@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/queen/debug.cpp $
- * $Id: debug.cpp 54007 2010-11-01 16:03:35Z fingolfin $
+ * $Id: debug.cpp 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -50,10 +50,13 @@ Debugger::Debugger(QueenEngine *vm)
 }
 
 Debugger::~Debugger() {} // we need this here for __SYMBIAN32__
+
 void Debugger::preEnter() {
+	_vm->pauseEngine(true);
 }
 
 void Debugger::postEnter() {
+	_vm->pauseEngine(false);
 	_vm->graphics()->setupMouseCursor();
 }
 

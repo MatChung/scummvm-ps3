@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CELauncherDialog.cpp $
- * $Id: CELauncherDialog.cpp 53978 2010-10-31 17:10:45Z fingolfin $
+ * $Id: CELauncherDialog.cpp 54265 2010-11-16 10:19:01Z fingolfin $
  *
  */
 
@@ -32,7 +32,7 @@
 
 #include "engines/metaengine.h"
 
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 #include "gui/widget.h"
 #include "gui/browser.h"
 #include "gui/message.h"

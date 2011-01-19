@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/console.h $
- * $Id: console.h 54117 2010-11-07 15:04:47Z tdhs $
+ * $Id: console.h 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -36,10 +36,6 @@ class HugoConsole : public GUI::Debugger {
 public:
 	HugoConsole(HugoEngine *vm);
 	virtual ~HugoConsole(void);
-
-protected:
-	virtual void preEnter();
-	virtual void postEnter();
 
 private:
 	HugoEngine *_vm;

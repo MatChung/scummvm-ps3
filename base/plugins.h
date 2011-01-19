@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/base/plugins.h $
- * $Id: plugins.h 54097 2010-11-05 13:24:57Z bluddy $
+ * $Id: plugins.h 55061 2010-12-29 15:25:21Z Bluddy $
  *
  */
 
@@ -152,11 +152,11 @@ extern int pluginTypeVersions[PLUGIN_TYPE_MAX];
 // Abstract plugins
 
 /**
- * Abstract base class for the plugin objects which handle plugins
- * instantiation. Subclasses for this may be used for engine plugins
- * and other types of plugins.
- *
- * FIXME: This class needs better documentation, esp. how it differs from class Plugin
+ * Abstract base class for the plugin objects which handle plugins 
+ * instantiation. Subclasses for this may be used for engine plugins and other
+ * types of plugins. An existing PluginObject refers to an executable file
+ * loaded in memory and ready to run. The plugin, on the other hand, is just
+ * a handle to the file/object, whether it's loaded in memory or not.
  */
 class PluginObject {
 public:
@@ -169,9 +169,8 @@ public:
 /**
  * Abstract base class for the plugin system.
  * Subclasses for this can be used to wrap both static and dynamic
- * plugins.
- *
- * FIXME: This class needs better documentation, esp. how it differs from class PluginObject
+ * plugins. This class refers to a plugin which may or may not be loaded in
+ * memory.
  */
 class Plugin {
 protected:
@@ -189,8 +188,19 @@ public:
 	virtual bool loadPlugin() = 0;	// TODO: Rename to load() ?
 	virtual void unloadPlugin() = 0;	// TODO: Rename to unload() ?
 
+	/**
+	 * The following functions query information from the plugin object once
+	 * it's loaded into memory.
+	 **/
 	PluginType getType() const;
 	const char *getName() const;
+
+	/**
+	 * The getFileName() function gets the name of the plugin file for those
+	 * plugins that have files (ie. not static). It doesn't require the plugin
+	 * object to be loaded into memory, unlike getName()
+	 **/
+	virtual const char *getFileName() const { return 0; }
 };
 
 /** List of Plugin instances. */
@@ -294,39 +304,70 @@ protected:
 
 #endif // DYNAMIC_MODULES
 
+#define PluginMan PluginManager::instance()
+
 /**
  * Singleton class which manages all plugins, including loading them,
  * managing all Plugin class instances, and unloading them.
  */
-class PluginManager : public Common::Singleton<PluginManager> {
+class PluginManager {
+protected:
 	typedef Common::Array<PluginProvider *> ProviderList;
-private:
+
 	PluginList _pluginsInMem[PLUGIN_TYPE_MAX];
 	ProviderList _providers;
-
-	PluginList _allEnginePlugins;
-	PluginList::iterator _currentPlugin;
 
 	bool tryLoadPlugin(Plugin *plugin);
 	void addToPluginsInMemList(Plugin *plugin);
 	
-	friend class Common::Singleton<SingletonBaseType>;
+	static PluginManager *_instance;
 	PluginManager();
 
 public:
-	~PluginManager();
+	virtual ~PluginManager();
+
+	static void destroy() { delete _instance; _instance = 0; }
+	static PluginManager &instance();
 
 	void addPluginProvider(PluginProvider *pp);
 
-	void loadNonEnginePluginsAndEnumerate();	
-	void loadFirstPlugin();
-	bool loadNextPlugin();
+	// Functions used by the uncached PluginManager
+	virtual void init()	{}
+	virtual void loadFirstPlugin() {}
+	virtual bool loadNextPlugin() { return false; }
+	virtual bool loadPluginFromGameId(const Common::String &gameId) { return false; } 
+	virtual void updateConfigWithFileName(const Common::String &gameId) {} 
 	
-	void loadPlugins();
-	void unloadPlugins();
+	// Functions used only by the cached PluginManager
+	virtual void loadAllPlugins();
+	void unloadAllPlugins();
+
 	void unloadPluginsExcept(PluginType type, const Plugin *plugin, bool deletePlugin = true);
 
 	const PluginList &getPlugins(PluginType t) { return _pluginsInMem[t]; }
+};
+
+/** 
+ *  Uncached version of plugin manager
+ *  Keeps only one dynamic plugin in memory at a time
+ **/
+class PluginManagerUncached : public PluginManager {
+protected:
+	friend class PluginManager;
+	PluginList _allEnginePlugins;
+	PluginList::iterator _currentPlugin;
+
+	PluginManagerUncached() {}
+	bool loadPluginByFileName(const Common::String &filename); 
+
+public:
+	virtual void init();
+	virtual void loadFirstPlugin();
+	virtual bool loadNextPlugin();
+	virtual bool loadPluginFromGameId(const Common::String &gameId); 
+	virtual void updateConfigWithFileName(const Common::String &gameId); 
+	
+	virtual void loadAllPlugins() {} 	// we don't allow this
 };
 
 #endif

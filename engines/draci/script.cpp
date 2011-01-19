@@ -19,13 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/draci/script.cpp $
- * $Id: script.cpp 52144 2010-08-17 10:59:11Z sev $
+ * $Id: script.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "common/array.h"
 #include "common/debug.h"
-#include "common/stream.h"
+#include "common/memstream.h"
 #include "common/stack.h"
 
 #include "draci/draci.h"
@@ -900,7 +900,7 @@ void Script::popNewRoom(const Common::Array<int> &params) {
  * @brief Evaluates mathematical expressions
  * @param reader Stream reader set to the beginning of the expression
  */
-int Script::handleMathExpression(Common::MemoryReadStream *reader) const {
+int Script::handleMathExpression(Common::ReadStream *reader) const {
 	Common::Stack<int> stk;
 	mathExpressionObject obj;
 	GPL2Operator oper;

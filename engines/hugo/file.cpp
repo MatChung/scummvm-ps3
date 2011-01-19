@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/file.cpp $
- * $Id: file.cpp 54021 2010-11-01 20:40:33Z fingolfin $
+ * $Id: file.cpp 55307 2011-01-18 18:26:33Z strangerke $
  *
  */
 
@@ -32,6 +32,9 @@
 
 #include "common/system.h"
 #include "common/savefile.h"
+#include "common/config-manager.h"
+#include "graphics/thumbnail.h"
+#include "gui/saveload.h"
 
 #include "hugo/hugo.h"
 #include "hugo/file.h"
@@ -94,12 +97,12 @@ seq_t *FileManager::readPCX(Common::File &f, seq_t *seqPtr, byte *imagePtr, bool
 	f.read(PCC_header.fill2, sizeof(PCC_header.fill2));
 
 	if (PCC_header.mfctr != 10)
-		Utils::Error(PCCH_ERR, "%s", name);
+		error("Bad data file format: %s", name);
 
 	// Allocate memory for seq_t if 0
 	if (seqPtr == 0) {
 		if ((seqPtr = (seq_t *)malloc(sizeof(seq_t))) == 0)
-			Utils::Error(HEAP_ERR, "%s", name);
+			error("Insufficient memory to run game.");
 	}
 
 	// Find size of image data in 8-bit DIB format
@@ -113,9 +116,9 @@ seq_t *FileManager::readPCX(Common::File &f, seq_t *seqPtr, byte *imagePtr, bool
 
 	// Allocate memory for image data if NULL
 	if (imagePtr == 0) {
-		if ((imagePtr = (byte *)malloc((size_t) size)) == 0)
-			Utils::Error(HEAP_ERR, "%s", name);
+		imagePtr = (byte *)malloc((size_t) size);
 	}
+	assert(imagePtr);
 
 	seqPtr->imagePtr = imagePtr;
 
@@ -147,6 +150,14 @@ seq_t *FileManager::readPCX(Common::File &f, seq_t *seqPtr, byte *imagePtr, bool
 void FileManager::readImage(int objNum, object_t *objPtr) {
 	debugC(1, kDebugFile, "readImage(%d, object_t *objPtr)", objNum);
 
+	/**
+	* Structure of object file lookup entry
+	*/
+	struct objBlock_t {
+		uint32 objOffset;
+		uint32 objLength;
+	};
+
 	if (!objPtr->seqNumb)                           // This object has no images
 		return;
 
@@ -165,8 +176,9 @@ void FileManager::readImage(int objNum, object_t *objPtr) {
 			warning("File %s not found, trying again with %s%s", buf, _vm->_arrayNouns[objPtr->nounIndex][0], OBJEXT);
 			strcat(strcpy(buf, _vm->_arrayNouns[objPtr->nounIndex][0]), OBJEXT);
 			if (!_objectsArchive.open(buf))
-				Utils::Error(FILE_ERR, "%s", buf);
+				error("File not found: %s", buf);
 		}
+		free(buf);
 	}
 
 	bool  firstFl = true;                           // Initializes pcx read function
@@ -238,7 +250,7 @@ void FileManager::readImage(int objNum, object_t *objPtr) {
 * any allocated memory.  Also returns size of data
 */
 sound_pt FileManager::getSound(int16 sound, uint16 *size) {
-	debugC(1, kDebugFile, "getSound(%d, %d)", sound, *size);
+	debugC(1, kDebugFile, "getSound(%d)", sound);
 
 	// No more to do if SILENCE (called for cleanup purposes)
 	if (sound == _vm->_soundSilence)
@@ -257,25 +269,22 @@ sound_pt FileManager::getSound(int16 sound, uint16 *size) {
 
 	if (!has_read_header) {
 		if (fp.read(s_hdr, sizeof(s_hdr)) != sizeof(s_hdr))
-			Utils::Error(FILE_ERR, "%s", SOUND_FILE);
+			error("Wrong sound file format: %s", SOUND_FILE);
 		has_read_header = true;
 	}
 
 	*size = s_hdr[sound].size;
 	if (*size == 0)
-		Utils::Error(SOUND_ERR, "%s", SOUND_FILE);
+		error("Wrong sound file format or missing sound %d: %s", sound, SOUND_FILE);
 
 	// Allocate memory for sound or music, if possible
 	sound_pt soundPtr = (byte *)malloc(s_hdr[sound].size); // Ptr to sound data
-	if (soundPtr == 0) {
-		warning("Low on memory");
-		return 0;
-	}
+	assert(soundPtr);
 
 	// Seek to data and read it
 	fp.seek(s_hdr[sound].offset, SEEK_SET);
 	if (fp.read(soundPtr, s_hdr[sound].size) != s_hdr[sound].size)
-		Utils::Error(FILE_ERR, "%s", SOUND_FILE);
+		error("File not found: %s", SOUND_FILE);
 
 	fp.close();
 
@@ -287,69 +296,96 @@ sound_pt FileManager::getSound(int16 sound, uint16 *size) {
 */
 bool FileManager::fileExists(char *filename) {
 	Common::File f;
-	if (f.open(filename)) {
-		f.close();
-		return true;
-	}
-	return false;
+	return(f.exists(filename));
 }
 
 /**
-* Save game to supplied slot (-1 is INITFILE)
+* Save game to supplied slot
 */
-void FileManager::saveGame(int16 slot, const char *descrip) {
-	debugC(1, kDebugFile, "saveGame(%d, %s)", slot, descrip);
+bool FileManager::saveGame(int16 slot, Common::String descrip) {
+	debugC(1, kDebugFile, "saveGame(%d, %s)", slot, descrip.c_str());
 
-	// Get full path of saved game file - note test for INITFILE
-	Common::String path; // Full path of saved game
+	const EnginePlugin *plugin = NULL;
+	int16 savegameId;
+	Common::String savegameDescription;
+	EngineMan.findGame(_vm->getGameId(), &plugin);
 
-	if (slot == -1)
-		path = _vm->_initFilename;
-	else
-		path = Common::String::format(_vm->_saveFilename.c_str(), slot);
+	if (slot == -1) {
+		GUI::SaveLoadChooser *dialog = new GUI::SaveLoadChooser("Save game:", "Save");
+		dialog->setSaveMode(true);
+		savegameId = dialog->runModal(plugin, ConfMan.getActiveDomainName());
+		savegameDescription = dialog->getResultString();
+		delete dialog;
+	} else {
+		savegameId = slot;
+		if (!descrip.empty()) {
+			savegameDescription = descrip;
+		} else {
+			savegameDescription = Common::String::format("Quick save #%d", slot);
+		}
+	}
 
-	Common::WriteStream *out = _vm->getSaveFileManager()->openForSaving(path);
+	if (savegameId < 0)                             // dialog aborted
+		return false;
+
+	Common::String savegameFile = Common::String::format(_vm->_saveFilename.c_str(), savegameId);
+	Common::SaveFileManager *saveMan = g_system->getSavefileManager();
+	Common::OutSaveFile *out = saveMan->openForSaving(savegameFile);
+
 	if (!out) {
-		warning("Can't create file '%s', game not saved", path.c_str());
-		return;
+		warning("Can't create file '%s', game not saved", savegameFile.c_str());
+		return false;
 	}
 
 	// Write version.  We can't restore from obsolete versions
-	out->write(&kSavegameVersion, sizeof(kSavegameVersion));
+	out->writeByte(kSavegameVersion);
 
-	// Save description of saved game
-	out->write(descrip, DESCRIPLEN);
-
-	// Save objects
-	for (int i = 0; i < _vm->_numObj; i++) {
-		// Save where curr_seq_p is pointing to
-		_vm->_object->saveSeq(&_vm->_object->_objects[i]);
-		out->write(&_vm->_object->_objects[i], sizeof(object_t));
+	if (savegameDescription == "") {
+		savegameDescription = "Untitled savegame";
 	}
+
+	out->writeSint16BE(savegameDescription.size() + 1);
+	out->write(savegameDescription.c_str(), savegameDescription.size() + 1);
+
+	Graphics::saveThumbnail(*out);
+
+	TimeDate curTime;
+	_vm->_system->getTimeAndDate(curTime);
+
+	uint32 saveDate = (curTime.tm_mday & 0xFF) << 24 | ((curTime.tm_mon + 1) & 0xFF) << 16 | ((curTime.tm_year + 1900) & 0xFFFF);
+	uint16 saveTime = (curTime.tm_hour & 0xFF) << 8 | ((curTime.tm_min) & 0xFF);
+
+	out->writeUint32BE(saveDate);
+	out->writeUint16BE(saveTime);
+
+	_vm->_object->saveObjects(out);
 
 	const status_t &gameStatus = _vm->getGameStatus();
 
 	// Save whether hero image is swapped
-	out->write(&_vm->_heroImage, sizeof(_vm->_heroImage));
+	out->writeByte(_vm->_heroImage);
 
 	// Save score
-	int score = _vm->getScore();
-	out->write(&score, sizeof(score));
+	out->writeSint16BE(_vm->getScore());
 
 	// Save story mode
-	out->write(&gameStatus.storyModeFl, sizeof(gameStatus.storyModeFl));
+	out->writeByte((gameStatus.storyModeFl) ? 1 : 0);
 
 	// Save jumpexit mode
-	out->write(&gameStatus.jumpExitFl, sizeof(gameStatus.jumpExitFl));
+	out->writeByte((gameStatus.jumpExitFl) ? 1 : 0);
 
 	// Save gameover status
-	out->write(&gameStatus.gameOverFl, sizeof(gameStatus.gameOverFl));
+	out->writeByte((gameStatus.gameOverFl) ? 1 : 0);
 
 	// Save screen states
-	out->write(_vm->_screenStates, sizeof(*_vm->_screenStates) * _vm->_numScreens);
+	for (int i = 0; i < _vm->_numScreens; i++)
+		out->writeByte(_vm->_screenStates[i]);
 
 	// Save points table
-	out->write(_vm->_points, sizeof(point_t) * _vm->_numBonuses);
+	for (int i = 0; i < _vm->_numBonuses; i++) {
+		out->writeByte(_vm->_points[i].score);
+		out->writeByte((_vm->_points[i].scoredFl) ? 1 : 0);
+	}
 
 	// Now save current time and all current events in event queue
 	_vm->_scheduler->saveEvents(out);
@@ -358,86 +394,103 @@ void FileManager::saveGame(int16 slot, const char *descrip) {
 	_vm->_screen->savePal(out);
 
 	// Save maze status
-	out->write(&_maze, sizeof(maze_t));
+	out->writeByte((_maze.enabledFl) ? 1 : 0);
+	out->writeByte(_maze.size);
+	out->writeSint16BE(_maze.x1);
+	out->writeSint16BE(_maze.y1);
+	out->writeSint16BE(_maze.x2);
+	out->writeSint16BE(_maze.y2);
+	out->writeSint16BE(_maze.x3);
+	out->writeSint16BE(_maze.x4);
+	out->writeByte(_maze.firstScreenIndex);
 
 	out->finalize();
 
 	delete out;
+
+	return true;
 }
 
 /**
-* Restore game from supplied slot number (-1 is INITFILE)
+* Restore game from supplied slot number
 */
-void FileManager::restoreGame(int16 slot) {
+bool FileManager::restoreGame(int16 slot) {
 	debugC(1, kDebugFile, "restoreGame(%d)", slot);
+
+	const EnginePlugin *plugin = NULL;
+	int16 savegameId;
+	EngineMan.findGame(_vm->getGameId(), &plugin);
+
+	if (slot == -1) {
+		GUI::SaveLoadChooser *dialog = new GUI::SaveLoadChooser("Restore game:", "Restore");
+		dialog->setSaveMode(false);
+		savegameId = dialog->runModal(plugin, ConfMan.getActiveDomainName());
+		delete dialog;
+	} else {
+		savegameId = slot;
+	}
+
+	if (savegameId < 0)                             // dialog aborted
+		return false;
+
+	Common::String savegameFile = Common::String::format(_vm->_saveFilename.c_str(), savegameId);
+	Common::SaveFileManager *saveMan = g_system->getSavefileManager();
+	Common::InSaveFile *in = saveMan->openForLoading(savegameFile);
+
+	if (!in)
+		return false;
 
 	// Initialize new-game status
 	_vm->initStatus();
 
-	// Get full path of saved game file - note test for INITFILE
-	Common::String path; // Full path of saved game
-
-	if (slot == -1)
-		path = _vm->_initFilename;
-	else
-		path = Common::String::format(_vm->_saveFilename.c_str(), slot);
-
-	Common::SeekableReadStream *in = _vm->getSaveFileManager()->openForLoading(path);
-	if (!in)
-		return;
-
 	// Check version, can't restore from different versions
-	int saveVersion;
-	in->read(&saveVersion, sizeof(saveVersion));
+	int saveVersion = in->readByte();
 	if (saveVersion != kSavegameVersion) {
-		Utils::Error(GEN_ERR, "%s", "Savegame of incompatible version");
-		return;
+		warning("Savegame of incompatible version");
+		delete in;
+		return false;
 	}
 
 	// Skip over description
-	in->seek(DESCRIPLEN, SEEK_CUR);
+	int32 saveGameNameSize = in->readSint16BE();
+	in->skip(saveGameNameSize);
+
+	Graphics::skipThumbnail(*in);
+
+	in->skip(6);                                    // Skip date & time
 
 	// If hero image is currently swapped, swap it back before restore
 	if (_vm->_heroImage != HERO)
 		_vm->_object->swapImages(HERO, _vm->_heroImage);
 
-	// Restore objects, retain current seqList which points to dynamic mem
-	// Also, retain cmnd_t pointers
-	for (int i = 0; i < _vm->_numObj; i++) {
-		object_t *p = &_vm->_object->_objects[i];
-		seqList_t seqList[MAX_SEQUENCES];
-		memcpy(seqList, p->seqList, sizeof(seqList_t));
-		uint16 cmdIndex = p->cmdIndex;
-		in->read(p, sizeof(object_t));
-		p->cmdIndex = cmdIndex;
-		memcpy(p->seqList, seqList, sizeof(seqList_t));
-	}
+	_vm->_object->restoreObjects(in);
 
-	in->read(&_vm->_heroImage, sizeof(_vm->_heroImage));
+	_vm->_heroImage = in->readByte();
 
 	// If hero swapped in saved game, swap it
-	int heroImg = _vm->_heroImage;
+	byte heroImg = _vm->_heroImage;
 	if (heroImg != HERO)
 		_vm->_object->swapImages(HERO, _vm->_heroImage);
 	_vm->_heroImage = heroImg;
 
 	status_t &gameStatus = _vm->getGameStatus();
 
-	int score;
-	in->read(&score, sizeof(score));
+	int score = in->readSint16BE();
 	_vm->setScore(score);
 
-	in->read(&gameStatus.storyModeFl, sizeof(gameStatus.storyModeFl));
-	in->read(&gameStatus.jumpExitFl, sizeof(gameStatus.jumpExitFl));
-	in->read(&gameStatus.gameOverFl, sizeof(gameStatus.gameOverFl));
-	in->read(_vm->_screenStates, sizeof(*_vm->_screenStates) * _vm->_numScreens);
+	gameStatus.storyModeFl = (in->readByte() == 1);
+	gameStatus.jumpExitFl = (in->readByte() == 1);
+	gameStatus.gameOverFl = (in->readByte() == 1);
+	for (int i = 0; i < _vm->_numScreens; i++)
+		_vm->_screenStates[i] = in->readByte();
 
 	// Restore points table
-	in->read(_vm->_points, sizeof(point_t) * _vm->_numBonuses);
+	for (int i = 0; i < _vm->_numBonuses; i++) {
+		_vm->_points[i].score = in->readByte();
+		_vm->_points[i].scoredFl = (in->readByte() == 1);
+	}
 
-	// Restore ptrs to currently loaded objects
-	for (int i = 0; i < _vm->_numObj; i++)
-		_vm->_object->restoreSeq(&_vm->_object->_objects[i]);
+	_vm->_object->restoreAllSeq();
 
 	// Now restore time of the save and the event queue
 	_vm->_scheduler->restoreEvents(in);
@@ -446,44 +499,18 @@ void FileManager::restoreGame(int16 slot) {
 	_vm->_screen->restorePal(in);
 
 	// Restore maze status
-	in->read(&_maze, sizeof(maze_t));
+	_maze.enabledFl = (in->readByte() == 1);
+	_maze.size = in->readByte();
+	_maze.x1 = in->readSint16BE();
+	_maze.y1 = in->readSint16BE();
+	_maze.x2 = in->readSint16BE();
+	_maze.y2 = in->readSint16BE();
+	_maze.x3 = in->readSint16BE();
+	_maze.x4 = in->readSint16BE();
+	_maze.firstScreenIndex = in->readByte();
 
 	delete in;
-}
-
-/**
-* Initialize the size of a saved game (from the fixed initial game).
-* If status.initsave is TRUE, or the initial saved game is not found,
-* force a save to create one.  Normally the game will be shipped with
-* the initial game file but useful to force a write during development
-* when the size is changeable.
-* The net result is a valid INITFILE, with status.savesize initialized.
-*/
-void FileManager::initSavedGame() {
-	debugC(1, kDebugFile, "initSavedGame");
-
-	// Force save of initial game
-	if (_vm->getGameStatus().initSaveFl)
-		saveGame(-1, "");
-
-	// If initial game doesn't exist, create it
-	Common::SeekableReadStream *in = _vm->getSaveFileManager()->openForLoading(_vm->_initFilename);
-	if (!in) {
-		saveGame(-1, "");
-		in = _vm->getSaveFileManager()->openForLoading(_vm->_initFilename);
-		if (!in) {
-			Utils::Error(WRITE_ERR, "%s", _vm->_initFilename.c_str());
-			return;
-		}
-	}
-
-	// Must have an open saved game now
-	_vm->getGameStatus().saveSize = in->size();
-	delete in;
-
-	// Check sanity - maybe disk full or path set to read-only drive?
-	if (_vm->getGameStatus().saveSize == -1)
-		Utils::Error(WRITE_ERR, "%s", _vm->_initFilename.c_str());
+	return true;
 }
 
 /**
@@ -494,12 +521,12 @@ void FileManager::printBootText() {
 
 	Common::File ofp;
 	if (!ofp.open(BOOTFILE)) {
-		if (_vm->_gameVariant == 3) {
+		if (_vm->_gameVariant == kGameVariantH1Dos) {
 			//TODO initialize properly _boot structure
 			warning("printBootText - Skipping as H1 Dos may be a freeware");
 			return;
 		} else {
-			Utils::Error(FILE_ERR, "%s", BOOTFILE);
+			error("Missing startup file");
 		}
 	}
 
@@ -509,7 +536,7 @@ void FileManager::printBootText() {
 		// Skip over the boot structure (already read) and read exit text
 		ofp.seek((long)sizeof(_boot), SEEK_SET);
 		if (ofp.read(buf, _boot.exit_len) != (size_t)_boot.exit_len)
-			Utils::Error(FILE_ERR, "%s", BOOTFILE);
+			error("Error while reading startup file");
 
 		// Decrypt the exit text, using CRYPT substring
 		int i;
@@ -517,9 +544,7 @@ void FileManager::printBootText() {
 			buf[i] ^= CRYPT[i % strlen(CRYPT)];
 
 		buf[i] = '\0';
-		//Box(BOX_OK, "%s", buf_p);
-		//MessageBox(hwnd, buf_p, "License", MB_ICONINFORMATION);
-		warning("printBootText(): License: %s", buf);
+		Utils::Box(BOX_OK, "%s", buf);
 	}
 
 	free(buf);
@@ -535,17 +560,17 @@ void FileManager::readBootFile() {
 
 	Common::File ofp;
 	if (!ofp.open(BOOTFILE)) {
-		if (_vm->_gameVariant == 3) {
+		if (_vm->_gameVariant == kGameVariantH1Dos) {
 			//TODO initialize properly _boot structure
 			warning("readBootFile - Skipping as H1 Dos may be a freeware");
 			return;
 		} else {
-			Utils::Error(FILE_ERR, "%s", BOOTFILE);
+			error("Missing startup file");
 		}
 	}
 
 	if (ofp.size() < (int32)sizeof(_boot))
-		Utils::Error(FILE_ERR, "%s", BOOTFILE);
+		error("Corrupted startup file");
 
 	_boot.checksum = ofp.readByte();
 	_boot.registered = ofp.readByte();
@@ -563,7 +588,7 @@ void FileManager::readBootFile() {
 	ofp.close();
 
 	if (checksum)
-		Utils::Error(GEN_ERR, "%s", "Program startup file invalid");
+		error("Corrupted startup file");
 }
 
 /**
@@ -581,10 +606,10 @@ uif_hdr_t *FileManager::getUIFHeader(uif_t id) {
 		// Open unbuffered to do far read
 		Common::File ip;                            // Image data file
 		if (!ip.open(UIF_FILE))
-			Utils::Error(FILE_ERR, "%s", UIF_FILE);
+			error("File not found: %s", UIF_FILE);
 
 		if (ip.size() < (int32)sizeof(UIFHeader))
-			Utils::Error(FILE_ERR, "%s", UIF_FILE);
+			error("Wrong file format: %s", UIF_FILE);
 
 		for (int i = 0; i < MAX_UIFS; ++i) {
 			UIFHeader[i].size = ip.readUint16LE();
@@ -605,53 +630,26 @@ void FileManager::readUIFItem(int16 id, byte *buf) {
 	// Open uif file to read data
 	Common::File ip;                                // UIF_FILE handle
 	if (!ip.open(UIF_FILE))
-		Utils::Error(FILE_ERR, "%s", UIF_FILE);
+		error("File not found: %s", UIF_FILE);
 
 	// Seek to data
 	uif_hdr_t *UIFHeaderPtr = getUIFHeader((uif_t)id);
 	ip.seek(UIFHeaderPtr->offset, SEEK_SET);
 
 	// We support pcx images and straight data
-	seq_t dummySeq;                                 // Dummy seq_t for image data
+	seq_t *dummySeq;                                // Dummy seq_t for image data
 	switch (id) {
 	case UIF_IMAGES:                                // Read uif images file
-		readPCX(ip, &dummySeq, buf, true, UIF_FILE);
+		dummySeq = readPCX(ip, 0, buf, true, UIF_FILE);
+		free(dummySeq);
 		break;
 	default:                                        // Read file data into supplied array
 		if (ip.read(buf, UIFHeaderPtr->size) != UIFHeaderPtr->size)
-			Utils::Error(FILE_ERR, "%s", UIF_FILE);
+			error("Wrong file format: %s", UIF_FILE);
 		break;
 	}
 
 	ip.close();
-}
-
-/**
-* Simple instructions given when F1 pressed twice in a row
-* Only in DOS versions
-*/
-void FileManager::instructions() {
-	Common::File f;
-	if (!f.open(HELPFILE)) {
-		warning("help.dat not found");
-		return;
-	}
-
-	char readBuf[2];
-	while (f.read(readBuf, 1)) {
-		char line[1024], *wrkLine;
-		wrkLine = line;
-		wrkLine[0] = readBuf[0];
-		wrkLine++;
-		do {
-			f.read(wrkLine, 1);
-		} while (*wrkLine++ != EOP);
-		wrkLine[-2] = '\0';                         // Remove EOP and previous CR
-		Utils::Box(BOX_ANY, "%s", line);
-		wrkLine = line;
-		f.read(readBuf, 2);                         // Remove CRLF after EOP
-	}
-	f.close();
 }
 
 /**

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/fs/psp/psp-fs.cpp $
- * $Id: psp-fs.cpp 53160 2010-10-12 02:18:11Z jvprat $
+ * $Id: psp-fs.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  */
 
 #ifdef __PSP__
@@ -27,6 +27,7 @@
 #include "engines/engine.h"
 #include "backends/fs/abstract-fs.h"
 #include "backends/fs/psp/psp-stream.h"
+#include "common/bufferedstream.h"
 
 #include <sys/stat.h>
 #include <unistd.h>
@@ -251,7 +252,7 @@ Common::SeekableReadStream *PSPFilesystemNode::createReadStream() {
 
 	Common::SeekableReadStream *stream = PspIoStream::makeFromPath(getPath(), false);
 
-	return new Common::BufferedSeekableReadStream(stream, READ_BUFFER_SIZE, DisposeAfterUse::YES);
+	return Common::wrapBufferedSeekableReadStream(stream, READ_BUFFER_SIZE, DisposeAfterUse::YES);
 }
 
 Common::WriteStream *PSPFilesystemNode::createWriteStream() {
@@ -259,7 +260,7 @@ Common::WriteStream *PSPFilesystemNode::createWriteStream() {
 
 	Common::WriteStream *stream = PspIoStream::makeFromPath(getPath(), true);
 
-	return new Common::BufferedWriteStream(stream, WRITE_BUFFER_SIZE, DisposeAfterUse::YES);
+	return Common::wrapBufferedWriteStream(stream, WRITE_BUFFER_SIZE);
 }
 
 #endif //#ifdef __PSP__

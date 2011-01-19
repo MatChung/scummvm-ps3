@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/detection.cpp $
- * $Id: detection.cpp 53161 2010-10-12 04:19:58Z eriktorbjorn $
+ * $Id: detection.cpp 54358 2010-11-19 01:37:04Z fingolfin $
  *
  */
 
@@ -30,6 +30,7 @@
 #include "common/file.h"
 #include "common/savefile.h"
 #include "graphics/thumbnail.h"
+#include "graphics/surface.h"
 
 #include "agi/agi.h"
 #include "agi/preagi.h"

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/scn.cpp $
- * $Id: scn.cpp 45399 2009-10-26 10:40:35Z fingolfin $
+ * $Id: scn.cpp 54811 2010-12-07 18:00:18Z fingolfin $
  *
  * A (some would say very) small collection of utility functions.
  */
@@ -60,14 +60,17 @@ byte *FindChunk(SCNHANDLE handle, uint32 chunk) {
 		chunk -= 0x2L;
 
 	while (1) {
-		if (READ_LE_UINT32(lptr) == chunk)
+		if (READ_32(lptr) == chunk)
 			return (byte *)(lptr + 2);
 
 		++lptr;
-		add = READ_LE_UINT32(lptr);
+		add = READ_32(lptr);
+
 		if (!add)
+			// End of file reached
 			return NULL;
 
+		// Move to next chunk
 		lptr = (uint32 *)(bptr + add);
 	}
 }

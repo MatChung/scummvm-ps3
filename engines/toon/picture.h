@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/picture.h $
-* $Id: picture.h 53098 2010-10-09 11:11:26Z lordhoto $
+* $Id: picture.h 54127 2010-11-07 21:08:46Z tdhs $
 *
 */
 
@@ -40,6 +40,7 @@ class Picture {
 
 public:
 	Picture(ToonEngine *vm);
+	~Picture();
 	bool loadPicture(Common::String file, bool totalPalette = false);
 	void setupPalette();
 	void draw(Graphics::Surface &surface, int32 x, int32 y, int32 dx, int32 dy);

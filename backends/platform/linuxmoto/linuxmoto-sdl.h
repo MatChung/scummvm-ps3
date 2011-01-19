@@ -19,47 +19,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/linuxmoto/linuxmoto-sdl.h $
- * $Id: linuxmoto-sdl.h 45975 2009-11-18 15:22:15Z fingolfin $
+ * $Id: linuxmoto-sdl.h 54584 2010-11-29 18:48:43Z lordhoto $
  *
  */
 
-#ifndef LINUXMOTO_SDL
-#define LINUXMOTO_SDL
+#ifndef PLATFORM_SDL_LINUXMOTO_H
+#define PLATFORM_SDL_LINUXMOTO_H
 
-#include "backends/platform/sdl/sdl.h"
+#include "backends/platform/sdl/posix/posix.h"
 
-// FIXME: For now keep hacks in this header to save polluting the SDL backend.
-enum {
-	GFX_HALF = 12
-};
-
-class OSystem_LINUXMOTO : public OSystem_SDL {
-private:
-	bool _audioSuspended;
+class OSystem_LINUXMOTO : public OSystem_POSIX {
 public:
-	/* Graphics */
-	void initSize(uint w, uint h);
-	void setGraphicsModeIntern();
-	bool setGraphicsMode(int mode);
-	void internUpdateScreen();
-	const OSystem::GraphicsMode *getSupportedGraphicsModes() const;
-	bool setGraphicsMode(const char *name);
-	int getDefaultGraphicsMode() const;
-	bool loadGFXMode();
-	void drawMouse();
-	void undrawMouse();
-	void showOverlay();
-	void hideOverlay();
+	virtual void initBackend();
 
-	/* Event Stuff */
-	virtual bool remapKey(SDL_Event &ev, Common::Event &event);
-	virtual void preprocessEvents(SDL_Event *event);
-	virtual void setupMixer();
+	// FIXME: This just calls parent methods, is it needed?
 	virtual Common::HardwareKeySet *getHardwareKeySet();
-	void fillMouseEvent(Common::Event&, int, int);
-	void suspendAudio();
-	int resumeAudio();
-	void warpMouse(int, int);
 };
 
 #endif

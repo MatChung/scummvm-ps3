@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/archive.cpp $
- * $Id: archive.cpp 48254 2010-03-13 21:55:49Z lordhoto $
+ * $Id: archive.cpp 54258 2010-11-16 08:23:13Z fingolfin $
  *
  */
 
@@ -290,5 +290,5 @@ void SearchManager::clear() {
 
 } // namespace Common
 
-DECLARE_SINGLETON(Common::SearchManager)
+DECLARE_SINGLETON(Common::SearchManager);
 

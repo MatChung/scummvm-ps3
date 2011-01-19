@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/objectmap.h $
- * $Id: objectmap.h 53781 2010-10-24 22:40:37Z h00ligan $
+ * $Id: objectmap.h 54323 2010-11-18 16:38:03Z fingolfin $
  *
  */
 
@@ -36,7 +36,7 @@ private:
 	typedef Common::Array<Point> ClickArea;
 	typedef Common::Array<ClickArea> ClickAreas;
 public:
-	void load(SagaEngine *vm, MemoryReadStreamEndian *readStream, int index, int sceneNumber);
+	void load(SagaEngine *vm, Common::MemoryReadStreamEndian *readStream, int index, int sceneNumber);
 
 	int getIndex() const {
 		return _index;

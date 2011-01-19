@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/data/animation.h $
- * $Id: animation.h 53579 2010-10-18 19:17:38Z sev $
+ * $Id: animation.h 54358 2010-11-19 01:37:04Z fingolfin $
  *
  */
 
@@ -41,7 +41,10 @@
 #include "lastexpress/drawable.h"
 
 #include "common/array.h"
-#include "common/stream.h"
+
+namespace Common {
+class SeekableReadStream;
+}
 
 namespace LastExpress {
 
@@ -69,6 +72,7 @@ private:
 
 	// despite their size field, info chunks don't have a payload
 	enum ChunkType {
+		kChunkTypeNone              = 0,
 		kChunkTypeUnknown1          = 1,
 		kChunkTypeUnknown2          = 2,
 		kChunkTypeAudioInfo         = 3,
@@ -91,6 +95,12 @@ private:
 		ChunkType type;
 		uint16 frame;
 		uint32 size;
+
+		Chunk() {
+			type = kChunkTypeNone;
+			frame = 0;
+			size = 0;
+		}
 	};
 
 	void reset();

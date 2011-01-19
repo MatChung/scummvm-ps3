@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/codecs/indeo3.cpp $
- * $Id: indeo3.cpp 52956 2010-09-30 15:22:52Z eriktorbjorn $
+ * $Id: indeo3.cpp 55095 2011-01-02 14:57:49Z fuzzie $
  *
  */
 
@@ -58,6 +58,7 @@ Indeo3Decoder::Indeo3Decoder(uint16 width, uint16 height) : _ModPred(0), _correc
 }
 
 Indeo3Decoder::~Indeo3Decoder() {
+	_surface->free();
 	delete _surface;
 
 	delete[] _iv_frame[0].the_buf;
@@ -168,7 +169,7 @@ void Indeo3Decoder::allocFrames() {
 	}
 }
 
-Surface *Indeo3Decoder::decodeImage(Common::SeekableReadStream *stream) {
+const Surface *Indeo3Decoder::decodeImage(Common::SeekableReadStream *stream) {
 	// Not Indeo 3? Fail
 	if (!isIndeo3(*stream))
 		return 0;

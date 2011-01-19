@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/script.h $
-* $Id: script.h 53401 2010-10-13 07:14:38Z anotherguest $
+* $Id: script.h 54136 2010-11-08 03:14:32Z tdhs $
 *
 */
 
@@ -98,6 +98,7 @@ public:
 class EMCInterpreter {
 public:
 	EMCInterpreter(ToonEngine *vm);
+	~EMCInterpreter();
 
 	bool load(const char *filename, EMCData *data, const Common::Array<const OpcodeV2 *> *opcodes);
 	void unload(EMCData *data);
@@ -147,6 +148,7 @@ private:
 	void op_eval(EMCState *);
 	void op_setRetAndJmp(EMCState *);
 };
+
 } // End of namespace Toon
 
 #endif

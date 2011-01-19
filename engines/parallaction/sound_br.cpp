@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/sound_br.cpp $
- * $Id: sound_br.cpp 52791 2010-09-18 10:55:16Z eriktorbjorn $
+ * $Id: sound_br.cpp 55226 2011-01-13 15:34:18Z tdhs $
  *
  */
 
@@ -272,8 +272,8 @@ void MidiPlayer_MSC::play(Common::SeekableReadStream *stream) {
 		return;
 	}
 
+	stop();
 	int size = stream->size();
-
 	_midiData = (uint8 *)malloc(size);
 	if (_midiData) {
 		stream->read(_midiData, size);

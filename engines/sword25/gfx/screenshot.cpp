@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/screenshot.cpp $
- * $Id: screenshot.cpp 53961 2010-10-30 21:27:42Z fingolfin $
+ * $Id: screenshot.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -37,8 +37,7 @@
 
 #define BS_LOG_PREFIX "SCREENSHOT"
 
-#include "common/system.h"
-#include "common/savefile.h"
+#include "common/memstream.h"
 #include "sword25/gfx/screenshot.h"
 #include "sword25/kernel/filesystemutil.h"
 #include <png.h>
@@ -97,7 +96,7 @@ bool Screenshot::saveToFile(Graphics::Surface *data, Common::WriteStream *stream
 	             data->w,                        // Width
 	             data->h,                        // Height
 	             8,                              // Bits depth
-	             PNG_COLOR_TYPE_RGB,             // Colour type
+	             PNG_COLOR_TYPE_RGB,             // Color type
 	             PNG_INTERLACE_NONE,             // No interlacing
 	             PNG_COMPRESSION_TYPE_DEFAULT,   // Compression type
 	             PNG_FILTER_TYPE_DEFAULT);       // Filter Type
@@ -123,7 +122,7 @@ bool Screenshot::saveToFile(Graphics::Surface *data, Common::WriteStream *stream
 
 // -----------------------------------------------------------------------------
 
-Common::MemoryReadStream *Screenshot::createThumbnail(Graphics::Surface *data) {
+Common::SeekableReadStream *Screenshot::createThumbnail(Graphics::Surface *data) {
 	// This method takes a screen image with a dimension of 800x600, and creates a screenshot with a dimension of 200x125.
 	// First 50 pixels are cut off the top and bottom (the interface boards in the game). The remaining image of 800x500 
 	// will be on a 16th of its size, reduced by being handed out in 4x4 pixel blocks and the average of each block 
@@ -177,7 +176,7 @@ Common::MemoryReadStream *Screenshot::createThumbnail(Graphics::Surface *data) {
 	saveToFile(&thumbnail, stream);
 
 	// Output a MemoryReadStream that encompasses the written data
-	Common::MemoryReadStream *result = new Common::MemoryReadStream(stream->getData(), stream->size(),
+	Common::SeekableReadStream *result = new Common::MemoryReadStream(stream->getData(), stream->size(),
 		DisposeAfterUse::YES);
 	return result;
 }

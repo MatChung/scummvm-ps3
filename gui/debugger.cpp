@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/debugger.cpp $
- * $Id: debugger.cpp 54067 2010-11-04 16:09:20Z wjpalenstijn $
+ * $Id: debugger.cpp 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -29,6 +29,8 @@
 #include "common/debug.h"
 #include "common/debug-channels.h"
 #include "common/system.h"
+
+#include "engines/engine.h"
 
 #include "gui/debugger.h"
 #ifndef USE_TEXT_CONSOLE
@@ -87,6 +89,14 @@ int Debugger::DebugPrintf(const char *format, ...) {
 #endif
 	va_end (argptr);
 	return count;
+}
+
+void Debugger::preEnter() {
+	g_engine->pauseEngine(true);
+}
+
+void Debugger::postEnter() {
+	g_engine->pauseEngine(false);
 }
 
 void Debugger::attach(const char *entry) {

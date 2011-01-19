@@ -2,7 +2,7 @@
  * Copyright (C) 2003-2005 Andreas 'Sprawl' Karlsson - Original EPOC port, ESDL
  * Copyright (C) 2003-2005 Lars 'AnotherGuest' Persson - Original EPOC port, Audio System
  * Copyright (C) 2005 Jurgen 'SumthinWicked' Braam - EPOC/CVS maintainer
- * Copyright (C) 2005-2010 The ScummVM project
+ * Copyright (C) 2005-2011 The ScummVM project
  *
  * ScummVM is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -23,7 +23,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/symbian/S60v3/ScummVM_S60v3.mmp.in $
- * $Id: ScummVM_S60v3.mmp.in 53160 2010-10-12 02:18:11Z jvprat $
+ * $Id: ScummVM_S60v3.mmp.in 55082 2010-12-31 23:04:49Z strangerke $
  *
  */
 
@@ -115,14 +115,15 @@ SOURCEPATH ..\..\..\..\base
 SOURCEPATH ..\..\..\..
 
 // backend EPOC/SDL/ESDL specific includes
-SOURCE backends\platform\sdl\events.cpp
-SOURCE backends\platform\sdl\graphics.cpp
 SOURCE backends\platform\sdl\hardwarekeys.cpp
 SOURCE backends\platform\sdl\sdl.cpp
+SOURCE backends\audiocd\sdl\sdl-audiocd.cpp
+SOURCE backends\audiocd\default\default-audiocd.cpp
 SOURCE backends\fs\symbian\symbian-fs-factory.cpp
 SOURCE backends\platform\symbian\src\SymbianOS.cpp
 SOURCE backends\platform\symbian\src\SymbianActions.cpp
 SOURCE backends\platform\symbian\src\ScummApp.cpp
+SOURCE backends\platform\symbian\src\SymbianMain.cpp
 
 SOURCE gui\Key.cpp
 SOURCE gui\KeysDialog.cpp
@@ -144,3 +145,4 @@ LIBRARY mediaclientaudiostream.lib efsrv.lib ws32.lib
 library avkon.lib bafl.lib
 
 CAPABILITY LocalServices ReadUserData
+MACRO SDL_BACKEND

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/sound/drivers/amigamac.cpp $
- * $Id: amigamac.cpp 54037 2010-11-02 09:49:47Z fingolfin $
+ * $Id: amigamac.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -29,6 +29,7 @@
 
 #include "common/file.h"
 #include "common/frac.h"
+#include "common/memstream.h"
 #include "common/util.h"
 
 namespace Sci {

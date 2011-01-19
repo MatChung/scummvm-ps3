@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/character.h $
-* $Id: character.h 53710 2010-10-22 21:21:57Z sylvaintv $
+* $Id: character.h 54221 2010-11-13 01:15:37Z sylvaintv $
 *
 */
 
@@ -53,11 +53,12 @@ struct SpecialCharacterAnimation {
 class Character {
 public:
 	Character(ToonEngine *vm);
-	virtual ~Character(void);
+	virtual ~Character();
 	virtual void init();
 	virtual int32 getId();
 	virtual void setId(int32 id);
 	virtual void setFacing(int32 facing);
+	virtual void forceFacing(int32 facing);
 	virtual int32 getFacing();
 	virtual void setAnimScript(int32 animScriptId);
 	virtual void setSceneAnimationId(int32 sceneAnimationId);
@@ -69,6 +70,7 @@ public:
 	virtual int32 getAnimFlag();
 	virtual void setAnimFlag(int32 flag);
 	virtual void setPosition(int32 x, int32 y);
+	virtual void forcePosition(int32 x, int32 y);
 	virtual int32 getX();
 	virtual int32 getY();
 	virtual int32 getFinalX();

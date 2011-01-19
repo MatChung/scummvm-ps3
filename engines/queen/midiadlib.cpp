@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/queen/midiadlib.cpp $
- * $Id: midiadlib.cpp 48637 2010-04-12 09:14:17Z fingolfin $
+ * $Id: midiadlib.cpp 54410 2010-11-21 18:42:00Z tdhs $
  *
  */
 
@@ -35,7 +35,7 @@ class AdLibMidiChannel;
 class AdLibMidiDriver : public MidiDriver_Emulated {
 public:
 
-	AdLibMidiDriver(Audio::Mixer *mixer) : MidiDriver_Emulated(mixer) {}
+	AdLibMidiDriver(Audio::Mixer *mixer) : MidiDriver_Emulated(mixer) { _adlibWaveformSelect = 0; }
 	~AdLibMidiDriver() {}
 
 	// MidiDriver

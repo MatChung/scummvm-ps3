@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/math/regionregistry.cpp $
- * $Id: regionregistry.cpp 53752 2010-10-24 01:29:59Z fingolfin $
+ * $Id: regionregistry.cpp 54258 2010-11-16 08:23:13Z fingolfin $
  *
  */
 
@@ -39,7 +39,7 @@
 #include "sword25/math/regionregistry.h"
 #include "sword25/math/region.h"
 
-DECLARE_SINGLETON(Sword25::RegionRegistry)
+DECLARE_SINGLETON(Sword25::RegionRegistry);
 
 namespace Sword25 {
 

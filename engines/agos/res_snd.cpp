@@ -19,18 +19,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/res_snd.cpp $
- * $Id: res_snd.cpp 54001 2010-11-01 16:00:17Z fingolfin $
+ * $Id: res_snd.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "common/config-manager.h"
 #include "common/file.h"
+#include "common/memstream.h"
 
 #include "agos/intern.h"
 #include "agos/agos.h"
 #include "agos/vga.h"
 
-#include "sound/audiocd.h"
+#include "backends/audiocd/audiocd.h"
+
 #include "sound/audiostream.h"
 #include "sound/mididrv.h"
 #include "sound/mods/protracker.h"
@@ -226,9 +228,9 @@ void AGOSEngine_Simon1::playMusic(uint16 music, uint16 track) {
 	stopMusic();
 
 	// Support for compressed music from the ScummVM Music Enhancement Project
-	AudioCD.stop();
-	AudioCD.play(music + 1, -1, 0, 0);
-	if (AudioCD.isPlaying())
+	_system->getAudioCDManager()->stop();
+	_system->getAudioCDManager()->play(music + 1, -1, 0, 0);
+	if (_system->getAudioCDManager()->isPlaying())
 		return;
 
 	if (getPlatform() == Common::kPlatformAmiga) {

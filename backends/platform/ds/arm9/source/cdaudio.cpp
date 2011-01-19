@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/ds/arm9/source/cdaudio.cpp $
- * $Id: cdaudio.cpp 50708 2010-07-05 20:36:11Z fingolfin $
+ * $Id: cdaudio.cpp 54335 2010-11-18 17:45:07Z fingolfin $
  *
  */
+
+// Disable symbol overrides for FILE as that is used in FLAC headers
+#define FORBIDDEN_SYMBOL_EXCEPTION_FILE
 
 #include "cdaudio.h"
 #include "backends/fs/ds/ds-fs.h"
@@ -74,6 +77,7 @@ struct decoderFormat {
 	unsigned char	sample[1024];
 } __attribute__ ((packed));
 
+static bool s_started = false;
 static bool s_active = false;
 static WaveHeader waveHeader;
 static Header blockHeader;
@@ -140,9 +144,8 @@ void playTrack(int track, int numLoops, int startFrame, int duration) {
 
 	char str[100];
 
-	if (path[strlen(path.c_str()) - 1] != '/') {
-		path = path + "/";
-	}
+	if (path.lastChar() != '/')
+		path += '/';
 
 	Common::String fname;
 
@@ -196,7 +199,6 @@ void playTrack(int track, int numLoops, int startFrame, int duration) {
 	dataChunkStart = DS::std_ftell(s_file);
 
 
-	static bool started = false;
 	sampleNum = 0;
 	blockCount = 0;
 
@@ -204,11 +206,11 @@ void playTrack(int track, int numLoops, int startFrame, int duration) {
 	IPC->streamFillNeeded[1] = true;
 	IPC->streamFillNeeded[2] = true;
 	IPC->streamFillNeeded[3] = true;
-	if (!started) {
+	if (!s_started) {
 		fillPos = 0;
 		audioBuffer = (s16 *) malloc(BUFFER_SIZE * 2);
 		decompressionBuffer = (s16 *) malloc(waveHeader.fmtExtra * 2);
-		started = true;
+		s_started = true;
 //		consolePrintf("****Starting buffer*****\n");
 		memset(audioBuffer, 0, BUFFER_SIZE * 2);
 		memset(decompressionBuffer, 0, waveHeader.fmtExtra * 2);
@@ -252,7 +254,12 @@ void update() {
 }
 
 #ifdef ARM_ADPCM
-extern "C" void ARM_adcpm(int *block, int len, int stepTableIndex,
+// FIXME: This code, as well as the source file adpcm_arm.s, are
+// apparently unused. Maybe that is a mistake? Or maybe there is a bug
+// in ARM_adpcm (then this should be reported and fixed). Or maybe there
+// are other good reasons to prefer the C code, but then this as well as
+// the assembler source file should be removed.
+extern "C" void ARM_adpcm(int *block, int len, int stepTableIndex,
                           int firstSample, s16 *decompressionBuffer);
 #endif
 
@@ -469,20 +476,20 @@ void stopTrack() {
 }
 
 bool trackExists(int num) {
-	Common::String path = ConfMan.get("path");
-
+	Common::String path;
 	char fname[128];
+	FILE *file;
 
 	sprintf(fname, "track%d.wav", num);
 
-	if (path[strlen(path.c_str()) - 1] == '/') {
-		path = path + fname;
-	} else {
-		path = path + "/" + fname;
-	}
+	path = ConfMan.get("path");
+	if (path.lastChar() != '/')
+		path += '/';
+	path += fname;
+
 	consolePrintf("Looking for %s...", path.c_str());
 
-	FILE *file = DS::std_fopen(path.c_str(), "r");
+	file = DS::std_fopen(path.c_str(), "r");
 	if (file) {
 		consolePrintf("Success!\n");
 		setActive(true);
@@ -492,27 +499,24 @@ bool trackExists(int num) {
 
 	sprintf(fname, "track%02d.wav", num);
 
-	 path = ConfMan.get("path");
-
-	if (path[strlen(path.c_str()) - 1] == '/') {
-		path = path + fname;
-	} else {
-		path = path + "/" + fname;
-	}
+	path = ConfMan.get("path");
+	if (path.lastChar() != '/')
+		path += '/';
+	path += fname;
 
 	consolePrintf("Looking for %s...", path.c_str());
 
-
-	if ((file = DS::std_fopen(path.c_str(), "r"))) {
+	file = DS::std_fopen(path.c_str(), "r");
+	if (file) {
 		consolePrintf("Success!\n");
 		setActive(true);
 		DS::std_fclose(file);
 		return true;
-	} else {
-		setActive(false);
-		consolePrintf("Failed!\n");
-		return false;
 	}
+
+	setActive(false);
+	consolePrintf("Failed!\n");
+	return false;
 }
 
 bool checkCD() {

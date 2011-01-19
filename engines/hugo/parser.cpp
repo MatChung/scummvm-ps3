@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/parser.cpp $
- * $Id: parser.cpp 54018 2010-11-01 20:20:21Z strangerke $
+ * $Id: parser.cpp 55192 2011-01-09 22:42:56Z strangerke $
  *
  */
 
@@ -31,13 +31,15 @@
  */
 
 #include "common/system.h"
+#include "common/events.h"
 
 #include "hugo/hugo.h"
+#include "hugo/display.h"
 #include "hugo/parser.h"
 #include "hugo/file.h"
-#include "hugo/display.h"
-#include "hugo/route.h"
+#include "hugo/schedule.h"
 #include "hugo/util.h"
+#include "hugo/route.h"
 #include "hugo/sound.h"
 #include "hugo/object.h"
 
@@ -54,70 +56,8 @@ Parser::Parser(HugoEngine *vm) :
 Parser::~Parser() {
 }
 
-void Parser::keyHandler(uint16 nChar, uint16 nFlags) {
-	debugC(1, kDebugParser, "keyHandler(%d, %d)", nChar, nFlags);
-
-	status_t &gameStatus = _vm->getGameStatus();
-	bool repeatedFl = (nFlags & 0x4000);            // TRUE if key is a repeat
-
-// Process key down event - called from OnKeyDown()
-	switch (nChar)  {                               // Set various toggle states
-	case Common::KEYCODE_ESCAPE:                    // Escape key, may want to QUIT
-		if (gameStatus.inventoryState == I_ACTIVE)  // Remove inventory, if displayed
-			gameStatus.inventoryState = I_UP;
-		gameStatus.inventoryObjId = -1;             // Deselect any dragged icon
-		break;
-	case Common::KEYCODE_END:
-	case Common::KEYCODE_HOME:
-	case Common::KEYCODE_LEFT:
-	case Common::KEYCODE_RIGHT:
-	case Common::KEYCODE_UP:
-	case Common::KEYCODE_DOWN:
-		if (!repeatedFl) {
-			gameStatus.routeIndex = -1;             // Stop any automatic route
-			_vm->_route->setWalk(nChar);             // Direction of hero travel
-		}
-		break;
-	case Common::KEYCODE_F1:                        // User Help (DOS)
-		if (_checkDoubleF1Fl)
-			_vm->_file->instructions();
-		else
-			_vm->_screen->userHelp();
-		_checkDoubleF1Fl = !_checkDoubleF1Fl;
-		break;
-	case Common::KEYCODE_F6:                        // Inventory
-		showDosInventory();
-		break;
-	case Common::KEYCODE_F8:                        // Turbo mode
-		_config.turboFl = !_config.turboFl;
-		break;
-	case Common::KEYCODE_F2:                        // Toggle sound
-		_vm->_sound->toggleSound();
-		_vm->_sound->toggleMusic();
-		break;
-	case Common::KEYCODE_F3:                        // Repeat last line
-		gameStatus.recallFl = true;
-		break;
-	case Common::KEYCODE_F4:                        // Save game
-	case Common::KEYCODE_F5:                        // Restore game
-	case Common::KEYCODE_F9:                        // Boss button
-		warning("STUB: KeyHandler() - F4-F5-F9 (DOS)");
-		break;
-	default:                                        // Any other key
-		if (!gameStatus.storyModeFl) {              // Keyboard disabled
-			// Add printable keys to ring buffer
-			uint16 bnext = _putIndex + 1;
-			if (bnext >= sizeof(_ringBuffer))
-				bnext = 0;
-			if (bnext != _getIndex) {
-				_ringBuffer[_putIndex] = nChar;
-				_putIndex = bnext;
-			}
-		}
-		break;
-	}
-	if (_checkDoubleF1Fl && (nChar != Common::KEYCODE_F1))
-		_checkDoubleF1Fl = false;
+void Parser::switchTurbo() {
+	_config.turboFl = !_config.turboFl;
 }
 
 /**
@@ -157,7 +97,7 @@ void Parser::charHandler() {
 		default:                                    // Normal text key, add to line
 			if (lineIndex >= MAX_CHARS) {
 				//MessageBeep(MB_ICONASTERISK);
-				warning("STUB: MessageBeep(MB_ICONASTERISK);");
+				warning("STUB: MessageBeep() - Command line too long");
 			} else if (isprint(c)) {
 				cmdLine[lineIndex++] = c;
 				cmdLine[lineIndex] = '\0';
@@ -167,7 +107,7 @@ void Parser::charHandler() {
 	}
 
 	// See if time to blink cursor, set cursor character
-	if ((tick++ % (TPS / BLINKS)) == 0)
+	if ((tick++ % (_vm->getTPS() / BLINKS)) == 0)
 		cursor = (cursor == '_') ? ' ' : '_';
 
 	// See if recall button pressed
@@ -186,6 +126,150 @@ void Parser::charHandler() {
 		command("look around");
 		gameStatus.lookFl = false;
 	}
+}
+
+void Parser::keyHandler(Common::Event event) {
+	debugC(1, kDebugParser, "keyHandler(%d)", event.kbd.keycode);
+
+	status_t &gameStatus = _vm->getGameStatus();
+	uint16 nChar = event.kbd.keycode;
+
+	// Process key down event - called from OnKeyDown()
+	switch (nChar) {                                // Set various toggle states
+	case Common::KEYCODE_ESCAPE:                    // Escape key, may want to QUIT
+		if (gameStatus.viewState == V_INTRO)
+			gameStatus.skipIntroFl = true;
+		else {
+			if (gameStatus.inventoryState == I_ACTIVE)  // Remove inventory, if displayed
+				gameStatus.inventoryState = I_UP;
+			_vm->_screen->resetInventoryObjId();
+		}
+		break;
+	case Common::KEYCODE_END:
+	case Common::KEYCODE_HOME:
+	case Common::KEYCODE_PAGEUP:
+	case Common::KEYCODE_PAGEDOWN:
+	case Common::KEYCODE_KP1:
+	case Common::KEYCODE_KP7:
+	case Common::KEYCODE_KP9:
+	case Common::KEYCODE_KP3:
+	case Common::KEYCODE_LEFT:
+	case Common::KEYCODE_RIGHT:
+	case Common::KEYCODE_UP:
+	case Common::KEYCODE_DOWN:
+	case Common::KEYCODE_KP4:
+	case Common::KEYCODE_KP6:
+	case Common::KEYCODE_KP8:
+	case Common::KEYCODE_KP2:
+		gameStatus.routeIndex = -1;                 // Stop any automatic route
+		_vm->_route->setWalk(nChar);                // Direction of hero travel
+		break;
+	case Common::KEYCODE_F1:                        // User Help (DOS)
+		if (_checkDoubleF1Fl)
+			_vm->_file->instructions();
+		else
+			_vm->_screen->userHelp();
+		_checkDoubleF1Fl = !_checkDoubleF1Fl;
+		break;
+	case Common::KEYCODE_F2:                        // Toggle sound
+		_vm->_sound->toggleSound();
+		_vm->_sound->toggleMusic();
+		break;
+	case Common::KEYCODE_F3:                        // Repeat last line
+		gameStatus.recallFl = true;
+		break;
+	case Common::KEYCODE_F4:                        // Save game
+		if (gameStatus.viewState == V_PLAY) {
+			if (gameStatus.gameOverFl)
+				Utils::gameOverMsg();
+			else
+				_vm->_file->saveGame(-1, Common::String());
+		}
+		break;
+	case Common::KEYCODE_F5:                        // Restore game
+		_vm->_file->restoreGame(-1);
+		_vm->_scheduler->restoreScreen(*_vm->_screen_p);
+		gameStatus.viewState = V_PLAY;
+		break;
+	case Common::KEYCODE_F6:                        // Inventory
+		showInventory();
+		break;
+	case Common::KEYCODE_F8:                        // Turbo mode
+		switchTurbo();
+		break;
+	case Common::KEYCODE_F9:                        // Boss button
+		warning("STUB: F9 (DOS) - BossKey");
+		break;
+	case Common::KEYCODE_l:
+		if (event.kbd.hasFlags(Common::KBD_CTRL)) {
+			_vm->_file->restoreGame(-1);
+			_vm->_scheduler->restoreScreen(*_vm->_screen_p);
+			gameStatus.viewState = V_PLAY;
+		} else {
+			if (!gameStatus.storyModeFl) {          // Keyboard disabled
+				// Add printable keys to ring buffer
+				uint16 bnext = _putIndex + 1;
+				if (bnext >= sizeof(_ringBuffer))
+					bnext = 0;
+				if (bnext != _getIndex) {
+					_ringBuffer[_putIndex] = event.kbd.ascii;
+					_putIndex = bnext;
+				}
+			}
+		}
+		break;
+	case Common::KEYCODE_n:
+		if (event.kbd.hasFlags(Common::KBD_CTRL)) {
+			warning("STUB: CTRL-N (WIN) - New Game");
+		} else {
+			if (!gameStatus.storyModeFl) {          // Keyboard disabled
+				// Add printable keys to ring buffer
+				uint16 bnext = _putIndex + 1;
+				if (bnext >= sizeof(_ringBuffer))
+					bnext = 0;
+				if (bnext != _getIndex) {
+					_ringBuffer[_putIndex] = event.kbd.ascii;
+					_putIndex = bnext;
+				}
+			}
+		}
+		break;
+	case Common::KEYCODE_s:
+		if (event.kbd.hasFlags(Common::KBD_CTRL)) {
+			if (gameStatus.viewState == V_PLAY) {
+				if (gameStatus.gameOverFl)
+					Utils::gameOverMsg();
+				else
+					_vm->_file->saveGame(-1, Common::String());
+			}
+		} else {
+			if (!gameStatus.storyModeFl) {          // Keyboard disabled
+				// Add printable keys to ring buffer
+				uint16 bnext = _putIndex + 1;
+				if (bnext >= sizeof(_ringBuffer))
+					bnext = 0;
+				if (bnext != _getIndex) {
+					_ringBuffer[_putIndex] = event.kbd.ascii;
+					_putIndex = bnext;
+				}
+			}
+		}
+		break;
+	default:                                        // Any other key
+		if (!gameStatus.storyModeFl) {              // Keyboard disabled
+			// Add printable keys to ring buffer
+			uint16 bnext = _putIndex + 1;
+			if (bnext >= sizeof(_ringBuffer))
+				bnext = 0;
+			if (bnext != _getIndex) {
+				_ringBuffer[_putIndex] = event.kbd.ascii;
+				_putIndex = bnext;
+			}
+		}
+		break;
+	}
+	if (_checkDoubleF1Fl && (nChar != Common::KEYCODE_F1))
+		_checkDoubleF1Fl = false;
 }
 
 /**
@@ -256,7 +340,7 @@ void Parser::showDosInventory() {
 	static const char *blanks = "                                        ";
 	uint16 index = 0, len1 = 0, len2 = 0;
 
-	for (int i = 0; i < _vm->_numObj; i++) {        // Find widths of 2 columns
+	for (int i = 0; i < _vm->_object->_numObj; i++) { // Find widths of 2 columns
 		if (_vm->_object->isCarried(i)) {
 			uint16 len = strlen(_vm->_arrayNouns[_vm->_object->_objects[i].nounIndex][1]);
 			if (index++ & 1)                        // Right hand column
@@ -274,7 +358,7 @@ void Parser::showDosInventory() {
 	strncat(buffer, blanks, (len1 + len2 - strlen(_vm->_textParser[kTBIntro])) / 2);
 	strcat(strcat(buffer, _vm->_textParser[kTBIntro]), "\n");
 	index = 0;
-	for (int i = 0; i < _vm->_numObj; i++) {        // Assign strings
+	for (int i = 0; i < _vm->_object->_numObj; i++) { // Assign strings
 		if (_vm->_object->isCarried(i)) {
 			if (index++ & 1)
 				strcat(strcat(buffer, _vm->_arrayNouns[_vm->_object->_objects[i].nounIndex][1]), "\n");

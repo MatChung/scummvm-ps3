@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/codecs/cinepak.cpp $
- * $Id: cinepak.cpp 51928 2010-08-08 03:33:44Z mthreepwood $
+ * $Id: cinepak.cpp 54930 2010-12-16 02:02:53Z mthreepwood $
  *
  */
 
@@ -39,17 +39,24 @@ inline static void CPYUV2RGB(byte y, byte u, byte v, byte &r, byte &g, byte &b) 
 }
 
 #define PUT_PIXEL(offset, lum, u, v) \
-	CPYUV2RGB(lum, u, v, r, g, b); \
-	if (_pixelFormat.bytesPerPixel == 2) \
-		*((uint16 *)_curFrame.surface->pixels + offset) = _pixelFormat.RGBToColor(r, g, b); \
-	else \
-		*((uint32 *)_curFrame.surface->pixels + offset) = _pixelFormat.RGBToColor(r, g, b)
+	if (_pixelFormat.bytesPerPixel != 1) { \
+		CPYUV2RGB(lum, u, v, r, g, b); \
+		if (_pixelFormat.bytesPerPixel == 2) \
+			*((uint16 *)_curFrame.surface->pixels + offset) = _pixelFormat.RGBToColor(r, g, b); \
+		else \
+			*((uint32 *)_curFrame.surface->pixels + offset) = _pixelFormat.RGBToColor(r, g, b); \
+	} else \
+		*((byte *)_curFrame.surface->pixels + offset) = lum
 
-CinepakDecoder::CinepakDecoder() : Codec() {
+CinepakDecoder::CinepakDecoder(int bitsPerPixel) : Codec() {
 	_curFrame.surface = NULL;
 	_curFrame.strips = NULL;
 	_y = 0;
-	_pixelFormat = g_system->getScreenFormat();
+
+	if (bitsPerPixel == 8)
+		_pixelFormat = PixelFormat::createFormatCLUT8();
+	else
+		_pixelFormat = g_system->getScreenFormat();
 }
 
 CinepakDecoder::~CinepakDecoder() {
@@ -61,7 +68,7 @@ CinepakDecoder::~CinepakDecoder() {
 	delete[] _curFrame.strips;
 }
 
-Surface *CinepakDecoder::decodeImage(Common::SeekableReadStream *stream) {
+const Surface *CinepakDecoder::decodeImage(Common::SeekableReadStream *stream) {
 	_curFrame.flags = stream->readByte();
 	_curFrame.length = (stream->readByte() << 16) + stream->readUint16BE();
 	_curFrame.width = stream->readUint16BE();
@@ -181,8 +188,8 @@ void CinepakDecoder::loadCodebook(Common::SeekableReadStream *stream, uint16 str
 				codebook[i].v  = stream->readByte() + 128;
 			} else {
 				// This codebook type indicates either greyscale or
-				// palettized video. We don't handle palettized video
-				// currently.
+				// palettized video. For greyscale, default us to
+				// 128 for both u and v.
 				codebook[i].u  = 128;
 				codebook[i].v  = 128;
 			}

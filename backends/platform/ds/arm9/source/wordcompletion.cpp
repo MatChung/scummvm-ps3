@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/ds/arm9/source/wordcompletion.cpp $
- * $Id: wordcompletion.cpp 50689 2010-07-05 16:11:11Z fingolfin $
+ * $Id: wordcompletion.cpp 54325 2010-11-18 17:01:30Z fingolfin $
  *
  */
 
@@ -30,11 +30,11 @@
 #ifdef ENABLE_AGI
 
 namespace DS {
-// Default dictionary is about 64Kb, so 128Kb should be enough for future expansion
-#define WORD_BUFFER_SIZE (128 * 1024)
+// Default dictionary is about 64Kb, so 96Kb should be enough for future expansion
+#define WORD_BUFFER_SIZE (96 * 1024)
 
 // Default dictionary has ~8000 words
-#define MAX_WORD_COUNT 16000
+#define MAX_WORD_COUNT 12000
 
 char wordBuffer[WORD_BUFFER_SIZE];
 int wordBufferPos = 0;

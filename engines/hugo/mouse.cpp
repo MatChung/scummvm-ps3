@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/mouse.cpp $
- * $Id: mouse.cpp 54018 2010-11-01 20:20:21Z strangerke $
+ * $Id: mouse.cpp 55181 2011-01-09 10:16:55Z strangerke $
  *
  */
 
@@ -74,8 +74,14 @@ void MouseHandler::cursorText(char *buffer, int16 cx, int16 cy, uif_t fontId, in
 	// Find bounding rect for string
 	int16 sdx = _vm->_screen->stringLength(buffer);
 	int16 sdy = _vm->_screen->fontHeight() + 1;                      // + 1 for shadow
-	int16 sx  = (cx < XPIX / 2) ? cx + SX_OFF : cx - sdx - SX_OFF / 2;
-	int16 sy  = cy + SY_OFF;
+	int16 sx, sy;
+	if (cx < XPIX / 2) {
+		sx = cx + SX_OFF;
+		sy = (_vm->getGameStatus().inventoryObjId == -1) ? cy + SY_OFF : cy + SY_OFF - (_vm->_screen->fontHeight() + 1);
+	} else {
+		sx = cx - sdx - SX_OFF / 2;
+		sy = cy + SY_OFF;
+	}
 
 	// Display the string and add rect to display list
 	_vm->_screen->shadowStr(sx, sy, buffer, _TBRIGHTWHITE);
@@ -114,11 +120,11 @@ void MouseHandler::processRightClick(int16 objId, int16 cx, int16 cy) {
 	// Check if this was over iconbar
 	if (gameStatus.inventoryState == I_ACTIVE && cy < INV_DY + DIBOFF_Y) { // Clicked over iconbar object
 		if (gameStatus.inventoryObjId == -1)
-			gameStatus.inventoryObjId = objId;      // Not using so select new object
+			_vm->_screen->selectInventoryObjId(objId);
 		else if (gameStatus.inventoryObjId == objId)
-			gameStatus.inventoryObjId = -1;         // Same icon - deselect it
+			_vm->_screen->resetInventoryObjId();
 		else
-			_vm->_object->useObject(objId);                   // Use status.objid on object
+			_vm->_object->useObject(objId);         // Use status.objid on object
 	} else {                                        // Clicked over viewport object
 		object_t *obj = &_vm->_object->_objects[objId];
 		int16 x, y;
@@ -130,12 +136,12 @@ void MouseHandler::processRightClick(int16 objId, int16 cx, int16 cy) {
 				_vm->_object->useObject(objId);
 			break;
 		case 0:                                     // Immediate use
-			_vm->_object->useObject(objId);          // Pick up or use object
+			_vm->_object->useObject(objId);         // Pick up or use object
 			break;
 		default:                                    // Walk to view point if possible
 			if (!_vm->_route->startRoute(GO_GET, objId, obj->viewx, obj->viewy)) {
-				if (_vm->_hero->cycling == INVISIBLE)// If invisible do
-					_vm->_object->useObject(objId);           // immediate use
+				if (_vm->_hero->cycling == INVISIBLE) // If invisible do
+					_vm->_object->useObject(objId); // immediate use
 				else
 					Utils::Box(BOX_ANY, "%s", _vm->_textMouse[kMsNoWayText]);      // Can't get there
 			}
@@ -195,7 +201,7 @@ void MouseHandler::processLeftClick(int16 objId, int16 cx, int16 cy) {
 			}
 
 			// Get rid of any attached icon
-			gameStatus.inventoryObjId = -1;
+			_vm->_screen->resetInventoryObjId();
 		}
 		break;
 	default:                                        // Look at an icon or object
@@ -248,36 +254,16 @@ void MouseHandler::mouseHandler() {
 	if (cx < 0 || cx > XPIX || cy < DIBOFF_Y || cy > VIEW_DY + DIBOFF_Y)
 		return;
 
-	// Display dragged inventory icon if one currently selected
-	if (gameStatus.inventoryObjId != -1) {
-		// Find index of icon
-		int16 iconId;                               // Find index of dragged icon
-		for (iconId = 0; iconId < _vm->_maxInvent; iconId++) {
-			if (gameStatus.inventoryObjId == _vm->_invent[iconId])
-				break;
-		}
-
-		// Compute source coordinates in dib_u
-		int16 ux = (iconId + NUM_ARROWS) * INV_DX % XPIX;
-		int16 uy = (iconId + NUM_ARROWS) * INV_DX / XPIX * INV_DY;
-
-		// Compute destination coordinates in dib_a
-		int iconx = cx + IX_OFF;
-		int icony = cy + IY_OFF;
-		iconx = MAX(iconx, 0);                      // Keep within dib_a bounds
-		iconx = MIN(iconx, XPIX - INV_DX);
-		icony = MAX(icony, 0);
-		icony = MIN(icony, YPIX - INV_DY);
-
-		// Copy the icon and add to display list
-		_vm->_screen->moveImage(_vm->_screen->getGUIBuffer(), ux, uy, INV_DX, INV_DY, XPIX, _vm->_screen->getFrontBuffer(), iconx, icony, XPIX);
-		_vm->_screen->displayList(D_ADD, iconx, icony, INV_DX, INV_DY);
-	}
-
 	int16 objId = -1;                               // Current source object
 	// Process cursor over an object or icon
-	if (gameStatus.inventoryState == I_ACTIVE)      // Check inventory icon bar first
+	if (gameStatus.inventoryState == I_ACTIVE) {      // Check inventory icon bar first
 		objId = _vm->_inventory->processInventory(INV_GET, cx, cy);
+	} else {
+		if (cy < 5 && cy > 0) {
+			_vm->_topMenu->runModal();
+		}
+	}
+
 	if (objId == -1)                                // No match, check rest of view
 		objId = _vm->_object->findObject(cx, cy);
 	if (objId >= 0) {                               // Got a match

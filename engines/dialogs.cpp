@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/dialogs.cpp $
- * $Id: dialogs.cpp 54001 2010-11-01 16:00:17Z fingolfin $
+ * $Id: dialogs.cpp 54265 2010-11-16 10:19:01Z fingolfin $
  */
 
 #include "base/version.h"
@@ -33,9 +33,9 @@
 #include "graphics/scaler.h"
 
 #include "gui/about.h"
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 #include "gui/launcher.h"
-#include "gui/ListWidget.h"
+#include "gui/widgets/list.h"
 #include "gui/message.h"
 #include "gui/options.h"
 #include "gui/saveload.h"
@@ -176,6 +176,15 @@ void MainMenuDialog::reflowLayout() {
 		_loadButton->setEnabled(_engine->canLoadGameStateCurrently());
 	if (_engine->hasFeature(Engine::kSupportsSavingDuringRuntime))
 		_saveButton->setEnabled(_engine->canSaveGameStateCurrently());
+	
+	// Overlay size might have changed since the construction of the dialog.
+	// Update labels when it might be needed
+	// FIXME: it might be better to declare GUI::StaticTextWidget::setLabel() virtual
+	// and to reimplement it in GUI::ButtonWidget to handle the hotkey.
+	if (g_system->getOverlayWidth() > 320)
+		_rtlButton->setLabel(_rtlButton->cleanupHotkey(_("~R~eturn to Launcher")));
+	else
+		_rtlButton->setLabel(_rtlButton->cleanupHotkey(_c("~R~eturn to Launcher", "lowres")));
 
 #ifndef DISABLE_FANCY_THEMES
 	if (g_gui.xmlEval()->getVar("Globals.ShowGlobalMenuLogo", 0) == 1 && g_gui.theme()->supportsImages()) {

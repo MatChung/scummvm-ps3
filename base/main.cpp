@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/base/main.cpp $
- * $Id: main.cpp 54097 2010-11-05 13:24:57Z bluddy $
+ * $Id: main.cpp 55064 2010-12-30 08:01:58Z Bluddy $
  *
  */
 
@@ -48,13 +48,14 @@
 #include "common/system.h"
 #include "common/tokenizer.h"
 #include "common/translation.h"
+#include "common/debug-channels.h" /* for debug manager */
 
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 #include "gui/message.h"
 #include "gui/error.h"
 
-#include "sound/audiocd.h"
 #include "sound/mididrv.h"
+#include "sound/musicplugin.h"  /* for music manager */
 
 #include "backends/keymapper/keymapper.h"
 
@@ -106,11 +107,7 @@ static const EnginePlugin *detectPlugin() {
 	printf("User picked target '%s' (gameid '%s')...\n", ConfMan.getActiveDomainName().c_str(), gameid.c_str());
 	printf("%s", "  Looking for a plugin supporting this gameid... ");
 
-#if defined(ONE_PLUGIN_AT_A_TIME) && defined(DYNAMIC_MODULES)
-	GameDescriptor game = EngineMan.findGameOnePluginAtATime(gameid, &plugin);
-#else
  	GameDescriptor game = EngineMan.findGame(gameid, &plugin);
-#endif
 
 	if (plugin == 0) {
 		printf("failed\n");
@@ -216,19 +213,14 @@ static Common::Error runGame(const EnginePlugin *plugin, OSystem &system, const 
 	// Run the engine
 	Common::Error result = engine->run();
 
-#if defined(ONE_PLUGIN_AT_A_TIME) && defined(DYNAMIC_MODULES)
-	// do our best to prevent fragmentation by unloading as soon as we can
-	PluginManager::instance().unloadPluginsExcept(PLUGIN_TYPE_ENGINE, NULL, false);
-#endif	
-	
 	// Inform backend that the engine finished
 	system.engineDone();
 
-	// We clear all debug levels again even though the engine should do it
-	DebugMan.clearAllDebugChannels();
-
 	// Free up memory
 	delete engine;
+
+	// We clear all debug levels again even though the engine should do it
+	DebugMan.clearAllDebugChannels();
 
 	// Reset the file/directory mappings
 	SearchMan.clear();
@@ -346,14 +338,9 @@ extern "C" int scummvm_main(int argc, const char * const argv[]) {
 		settings.erase("debugflags");
 	}
 
-#if defined(ONE_PLUGIN_AT_A_TIME) && defined(DYNAMIC_MODULES)
-	// Only load non-engine plugins and first engine plugin initially in this case.
-	PluginManager::instance().loadNonEnginePluginsAndEnumerate();
-#else
- 	// Load the plugins.
- 	PluginManager::instance().loadPlugins();
-#endif
-
+	PluginManager::instance().init();
+ 	PluginManager::instance().loadAllPlugins(); // load plugins for cached plugin manager
+	
 	// If we received an invalid music parameter via command line we check this here.
 	// We can't check this before loading the music plugins.
 	// On the other hand we cannot load the plugins before we know the file paths (in case of external plugins).
@@ -376,8 +363,33 @@ extern "C" int scummvm_main(int argc, const char * const argv[]) {
 	// the command line params) was read.
 	system.initBackend();
 
+	// If we received an invalid graphics mode parameter via command line
+	// we check this here. We can't do it until after the backend is inited,
+	// or there won't be a graphics manager to ask for the supported modes.
+
+	if (settings.contains("gfx-mode")) {
+		const OSystem::GraphicsMode *gm = g_system->getSupportedGraphicsModes();
+		Common::String option = settings["gfx-mode"];
+		bool isValid = false;
+
+		while (gm->name && !isValid) {
+			isValid = !scumm_stricmp(gm->name, option.c_str());
+			gm++;
+		}
+		if (!isValid) {
+			warning("Unrecognized graphics mode '%s'. Switching to default mode", option.c_str());
+			settings["gfx-mode"] = "default";
+		}
+	}
+
 	setupGraphics(system);
 
+	// Init the different managers that are used by the engines.
+	// Do it here to prevent fragmentation later
+	system.getAudioCDManager();
+	MusicManager::instance();
+	Common::DebugManager::instance();
+	
 	// Init the event manager. As the virtual keyboard is loaded here, it must
 	// take place after the backend is initiated and the screen has been setup
 	system.getEventManager()->init();
@@ -411,6 +423,13 @@ extern "C" int scummvm_main(int argc, const char * const argv[]) {
 			// Try to run the game
 			Common::Error result = runGame(plugin, system, specialDebug);
 
+		#if defined(UNCACHED_PLUGINS) && defined(DYNAMIC_MODULES)
+			// do our best to prevent fragmentation by unloading as soon as we can
+			PluginManager::instance().unloadPluginsExcept(PLUGIN_TYPE_ENGINE, NULL, false);
+			// reallocate the config manager to get rid of any fragmentation
+			ConfMan.defragment();
+		#endif	
+			
 			// Did an error occur ?
 			if (result != Common::kNoError) {
 				// Shows an informative error dialog if starting the selected game failed.
@@ -435,34 +454,24 @@ extern "C" int scummvm_main(int argc, const char * const argv[]) {
 			// Clear the active config domain
 			ConfMan.setActiveDomain("");
 
-			// PluginManager::instance().unloadPlugins();
+			PluginManager::instance().loadAllPlugins(); // only for cached manager
 
-#if !defined(ONE_PLUGIN_AT_A_TIME)
-			PluginManager::instance().loadPlugins();
-#endif
 		} else {
 			GUI::displayErrorDialog(_("Could not find any engine capable of running the selected game"));
 		}
-
-		// We will destroy the AudioCDManager singleton here to save some memory.
-		// This will not make the CD audio stop, one would have to enable this:
-		//AudioCD.stop();
-		// but the engine is responsible for stopping CD playback anyway and
-		// this way we catch engines not doing it properly. For some more
-		// information about why AudioCDManager::destroy does not stop the CD
-		// playback read the FIXME in sound/audiocd.h
-		Audio::AudioCDManager::destroy();
 
 		// reset the graphics to default
 		setupGraphics(system);
 		launcherDialog();
 	}
-	PluginManager::instance().unloadPlugins();
+	PluginManager::instance().unloadAllPlugins();
 	PluginManager::destroy();
 	GUI::GuiManager::destroy();
 	Common::ConfigManager::destroy();
 	Common::SearchManager::destroy();
+#ifdef USE_TRANSLATION
 	Common::TranslationManager::destroy();
+#endif
 
 	return 0;
 }

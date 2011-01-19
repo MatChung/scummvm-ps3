@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/inter_playtoons.cpp $
- * $Id: inter_playtoons.cpp 53984 2010-10-31 20:07:14Z drmccoy $
+ * $Id: inter_playtoons.cpp 55284 2011-01-18 04:19:33Z drmccoy $
  *
  */
 
@@ -333,6 +333,13 @@ bool Inter_Playtoons::oPlaytoons_readData(OpFuncParams &params) {
 		return false;
 
 	_vm->_draw->animateCursor(4);
+	if (offset > stream->size()) {
+		warning("oPlaytoons_readData: File \"%s\", Offset (%d) > file size (%d)",
+				file, offset, stream->size());
+		delete stream;
+		return false;
+	}
+
 	if (offset < 0)
 		stream->seek(offset + 1, SEEK_END);
 	else

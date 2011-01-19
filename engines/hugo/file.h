@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/file.h $
- * $Id: file.h 53987 2010-10-31 21:20:22Z strangerke $
+ * $Id: file.h 55114 2011-01-04 08:36:03Z strangerke $
  *
  */
 
@@ -41,7 +41,7 @@ struct PCC_header_t {                               // Structure of PCX file hea
 	byte   mfctr, vers, enc, bpx;
 	uint16  x1, y1, x2, y2;                         // bounding box
 	uint16  xres, yres;
-	byte   palette[48];                             // EGA color palette
+	byte   palette[3 * NUM_COLORS];                 // EGA color palette
 	byte   vmode, planes;
 	uint16 bytesPerLine;                            // Bytes per line
 	byte   fill2[60];
@@ -56,19 +56,18 @@ public:
 
 
 	bool     fileExists(char *filename);
-	sound_pt getSound(short sound, uint16 *size);
+	sound_pt getSound(int16 sound, uint16 *size);
 
-	void     initSavedGame();
-	void     instructions();
 	void     readBootFile();
 	void     readImage(int objNum, object_t *objPtr);
 	void     readUIFImages();
-	void     readUIFItem(short id, byte *buf);
-	void     restoreGame(short slot);
-	void     saveGame(short slot, const char *descrip);
+	void     readUIFItem(int16 id, byte *buf);
+	bool     restoreGame(int16 slot);
+	bool     saveGame(int16 slot, Common::String descrip);
 
 	virtual void openDatabaseFiles() = 0;
 	virtual void closeDatabaseFiles() = 0;
+	virtual void instructions() = 0;
 
 	virtual void readBackground(int screenIndex) = 0;
 	virtual void readOverlay(int screenNum, image_pt image, ovl_t overlayType) = 0;
@@ -97,22 +96,23 @@ public:
 	FileManager_v1d(HugoEngine *vm);
 	~FileManager_v1d();
 
-	void openDatabaseFiles();
-	void closeDatabaseFiles();
-	void readBackground(int screenIndex);
-	void readOverlay(int screenNum, image_pt image, ovl_t overlayType);
-	char *fetchString(int index);
+	virtual void closeDatabaseFiles();
+	virtual void instructions();
+	virtual void openDatabaseFiles();
+	virtual void readBackground(int screenIndex);
+	virtual void readOverlay(int screenNum, image_pt image, ovl_t overlayType);
+	virtual char *fetchString(int index);
 };
 
-class FileManager_v2d : public FileManager {
+class FileManager_v2d : public FileManager_v1d {
 public:
 	FileManager_v2d(HugoEngine *vm);
 	~FileManager_v2d();
 
-	void openDatabaseFiles();
-	void closeDatabaseFiles();
-	void readBackground(int screenIndex);
-	void readOverlay(int screenNum, image_pt image, ovl_t overlayType);
+	virtual void closeDatabaseFiles();
+	virtual void openDatabaseFiles();
+	virtual void readBackground(int screenIndex);
+	virtual void readOverlay(int screenNum, image_pt image, ovl_t overlayType);
 	char *fetchString(int index);
 };
 
@@ -121,15 +121,23 @@ public:
 	FileManager_v3d(HugoEngine *vm);
 	~FileManager_v3d();
 
-	void openDatabaseFiles();
 	void closeDatabaseFiles();
+	void openDatabaseFiles();
 	void readBackground(int screenIndex);
 	void readOverlay(int screenNum, image_pt image, ovl_t overlayType);
 private:
 	Common::File _sceneryArchive2;                  // Handle for scenery file
 };
 
-class FileManager_v1w : public FileManager_v2d {
+class FileManager_v2w : public FileManager_v2d {
+public:
+	FileManager_v2w(HugoEngine *vm);
+	~FileManager_v2w();
+
+	void instructions();
+};
+
+class FileManager_v1w : public FileManager_v2w {
 public:
 	FileManager_v1w(HugoEngine *vm);
 	~FileManager_v1w();

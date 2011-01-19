@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lure/res_struct.h $
- * $Id: res_struct.h 54106 2010-11-07 01:03:03Z fingolfin $
+ * $Id: res_struct.h 54236 2010-11-14 00:35:13Z dreammaster $
  *
  */
 
@@ -445,6 +445,10 @@ public:
 	void setRoomNumber(uint16 roomNum) { _roomNumber = roomNum; }
 	void setSupportData(CharacterScheduleEntry *newRec) {
 		assert((newRec == NULL) || (newRec->parent() != NULL));
+		if (_dynamicSupportData) {
+			delete _supportData;
+			_dynamicSupportData = false;
+		}
 		_supportData = newRec;
 	}
 	void setSupportData(uint16 entryId);

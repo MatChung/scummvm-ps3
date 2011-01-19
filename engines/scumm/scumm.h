@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/scumm.h $
- * $Id: scumm.h 53892 2010-10-27 22:37:51Z lordhoto $
+ * $Id: scumm.h 54729 2010-12-02 00:27:26Z fingolfin $
  *
  */
 
@@ -1246,6 +1246,7 @@ protected:
 
 	virtual bool handleNextCharsetCode(Actor *a, int *c);
 	virtual void CHARSET_1();
+	bool newLine();
 	void drawString(int a, const byte *msg);
 	void debugMessage(const byte *msg);
 	void showMessageDialog(const byte *msg);

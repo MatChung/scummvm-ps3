@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/frameout.cpp $
- * $Id: frameout.cpp 53974 2010-10-31 01:45:24Z thebluegr $
+ * $Id: frameout.cpp 55184 2011-01-09 13:28:34Z thebluegr $
  *
  */
 
@@ -63,8 +63,15 @@ void GfxFrameout::kernelAddPlane(reg_t object) {
 	if (_planes.empty()) {
 		// There has to be another way for sierra sci to do this or maybe script resolution is compiled into
 		//  interpreter (TODO)
-		scriptsRunningHeight = readSelectorValue(_segMan, object, SELECTOR(resY));
-		scriptsRunningWidth = readSelectorValue(_segMan, object, SELECTOR(resX));
+		uint16 tmpRunningWidth = readSelectorValue(_segMan, object, SELECTOR(resX));
+		uint16 tmpRunningHeight = readSelectorValue(_segMan, object, SELECTOR(resY));
+
+		// The above can be 0 in SCI3 (e.g. Phantasmagoria 2)
+		if (tmpRunningWidth > 0 && tmpRunningHeight > 0) {
+			scriptsRunningWidth = tmpRunningWidth;
+			scriptsRunningHeight = tmpRunningHeight;
+		}
+
 		_coordAdjuster->setScriptsResolution(scriptsRunningWidth, scriptsRunningHeight);
 	}
 
@@ -202,6 +209,7 @@ void GfxFrameout::kernelAddScreenItem(reg_t object) {
 		return;
 
 	FrameoutEntry *itemEntry = new FrameoutEntry();
+	memset(itemEntry, 0, sizeof(FrameoutEntry));
 	itemEntry->object = object;
 	itemEntry->givenOrderNr = _screenItems.size();
 	_screenItems.push_back(itemEntry);
@@ -291,6 +299,42 @@ void GfxFrameout::sortPlanes() {
 
 	// Sort the rest of them
 	Common::sort(_planes.begin(), _planes.end(), planeSortHelper);
+}
+
+static int16 GetLongest(const char *text, int16 maxWidth, GfxFont *font) {
+	uint16 curChar = 0;
+	int16 maxChars = 0, curCharCount = 0;
+	uint16 width = 0;
+
+	while (width <= maxWidth) {
+		curChar = (*(const byte *)text++);
+
+		switch (curChar) {
+		// We need to add 0xD, 0xA and 0xD 0xA to curCharCount and then exit
+		//  which means, we split text like
+		//  'Mature, experienced software analyst available.' 0xD 0xA
+		//  'Bug installation a proven speciality. "No version too clean."' (normal game text, this is from lsl2)
+		//   and 0xA '-------' 0xA (which is the official sierra subtitle separator)
+		//  Sierra did it the same way.
+		case 0xD:
+			// Check, if 0xA is following, if so include it as well
+			if ((*(const unsigned char *)text) == 0xA)
+				curCharCount++;
+			// it's meant to pass through here
+		case 0xA:
+			curCharCount++;
+			// and it's also meant to pass through here
+		case 0:
+			return curCharCount;
+		case ' ':
+			maxChars = curCharCount; // return count up to (but not including) breaking space
+			break;
+		}
+		width += font->getCharWidth(curChar);
+		curCharCount++;
+	}
+
+	return maxChars;
 }
 
 void GfxFrameout::kernelFrameout() {
@@ -515,17 +559,28 @@ void GfxFrameout::kernelFrameout() {
 
 					uint16 curX = itemEntry->x + it->planeRect.left;
 					uint16 curY = itemEntry->y + it->planeRect.top;
-					for (uint32 i = 0; i < text.size(); i++) {
-						unsigned char curChar = text[i];
-						// TODO: proper text splitting... this is a hack
-						if ((curChar == ' ' && i > 0 && text[i - i] == ' ') || curChar == '\n' || 
-							(curX + font->getCharWidth(curChar) > _screen->getWidth())) {
-							curY += font->getHeight();
-							curX = itemEntry->x;
+					const char *txt = text.c_str();
+					uint16 w = it->planeRect.width() >= 20 ? it->planeRect.width() : _screen->getWidth() - 10;
+					int16 charCount;
+
+					while (*txt) {
+						charCount = GetLongest(txt, w, font);
+						if (charCount == 0)
+							break;
+
+						for (int i = 0; i < charCount; i++) {
+							unsigned char curChar = txt[i];
+							font->draw(curChar, curY, curX, foreColor, dimmed);
+							curX += font->getCharWidth(curChar);
 						}
-						font->draw(curChar, curY, curX, foreColor, dimmed);
-						curX += font->getCharWidth(curChar);
+
+						curX = itemEntry->x + it->planeRect.left;
+						curY += font->getHeight();
+						txt += charCount;
+						while (*txt == ' ')
+							txt++; // skip over breaking spaces
 					}
+
 				}
 			}
 		}
@@ -533,6 +588,7 @@ void GfxFrameout::kernelFrameout() {
 		for (PlanePictureList::iterator pictureIt = _planePictures.begin(); pictureIt != _planePictures.end(); pictureIt++) {
 			if (pictureIt->object == planeObject) {
 				delete[] pictureIt->pictureCels;
+				pictureIt->pictureCels = 0;
 			}
 		}
 	}

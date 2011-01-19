@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/walk.h $
- * $Id: walk.h 48477 2010-04-02 22:14:18Z wjpalenstijn $
+ * $Id: walk.h 55280 2011-01-17 23:12:59Z tdhs $
  *
  */
 
@@ -31,11 +31,9 @@
 
 #include "parallaction/objects.h"
 
-
 namespace Parallaction {
 
 struct Character;
-
 
 class PathWalker_NS {
 	AnimationPtr _a;
@@ -61,14 +59,13 @@ public:
 	void walk();
 };
 
-
 class PathWalker_BR {
 
 	struct State {
 		bool			_active;
 		AnimationPtr	_a;
 		int				_walkDelay;
-		int				_fieldC;
+		bool			_stillWalkingTowardsNode;
 		Common::Point	_startFoot;
 		bool			_first;
 		int				_step;

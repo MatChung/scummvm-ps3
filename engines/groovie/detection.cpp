@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/groovie/detection.cpp $
- * $Id: detection.cpp 52633 2010-09-08 09:37:33Z jvprat $
+ * $Id: detection.cpp 54961 2010-12-19 08:56:42Z spookypeanut $
  *
  */
 
@@ -65,6 +65,28 @@ static const GroovieGameDescription gameDescriptions[] = {
 		{
 			"t7g", "",
 			AD_ENTRY1s("T7GMac", "a139540fa2be2247005ccf888b7231e3", 1830783),
+			Common::EN_ANY, Common::kPlatformMacintosh, ADGF_MACRESFORK,
+			Common::GUIO_MIDIADLIB | Common::GUIO_MIDIMT32 | Common::GUIO_MIDIGM
+		},
+		kGroovieT7G, 0
+	},
+
+	// The 7th Guest Mac English (Aztec single disc)
+	{
+		{
+			"t7g", "",
+			AD_ENTRY1s("T7GMac", "6bdee8d0f9eef6d58d02fcd7deec3fb2", 1830783),
+			Common::EN_ANY, Common::kPlatformMacintosh, ADGF_MACRESFORK,
+			Common::GUIO_MIDIADLIB | Common::GUIO_MIDIMT32 | Common::GUIO_MIDIGM
+		},
+		kGroovieT7G, 0
+	},
+
+	// The 7th Guest Mac English (Aztec bundle, provided by Thefinaleofseem)
+	{
+		{
+			"t7g", "",
+			AD_ENTRY1s("T7GMac", "0d595d4b44ae1814082938d051e5174e", 1830783),
 			Common::EN_ANY, Common::kPlatformMacintosh, ADGF_MACRESFORK,
 			Common::GUIO_MIDIADLIB | Common::GUIO_MIDIMT32 | Common::GUIO_MIDIGM
 		},

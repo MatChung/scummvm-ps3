@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/font.cpp $
- * $Id: font.cpp 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: font.cpp 54286 2010-11-17 12:13:23Z fingolfin $
  */
 
 #include "tinsel/actors.h"
@@ -34,6 +34,8 @@
 namespace Tinsel {
 
 //----------------- LOCAL GLOBAL DATA --------------------
+
+// FIXME: Avoid non-const global vars
 
 static char tBuffer[TBUFSZ];
 
@@ -117,9 +119,9 @@ void FettleFontPal(SCNHANDLE fontPal) {
 		pImg->hImgPal = 0;
 
 	if (TinselV2 && SysVar(SV_TAGCOLOUR)) {
-		static COLORREF c = GetActorRGB(-1);
+		const COLORREF c = GetActorRGB(-1);
 		SetTagColorRef(c);
-		UpdateDACqueue(SysVar(SV_TAGCOLOUR), 1, &c);
+		UpdateDACqueue(SysVar(SV_TAGCOLOUR), c);
 	}
 }
 

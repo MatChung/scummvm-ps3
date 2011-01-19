@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/sthread.cpp $
- * $Id: sthread.cpp 53719 2010-10-22 23:13:17Z h00ligan $
+ * $Id: sthread.cpp 54323 2010-11-18 16:38:03Z fingolfin $
  *
  */
 
@@ -198,7 +198,7 @@ bool Script::runThread(ScriptThread &thread) {
 	bool breakOut = false;
 	int operandChar;
 
-	MemoryReadStream scriptS(thread._moduleBase, thread._moduleBaseSize);
+	Common::MemoryReadStream scriptS(thread._moduleBase, thread._moduleBaseSize);
 
 	scriptS.seek(thread._instructionOffset);
 

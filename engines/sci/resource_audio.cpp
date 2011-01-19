@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/resource_audio.cpp $
- * $Id: resource_audio.cpp 52791 2010-09-18 10:55:16Z eriktorbjorn $
+ * $Id: resource_audio.cpp 54476 2010-11-25 14:22:09Z thebluegr $
  *
  */
 
@@ -276,7 +276,7 @@ int ResourceManager::readAudioMapSCI11(ResourceSource *map) {
 #ifndef ENABLE_SCI32
 	// SCI32 support is not built in. Check if this is a SCI32 game
 	// and if it is abort here.
-	if (_volVersion == kResVersionSci32)
+	if (_volVersion >= kResVersionSci2)
 		return SCI_ERROR_RESMAP_NOT_FOUND;
 #endif
 

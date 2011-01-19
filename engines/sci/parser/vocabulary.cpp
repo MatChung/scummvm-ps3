@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/parser/vocabulary.cpp $
- * $Id: vocabulary.cpp 54037 2010-11-02 09:49:47Z fingolfin $
+ * $Id: vocabulary.cpp 54805 2010-12-07 00:47:05Z thebluegr $
  *
  */
 
@@ -75,7 +75,6 @@ Vocabulary::Vocabulary(ResourceManager *resMan, bool foreign) : _resMan(resMan),
 
 	loadAltInputs();
 
-	parser_base = NULL_REG;
 	parser_event = NULL_REG;
 	parserIsValid = false;
 }
@@ -89,7 +88,6 @@ Vocabulary::~Vocabulary() {
 void Vocabulary::reset() {
 	parserIsValid = false; // Invalidate parser
 	parser_event = NULL_REG; // Invalidate parser event
-	parser_base = make_reg(g_sci->getEngineState()->_segMan->getSysStringsSegment(), SYS_STRING_PARSER_BASE);
 }
 
 bool Vocabulary::loadParserWords() {

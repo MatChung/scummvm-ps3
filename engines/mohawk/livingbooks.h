@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/livingbooks.h $
- * $Id: livingbooks.h 47541 2010-01-25 01:39:44Z lordhoto $
+ * $Id: livingbooks.h 55215 2011-01-12 19:11:27Z fuzzie $
  *
  */
 
@@ -31,14 +31,529 @@
 #include "mohawk/graphics.h"
 
 #include "common/config-file.h"
+#include "common/substream.h"
+#include "common/rect.h"
+#include "common/queue.h"
+#include "common/random.h"
+
+#include "sound/mixer.h"
+
+#include "livingbooks_code.h"
 
 namespace Mohawk {
 
-enum {
-	kIntroPage = 0
+enum NodeState {
+	kLBNodeDone = 0,
+	kLBNodeRunning = 1,
+	kLBNodeWaiting = 2
 };
 
+enum LBMode {
+	kLBIntroMode = 1,
+	kLBControlMode = 2,
+	kLBCreditsMode = 3,
+	kLBPreviewMode = 4,
+	kLBReadMode = 5,
+	kLBPlayMode = 6
+};
+
+// automatic modes used in _timingMode
+enum {
+	kLBAutoNone = 0,
+	kLBAutoIntro = 1,
+	kLBAutoUserIdle = 2,
+	kLBAutoMain = 3,
+	kLBAutoSync = 4,
+	kLBAutoInit = 5,
+	kLBAutoCreate = 6,
+	kLBAutoLoad = 7
+};
+
+// control modes used in _controlMode
+enum {
+	kLBControlNone = 0,
+	kLBControlHideMouse = 1,
+	kLBControlPauseItems = 2
+};
+
+enum {
+	kLBStaticTextItem = 0x1,
+	kLBPictureItem = 0x2,
+	kLBEditTextItem = 0x14,
+	kLBLiveTextItem = 0x15,
+	kLBAnimationItem = 0x40,
+	kLBSoundItem = 0x41,
+	kLBGroupItem = 0x42,
+	kLBMovieItem = 0x43,
+	kLBPaletteAItem = 0x44, // unused?
+	kLBPaletteItem = 0x45,
+	kLBProxyItem = 0x46,
+	kLBXDataFileItem = 0x3e9,
+	kLBDiscDectectorItem = 0xfa1
+};
+
+enum {
+	// no 0x1?
+	kLBAnimOpNotify = 0x2,
+	kLBAnimOpSetTempo = 0x3,
+	// no 0x4?
+	kLBAnimOpMoveTo = 0x5,
+	kLBAnimOpWait = 0x6,
+	kLBAnimOpSetCel = 0x7,
+	kLBAnimOpSleepUntil = 0x8,
+	kLBAnimOpDrawMode = 0x9,
+	kLBAnimOpPlaySound = 0xa,
+	kLBAnimOpWaitForSound = 0xb,
+	kLBAnimOpReleaseSound = 0xc,
+	kLBAnimOpResetSound = 0xd,
+	kLBAnimOpUnknownE = 0xe,
+	kLBAnimOpDelay = 0xf
+};
+
+enum {
+	kLBEventPhaseInit = 0,
+	kLBEventPhaseIntro = 1,
+	kLBEventMouseDown = 2,
+	kLBEventStarted = 3,
+	kLBEventDone = 4,
+	kLBEventMouseUp = 5,
+	kLBEventPhaseMain = 6,
+	kLBEventNotified = 7,
+	kLBEventDragMove = 9,
+	kLBEventRolloverBegin = 0xb,
+	kLBEventRolloverMove = 0xc,
+	kLBEventRolloverEnd = 0xd,
+	kLBEventMouseUpIn = 0xe,
+	kLBEventMouseUpOut = 0xf,
+	kLBEventMouseTrackIn = 0x10,
+	kLBEventMouseTrackMove = 0x11,
+	kLBEventMouseTrackMoveIn = 0x12,
+	kLBEventMouseTrackMoveOut = 0x13,
+	kLBEventMouseTrackOut = 0x14,
+	kLBEventFocusBegin = 0x15,
+	kLBEventFocusEnd = 0x16,
+	kLBEventInit = 0x17,
+	kLBEventLoad = 0x1a,
+	kLBEventListLoad = 0x1b,
+	kLBEventPhaseCreate = 0xff
+};
+
+enum {
+	kLBGroupData = 0x64,
+	kLBLiveTextData = 0x65,
+	kLBMsgListScript = 0x66,
+	kLBNotifyScript = 0x67,
+	kLBSetPlayInfo = 0x68,
+	kLBSetRandomLoc = 0x69,  // unused?
+	kLBSetDrag = 0x6a,       // unused?
+	kLBSetDrawMode = 0x6b,
+	kLBSetFont = 0x6c,       // unused?
+	kLBSetOneShot = 0x6d,    // unused?
+	kLBSetPlayPhase = 0x6e,
+	// from here, 2.x+
+	kLBUnknown6F = 0x6f,
+	kLBCommand = 0x70,
+	kLBPaletteAData = 0x71,  // unused?
+	kLBPaletteXData = 0x72,
+	kLBDisable = 0x73,       // unused?
+	kLBEnable = 0x74,        // unused?
+	kLBSetNotVisible = 0x75,
+	kLBSetVisible = 0x76,    // unused?
+	kLBGlobalDisable = 0x77,
+	kLBGlobalEnable = 0x78,  // unused?
+	kLBGlobalSetNotVisible = 0x79,
+	kLBGlobalSetVisible = 0x7a, // unused?
+	kLBSetAmbient = 0x7b,
+	kLBUnknown7C = 0x7c,     // unused?
+	kLBUnknown7D = 0x7d,
+	kLBUnknown7E = 0x7e,     // unused? (rect flag)
+	kLBSetParent = 0x7f,     // unused?
+	kLBUnknown80 = 0x80,      // unused? TODO: sets +36
+	// from here, rugrats
+	kLBUnknown194 = 0x194
+};
+
+enum {
+	kLBOpNone = 0x0,
+	kLBOpXShow = 0x1,
+	kLBOpTogglePlay = 0x2,
+	kLBOpSetNotVisible = 0x3,
+	kLBOpSetVisible = 0x4,
+	kLBOpDestroy = 0x5,
+	kLBOpRewind = 0x6,
+	kLBOpStop = 0x7,
+	kLBOpDisable = 0x8,
+	kLBOpEnable = 0x9,
+	// (no 0xa)
+	kLBOpGlobalSetNotVisible = 0xb,
+	kLBOpGlobalSetVisible = 0xc,
+	kLBOpGlobalDisable = 0xd,
+	kLBOpGlobalEnable = 0xe,
+	kLBOpSeekToEnd = 0xf,
+	// (no 0x10)
+	kLBOpMute = 0x11,
+	kLBOpUnmute = 0x12,
+	kLBOpLoad = 0x13,
+	kLBOpPreload = 0x14,
+	kLBOpUnload = 0x15,
+	kLBOpSeekToNext = 0x16,
+	kLBOpSeekToPrev = 0x17,
+	kLBOpDragBegin = 0x18,
+	kLBOpDragEnd = 0x19,
+	kLBOpScriptDisable = 0x1a,
+	kLBOpScriptEnable = 0x1b,
+	kLBOpUnknown1C = 0x1c,
+	kLBOpSendExpression = 0x1d,
+	kLBOpRunSubentries = 0xfffe,
+	kLBOpRunCommand = 0xffff
+};
+
+enum {
+	kLBNotifyGUIAction = 1,
+	kLBNotifyGoToControls = 2,
+	kLBNotifyChangePage = 3,
+	kLBNotifyGotoQuit = 4,
+	kLBNotifyIntroDone = 5,
+	kLBNotifyChangeMode = 6,
+	kLBNotifyCursorChange = 7,
+	kLBNotifyPrintPage = 0xc,
+	kLBNotifyQuit = 0xd
+};
+
+class MohawkEngine_LivingBooks;
 class LBGraphics;
+class LBAnimation;
+
+struct LBScriptEntry {
+	LBScriptEntry();
+	~LBScriptEntry();
+
+	uint16 type;
+	uint16 event;
+	uint16 opcode;
+	uint16 param;
+
+	uint16 argc;
+	uint16 *argvParam;
+	uint16 *argvTarget;
+
+	// kLBNotifyChangeMode
+	uint16 newUnknown;
+	uint16 newMode;
+	uint16 newPage;
+	uint16 newSubpage;
+
+	// kLBEventNotified
+	uint16 matchFrom;
+	uint16 matchNotify;
+
+	// kLBOpSendExpression
+	uint32 offset;
+
+	Common::String command;
+	Common::Array<Common::String> conditions;
+	Common::Array<LBScriptEntry *> subentries;
+};
+
+struct LBAnimScriptEntry {
+	byte opcode;
+	byte size;
+	byte *data;
+};
+
+class LBAnimationNode {
+public:
+	LBAnimationNode(MohawkEngine_LivingBooks *vm, LBAnimation *parent, uint16 scriptResourceId);
+	~LBAnimationNode();
+
+	void draw(const Common::Rect &_bounds);
+	void reset();
+	NodeState update(bool seeking = false);
+	bool transparentAt(int x, int y);
+
+protected:
+	MohawkEngine_LivingBooks *_vm;
+	LBAnimation *_parent;
+
+	void loadScript(uint16 resourceId);
+	uint _currentEntry;
+	Common::Array<LBAnimScriptEntry> _scriptEntries;
+
+	uint _currentCel;
+	int16 _xPos, _yPos;
+	uint32 _delay;
+};
+
+class LBAnimationItem;
+
+class LBAnimation {
+public:
+	LBAnimation(MohawkEngine_LivingBooks *vm, LBAnimationItem *parent, uint16 resourceId);
+	~LBAnimation();
+
+	void draw();
+	bool update();
+
+	void start();
+	void seek(uint16 pos);
+	void stop();
+
+	bool transparentAt(int x, int y);
+
+	void setTempo(uint16 tempo);
+
+	uint getNumResources() { return _shapeResources.size(); }
+	uint16 getResource(uint num) { return _shapeResources[num]; }
+	Common::Point getOffset(uint num) { return _shapeOffsets[num]; }
+
+	uint32 getCurrentFrame() { return _currentFrame; }
+
+	uint16 getParentId();
+
+protected:
+	MohawkEngine_LivingBooks *_vm;
+	LBAnimationItem *_parent;
+
+	Common::Rect _bounds, _clip;
+	Common::Array<LBAnimationNode *> _nodes;
+
+	uint16 _tempo;
+	uint32 _lastTime, _currentFrame;
+	bool _running;
+
+	void loadShape(uint16 resourceId);
+	Common::Array<uint16> _shapeResources;
+	Common::Array<Common::Point> _shapeOffsets;
+};
+
+class LBItem {
+	friend class LBCode;
+
+public:
+	LBItem(MohawkEngine_LivingBooks *vm, Common::Rect rect);
+	virtual ~LBItem();
+
+	void readFrom(Common::SeekableSubReadStreamEndian *stream);
+	virtual void readData(uint16 type, uint16 size, Common::SeekableSubReadStreamEndian *stream);
+
+	virtual void destroySelf(); // 0x2
+	virtual void setEnabled(bool enabled); // 0x3
+	virtual void setGlobalEnabled(bool enabled);
+	virtual bool contains(Common::Point point); // 0x7
+	virtual void update(); // 0x8
+	virtual void draw() { } // 0x9
+	virtual void handleKeyChar(Common::Point pos) { } // 0xA
+	virtual void handleMouseDown(Common::Point pos); // 0xB
+	virtual void handleMouseMove(Common::Point pos); // 0xC
+	virtual void handleMouseUp(Common::Point pos); // 0xD
+	virtual bool togglePlaying(bool playing, bool restart = false); // 0xF
+	virtual void done(bool onlyNotify); // 0x10
+	virtual void init() { } // 0x11
+	virtual void seek(uint16 pos) { } // 0x13
+	virtual void setFocused(bool focused) { } // 0x14
+	virtual void setVisible(bool visible); // 0x17
+	virtual void setGlobalVisible(bool enabled);
+	virtual void startPhase(uint phase); // 0x18
+	virtual void stop(); // 0x19
+	virtual void notify(uint16 data, uint16 from); // 0x1A
+
+	uint16 getId() { return _itemId; }
+
+protected:
+	MohawkEngine_LivingBooks *_vm;
+
+	void setNextTime(uint16 min, uint16 max);
+	void setNextTime(uint16 min, uint16 max, uint32 start);
+
+	Common::Rect _rect;
+	Common::String _desc;
+	uint16 _resourceId;
+	uint16 _itemId;
+
+	bool _visible, _globalVisible, _playing, _enabled, _neverEnabled, _globalEnabled;
+
+	uint32 _nextTime, _startTime;
+	uint16 _loops;
+
+	uint16 _phase, _timingMode, _delayMin, _delayMax;
+	uint16 _loopMode, _periodMin, _periodMax;
+	uint16 _controlMode, _soundMode;
+	Common::Point _relocPoint;
+
+	bool _isAmbient;
+
+	Common::Array<LBScriptEntry *> _scriptEntries;
+	void runScript(uint event, uint16 data = 0, uint16 from = 0);
+	void runScriptEntry(LBScriptEntry *entry);
+
+	LBValue parseValue(const Common::String &command, uint &pos);
+	void runCommand(const Common::String &command);
+	bool checkCondition(const Common::String &condition);
+
+	LBScriptEntry *parseScriptEntry(uint16 type, uint16 &size, Common::SeekableSubReadStreamEndian *stream, bool isSubentry = false);
+};
+
+class LBSoundItem : public LBItem {
+public:
+	LBSoundItem(MohawkEngine_LivingBooks *_vm, Common::Rect rect);
+	~LBSoundItem();
+
+	void update();
+	bool togglePlaying(bool playing, bool restart);
+	void stop();
+
+protected:
+	bool _running;
+};
+
+struct GroupEntry {
+	uint entryId;
+	uint entryType;
+};
+
+class LBGroupItem : public LBItem {
+public:
+	LBGroupItem(MohawkEngine_LivingBooks *_vm, Common::Rect rect);
+
+	void readData(uint16 type, uint16 size, Common::SeekableSubReadStreamEndian *stream);
+
+	void setEnabled(bool enabled);
+	void setGlobalEnabled(bool enabled);
+	bool contains(Common::Point point);
+	bool togglePlaying(bool playing, bool restart);
+	// 0x12
+	void seek(uint16 pos);
+	void setVisible(bool visible);
+	void setGlobalVisible(bool visible);
+	void startPhase(uint phase);
+	void stop();
+	
+protected:
+	bool _starting;
+
+	Common::Array<GroupEntry> _groupEntries;
+};
+
+class LBPaletteItem : public LBItem {
+public:
+	LBPaletteItem(MohawkEngine_LivingBooks *_vm, Common::Rect rect);
+	~LBPaletteItem();
+
+	void readData(uint16 type, uint16 size, Common::SeekableSubReadStreamEndian *stream);
+
+	bool togglePlaying(bool playing, bool restart);
+	void update();
+
+protected:
+	uint16 _fadeInPeriod, _fadeInStep, _drawStart, _drawCount;
+	uint32 _fadeInStart, _fadeInCurrent;
+	byte *_palette;
+};
+
+struct LiveTextWord {
+	Common::Rect bounds;
+	uint16 soundId;
+};
+
+struct LiveTextPhrase {
+	uint16 wordStart, wordCount;
+	uint16 highlightStart, highlightEnd;
+	uint16 startId, endId;
+};
+
+class LBLiveTextItem : public LBItem {
+public:
+	LBLiveTextItem(MohawkEngine_LivingBooks *_vm, Common::Rect rect);
+
+	void readData(uint16 type, uint16 size, Common::SeekableSubReadStreamEndian *stream);
+
+	bool contains(Common::Point point);
+	void update();
+	void draw();
+	void handleMouseDown(Common::Point pos);
+	bool togglePlaying(bool playing, bool restart);
+	void stop();
+	void notify(uint16 data, uint16 from);
+
+protected:
+	void paletteUpdate(uint16 word, bool on);
+	void drawWord(uint word, uint yPos);
+
+	uint16 _currentPhrase, _currentWord;
+
+	byte _backgroundColor[4];
+	byte _foregroundColor[4];
+	byte _highlightColor[4];
+	uint16 _paletteIndex;
+
+	Common::Array<LiveTextWord> _words;
+	Common::Array<LiveTextPhrase> _phrases;
+};
+
+class LBPictureItem : public LBItem {
+public:
+	LBPictureItem(MohawkEngine_LivingBooks *_vm, Common::Rect rect);
+
+	void readData(uint16 type, uint16 size, Common::SeekableSubReadStreamEndian *stream);
+
+	bool contains(Common::Point point);
+	void draw();
+	void init();
+};
+
+class LBAnimationItem : public LBItem {
+public:
+	LBAnimationItem(MohawkEngine_LivingBooks *_vm, Common::Rect rect);
+	~LBAnimationItem();
+
+	void setEnabled(bool enabled);
+	bool contains(Common::Point point);
+	void update();
+	void draw();
+	bool togglePlaying(bool playing, bool restart);
+	void done(bool onlyNotify);
+	void init();
+	void seek(uint16 pos);
+	void startPhase(uint phase);
+	void stop();
+
+protected:
+	LBAnimation *_anim;
+	bool _running;
+};
+
+class LBMovieItem : public LBItem {
+public:
+	LBMovieItem(MohawkEngine_LivingBooks *_vm, Common::Rect rect);
+	~LBMovieItem();
+
+	void update();
+	bool togglePlaying(bool playing, bool restart);
+};
+
+struct NotifyEvent {
+	NotifyEvent(uint t, uint p) : type(t), param(p) { }
+	uint type;
+	uint param;
+
+	// kLBNotifyChangeMode
+	uint16 newUnknown;
+	uint16 newMode;
+	uint16 newPage;
+	uint16 newSubpage;
+};
+
+enum DelayedEventType {
+	kLBDelayedEventDestroy = 0,
+	kLBDelayedEventSetNotVisible = 1,
+	kLBDelayedEventDone = 2
+};
+
+struct DelayedEvent {
+	DelayedEvent(LBItem *i, DelayedEventType t) : item(i), type(t) { }
+	LBItem *item;
+	DelayedEventType type;
+};
 
 class MohawkEngine_LivingBooks : public MohawkEngine {
 protected:
@@ -48,24 +563,71 @@ public:
 	MohawkEngine_LivingBooks(OSystem *syst, const MohawkGameDescription *gamedesc);
 	virtual ~MohawkEngine_LivingBooks();
 
+	Common::RandomSource *_rnd;
+
 	LBGraphics *_gfx;
-	bool _needsUpdate;
+	bool _needsRedraw, _needsUpdate;
+
+	void addNotifyEvent(NotifyEvent event);
 
 	Common::SeekableSubReadStreamEndian *wrapStreamEndian(uint32 tag, uint16 id);
+	Common::String readString(Common::SeekableSubReadStreamEndian *stream);
+	Common::Rect readRect(Common::SeekableSubReadStreamEndian *stream);
 	GUI::Debugger *getDebugger() { return _console; }
+
+	LBItem *getItemById(uint16 id);
+
+	void setFocus(LBItem *focus);
+	void setEnableForAll(bool enable, LBItem *except = 0);
+	void notifyAll(uint16 data, uint16 from);
+	void queueDelayedEvent(DelayedEvent event);
+
+	bool isBigEndian() const { return getGameType() != GType_LIVINGBOOKSV1 || getPlatform() == Common::kPlatformMacintosh; }
+
+	LBMode getCurMode() { return _curMode; }
+
+	bool tryLoadPageStart(LBMode mode, uint page);
+	void prevPage();
+	void nextPage();
+
+	LBCode *_code;
+
+	// TODO: make private
+	Common::HashMap<Common::String, LBValue> _variables;
 
 private:
 	LivingBooksConsole *_console;
 	Common::ConfigFile _bookInfoFile;
 
-	uint16 _curPage;
 	Common::String getBookInfoFileName() const;
-	void loadBookInfo(Common::String filename);
-	void loadIntro();
+	void loadBookInfo(const Common::String &filename);
+
+	Common::String stringForMode(LBMode mode);
+
+	bool _readOnly, _introDone;
+	LBMode _curMode;
+	uint16 _curPage, _curSubPage;
+	uint16 _phase;
+	Common::Array<LBItem *> _items;
+	Common::Queue<DelayedEvent> _eventQueue;
+	LBItem *_focus;
+	void destroyPage();
+	bool loadPage(LBMode mode, uint page, uint subpage);
+	void updatePage();
 
 	uint16 getResourceVersion();
+	void loadBITL(uint16 resourceId);
 	void loadSHP(uint16 resourceId);
-	void loadANI(uint16 resourceId);
+
+	bool tryDefaultPage();
+
+	void handleUIMenuClick(uint controlId);
+	void handleUIPoetryMenuClick(uint controlId);
+	void handleUIQuitClick(uint controlId);
+	void handleUIOptionsClick(uint controlId);
+
+	Common::Queue<NotifyEvent> _notifyEvents;
+	void handleNotify(NotifyEvent &event);
 
 	uint16 _screenWidth;
 	uint16 _screenHeight;
@@ -73,19 +635,23 @@ private:
 	uint16 _numPages;
 	Common::String _title;
 	Common::String _copyright;
+	bool _poetryMode;
+
+	uint16 _curLanguage;
+	uint16 _curSelectedPage;
+	bool _alreadyShowedIntro;
 
 	// String Manipulation Functions
-	Common::String removeQuotesFromString(Common::String string);
-	Common::String convertMacFileName(Common::String string);
-	Common::String convertWinFileName(Common::String string);
+	Common::String removeQuotesFromString(const Common::String &string);
+	Common::String convertMacFileName(const Common::String &string);
+	Common::String convertWinFileName(const Common::String &string);
 
 	// Configuration File Functions
-	Common::String getStringFromConfig(Common::String section, Common::String key);
-	int getIntFromConfig(Common::String section, Common::String key);
-	Common::String getFileNameFromConfig(Common::String section, Common::String key);
+	Common::String getStringFromConfig(const Common::String &section, const Common::String &key);
+	int getIntFromConfig(const Common::String &section, const Common::String &key);
+	Common::String getFileNameFromConfig(const Common::String &section, const Common::String &key);
 
 	// Platform/Version functions
-	bool isBigEndian() const { return getGameType() == GType_LIVINGBOOKSV3 || getPlatform() == Common::kPlatformMacintosh; }
 	MohawkArchive *createMohawkArchive() const;
 };
 

@@ -1,5 +1,5 @@
 # $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/dc/dreamcast.mk $
-# $Id: dreamcast.mk 48352 2010-03-21 10:35:15Z marcus_c $
+# $Id: dreamcast.mk 55144 2011-01-07 14:40:25Z marcus_c $
 
 ronindir = /usr/local/ronin
 
@@ -14,6 +14,7 @@ plugin_dist : plugins
 	  if /usr/bin/test "$$p" -ot "$$t"; then :; else \
 	    echo sh-elf-strip -g -o "$$t" "$$p"; \
 	    sh-elf-strip -g -o "$$t" "$$p"; \
+	    $(srcdir)/backends/platform/dc/check_plugin_symbols "$$t"; \
           fi;\
 	done
 

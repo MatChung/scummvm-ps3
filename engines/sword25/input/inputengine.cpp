@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/input/inputengine.cpp $
- * $Id: inputengine.cpp 53899 2010-10-28 00:26:25Z fingolfin $
+ * $Id: inputengine.cpp 54184 2010-11-10 04:30:24Z tdhs $
  *
  */
 
@@ -121,6 +121,12 @@ void InputEngine::update() {
 
 		case Common::EVENT_KEYDOWN:
 		case Common::EVENT_KEYUP:
+			// FIXME - Need to work out how to expose getDebugger() to this module
+			//if (event.kbd.hasFlags(Common::KBD_CTRL) && event.kbd.keycode == Common::KEYCODE_d && event.type == Common::EVENT_KEYDOWN) {
+			//	_vm->getDebugger()->attach();
+			//	_vm->getDebugger()->onFrame();
+			//}
+
 			alterKeyboardState(event.kbd.keycode, (event.type == Common::EVENT_KEYDOWN) ? 0x80 : 0);
 			break;
 

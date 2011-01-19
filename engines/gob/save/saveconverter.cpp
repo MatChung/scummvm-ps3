@@ -19,11 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/save/saveconverter.cpp $
- * $Id: saveconverter.cpp 42858 2009-07-28 16:28:32Z drmccoy $
+ * $Id: saveconverter.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "common/endian.h"
+#include "common/memstream.h"
 #include "common/savefile.h"
 
 #include "gob/gob.h"

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/portrait.cpp $
- * $Id: portrait.cpp 52431 2010-08-29 00:39:33Z thebluegr $
+ * $Id: portrait.cpp 54983 2010-12-21 07:53:34Z thebluegr $
  *
  */
 
@@ -203,8 +203,12 @@ void Portrait::doit(Common::Point position, uint16 resourceId, uint16 noun, uint
 		}
 	}
 
-	if (userAbort)
+	if (userAbort) {
+		// Reset the portrait bitmap to "closed mouth" state, when skipping dialogs
+		drawBitmap(0);
+		bitsShow();
 		_audio->stopAudio();
+	}
 
 	_resMan->unlockResource(syncResource);
 }

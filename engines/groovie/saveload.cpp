@@ -19,13 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/groovie/saveload.cpp $
- * $Id: saveload.cpp 48287 2010-03-18 15:54:40Z fingolfin $
+ * $Id: saveload.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "groovie/saveload.h"
 
 #include "common/system.h"
+#include "common/substream.h"
 
 #define SUPPORTED_SAVEFILE_VERSION 1
 // 0 - Just script variables, compatible with the original

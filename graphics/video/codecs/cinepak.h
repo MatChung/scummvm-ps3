@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/codecs/cinepak.h $
- * $Id: cinepak.h 49165 2010-05-23 18:33:55Z mthreepwood $
+ * $Id: cinepak.h 54930 2010-12-16 02:02:53Z mthreepwood $
  *
  */
 
@@ -61,10 +61,10 @@ struct CinepakFrame {
 
 class CinepakDecoder : public Codec {
 public:
-	CinepakDecoder();
+	CinepakDecoder(int bitsPerPixel = 24);
 	~CinepakDecoder();
 
-	Surface *decodeImage(Common::SeekableReadStream *stream);
+	const Surface *decodeImage(Common::SeekableReadStream *stream);
 	PixelFormat getPixelFormat() const { return _pixelFormat; }
 
 private:

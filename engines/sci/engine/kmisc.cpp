@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/kmisc.cpp $
- * $Id: kmisc.cpp 54037 2010-11-02 09:49:47Z fingolfin $
+ * $Id: kmisc.cpp 55138 2011-01-07 00:12:18Z thebluegr $
  *
  */
 
@@ -75,6 +75,17 @@ reg_t kGameIsRestarting(EngineState *s, int argc, reg_t *argv) {
 			neededSleep = 60;
 		}
 		break;
+	case GID_SQ4:
+		// In SQ4 (floppy and CD) the sequel police appear way too quickly in 
+		// the Skate-o-rama rooms, resulting in all sorts of timer issues, like
+		// #3109139 (which occurs because a police officer instantly teleports
+		// just before Roger exits and shoots him). We throttle these scenes a
+		// bit more, in order to prevent timer bugs related to the sequel police 
+		if (s->currentRoomNumber() == 405 || s->currentRoomNumber() == 406 ||
+			s->currentRoomNumber() == 410 || s->currentRoomNumber() == 411) {
+			s->_throttleTrigger = true;
+			neededSleep = 60;
+		}
 	default:
 		break;
 	}
@@ -159,7 +170,7 @@ reg_t kMemorySegment(EngineState *s, int argc, reg_t *argv) {
 
 reg_t kFlushResources(EngineState *s, int argc, reg_t *argv) {
 	run_gc(s);
-	debugC(2, kDebugLevelRoom, "Entering room number %d", argv[0].toUint16());
+	debugC(kDebugLevelRoom, "Entering room number %d", argv[0].toUint16());
 	return s->r_acc;
 }
 
@@ -195,19 +206,19 @@ reg_t kGetTime(EngineState *s, int argc, reg_t *argv) {
 	switch (mode) {
 	case KGETTIME_TICKS :
 		retval = elapsedTime * 60 / 1000;
-		debugC(2, kDebugLevelTime, "GetTime(elapsed) returns %d", retval);
+		debugC(kDebugLevelTime, "GetTime(elapsed) returns %d", retval);
 		break;
 	case KGETTIME_TIME_12HOUR :
 		retval = ((loc_time.tm_hour % 12) << 12) | (loc_time.tm_min << 6) | (loc_time.tm_sec);
-		debugC(2, kDebugLevelTime, "GetTime(12h) returns %d", retval);
+		debugC(kDebugLevelTime, "GetTime(12h) returns %d", retval);
 		break;
 	case KGETTIME_TIME_24HOUR :
 		retval = (loc_time.tm_hour << 11) | (loc_time.tm_min << 5) | (loc_time.tm_sec >> 1);
-		debugC(2, kDebugLevelTime, "GetTime(24h) returns %d", retval);
+		debugC(kDebugLevelTime, "GetTime(24h) returns %d", retval);
 		break;
 	case KGETTIME_DATE :
 		retval = loc_time.tm_mday | ((loc_time.tm_mon + 1) << 5) | (((loc_time.tm_year + 1900) & 0x7f) << 9);
-		debugC(2, kDebugLevelTime, "GetTime(date) returns %d", retval);
+		debugC(kDebugLevelTime, "GetTime(date) returns %d", retval);
 		break;
 	default:
 		error("Attempt to use unknown GetTime mode %d", mode);
@@ -278,9 +289,12 @@ reg_t kMemory(EngineState *s, int argc, reg_t *argv) {
 			error("Attempt to peek invalid memory at %04x:%04x", PRINT_REG(argv[1]));
 			return s->r_acc;
 		}
-		if (ref.isRaw)
-			return make_reg(0, (int16)READ_LE_UINT16(ref.raw));
-		else {
+		if (ref.isRaw) {
+			if (g_sci->getPlatform() == Common::kPlatformAmiga)
+				return make_reg(0, (int16)READ_BE_UINT16(ref.raw));		// Amiga versions are BE
+			else
+				return make_reg(0, (int16)READ_LE_UINT16(ref.raw));
+		} else {
 			if (ref.skipByte)
 				error("Attempt to peek memory at odd offset %04X:%04X", PRINT_REG(argv[1]));
 			return *(ref.reg);
@@ -300,7 +314,10 @@ reg_t kMemory(EngineState *s, int argc, reg_t *argv) {
 				error("Attempt to poke memory reference %04x:%04x to %04x:%04x", PRINT_REG(argv[2]), PRINT_REG(argv[1]));
 				return s->r_acc;
 			}
-			WRITE_LE_UINT16(ref.raw, argv[2].offset);
+			if (g_sci->getPlatform() == Common::kPlatformAmiga)
+				WRITE_BE_UINT16(ref.raw, argv[2].offset);		// Amiga versions are BE
+			else
+				WRITE_LE_UINT16(ref.raw, argv[2].offset);
 		} else {
 			if (ref.skipByte)
 				error("Attempt to poke memory at odd offset %04X:%04X", PRINT_REG(argv[1]));
@@ -328,6 +345,17 @@ reg_t kIconBar(EngineState *s, int argc, reg_t *argv) {
 
 	return NULL_REG;
 }
+
+#ifdef ENABLE_SCI32
+reg_t kGetConfig(EngineState *s, int argc, reg_t *argv) {
+	Common::String setting = s->_segMan->getString(argv[0]);
+	reg_t data = readSelector(s->_segMan, argv[1], SELECTOR(data));
+
+	warning("Get config setting %s", setting.c_str());
+	s->_segMan->strcpy(data, "");
+	return argv[1];
+}
+#endif
 
 enum kSciPlatforms {
 	kSciPlatformDOS = 1,
@@ -391,18 +419,6 @@ reg_t kPlatform(EngineState *s, int argc, reg_t *argv) {
 
 	return NULL_REG;
 }
-
-#ifdef ENABLE_SCI32
-reg_t kWinDLL(EngineState *s, int argc, reg_t *argv) {
-	kStub(s, argc, argv);
-
-	// TODO: This seems to be loading and calling Windows DLLs. We'll probably
-	// need to either ignore calls made here, or wire each call for each game
-	// that requests it by hand
-
-	error("kWinDLL called");
-}
-#endif
 
 reg_t kEmpty(EngineState *s, int argc, reg_t *argv) {
 	// Placeholder for empty kernel functions which are still called from the

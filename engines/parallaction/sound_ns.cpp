@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/sound_ns.cpp $
- * $Id: sound_ns.cpp 48637 2010-04-12 09:14:17Z fingolfin $
+ * $Id: sound_ns.cpp 55147 2011-01-07 16:00:08Z peres001 $
  *
  */
 
@@ -236,7 +236,7 @@ void MidiPlayer::timerCallback(void *p) {
 	player->updateTimer();
 }
 
-DosSoundMan_ns::DosSoundMan_ns(Parallaction_ns *vm, MidiDriver *midiDriver) : SoundMan_ns(vm), _musicData1(0) {
+DosSoundMan_ns::DosSoundMan_ns(Parallaction_ns *vm, MidiDriver *midiDriver) : SoundMan_ns(vm), _playing(false) {
 	_midiPlayer = new MidiPlayer(midiDriver);
 }
 
@@ -273,10 +273,15 @@ void DosSoundMan_ns::playMusic() {
 	Common::SeekableReadStream *stream = _vm->_disk->loadMusic(_musicFile);
 	_midiPlayer->play(stream);
 	_midiPlayer->setVolume(255);
+	
+	_playing = true;
 }
 
 void DosSoundMan_ns::stopMusic() {
+	_musicFile[0] = 0;
 	_midiPlayer->stop();
+
+	_playing = false;
 }
 
 void DosSoundMan_ns::pause(bool p) {
@@ -284,54 +289,51 @@ void DosSoundMan_ns::pause(bool p) {
 	_midiPlayer->pause(p);
 }
 
+bool DosSoundMan_ns::locationHasOwnSoftMusic(const char *locationName) {
+	return !scumm_stricmp(locationName, "night") || !scumm_stricmp(locationName, "intsushi");
+}
+	
 void DosSoundMan_ns::playCharacterMusic(const char *character) {
-	if (character == NULL) {
-		return;
-	}
-
-	if (!scumm_stricmp(_vm->_location._name, "night") ||
-		!scumm_stricmp(_vm->_location._name, "intsushi")) {
+	if (!character || locationHasOwnSoftMusic(_vm->_location._name)) {
 		return;
 	}
 
 	char *name = const_cast<char*>(character);
-
+	const char *newMusicFile = 0;
+	
 	if (!scumm_stricmp(name, _dinoName)) {
-		setMusicFile("dino");
+		newMusicFile = "dino";
 	} else
 	if (!scumm_stricmp(name, _donnaName)) {
-		setMusicFile("donna");
+		newMusicFile = "donna";
 	} else
 	if (!scumm_stricmp(name, _doughName)) {
-		setMusicFile("nuts");
+		newMusicFile = "nuts";
 	} else {
 		warning("unknown character '%s' in DosSoundMan_ns_ns::playCharacterMusic", character);
 		return;
 	}
 
-	playMusic();
+	if (!_playing || (newMusicFile && scumm_stricmp(newMusicFile, _musicFile))) {
+		// avoid restarting the same piece
+		setMusicFile(newMusicFile);
+		playMusic();
+		debugC(2, kDebugExec, "changeLocation: started character specific music (%s)", newMusicFile);
+	}
 }
 
 void DosSoundMan_ns::playLocationMusic(const char *location) {
-	if (_musicData1 != 0) {
-		playCharacterMusic(_vm->_char.getBaseName());
-		_musicData1 = 0;
-		debugC(2, kDebugExec, "changeLocation: started character specific music");
-	}
-
-	if (!scumm_stricmp(location, "night") || !scumm_stricmp(location, "intsushi")) {
+	if (locationHasOwnSoftMusic(location)) {
 		setMusicFile("soft");
 		playMusic();
-
 		debugC(2, kDebugExec, "changeLocation: started music 'soft'");
-	}
-
+	} else
 	if (isLocationSilent(location)) {
 		stopMusic();
-		_musicData1 = 1;
-
 		debugC(2, kDebugExec, "changeLocation: music stopped");
-	}
+	} else {
+		playCharacterMusic(_vm->_char.getBaseName());
+	}	
 }
 
 

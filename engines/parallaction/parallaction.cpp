@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/parallaction.cpp $
- * $Id: parallaction.cpp 52791 2010-09-18 10:55:16Z eriktorbjorn $
+ * $Id: parallaction.cpp 55233 2011-01-14 00:13:27Z tdhs $
  *
  */
 
@@ -30,9 +30,6 @@
 #include "common/file.h"
 #include "common/util.h"
 #include "common/system.h"
-
-#include "sound/mididrv.h"
-#include "sound/mixer.h"
 
 #include "parallaction/exec.h"
 #include "parallaction/input.h"
@@ -94,6 +91,7 @@ Parallaction::~Parallaction() {
 	_balloonMan = 0;
 
 	delete _localFlagNames;
+	_char._ani.reset();
 	delete _gfx;
 	delete _soundMan;
 	delete _disk;
@@ -520,6 +518,7 @@ void Parallaction::enterCommentMode(ZonePtr z) {
 	TypeData *data = &_commentZone->u;
 
 	if (data->_examineText.empty()) {
+		exitCommentMode();
 		return;
 	}
 
@@ -1004,4 +1003,4 @@ void Parallaction::scheduleLocationSwitch(const char *location) {
 }
 
 
-} // namespace Parallaction
+} // End of namespace Parallaction

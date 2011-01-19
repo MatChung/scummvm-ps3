@@ -20,10 +20,10 @@
  - Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  -
  - $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/themes/scummmodern/scummmodern_layout_lowres.stx $
- - $Id: scummmodern_layout_lowres.stx 54090 2010-11-05 10:53:37Z thebluegr $
+ - $Id: scummmodern_layout_lowres.stx 54944 2010-12-17 12:23:59Z lordhoto $
  -
  -->
-<layout_info resolution = "320xY, 256x240, Xx272, Xx350">
+<layout_info resolution = "320xY, 256x240, Xx272, 544x332, Xx350">
 	<globals>
 		<def var = 'Line.Height' value = '12' />
 		<def var = 'Font.Height' value = '10' />

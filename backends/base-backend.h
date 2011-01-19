@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/base-backend.h $
- * $Id: base-backend.h 42718 2009-07-25 00:59:03Z lordhoto $
+ * $Id: base-backend.h 54147 2010-11-08 22:53:36Z fingolfin $
  *
  */
 
@@ -31,12 +31,22 @@
 
 class BaseBackend : public OSystem, Common::EventSource {
 public:
+	BaseBackend();
+	~BaseBackend();
+
 	virtual Common::EventManager *getEventManager();
 	virtual void displayMessageOnOSD(const char *msg);
 	virtual void fillScreen(uint32 col);
 
 	virtual Common::SeekableReadStream *createConfigReadStream();
 	virtual Common::WriteStream *createConfigWriteStream();
+
+	virtual AudioCDManager *getAudioCDManager();
+
+	virtual void resetGraphicsScale();
+
+protected:
+	AudioCDManager *_audiocdManager;
 };
 
 

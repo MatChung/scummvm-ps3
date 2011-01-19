@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/debugger.h $
- * $Id: debugger.h 46516 2009-12-23 21:12:15Z sev $
+ * $Id: debugger.h 54815 2010-12-07 18:54:21Z fingolfin $
  */
 
 #ifndef SCUMM_DEBUGGER_H
@@ -36,12 +36,9 @@ public:
 	ScummDebugger(ScummEngine *s);
 	virtual ~ScummDebugger(); // we need this here for __SYMBIAN32__
 
-protected:
+private:
 	ScummEngine *_vm;
 	bool  _old_soundsPaused;
-
-	virtual void preEnter();
-	virtual void postEnter();
 
 	// Commands
 	bool Cmd_Room(int argc, const char **argv);

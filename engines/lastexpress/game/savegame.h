@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/savegame.h $
- * $Id: savegame.h 53883 2010-10-27 19:20:20Z littleboy $
+ * $Id: savegame.h 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -78,6 +78,7 @@
 
 #include "common/savefile.h"
 #include "common/serializer.h"
+#include "common/memstream.h"
 
 namespace LastExpress {
 

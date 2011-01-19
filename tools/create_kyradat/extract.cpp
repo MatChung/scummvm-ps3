@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/tools/create_kyradat/extract.cpp $
- * $Id: extract.cpp 53965 2010-10-30 22:44:15Z fingolfin $
+ * $Id: extract.cpp 54183 2010-11-10 03:59:43Z lordhoto $
  *
  */
 
@@ -881,7 +881,7 @@ bool extractRaw16to8(PAKFile &out, const ExtractInformation *info, const byte *d
 
 	for (int i = 0; i < outsize; i++) {
 		*dst++ = *src++;
-		*src++;
+		src++;
 	}
 
 	return out.addFile(filename, buffer, outsize);

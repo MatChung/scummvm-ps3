@@ -19,18 +19,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/options.cpp $
- * $Id: options.cpp 54092 2010-11-05 11:17:57Z thebluegr $
+ * $Id: options.cpp 54684 2010-11-30 18:50:19Z jvprat $
  */
 
 #include "gui/browser.h"
 #include "gui/themebrowser.h"
 #include "gui/chooser.h"
 #include "gui/message.h"
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 #include "gui/ThemeEval.h"
 #include "gui/options.h"
-#include "gui/PopUpWidget.h"
-#include "gui/TabWidget.h"
+#include "gui/widgets/popup.h"
+#include "gui/widgets/tab.h"
 
 #include "common/fs.h"
 #include "common/config-manager.h"
@@ -80,8 +80,6 @@ static const int savePeriodValues[] = { 0, 5 * 60, 10 * 60, 15 * 60, 30 * 60, -1
 static const char *outputRateLabels[] = { _s("<default>"), _s("8 kHz"), _s("11kHz"), _s("22 kHz"), _s("44 kHz"), _s("48 kHz"), 0 };
 static const int outputRateValues[] = { 0, 8000, 11025, 22050, 44100, 48000, -1 };
 
-
-
 OptionsDialog::OptionsDialog(const Common::String &domain, int x, int y, int w, int h)
 	: Dialog(x, y, w, h), _domain(domain), _graphicsTabId(-1), _tabWidget(0) {
 	init();
@@ -92,23 +90,40 @@ OptionsDialog::OptionsDialog(const Common::String &domain, const Common::String 
 	init();
 }
 
+OptionsDialog::~OptionsDialog() {
+	delete _subToggleGroup;
+}
+
 void OptionsDialog::init() {
 	_enableGraphicSettings = false;
 	_gfxPopUp = 0;
+	_gfxPopUpDesc = 0;
 	_renderModePopUp = 0;
+	_renderModePopUpDesc = 0;
 	_fullscreenCheckbox = 0;
 	_aspectCheckbox = 0;
 	_disableDitheringCheckbox = 0;
 	_enableAudioSettings = false;
 	_midiPopUp = 0;
+	_midiPopUpDesc = 0;
 	_oplPopUp = 0;
+	_oplPopUpDesc = 0;
 	_outputRatePopUp = 0;
+	_outputRatePopUpDesc = 0;
 	_enableMIDISettings = false;
 	_gmDevicePopUp = 0;
+	_gmDevicePopUpDesc = 0;
+	_soundFont = 0;
+	_soundFontButton = 0;
+	_soundFontClearButton = 0;
 	_multiMidiCheckbox = 0;
+	_midiGainDesc = 0;
+	_midiGainSlider = 0;
+	_midiGainLabel = 0;
 	_enableMT32Settings = false;
 	_mt32Checkbox = 0;
 	_mt32DevicePopUp = 0;
+	_mt32DevicePopUpDesc = 0;
 	_enableGSCheckbox = 0;
 	_enableVolumeSettings = false;
 	_musicVolumeDesc = 0;
@@ -650,7 +665,7 @@ void OptionsDialog::addGraphicControls(GuiObject *boss, const Common::String &pr
 
 	// Aspect ratio checkbox
 	_aspectCheckbox = new CheckboxWidget(boss, prefix + "grAspectCheckbox", _("Aspect ratio correction"), _("Correct aspect ratio for 320x200 games"));
-	_disableDitheringCheckbox = new CheckboxWidget(boss, prefix + "grDisableDitheringCheckbox", _("Disable EGA dithering"), _("Disable dithering in EGA games"));
+	_disableDitheringCheckbox = new CheckboxWidget(boss, prefix + "grDisableDitheringCheckbox", _("EGA undithering"), _("Enable undithering in EGA games that support it"));
 
 	_enableGraphicSettings = true;
 }
@@ -1298,9 +1313,12 @@ void GlobalOptionsDialog::handleCommand(CommandSender *sender, uint32 cmd, uint3
 			Common::String theme = browser.getSelected();
 			// FIXME: Actually, any changes (including the theme change) should
 			// only become active *after* the options dialog has closed.
+#ifdef USE_TRANSLATION
 			Common::String lang = TransMan.getCurrentLanguage();
+#endif
 			Common::String oldTheme = g_gui.theme()->getThemeId();
 			if (g_gui.loadNewTheme(theme)) {
+#ifdef USE_TRANSLATION
 				// If the charset has changed, it means the font were not found for the
 				// new theme. Since for the moment we do not support change of translation
 				// language without restarting, we let the user know about this.
@@ -1310,9 +1328,12 @@ void GlobalOptionsDialog::handleCommand(CommandSender *sender, uint32 cmd, uint3
 					MessageDialog error(_("The theme you selected does not support your current language. If you want to use this theme you need to switch to another language first."));
 					error.runModal();
 				} else {
+#endif
 					_curTheme->setLabel(g_gui.theme()->getThemeName());
 					ConfMan.set("gui_theme", theme);
+#ifdef USE_TRANSLATION
 				}
+#endif
 			}
 			draw();
 		}

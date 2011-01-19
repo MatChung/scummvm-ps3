@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/menu.cpp $
- * $Id: menu.cpp 54037 2010-11-02 09:49:47Z fingolfin $
+ * $Id: menu.cpp 55254 2011-01-15 23:55:35Z thebluegr $
  *
  */
 
@@ -54,14 +54,20 @@ GfxMenu::GfxMenu(EventManager *event, SegManager *segMan, GfxPorts *ports, GfxPa
 }
 
 GfxMenu::~GfxMenu() {
-	// TODO: deallocate _list and _itemList
-	reset();
+	for (GuiMenuItemList::iterator itemIter = _itemList.begin(); itemIter != _itemList.end(); ++itemIter)
+		delete *itemIter;
+
+	_itemList.clear();
+
+	for (GuiMenuList::iterator menuIter = _list.begin(); menuIter != _list.end(); ++menuIter)
+		delete *menuIter;
+
+	_list.clear();
 }
 
 void GfxMenu::reset() {
 	_list.clear();
 	_itemList.clear();
-	_listCount = 0;
 
 	// We actually set active item in here and remember last selection of the
 	// user. Sierra SCI always defaulted to first item every time menu was
@@ -81,15 +87,16 @@ void GfxMenu::kernelAddEntry(Common::String title, Common::String content, reg_t
 	const char *tempPtr;
 
 	// Sierra SCI starts with id 1, so we do so as well
-	_listCount++;
-	menuEntry = new GuiMenuEntry(_listCount);
+	menuEntry = new GuiMenuEntry(_list.size() + 1);
 	menuEntry->text = title;
 	_list.push_back(menuEntry);
 
 	curPos = 0;
+	uint16 listSize = _list.size();
+
 	do {
 		itemCount++;
-		itemEntry = new GuiMenuItemEntry(_listCount, itemCount);
+		itemEntry = new GuiMenuItemEntry(listSize, itemCount);
 
 		beginPos = curPos;
 
@@ -276,7 +283,7 @@ void GfxMenu::kernelSetAttribute(uint16 menuId, uint16 itemId, uint16 attributeI
 		// PQ2 demo calls this, for example, but has no menus (bug report #3034507). Some SCI
 		// fan games (Al Pond 2, Aquarius) call this too on non-existent menu items. The
 		// original interpreter ignored these as well.
-		debugC(2, kDebugLevelGraphics, "Tried to setAttribute() on non-existent menu-item %d:%d", menuId, itemId);
+		debugC(kDebugLevelGraphics, "Tried to setAttribute() on non-existent menu-item %d:%d", menuId, itemId);
 		return;
 	}
 
@@ -345,7 +352,7 @@ void GfxMenu::drawBar() {
 	listIterator = _list.begin();
 	while (listIterator != listEnd) {
 		listEntry = *listIterator;
-		_text16->Draw_String(listEntry->textSplit.c_str());
+		_text16->DrawString(listEntry->textSplit.c_str());
 
 		listIterator++;
 	}
@@ -498,10 +505,10 @@ GuiMenuItemEntry *GfxMenu::interactiveGetItem(uint16 menuId, uint16 itemId, bool
 	GuiMenuItemEntry *lastItemEntry = NULL;
 
 	// Fixup menuId if needed
-	if (menuId > _listCount)
+	if (menuId > _list.size())
 		menuId = 1;
 	if (menuId == 0)
-		menuId = _listCount;
+		menuId = _list.size();
 	while (itemIterator != itemEnd) {
 		itemEntry = *itemIterator;
 		if (itemEntry->menuId == menuId) {
@@ -604,9 +611,9 @@ void GfxMenu::drawMenu(uint16 oldMenuId, uint16 newMenuId) {
 			if (!listItemEntry->separatorLine) {
 				_ports->textGreyedOutput(listItemEntry->enabled ? false : true);
 				_ports->moveTo(_menuRect.left, topPos);
-				_text16->Draw_String(listItemEntry->textSplit.c_str());
+				_text16->DrawString(listItemEntry->textSplit.c_str());
 				_ports->moveTo(_menuRect.right - listItemEntry->textRightAlignedWidth - 5, topPos);
-				_text16->Draw_String(listItemEntry->textRightAligned.c_str());
+				_text16->DrawString(listItemEntry->textRightAligned.c_str());
 			} else {
 				// We dont 100% follow sierra here, we draw the line from left to right. Looks better
 				// BTW. SCI1.1 seems to put 2 pixels and then skip one, we don't do this at all (lsl6)
@@ -905,7 +912,7 @@ void GfxMenu::kernelDrawStatus(const char *text, int16 colorPen, int16 colorBack
 	_paint16->fillRect(_ports->_menuBarRect, 1, colorBack);
 	_ports->penColor(colorPen);
 	_ports->moveTo(0, 1);
-	_text16->Draw_Status(text);
+	_text16->DrawStatus(text);
 	_paint16->bitsShow(_ports->_menuBarRect);
 	_ports->setPort(oldPort);
 }

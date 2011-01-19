@@ -19,13 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cine/bg.cpp $
- * $Id: bg.cpp 41453 2009-06-11 18:32:35Z buddha_ $
+ * $Id: bg.cpp 55071 2010-12-31 09:14:49Z tdhs $
  *
  */
 
 
 #include "common/endian.h"
-#include "common/stream.h"
+#include "common/memstream.h"
 
 #include "cine/cine.h"
 #include "cine/various.h"
@@ -38,6 +38,7 @@ byte *additionalBgTable[9];
 int16 currentAdditionalBgIdx = 0, currentAdditionalBgIdx2 = 0;
 
 byte loadCtFW(const char *ctName) {
+	debugC(1, kCineDebugCollision, "loadCtFW(\"%s\")", ctName);
 	uint16 header[32];
 	byte *ptr, *dataPtr;
 
@@ -71,12 +72,21 @@ byte loadCtFW(const char *ctName) {
 }
 
 byte loadCtOS(const char *ctName) {
+	debugC(1, kCineDebugCollision, "loadCtOS(\"%s\")", ctName);
 	byte *ptr, *dataPtr;
+
+	int16 foundFileIdx = findFileInBundle(ctName);
+	if (foundFileIdx == -1) {
+		warning("loadCtOS: Unable to find collision data file '%s'", ctName);
+		// FIXME: Rework this function's return value policy and return an appropriate value here.
+		// The return value isn't yet used for anything so currently it doesn't really matter.
+		return 0;
+	}
 
 	if (currentCtName != ctName)
 		strcpy(currentCtName, ctName);
 
-	ptr = dataPtr = readBundleFile(findFileInBundle(ctName));
+	ptr = dataPtr = readBundleFile(foundFileIdx);
 
 	uint16 bpp = READ_BE_UINT16(ptr);
 	ptr += 2;

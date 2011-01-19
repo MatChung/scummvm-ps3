@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/made/made.h $
- * $Id: made.h 53484 2010-10-15 12:48:19Z fingolfin $
+ * $Id: made.h 54147 2010-11-08 22:53:36Z fingolfin $
  *
  */
 
@@ -42,11 +42,11 @@
 #include "sound/audiostream.h"
 #include "sound/mixer.h"
 #include "sound/decoders/voc.h"
-#include "sound/audiocd.h"
 
 #include "engines/engine.h"
 
 #include "made/sound.h"
+#include "made/console.h"
 
 /**
  * This is the namespace of the Made engine.
@@ -101,6 +101,8 @@ public:
 	virtual bool hasFeature(EngineFeature f) const;
 	virtual void syncSoundSettings();
 
+	GUI::Debugger *getDebugger() { return _console; }
+
 	int getGameId() {
 		return _gameId;
 	}
@@ -113,6 +115,7 @@ public:
 	Common::Platform getPlatform() const;
 
 private:
+	MadeConsole *_console;
 public:
 	PmvPlayer *_pmvPlayer;
 	ResourceReader *_res;

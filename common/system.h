@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/system.h $
- * $Id: system.h 49843 2010-06-15 12:33:20Z fingolfin $
+ * $Id: system.h 54978 2010-12-20 17:28:17Z lordhoto $
  *
  */
 
@@ -52,6 +52,7 @@ namespace Common {
 	class HardwareKeySet;
 }
 
+class AudioCDManager;
 class FilesystemFactory;
 
 /**
@@ -71,6 +72,16 @@ struct TimeDate {
 	int tm_mon;     ///< month of year (0 - 11)
 	int tm_year;    ///< year - 1900
 };
+
+namespace LogMessageType {
+
+enum Type {
+	kError,
+	kWarning,
+	kDebug
+};
+
+} // End of namespace LogMessageType
 
 /**
  * Interface for ScummVM backends. If you want to port ScummVM to a system
@@ -354,6 +365,13 @@ public:
 	 */
 	virtual int getGraphicsMode() const = 0;
 
+	/**
+	 * Sets the graphics scale factor to x1. Games with large screen sizes
+	 * reset the scale to x1 so the screen will not be too big when starting
+	 * the game.
+	 */
+	virtual void resetGraphicsScale() = 0;
+
 #ifdef USE_RGB_COLOR
 	/**
 	 * Determine the pixel format currently in use for screen rendering.
@@ -529,6 +547,23 @@ public:
 	/**
 	 * Grabs a specified part of the currently active palette.
 	 * The format is the same as for setPalette.
+	 *
+	 * This should return exactly the same RGB data as was setup via previous
+	 * setPalette calls.
+	 *
+	 * For example, for every valid value of start and num of the following
+	 * code:
+	 *
+	 * byte origPal[num*4];
+	 * // Setup origPal's data however you like
+	 * g_system->setPalette(origPal, start, num);
+	 * byte obtainedPal[num*4];
+	 * g_system->grabPalette(obtainedPal, start, num);
+	 *
+	 * the following should be true:
+	 *
+	 * For each i < num : memcmp(&origPal[i*4], &obtainedPal[i*4], 3) == 0
+	 * (i is an uint here)
 	 *
 	 * @see setPalette
 	 * @param colors	the palette data, in interleaved RGBA format
@@ -926,46 +961,14 @@ public:
 
 
 
-	/**
-	 * @name Audio CD
-	 * The methods in this group deal with Audio CD playback.
-	 * The default implementation simply does nothing.
-	 * This is the lower level implementation as provided by the
-	 * backends. The engines should use the Audio::AudioCDManager
-	 * class instead of using it directly.
-	 */
+	/** @name Audio CD */
 	//@{
 
 	/**
-	 * Initialise the specified CD drive for audio playback.
-	 * @return true if the CD drive was inited succesfully
+	 * Return the audio cd manager. For more information, refer to the
+	 * AudioCDManager documentation.
 	 */
-	virtual bool openCD(int drive);
-
-	/**
-	 * Poll CD status.
-	 * @return true if CD audio is playing
-	 */
-	virtual bool pollCD();
-
-	/**
-	 * Start audio CD playback.
-	 * @param track			the track to play.
-	 * @param num_loops		how often playback should be repeated (-1 = infinitely often).
-	 * @param start_frame	the frame at which playback should start (75 frames = 1 second).
-	 * @param duration		the number of frames to play.
-	 */
-	virtual void playCD(int track, int num_loops, int start_frame, int duration) {}
-
-	/**
-	 * Stop audio CD playback.
-	 */
-	virtual void stopCD() {}
-
-	/**
-	 * Update cdrom audio status.
-	 */
-	virtual void updateCD() {}
+	virtual AudioCDManager *getAudioCDManager() = 0;
 
 	//@}
 
@@ -975,6 +978,13 @@ public:
 	//@{
 	/** Quit (exit) the application. */
 	virtual void quit() = 0;
+
+	/**
+	 * Signals that a fatal error inside the client code has happened.
+	 *
+	 * This should quit the application.
+	 */
+	virtual void fatalError();
 
 	/**
 	 * Set a window caption or any other comparable status display to the
@@ -994,8 +1004,9 @@ public:
 	 *
 	 * Currently, only pure ASCII messages can be expected to show correctly.
 	 *
-	 * @note There is a default implementation which uses a TimedMessageDialog
-	 *       to display the message. Hence implementing this is optional.
+	 * @note There is a default implementation in BaseBackend which uses a
+	 *       TimedMessageDialog to display the message. Hence implementing
+	 *       this is optional.
 	 *
 	 * @param msg	the message to display on screen
 	 */
@@ -1042,6 +1053,38 @@ public:
 	 * May return 0 to indicate that writing to config file is not possible.
 	 */
 	virtual Common::WriteStream *createConfigWriteStream() = 0;
+
+	/**
+	 * Logs a given message.
+	 *
+	 * It is up to the backend where to log the different messages.
+	 * The backend should aim at using a non-buffered output for it
+	 * so that no log data is lost in case of a crash.
+	 *
+	 * The default implementation outputs them on stdout/stderr.
+	 *
+	 * @param type    the type of the message
+	 * @param message the message itself
+	 */
+	virtual void logMessage(LogMessageType::Type type, const char *message);
+
+	/**
+	 * Returns the locale of the system.
+	 *
+	 * This returns the currently set up locale of the system, on which
+	 * ScummVM is run.
+	 *
+	 * The format of the locale is language_country. These should match
+	 * the POSIX locale values.
+	 *
+	 * For information about POSIX locales read here:
+	 * http://en.wikipedia.org/wiki/Locale#POSIX-type_platforms
+	 * 
+	 * The default implementation returns "en_US".
+	 *
+	 * @return locale of the system
+	 */
+	virtual Common::String getSystemLanguage() const;
 
 	//@}
 };

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/parallaction_br.cpp $
- * $Id: parallaction_br.cpp 53702 2010-10-22 14:21:26Z peres001 $
+ * $Id: parallaction_br.cpp 55229 2011-01-13 17:26:00Z tdhs $
  *
  */
 
@@ -228,7 +228,6 @@ void Parallaction_br::freeCharacter() {
 void Parallaction_br::freeLocation(bool removeAll) {
 	// free open location stuff
 	clearSubtitles();
-	_subtitle[0] = _subtitle[1] = 0;
 
 	_localFlagNames->clear();
 
@@ -301,6 +300,7 @@ void Parallaction_br::changeLocation() {
 		_countersNames = _disk->loadTable("counters");
 
 		// TODO: maybe handle this into Disk
+		delete _objects;
 		if (getPlatform() == Common::kPlatformPC) {
 			_objects = _disk->loadObjects("icone.ico");
 		} else {

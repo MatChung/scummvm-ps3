@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/text16.cpp $
- * $Id: text16.cpp 52913 2010-09-26 18:23:53Z m_kiewitz $
+ * $Id: text16.cpp 55179 2011-01-09 00:32:26Z thebluegr $
  *
  */
 
@@ -335,8 +335,8 @@ int16 GfxText16::Size(Common::Rect &rect, const char *text, GuiResourceId fontId
 			maxTextWidth = MAX(textWidth, maxTextWidth);
 			totalHeight += textHeight;
 			curPos += charCount;
-			if (*curPos == ' ')
-				curPos++; // skip over breaking space
+			while (*curPos == ' ')
+				curPos++; // skip over breaking spaces
 		}
 		rect.bottom = totalHeight;
 		rect.right = maxWidth ? maxWidth : MIN(rect.right, maxTextWidth);
@@ -403,7 +403,7 @@ void GfxText16::Show(const char *text, int16 from, int16 len, GuiResourceId orgF
 }
 
 // Draws a text in rect.
-void GfxText16::Box(const char *text, int16 bshow, const Common::Rect &rect, TextAlignment alignment, GuiResourceId fontId) {
+void GfxText16::Box(const char *text, bool show, const Common::Rect &rect, TextAlignment alignment, GuiResourceId fontId) {
 	int16 textWidth, maxTextWidth, textHeight, charCount;
 	int16 offset = 0;
 	int16 hline = 0;
@@ -448,7 +448,7 @@ void GfxText16::Box(const char *text, int16 bshow, const Common::Rect &rect, Tex
 		}
 		_ports->moveTo(rect.left + offset, rect.top + hline);
 
-		if (bshow) {
+		if (show) {
 			Show(text, 0, charCount, fontId, previousPenColor);
 		} else {
 			Draw(text, 0, charCount, fontId, previousPenColor);
@@ -456,8 +456,8 @@ void GfxText16::Box(const char *text, int16 bshow, const Common::Rect &rect, Tex
 
 		hline += textHeight;
 		text += charCount;
-		if (*text == ' ')
-			text++; // skip over breaking space
+		while (*text == ' ')
+			text++; // skip over breaking spaces
 	}
 	SetFont(previousFontId);
 	_ports->penColor(previousPenColor);
@@ -482,7 +482,7 @@ void GfxText16::Box(const char *text, int16 bshow, const Common::Rect &rect, Tex
 	}
 }
 
-void GfxText16::Draw_String(const char *text) {
+void GfxText16::DrawString(const char *text) {
 	GuiResourceId previousFontId = GetFontId();
 	int16 previousPenColor = _ports->_curPort->penClr;
 
@@ -493,7 +493,7 @@ void GfxText16::Draw_String(const char *text) {
 
 // we need to have a separate status drawing code
 //  In KQ4 the IV char is actually 0xA, which would otherwise get considered as linebreak and not printed
-void GfxText16::Draw_Status(const char *text) {
+void GfxText16::DrawStatus(const char *text) {
 	uint16 curChar, charWidth;
 	uint16 textLen = strlen(text);
 	Common::Rect rect;

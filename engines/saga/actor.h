@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/actor.h $
- * $Id: actor.h 53766 2010-10-24 17:42:45Z h00ligan $
+ * $Id: actor.h 54323 2010-11-18 16:38:03Z fingolfin $
  *
  */
 
@@ -267,7 +267,7 @@ struct Location {
 		screenPoint.x = x / ACTOR_LMULT;
 		screenPoint.y = y / ACTOR_LMULT - z;
 	}
-	void fromStream(MemoryReadStream &stream) {
+	void fromStream(Common::ReadStream &stream) {
 		x = stream.readUint16LE();
 		y = stream.readUint16LE();
 		z = stream.readUint16LE();

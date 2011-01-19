@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/kernel/objectregistry.h $
- * $Id: objectregistry.h 53413 2010-10-13 11:42:17Z drmccoy $
+ * $Id: objectregistry.h 54550 2010-11-28 21:33:02Z fingolfin $
  *
  */
 
@@ -137,7 +137,7 @@ protected:
 	};
 	struct ClassPointer_Hash {
 		uint operator()(const T *x) const {
-			return *(uint *)&x;
+			return (uint)(x - (const T *)0);
 		}
 	};
 

@@ -19,12 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/console.cpp $
- * $Id: console.cpp 54109 2010-11-07 02:08:02Z mthreepwood $
+ * $Id: console.cpp 55314 2011-01-18 21:10:58Z mthreepwood $
  *
  */
 
 #include "mohawk/console.h"
 #include "mohawk/myst.h"
+#include "mohawk/myst_areas.h"
 #include "mohawk/myst_scripts.h"
 #include "mohawk/graphics.h"
 #include "mohawk/riven.h"
@@ -49,17 +50,10 @@ MystConsole::MystConsole(MohawkEngine_Myst *vm) : GUI::Debugger(), _vm(vm) {
 	DCmd_Register("playMovie",			WRAP_METHOD(MystConsole, Cmd_PlayMovie));
 	DCmd_Register("disableInitOpcodes",	WRAP_METHOD(MystConsole, Cmd_DisableInitOpcodes));
 	DCmd_Register("cache",				WRAP_METHOD(MystConsole, Cmd_Cache));
+	DCmd_Register("resources",			WRAP_METHOD(MystConsole, Cmd_Resources));
 }
 
 MystConsole::~MystConsole() {
-}
-
-void MystConsole::preEnter() {
-	_vm->_sound->pauseSound();
-}
-
-void MystConsole::postEnter() {
-	_vm->_sound->resumeSound();
 }
 
 bool MystConsole::Cmd_ChangeCard(int argc, const char **argv) {
@@ -69,7 +63,7 @@ bool MystConsole::Cmd_ChangeCard(int argc, const char **argv) {
 	}
 
 	_vm->_sound->stopSound();
-	_vm->changeToCard((uint16)atoi(argv[1]));
+	_vm->changeToCard((uint16)atoi(argv[1]), true);
 
 	return false;
 }
@@ -86,9 +80,9 @@ bool MystConsole::Cmd_Var(int argc, const char **argv) {
 	}
 
 	if (argc > 2)
-		_vm->_varStore->setVar((uint16)atoi(argv[1]), (uint32)atoi(argv[2]));
+		_vm->_scriptParser->setVarValue((uint16)atoi(argv[1]), (uint16)atoi(argv[2]));
 
-	DebugPrintf("%d = %d\n", (uint16)atoi(argv[1]), _vm->_varStore->getVar((uint16)atoi(argv[1])));
+	DebugPrintf("%d = %d\n", (uint16)atoi(argv[1]), _vm->_scriptParser->getVar((uint16)atoi(argv[1])));
 
 	return true;
 }
@@ -158,12 +152,13 @@ bool MystConsole::Cmd_ChangeStack(int argc, const char **argv) {
 	// as the next card could continue playing it if it.
 	_vm->_sound->stopSound();
 
-	_vm->changeToStack(stackNum - 1);
-
+	uint16 card = 0;
 	if (argc == 3)
-		_vm->changeToCard((uint16)atoi(argv[2]));
+		card = (uint16)atoi(argv[2]);
 	else
-		_vm->changeToCard(default_start_card[stackNum - 1]);
+		card = default_start_card[stackNum - 1];
+
+	_vm->changeToStack(stackNum - 1, card, 0, 0);
 
 	return false;
 }
@@ -182,16 +177,25 @@ bool MystConsole::Cmd_DrawImage(int argc, const char **argv) {
 		rect = Common::Rect((uint16)atoi(argv[2]), (uint16)atoi(argv[3]), (uint16)atoi(argv[4]), (uint16)atoi(argv[5]));
 
 	_vm->_gfx->copyImageToScreen((uint16)atoi(argv[1]), rect);
+	_vm->_system->updateScreen();
 	return false;
 }
 
 bool MystConsole::Cmd_DrawRect(int argc, const char **argv) {
-	if (argc < 5) {
+	if (argc != 5 && argc != 2) {
 		DebugPrintf("Usage: drawRect <left> <top> <right> <bottom>\n");
+		DebugPrintf("Usage: drawRect <resource id>\n");
 		return true;
 	}
 
-	_vm->_gfx->drawRect(Common::Rect((uint16)atoi(argv[1]), (uint16)atoi(argv[2]), (uint16)atoi(argv[3]), (uint16)atoi(argv[4])), true);
+	if (argc == 5) {
+		_vm->_gfx->drawRect(Common::Rect((uint16)atoi(argv[1]), (uint16)atoi(argv[2]), (uint16)atoi(argv[3]), (uint16)atoi(argv[4])), kRectEnabled);
+	} else if (argc == 2) {
+		uint16 resourceId = (uint16)atoi(argv[1]);
+		if (resourceId < _vm->_resources.size())
+			_vm->_resources[resourceId]->drawBoundingRect();
+	}
+
 	return false;
 }
 
@@ -212,8 +216,7 @@ bool MystConsole::Cmd_PlaySound(int argc, const char **argv) {
 		return true;
 	}
 
-	_vm->_sound->stopSound();
-	_vm->_sound->playSound((uint16)atoi(argv[1]));
+	_vm->_sound->replaceSoundMyst((uint16)atoi(argv[1]));
 
 	return false;
 }
@@ -249,13 +252,13 @@ bool MystConsole::Cmd_PlayMovie(int argc, const char **argv) {
 	}
 
 	if (argc == 2)
-		_vm->_video->playBackgroundMovie(argv[1], 0, 0);
+		_vm->_video->playMovie(argv[1], 0, 0);
 	else if (argc == 3)
-		_vm->_video->playBackgroundMovie(_vm->wrapMovieFilename(argv[1], stackNum - 1), 0, 0);
+		_vm->_video->playMovie(_vm->wrapMovieFilename(argv[1], stackNum - 1), 0, 0);
 	else if (argc == 4)
-		_vm->_video->playBackgroundMovie(argv[1], atoi(argv[2]), atoi(argv[3]));
+		_vm->_video->playMovie(argv[1], atoi(argv[2]), atoi(argv[3]));
 	else
-		_vm->_video->playBackgroundMovie(_vm->wrapMovieFilename(argv[1], stackNum - 1), atoi(argv[3]), atoi(argv[4]));
+		_vm->_video->playMovie(_vm->wrapMovieFilename(argv[1], stackNum - 1), atoi(argv[3]), atoi(argv[4]));
 
 	return false;
 }
@@ -267,7 +270,7 @@ bool MystConsole::Cmd_DisableInitOpcodes(int argc, const char **argv) {
 		return true;
 	}
 
-	_vm->_scriptParser->disableInitOpcodes();
+	_vm->_scriptParser->disablePersistentScripts();
 
 	return true;
 }
@@ -293,6 +296,16 @@ bool MystConsole::Cmd_Cache(int argc, const char **argv) {
 	return true;
 }
 
+bool MystConsole::Cmd_Resources(int argc, const char **argv) {
+	DebugPrintf("Resources in card %d:\n", _vm->getCurCard());
+
+	for (uint i = 0; i < _vm->_resources.size(); i++) {
+		DebugPrintf("#%2d %s\n", i, _vm->_resources[i]->describe().c_str());
+	}
+
+	return true;
+}
+
 RivenConsole::RivenConsole(MohawkEngine_Riven *vm) : GUI::Debugger(), _vm(vm) {
 	DCmd_Register("changeCard",		WRAP_METHOD(RivenConsole, Cmd_ChangeCard));
 	DCmd_Register("curCard",		WRAP_METHOD(RivenConsole, Cmd_CurCard));
@@ -315,15 +328,6 @@ RivenConsole::RivenConsole(MohawkEngine_Riven *vm) : GUI::Debugger(), _vm(vm) {
 RivenConsole::~RivenConsole() {
 }
 
-void RivenConsole::preEnter() {
-	_vm->_sound->pauseSound();
-	_vm->_sound->pauseSLST();
-}
-
-void RivenConsole::postEnter() {
-	_vm->_sound->resumeSound();
-	_vm->_sound->resumeSLST();
-}
 
 bool RivenConsole::Cmd_ChangeCard(int argc, const char **argv) {
 	if (argc < 2) {
@@ -502,7 +506,7 @@ bool RivenConsole::Cmd_DumpScript(int argc, const char **argv) {
 	_vm->changeToStack(newStack);
 
 	// Load in Variable Names
-	Common::SeekableReadStream *nameStream = _vm->getRawData(ID_NAME, VariableNames);
+	Common::SeekableReadStream *nameStream = _vm->getResource(ID_NAME, VariableNames);
 	Common::StringArray varNames;
 
 	uint16 namesCount = nameStream->readUint16BE();
@@ -523,7 +527,7 @@ bool RivenConsole::Cmd_DumpScript(int argc, const char **argv) {
 	delete nameStream;
 
 	// Load in External Command Names
-	nameStream = _vm->getRawData(ID_NAME, ExternalCommandNames);
+	nameStream = _vm->getResource(ID_NAME, ExternalCommandNames);
 	Common::StringArray xNames;
 
 	namesCount = nameStream->readUint16BE();
@@ -553,7 +557,7 @@ bool RivenConsole::Cmd_DumpScript(int argc, const char **argv) {
 		// deriven.
 		debugN("\n\nDumping scripts for %s\'s card %d!\n", argv[1], (uint16)atoi(argv[3]));
 		debugN("==================================\n\n");
-		Common::SeekableReadStream *cardStream = _vm->getRawData(MKID_BE('CARD'), (uint16)atoi(argv[3]));
+		Common::SeekableReadStream *cardStream = _vm->getResource(MKID_BE('CARD'), (uint16)atoi(argv[3]));
 		cardStream->seek(4);
 		RivenScriptList scriptList = _vm->_scriptMan->readScripts(cardStream, false);
 		for (uint32 i = 0; i < scriptList.size(); i++) {
@@ -566,7 +570,7 @@ bool RivenConsole::Cmd_DumpScript(int argc, const char **argv) {
 		debugN("\n\nDumping scripts for %s\'s card %d hotspots!\n", argv[1], (uint16)atoi(argv[3]));
 		debugN("===========================================\n\n");
 
-		Common::SeekableReadStream *hsptStream = _vm->getRawData(MKID_BE('HSPT'), (uint16)atoi(argv[3]));
+		Common::SeekableReadStream *hsptStream = _vm->getResource(MKID_BE('HSPT'), (uint16)atoi(argv[3]));
 
 		uint16 hotspotCount = hsptStream->readUint16BE();
 
@@ -652,29 +656,20 @@ LivingBooksConsole::LivingBooksConsole(MohawkEngine_LivingBooks *vm) : GUI::Debu
 	DCmd_Register("playSound",			WRAP_METHOD(LivingBooksConsole, Cmd_PlaySound));
 	DCmd_Register("stopSound",			WRAP_METHOD(LivingBooksConsole, Cmd_StopSound));
 	DCmd_Register("drawImage",			WRAP_METHOD(LivingBooksConsole, Cmd_DrawImage));
+	DCmd_Register("changePage",			WRAP_METHOD(LivingBooksConsole, Cmd_ChangePage));
 }
 
 LivingBooksConsole::~LivingBooksConsole() {
 }
 
-void LivingBooksConsole::preEnter() {
-	_vm->_sound->pauseSound();
-}
-
-void LivingBooksConsole::postEnter() {
-	_vm->_sound->resumeSound();
-}
-
 bool LivingBooksConsole::Cmd_PlaySound(int argc, const char **argv) {
 	if (argc == 1) {
 		DebugPrintf("Usage: playSound <value>\n");
-
 		return true;
 	}
 
 	_vm->_sound->stopSound();
 	_vm->_sound->playSound((uint16)atoi(argv[1]));
-
 	return false;
 }
 
@@ -682,7 +677,6 @@ bool LivingBooksConsole::Cmd_StopSound(int argc, const char **argv) {
 	DebugPrintf("Stopping Sound\n");
 
 	_vm->_sound->stopSound();
-
 	return true;
 }
 
@@ -692,11 +686,21 @@ bool LivingBooksConsole::Cmd_DrawImage(int argc, const char **argv) {
 		return true;
 	}
 
-	if (_vm->getGameType() == GType_LIVINGBOOKSV1)
-		DebugPrintf("This isn't supported in the old Living Books games (yet)!\n");
+	_vm->_gfx->copyAnimImageToScreen((uint16)atoi(argv[1]));
+	_vm->_system->updateScreen();
+	return false;
+}
 
-	_vm->_gfx->copyImageToScreen((uint16)atoi(argv[1]));
-	return _vm->getGameType() != GType_LIVINGBOOKSV1;
+bool LivingBooksConsole::Cmd_ChangePage(int argc, const char **argv) {
+	if (argc == 1) {
+		DebugPrintf("Usage: changePage <page>\n");
+		return true;
+	}
+
+	if (_vm->tryLoadPageStart(_vm->getCurMode(), atoi(argv[1])))
+		return false;
+	DebugPrintf("no such page %d\n", atoi(argv[1]));
+	return true;
 }
 
 } // End of namespace Mohawk

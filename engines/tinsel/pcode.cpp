@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/pcode.cpp $
- * $Id: pcode.cpp 50360 2010-06-27 01:06:51Z dreammaster $
+ * $Id: pcode.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * Virtual processor.
  */
@@ -105,6 +105,8 @@ enum OPCODE {
 bool bNoPause = false;
 
 //----------------- LOCAL GLOBAL DATA --------------------
+
+// FIXME: Avoid non-const global vars
 
 static int32 *pGlobals = 0;		// global vars
 

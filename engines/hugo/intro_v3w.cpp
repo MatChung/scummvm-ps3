@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/intro_v3w.cpp $
- * $Id: intro_v3w.cpp 54018 2010-11-01 20:20:21Z strangerke $
+ * $Id: intro_v3w.cpp 55307 2011-01-18 18:26:33Z strangerke $
  *
  */
 
@@ -53,12 +53,16 @@ void intro_v3w::preNewGame() {
 * Hugo 3 - show map and set up for introPlay()
 */
 void intro_v3w::introInit() {
-//#if STORY
+
+	_vm->_file->readBackground(_vm->_numScreens - 1); // display splash screen
+
+	_vm->_screen->displayBackground();
+	g_system->updateScreen();
+	g_system->delayMillis(3000);
 	_vm->_file->readBackground(22); // display screen MAP_3w
 	_vm->_screen->displayBackground();
 	introTicks = 0;
 	_vm->_screen->loadFont(0);
-//#endif
 }
 
 /**
@@ -66,15 +70,13 @@ void intro_v3w::introInit() {
 * Called every tick.  Returns TRUE when complete
 */
 bool intro_v3w::introPlay() {
-	byte introSize = _vm->getIntroSize();
+	if (_vm->getGameStatus().skipIntroFl)
+		return true;
 
-//TODO : Add proper check of story mode
-//#if STORY
-	if (introTicks < introSize) {
+	if (introTicks < _vm->getIntroSize()) {
 		// Scale viewport x_intro,y_intro to screen (offsetting y)
 		_vm->_screen->writeStr(_vm->_introX[introTicks], _vm->_introY[introTicks] - DIBOFF_Y, "x", _TBRIGHTWHITE);
 		_vm->_screen->displayBackground();
-
 
 		// Text boxes at various times
 		switch (introTicks) {
@@ -90,9 +92,6 @@ bool intro_v3w::introPlay() {
 		}
 	}
 
-	return (++introTicks >= introSize);
-//#else //STORY
-//	return true;
-//#endif //STORY
+	return (++introTicks >= _vm->getIntroSize());
 }
 } // End of namespace Hugo

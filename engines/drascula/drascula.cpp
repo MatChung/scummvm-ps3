@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/drascula/drascula.cpp $
- * $Id: drascula.cpp 49722 2010-06-15 10:24:38Z sev $
+ * $Id: drascula.cpp 54148 2010-11-08 23:07:42Z fingolfin $
  *
  */
 
@@ -29,6 +29,8 @@
 #include "common/file.h"
 #include "common/savefile.h"
 #include "common/config-manager.h"
+
+#include "backends/audiocd/audiocd.h"
 
 #include "base/plugins.h"
 #include "base/version.h"
@@ -101,7 +103,7 @@ DrasculaEngine::DrasculaEngine(OSystem *syst, const DrasculaGameDescription *gam
 
 	int cd_num = ConfMan.getInt("cdrom");
 	if (cd_num >= 0)
-		_system->openCD(cd_num);
+		_system->getAudioCDManager()->openCD(cd_num);
 
 	_lang = kEnglish;
 

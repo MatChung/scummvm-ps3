@@ -19,13 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/he/cup_player_he.cpp $
- * $Id: cup_player_he.cpp 48637 2010-04-12 09:14:17Z fingolfin $
+ * $Id: cup_player_he.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #ifdef ENABLE_HE
 
 #include "common/system.h"
+#include "common/memstream.h"
 #include "sound/audiostream.h"
 #include "sound/mixer.h"
 #include "sound/decoders/raw.h"

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/gob.cpp $
- * $Id: gob.cpp 53984 2010-10-31 20:07:14Z drmccoy $
+ * $Id: gob.cpp 55298 2011-01-18 11:53:21Z drmccoy $
  *
  */
 
@@ -28,12 +28,13 @@
 #include "common/events.h"
 #include "common/EventRecorder.h"
 
+#include "backends/audiocd/audiocd.h"
 #include "base/plugins.h"
 #include "common/config-manager.h"
 #include "common/md5.h"
 #include "sound/mididrv.h"
 
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 #include "gui/dialog.h"
 #include "gui/widget.h"
 
@@ -245,6 +246,34 @@ const Graphics::PixelFormat &GobEngine::getPixelFormat() const {
 	return _pixelFormat;
 }
 
+void GobEngine::setTrueColor(bool trueColor) {
+	if (isTrueColor() == trueColor)
+		return;
+
+	_features = (_features & ~kFeaturesTrueColor) | (trueColor ? kFeaturesTrueColor : 0);
+
+	_video->setSize(is640x480());
+
+	_pixelFormat = g_system->getScreenFormat();
+
+	Common::Array<SurfacePtr>::iterator surf;
+	for (surf = _draw->_spritesArray.begin(); surf != _draw->_spritesArray.end(); ++surf)
+		if (*surf)
+			(*surf)->setBPP(_pixelFormat.bytesPerPixel);
+
+	if (_draw->_backSurface)
+		_draw->_backSurface->setBPP(_pixelFormat.bytesPerPixel);
+	if (_draw->_frontSurface)
+		_draw->_frontSurface->setBPP(_pixelFormat.bytesPerPixel);
+	if (_draw->_cursorSprites)
+		_draw->_cursorSprites->setBPP(_pixelFormat.bytesPerPixel);
+	if (_draw->_cursorSpritesBack)
+		_draw->_cursorSpritesBack->setBPP(_pixelFormat.bytesPerPixel);
+	if (_draw->_scummvmCursor)
+		_draw->_scummvmCursor->setBPP(_pixelFormat.bytesPerPixel);
+	SurfacePtr _scummvmCursor;
+}
+
 Common::Error GobEngine::run() {
 	if (!initGameParts()) {
 		GUIErrorMessage("GobEngine::init(): Unknown version of game engine");
@@ -262,7 +291,7 @@ Common::Error GobEngine::run() {
 
 	int cd_num = ConfMan.getInt("cdrom");
 	if (cd_num >= 0)
-		_system->openCD(cd_num);
+		_system->getAudioCDManager()->openCD(cd_num);
 
 	_global->_debugFlag = 1;
 	_video->_doRangeClamp = true;
@@ -427,7 +456,6 @@ bool GobEngine::initGameParts() {
 		break;
 
 	case kGameTypeGob3:
-	case kGameTypeInca2:
 		_init     = new Init_v3(this);
 		_video    = new Video_v2(this);
 		_inter    = new Inter_v3(this);
@@ -437,6 +465,18 @@ bool GobEngine::initGameParts() {
 		_goblin   = new Goblin_v3(this);
 		_scenery  = new Scenery_v2(this);
 		_saveLoad = new SaveLoad_v3(this, _targetName.c_str(), SaveLoad_v3::kScreenshotTypeGob3);
+		break;
+
+	case kGameTypeInca2:
+		_init     = new Init_v3(this);
+		_video    = new Video_v2(this);
+		_inter    = new Inter_Inca2(this);
+		_mult     = new Mult_v2(this);
+		_draw     = new Draw_v2(this);
+		_map      = new Map_v2(this);
+		_goblin   = new Goblin_v3(this);
+		_scenery  = new Scenery_v2(this);
+		_saveLoad = new SaveLoad_Inca2(this, _targetName.c_str());
 		break;
 
 	case kGameTypeLostInTime:

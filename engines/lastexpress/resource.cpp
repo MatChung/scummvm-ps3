@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/resource.cpp $
- * $Id: resource.cpp 53967 2010-10-30 22:44:57Z fingolfin $
+ * $Id: resource.cpp 54201 2010-11-11 14:19:44Z littleboy $
  *
  */
 
@@ -30,6 +30,7 @@
 #include "lastexpress/data/font.h"
 
 #include "lastexpress/debug.h"
+#include "lastexpress/helpers.h"
 
 #include "common/debug.h"
 #include "common/file.h"
@@ -107,7 +108,7 @@ bool ResourceManager::loadArchive(ArchiveIndex type) {
 void ResourceManager::reset() {
 	// Free the loaded archives
 	for (Common::Array<HPFArchive *>::iterator it = _archives.begin(); it != _archives.end(); ++it)
-		delete (*it);
+		SAFE_DELETE(*it);
 
 	_archives.clear();
 }

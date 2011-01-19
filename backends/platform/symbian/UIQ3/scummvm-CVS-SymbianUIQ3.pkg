@@ -19,7 +19,7 @@
 ; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 ;
 ; $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/symbian/UIQ3/scummvm-CVS-SymbianUIQ3.pkg $
-; $Id: scummvm-CVS-SymbianUIQ3.pkg 52882 2010-09-25 14:59:24Z anotherguest $
+; $Id: scummvm-CVS-SymbianUIQ3.pkg 54378 2010-11-19 13:23:33Z anotherguest $
 ;
 ;
 
@@ -35,7 +35,7 @@
 :"ScummVM"
 
 ; UID is the app's UID
-#{"ScummVM UIQ3"},(0xA0000657),1,13,0
+#{"ScummVM UIQ3"},(0xA0000657),1,30,0
 
 ; ProductID for UIQ 3.0
 ; Product/platform version UID, Major, Minor, Build, Product ID

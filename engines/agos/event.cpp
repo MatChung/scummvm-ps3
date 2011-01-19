@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/event.cpp $
- * $Id: event.cpp 50963 2010-07-17 18:38:42Z fingolfin $
+ * $Id: event.cpp 54148 2010-11-08 23:07:42Z fingolfin $
  *
  */
 
@@ -32,11 +32,12 @@
 #include "common/events.h"
 #include "common/system.h"
 
+#include "backends/audiocd/audiocd.h"
+
 #include "gui/about.h"
 
 #include "graphics/surface.h"
 
-#include "sound/audiocd.h"
 
 namespace AGOS {
 
@@ -429,7 +430,7 @@ void AGOSEngine::delay(uint amount) {
 	uint32 cur = start;
 	uint this_delay, vgaPeriod;
 
-	AudioCD.updateCD();
+	_system->getAudioCDManager()->updateCD();
 
 	_debugger->onFrame();
 
@@ -534,7 +535,7 @@ void AGOSEngine::delay(uint amount) {
 		if (_leftButton == 1)
 			_leftButtonCount++;
 
-		AudioCD.updateCD();
+		_system->getAudioCDManager()->updateCD();
 
 		_system->updateScreen();
 

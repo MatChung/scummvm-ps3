@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/gfx/renderobjectregistry.cpp $
- * $Id: renderobjectregistry.cpp 53752 2010-10-24 01:29:59Z fingolfin $
+ * $Id: renderobjectregistry.cpp 54258 2010-11-16 08:23:13Z fingolfin $
  *
  */
 
@@ -34,7 +34,7 @@
 
 #include "sword25/gfx/renderobjectregistry.h"
 
-DECLARE_SINGLETON(Sword25::RenderObjectRegistry)
+DECLARE_SINGLETON(Sword25::RenderObjectRegistry);
 
 namespace Sword25 {
 

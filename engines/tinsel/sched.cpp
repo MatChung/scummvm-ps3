@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/sched.cpp $
- * $Id: sched.cpp 54029 2010-11-01 21:06:04Z fingolfin $
+ * $Id: sched.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * Process scheduler.
  */
@@ -46,6 +46,8 @@ struct PROCESS_STRUC {
 #include "common/pack-end.h"	// END STRUCT PACKING
 
 //----------------- LOCAL GLOBAL DATA --------------------
+
+// FIXME: Avoid non-const global vars
 
 static uint32 numSceneProcess;
 static SCNHANDLE hSceneProcess;

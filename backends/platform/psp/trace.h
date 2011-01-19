@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/psp/trace.h $
- * $Id: trace.h 50982 2010-07-18 07:03:14Z Bluddy $
+ * $Id: trace.h 54312 2010-11-18 07:52:04Z Bluddy $
  *
  */
 
@@ -55,6 +55,7 @@
 												__PSP_PRINT__(format, ## __VA_ARGS__); }
 
 void PspDebugTrace(bool alsoToScreen, const char *format, ...);
+void mipsBacktrace(uint32 levels, void **addresses);
 
 extern int psp_debug_indent;
 

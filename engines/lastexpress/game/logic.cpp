@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/logic.cpp $
- * $Id: logic.cpp 53880 2010-10-27 19:19:22Z littleboy $
+ * $Id: logic.cpp 54201 2010-11-11 14:19:44Z littleboy $
  *
  */
 
@@ -72,12 +72,12 @@ Logic::Logic(LastExpressEngine *engine) : _engine(engine) {
 }
 
 Logic::~Logic() {
-	delete _action;
-	delete _beetle;
-	delete _fight;
-	delete _entities;
-	delete _saveload;
-	delete _state;
+	SAFE_DELETE(_action);
+	SAFE_DELETE(_beetle);
+	SAFE_DELETE(_fight);
+	SAFE_DELETE(_entities);
+	SAFE_DELETE(_saveload);
+	SAFE_DELETE(_state);
 
 	// Zero-out passed pointers
 	_engine = NULL;

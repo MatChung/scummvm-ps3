@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/psp/osys_psp.h $
- * $Id: osys_psp.h 53460 2010-10-14 22:11:17Z bluddy $
+ * $Id: osys_psp.h 54339 2010-11-18 19:12:14Z lordhoto $
  *
  */
 
@@ -152,6 +152,8 @@ public:
 	virtual void engineDone();
 
 	void quit();
+
+	void logMessage(LogMessageType::Type type, const char *message);
 
 	Common::SeekableReadStream *createConfigReadStream();
 	Common::WriteStream *createConfigWriteStream();

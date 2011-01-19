@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/debug.cpp $
- * $Id: debug.cpp 49141 2010-05-22 15:56:27Z peres001 $
+ * $Id: debug.cpp 55234 2011-01-14 03:25:39Z tdhs $
  *
  */
 
@@ -47,16 +47,18 @@ Debugger::Debugger(Parallaction *vm)
 	DCmd_Register("locations",	WRAP_METHOD(Debugger, Cmd_Locations));
 	DCmd_Register("gfxobjects",	WRAP_METHOD(Debugger, Cmd_GfxObjects));
 	DCmd_Register("programs",	WRAP_METHOD(Debugger, Cmd_Programs));
-
+	DCmd_Register("showmouse",	WRAP_METHOD(Debugger, Cmd_ShowMouse));
 }
 
 
 void Debugger::preEnter() {
 	_mouseState = _vm->_input->getMouseState();
+	_vm->pauseEngine(true);
 }
 
 
 void Debugger::postEnter() {
+	_vm->pauseEngine(false);
 	_vm->_input->setMouseState(_mouseState);
 	_vm->_input->setArrowCursor();	// unselects the active item, if any
 }
@@ -317,6 +319,11 @@ bool Debugger::Cmd_Programs(int argc, const char** argv) {
 	}
 	DebugPrintf("+---+--------------------+--------+----------+\n");
 
+	return true;
+}
+
+bool Debugger::Cmd_ShowMouse(int argc, const char** argv) {
+	_mouseState = MOUSE_ENABLED_SHOW;
 	return true;
 }
 

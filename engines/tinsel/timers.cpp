@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/timers.cpp $
- * $Id: timers.cpp 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: timers.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * Handles timers.
  *
@@ -52,7 +52,7 @@ struct TIMER {
 
 //----------------- LOCAL GLOBAL DATA --------------------
 
-static TIMER timers[MAX_TIMERS];
+static TIMER timers[MAX_TIMERS];	// FIXME: Avoid non-const global vars
 
 
 //--------------------------------------------------------

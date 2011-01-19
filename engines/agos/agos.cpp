@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/agos.cpp $
- * $Id: agos.cpp 54001 2010-11-01 16:00:17Z fingolfin $
+ * $Id: agos.cpp 54148 2010-11-08 23:07:42Z fingolfin $
  *
  */
 
@@ -37,11 +37,12 @@
 #include "agos/agos.h"
 #include "agos/vga.h"
 
+#include "backends/audiocd/audiocd.h"
+
 #include "graphics/surface.h"
 
 #include "sound/mididrv.h"
 #include "sound/mods/protracker.h"
-#include "sound/audiocd.h"
 
 namespace AGOS {
 
@@ -901,7 +902,7 @@ AGOSEngine::~AGOSEngine() {
 	_midi.close();
 	delete _driver;
 
-	AudioCD.stop();
+	_system->getAudioCDManager()->stop();
 
 	for (uint i = 0; i < _itemHeap.size(); i++) {
 		delete[] _itemHeap[i];

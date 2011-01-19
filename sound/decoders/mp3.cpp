@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/sound/decoders/mp3.cpp $
- * $Id: mp3.cpp 52272 2010-08-22 12:04:44Z lordhoto $
+ * $Id: mp3.cpp 54147 2010-11-08 22:53:36Z fingolfin $
  *
  */
 
@@ -31,7 +31,6 @@
 #include "common/stream.h"
 #include "common/util.h"
 
-#include "sound/audiocd.h"
 #include "sound/audiostream.h"
 
 #include <mad.h>

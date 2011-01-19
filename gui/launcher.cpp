@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/launcher.cpp $
- * $Id: launcher.cpp 54097 2010-11-05 13:24:57Z bluddy $
+ * $Id: launcher.cpp 55313 2011-01-18 21:03:13Z lordhoto $
  */
 
 #include "base/version.h"
@@ -38,13 +38,13 @@
 #include "gui/launcher.h"
 #include "gui/massadd.h"
 #include "gui/message.h"
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 #include "gui/options.h"
 #include "gui/saveload.h"
-#include "gui/EditTextWidget.h"
-#include "gui/ListWidget.h"
-#include "gui/TabWidget.h"
-#include "gui/PopUpWidget.h"
+#include "gui/widgets/edittext.h"
+#include "gui/widgets/list.h"
+#include "gui/widgets/tab.h"
+#include "gui/widgets/popup.h"
 #include "gui/ThemeEval.h"
 
 #include "graphics/cursorman.h"
@@ -188,8 +188,8 @@ EditGameDialog::EditGameDialog(const String &domain, const String &desc)
 	// Language popup
 	_langPopUpDesc = new StaticTextWidget(tab, "GameOptions_Game.LangPopupDesc", _("Language:"), _("Language of the game. This will not turn your Spanish game version into English"));
 	_langPopUp = new PopUpWidget(tab, "GameOptions_Game.LangPopup", _("Language of the game. This will not turn your Spanish game version into English"));
-	_langPopUp->appendEntry(_("<default>"), 0);
-	_langPopUp->appendEntry("", 0);
+	_langPopUp->appendEntry(_("<default>"), (uint32)Common::UNK_LANG);
+	_langPopUp->appendEntry("", (uint32)Common::UNK_LANG);
 	const Common::LanguageDescription *l = Common::g_languages;
 	for (; l->code; ++l) {
 		if (checkGameGUIOptionLanguage(l->id, _guioptionsString))
@@ -372,6 +372,8 @@ void EditGameDialog::open() {
 
 	if (ConfMan.hasKey("language", _domain)) {
 		_langPopUp->setSelectedTag(lang);
+	} else {
+		_langPopUp->setSelectedTag((uint32)Common::UNK_LANG);
 	}
 
 	if (_langPopUp->numEntries() <= 3) { // If only one language is avaliable
@@ -924,11 +926,7 @@ void LauncherDialog::loadGame(int item) {
 
 	const EnginePlugin *plugin = 0;
 	
-#if defined(ONE_PLUGIN_AT_A_TIME) && defined(DYNAMIC_MODULES)
-	EngineMan.findGameOnePluginAtATime(gameId, &plugin);
-#else
 	EngineMan.findGame(gameId, &plugin);
-#endif
 
 	String target = _domains[item];
 	target.toLowercase();

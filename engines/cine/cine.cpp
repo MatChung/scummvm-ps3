@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cine/cine.cpp $
- * $Id: cine.cpp 54115 2010-11-07 15:02:41Z tdhs $
+ * $Id: cine.cpp 55091 2011-01-02 14:06:42Z strangerke $
  *
  */
 
@@ -34,9 +34,6 @@
 #include "engines/util.h"
 
 #include "graphics/cursorman.h"
-
-#include "sound/mididrv.h"
-#include "sound/mixer.h"
 
 #include "cine/cine.h"
 #include "cine/bg_list.h"
@@ -53,9 +50,10 @@ Sound *g_sound = 0;
 CineEngine *g_cine = 0;
 
 CineEngine::CineEngine(OSystem *syst, const CINEGameDescription *gameDesc) : Engine(syst), _gameDescription(gameDesc) {
-	DebugMan.addDebugChannel(kCineDebugScript, "Script", "Script debug level");
-	DebugMan.addDebugChannel(kCineDebugPart,   "Part",   "Part debug level");
-	DebugMan.addDebugChannel(kCineDebugSound,  "Sound",  "Sound debug level");
+	DebugMan.addDebugChannel(kCineDebugScript,    "Script",    "Script debug level");
+	DebugMan.addDebugChannel(kCineDebugPart,      "Part",      "Part debug level");
+	DebugMan.addDebugChannel(kCineDebugSound,     "Sound",     "Sound debug level");
+	DebugMan.addDebugChannel(kCineDebugCollision, "Collision", "Collision debug level");
 	_console = new CineConsole(this);
 
 	// Setup mixer
@@ -161,6 +159,7 @@ void CineEngine::initialize() {
 	renderer->initialize();
 
 	collisionPage = new byte[320 * 200];
+	memset(collisionPage, 0, 320 * 200);
 
 	// Clear part buffer as there's nothing loaded into it yet.
 	// Its size will change when loading data into it with the loadPart function.

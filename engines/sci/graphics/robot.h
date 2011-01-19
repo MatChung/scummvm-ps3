@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/robot.h $
- * $Id: robot.h 52801 2010-09-19 10:56:08Z thebluegr $
+ * $Id: robot.h 55190 2011-01-09 18:18:16Z thebluegr $
  *
  */
 
@@ -47,11 +47,12 @@ private:
 	GuiResourceId _resourceId;
 	byte *_resourceData;
 
-	uint16 _width;
-	uint16 _height;
+	//uint16 _width;
+	//uint16 _height;
 	uint16 _frameCount;
 	uint32 _frameSize; // is width * height (pixelCount)
 	uint16 _audioSize;
+	bool _hasSound;
 };
 #endif
 

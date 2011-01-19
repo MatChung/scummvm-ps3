@@ -19,11 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/draci/screen.cpp $
- * $Id: screen.cpp 46320 2009-12-09 21:03:22Z fingolfin $
+ * $Id: screen.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
-#include "common/stream.h"
+#include "common/memstream.h"
 #include "common/system.h"
 
 #include "draci/draci.h"

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/ds/arm9/source/dsoptions.h $
- * $Id: dsoptions.h 50689 2010-07-05 16:11:11Z fingolfin $
+ * $Id: dsoptions.h 54264 2010-11-16 10:11:57Z fingolfin $
  *
  */
 
@@ -34,7 +34,7 @@
 #include "gui/object.h"
 #include "gui/widget.h"
 #include "gui/dialog.h"
-#include "gui/TabWidget.h"
+#include "gui/widgets/tab.h"
 #include "scumm/dialogs.h"
 
 namespace DS {

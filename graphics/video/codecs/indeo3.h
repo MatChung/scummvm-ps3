@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/codecs/indeo3.h $
- * $Id: indeo3.h 52408 2010-08-27 10:45:19Z drmccoy $
+ * $Id: indeo3.h 54930 2010-12-16 02:02:53Z mthreepwood $
  *
  */
 
@@ -46,7 +46,7 @@ public:
 	Indeo3Decoder(uint16 width, uint16 height);
 	~Indeo3Decoder();
 
-	Surface *decodeImage(Common::SeekableReadStream *stream);
+	const Surface *decodeImage(Common::SeekableReadStream *stream);
 	PixelFormat getPixelFormat() const;
 
 	static bool isIndeo3(Common::SeekableReadStream &stream);

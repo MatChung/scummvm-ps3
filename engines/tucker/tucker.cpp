@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tucker/tucker.cpp $
- * $Id: tucker.cpp 48934 2010-05-04 11:58:12Z fingolfin $
+ * $Id: tucker.cpp 54141 2010-11-08 12:24:18Z tdhs $
  *
  */
 
@@ -38,9 +38,11 @@ namespace Tucker {
 
 TuckerEngine::TuckerEngine(OSystem *system, Common::Language language, uint32 flags)
 	: Engine(system), _gameLang(language), _gameFlags(flags) {
+	_console = new TuckerConsole(this);
 }
 
 TuckerEngine::~TuckerEngine() {
+	delete _console;
 }
 
 bool TuckerEngine::hasFeature(EngineFeature f) const {
@@ -627,6 +629,12 @@ void TuckerEngine::parseEvents() {
 				break;
 			case Common::KEYCODE_ESCAPE:
 				_inputKeys[kInputKeyEscape] = true;
+				break;
+			case Common::KEYCODE_d:
+				if (ev.kbd.hasFlags(Common::KBD_CTRL)) {
+					this->getDebugger()->attach();
+					this->getDebugger()->onFrame();
+				}
 				break;
 			default:
 				break;

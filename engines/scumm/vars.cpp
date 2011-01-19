@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/vars.cpp $
- * $Id: vars.cpp 52796 2010-09-18 14:18:48Z Kirben $
+ * $Id: vars.cpp 55091 2011-01-02 14:06:42Z strangerke $
  *
  */
 
@@ -30,7 +30,6 @@
 #include "scumm/scumm_v8.h"
 #include "scumm/he/intern_he.h"
 #include "scumm/he/logic_he.h"
-#include "sound/mididrv.h"
 
 namespace Scumm {
 

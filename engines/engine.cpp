@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/engine.cpp $
- * $Id: engine.cpp 54023 2010-11-01 20:41:32Z fingolfin $
+ * $Id: engine.cpp 54265 2010-11-16 10:19:01Z fingolfin $
  */
 
 #if defined(WIN32) && !defined(_WIN32_WCE) && !defined(__SYMBIAN32__)
@@ -46,7 +46,7 @@
 
 #include "gui/debugger.h"
 #include "gui/message.h"
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 
 #include "sound/mixer.h"
 

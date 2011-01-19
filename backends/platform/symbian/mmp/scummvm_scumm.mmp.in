@@ -2,7 +2,7 @@
  * Copyright (C) 2003-2005 Andreas 'Sprawl' Karlsson - Original EPOC port, ESDL
  * Copyright (C) 2003-2005 Lars 'AnotherGuest' Persson - Original EPOC port, Audio System
  * Copyright (C) 2005 Jurgen 'SumthinWicked' Braam - EPOC/CVS maintainer
- * Copyright (C) 2005-2010 The ScummVM project
+ * Copyright (C) 2005-2011 The ScummVM project
  *
  * ScummVM is the legal property of its developers, whose names
  * are too numerous to list here. Please refer to the COPYRIGHT
@@ -23,7 +23,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/symbian/mmp/scummvm_scumm.mmp.in $
- * $Id: scummvm_scumm.mmp.in 47487 2010-01-23 22:13:40Z strangerke $
+ * $Id: scummvm_scumm.mmp.in 55082 2010-12-31 23:04:49Z strangerke $
  *
  */
 

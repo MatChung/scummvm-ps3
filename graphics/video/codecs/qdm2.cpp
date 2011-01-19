@@ -19,12 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/codecs/qdm2.cpp $
- * $Id: qdm2.cpp 53489 2010-10-15 13:11:34Z tdhs $
+ * $Id: qdm2.cpp 55156 2011-01-08 03:27:13Z wjpalenstijn $
  *
  */
 
 // Based off ffmpeg's QDM2 decoder
 
+#include "common/scummsys.h"
 #include "graphics/video/codecs/qdm2.h"
 
 #ifdef GRAPHICS_QDM2_H

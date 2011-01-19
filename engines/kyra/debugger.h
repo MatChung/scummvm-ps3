@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/debugger.h $
- * $Id: debugger.h 54032 2010-11-01 22:19:16Z lordhoto $
+ * $Id: debugger.h 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -41,9 +41,6 @@ public:
 	virtual ~Debugger() {}  // we need this for __SYMBIAN32__ archaic gcc/UIQ
 
 protected:
-	virtual void preEnter();
-	virtual void postEnter();
-
 	KyraEngine_v1 *_vm;
 
 	bool cmd_setScreenDebug(int argc, const char **argv);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/scummsys.h $
- * $Id: scummsys.h 53961 2010-10-30 21:27:42Z fingolfin $
+ * $Id: scummsys.h 54371 2010-11-19 12:47:52Z anotherguest $
  *
  */
 
@@ -437,6 +437,6 @@
 	typedef uint16 OverlayColor;
 #endif
 
-#include <common/forbidden.h>
+#include "common/forbidden.h"	
 
 #endif

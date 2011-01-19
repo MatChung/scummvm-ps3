@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/flux.cpp $
-* $Id: flux.cpp 53161 2010-10-12 04:19:58Z eriktorbjorn $
+* $Id: flux.cpp 54185 2010-11-10 06:22:18Z tdhs $
 *
 */
 
@@ -34,7 +34,7 @@ CharacterFlux::CharacterFlux(ToonEngine *vm) : Character(vm) {
 	vm->getAnimationManager()->addInstance(_animationInstance);
 }
 
-CharacterFlux::~CharacterFlux(void) {
+CharacterFlux::~CharacterFlux() {
 }
 
 void CharacterFlux::playStandingAnim() {

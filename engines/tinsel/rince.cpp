@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/rince.cpp $
- * $Id: rince.cpp 53471 2010-10-15 08:52:22Z dreammaster $
+ * $Id: rince.cpp 54263 2010-11-16 09:54:11Z fingolfin $
  *
  * Should really be called "moving actors.c"
  */
@@ -53,7 +53,7 @@ namespace Tinsel {
 
 //----------------- LOCAL GLOBAL DATA --------------------
 
-static MOVER Movers[MAX_MOVERS];
+static MOVER Movers[MAX_MOVERS];	// FIXME: Avoid non-const global vars
 
 //----------------- FUNCTIONS ----------------------------
 
@@ -853,7 +853,7 @@ void T2MoverProcess(CORO_PARAM, const void *param) {
  */
 void MoverProcessCreate(int X, int Y, int id, PMOVER pMover) {
 	if (TinselV2) {
-		static MAINIT iStruct;
+		MAINIT iStruct;
 		iStruct.X = X;
 		iStruct.Y = Y;
 		iStruct.pMover = pMover;

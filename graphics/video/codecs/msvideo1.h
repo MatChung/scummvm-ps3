@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/codecs/msvideo1.h $
- * $Id: msvideo1.h 49079 2010-05-18 14:17:24Z mthreepwood $
+ * $Id: msvideo1.h 54930 2010-12-16 02:02:53Z mthreepwood $
  *
  */
 
@@ -35,7 +35,7 @@ public:
 	MSVideo1Decoder(uint16 width, uint16 height, byte bitsPerPixel);
 	~MSVideo1Decoder();
 
-	Surface *decodeImage(Common::SeekableReadStream *stream);
+	const Surface *decodeImage(Common::SeekableReadStream *stream);
 	PixelFormat getPixelFormat() const { return PixelFormat::createFormatCLUT8(); }
 
 private:

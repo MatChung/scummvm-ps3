@@ -19,9 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/saves/psp/psp-saves.cpp $
- * $Id: psp-saves.cpp 47541 2010-01-25 01:39:44Z lordhoto $
+ * $Id: psp-saves.cpp 54573 2010-11-29 16:18:43Z fingolfin $
  *
  */
+
+#include "common/scummsys.h"
 
 #ifdef __PSP__
 

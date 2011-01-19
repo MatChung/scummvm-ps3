@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/myst.h $
- * $Id: myst.h 48080 2010-02-17 19:59:08Z tdhs $
+ * $Id: myst.h 55230 2011-01-13 19:30:00Z bgk $
  *
  */
 
@@ -30,6 +30,9 @@
 #include "mohawk/mohawk.h"
 #include "mohawk/resource_cache.h"
 #include "mohawk/myst_vars.h"
+#include "mohawk/myst_scripts.h"
+
+#include "common/random.h"
 
 #include "gui/saveload.h"
 
@@ -40,8 +43,11 @@ class VideoManager;
 class MystGraphics;
 class MystScriptParser;
 class MystConsole;
-class MystSaveLoad;
+class MystGameState;
 class MystOptionsDialog;
+class MystResource;
+class MystResourceType8;
+class MystResourceType13;
 
 // Engine Debug Flags
 enum {
@@ -75,28 +81,6 @@ enum {
 
 const uint16 kMasterpieceOnly = 0xFFFF;
 
-// Myst Resource Types
-// TODO: Other types and such
-enum {
-	kMystForwardResource = 0,
-	kMystLeftResource = 1,
-	kMystRightResource = 2,
-	kMystDownResource = 3,
-	kMystUpResource = 4,
-	kMystActionResource = 5,
-	kMystVideoResource = 6,
-	kMystSwitchResource = 7
-};
-
-// Myst Resource Flags
-// TODO: Figure out other flags
-enum {
-	kMystSubimageEnableFlag = (1 << 0),
-	kMystHotspotEnableFlag  = (1 << 1),
-	kMystUnknownFlag        = (1 << 2),
-	kMystZipModeEnableFlag  = (1 << 3)
-};
-
 struct MystCondition {
 	uint16 var;
 	uint16 numStates;
@@ -110,6 +94,11 @@ enum {
 	kMystSoundActionChangeVolume = -2,
 	kMystSoundActionStop         = -3
 	// Other positive values are PlayNewSound of that id
+};
+
+// View flags
+enum {
+	kMystZipDestination = (1 << 0)
 };
 
 struct MystView {
@@ -147,188 +136,6 @@ struct MystView {
 	uint16 exit;
 };
 
-struct MystScriptEntry {
-	uint16 opcode;
-	uint16 var;
-	uint16 numValues;
-	uint16 *values;
-};
-
-class MystResource {
-public:
-	MystResource(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent);
-	virtual ~MystResource() {}
-
-	MystResource *_parent;
-
-	bool contains(Common::Point point) { return _rect.contains(point); }
-	virtual void drawDataToScreen() {}
-	virtual void handleAnimation() {}
-	virtual Common::Rect getRect() { return _rect; }
-	bool isEnabled() { return _enabled; }
-	void setEnabled(bool enabled) { _enabled = enabled; }
-	uint16 getDest() { return _dest; }
-	virtual uint16 getType8Var() { return 0xFFFF; }
-
-	// Mouse interface
-	virtual void handleMouseUp();
-	virtual void handleMouseDown() {}
-	virtual void handleMouseEnter() {}
-	virtual void handleMouseLeave() {}
-
-protected:
-	MohawkEngine_Myst *_vm;
-
-	uint16 _flags;
-	Common::Rect _rect;
-	uint16 _dest;
-	bool _enabled;
-};
-
-class MystResourceType5 : public MystResource {
-public:
-	MystResourceType5(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent);
-	void handleMouseUp();
-
-protected:
-	uint16 _scriptCount;
-	MystScriptEntry *_scripts;
-};
-
-class MystResourceType6 : public MystResourceType5 {
-public:
-	MystResourceType6(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent);
-	void handleAnimation();
-
-protected:
-	static Common::String convertMystVideoName(Common::String name);
-	Common::String _videoFile;
-	uint16 _left;
-	uint16 _top;
-	uint16 _loop;
-	uint16 _u0;
-	uint16 _playBlocking;
-	uint16 _playOnCardChange;
-	uint16 _u3;
-
-private:
-	bool _videoRunning;
-};
-
-struct MystResourceType7 : public MystResource {
-public:
-	MystResourceType7(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent);
-	virtual ~MystResourceType7() {}
-
-	virtual void drawDataToScreen();
-	virtual void handleAnimation();
-
-	virtual void handleMouseUp();
-	virtual void handleMouseDown();
-	virtual void handleMouseEnter();
-	virtual void handleMouseLeave();
-
-protected:
-	uint16 _var7;
-	uint16 _numSubResources;
-	Common::Array<MystResource*> _subResources;
-};
-
-class MystResourceType8 : public MystResourceType7 {
-public:
-	MystResourceType8(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent);
-	void drawDataToScreen();
-	uint16 getType8Var();
-
-protected:
-	uint16 _var8;
-	uint16 _numSubImages;
-	struct SubImage {
-		uint16 wdib;
-		Common::Rect rect;
-	} *_subImages;
-};
-
-// No MystResourceType9!
-
-class MystResourceType10 : public MystResourceType8 {
-public:
-	MystResourceType10(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent);
-	void handleMouseUp();
-
-protected:
-	uint16 _kind;
-	Common::Rect _rect10;
-	uint16 _u0;
-	uint16 _u1;
-	uint16 _mouseDownOpcode;
-	uint16 _mouseDragOpcode;
-	uint16 _mouseUpOpcode;
-	struct {
-		uint16 listCount;
-		uint16 *list;
-	} _lists[4];
-};
-
-class MystResourceType11 : public MystResourceType8 {
-public:
-	MystResourceType11(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent);
-	void handleMouseUp();
-
-protected:
-	uint16 _kind;
-	Common::Rect _rect11;
-	uint16 _u0;
-	uint16 _u1;
-	uint16 _mouseDownOpcode;
-	uint16 _mouseDragOpcode;
-	uint16 _mouseUpOpcode;
-	struct {
-		uint16 listCount;
-		uint16 *list;
-	} _lists[3];
-};
-
-class MystResourceType12 : public MystResourceType8 {
-public:
-	MystResourceType12(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent);
-	void handleAnimation();
-	void handleMouseUp();
-
-protected:
-	uint16 _kind;
-	Common::Rect _rect11;
-	uint16 _state0Frame;
-	uint16 _state1Frame;
-	uint16 _mouseDownOpcode;
-	uint16 _mouseDragOpcode;
-	uint16 _mouseUpOpcode;
-	struct {
-		uint16 listCount;
-		uint16 *list;
-	} _lists[3];
-
-	uint16 _numFrames;
-	uint16 _firstFrame;
-	Common::Rect _frameRect;
-
-private:
-	bool _doAnimation;
-	uint16 _currentFrame;
-};
-
-class MystResourceType13 : public MystResource {
-public:
-	MystResourceType13(MohawkEngine_Myst *vm, Common::SeekableReadStream *rlstStream, MystResource *parent);
-	void handleMouseUp();
-	void handleMouseEnter();
-	void handleMouseLeave();
-
-protected:
-	uint16 _enterOpcode;
-	uint16 _leaveOpcode;
-};
-
 struct MystCursorHint {
 	uint16 id;
 	int16 cursor;
@@ -344,42 +151,54 @@ public:
 	MohawkEngine_Myst(OSystem *syst, const MohawkGameDescription *gamedesc);
 	virtual ~MohawkEngine_Myst();
 
-	Common::SeekableReadStream *getRawData(uint32 tag, uint16 id);
+	Common::SeekableReadStream *getResource(uint32 tag, uint16 id);
 
-	Common::String wrapMovieFilename(Common::String movieName, uint16 stack);
+	Common::String wrapMovieFilename(const Common::String &movieName, uint16 stack);
 
 	void reloadSaveList();
 	void runLoadDialog();
 	void runSaveDialog();
 
-	void changeToStack(uint16 stack);
-	void changeToCard(uint16 card);
+	void changeToStack(uint16 stack, uint16 card, uint16 linkSrcSound, uint16 linkDstSound);
+	void changeToCard(uint16 card, bool updateScreen);
 	uint16 getCurCard() { return _curCard; }
 	uint16 getCurStack() { return _curStack; }
 	void setMainCursor(uint16 cursor);
+	uint16 getMainCursor() { return _mainCursor; }
+	void checkCursorHints();
+	MystResource *updateCurrentResource();
+	bool skippableWait(uint32 duration);
 
 	MystVar *_varStore;
 
-	bool _zipMode;
-	bool _transitionsEnabled;
 	bool _tweaksEnabled;
 	bool _needsUpdate;
 
 	MystView _view;
 	MystGraphics *_gfx;
-	MystSaveLoad *_saveLoad;
+	MystGameState *_gameState;
 	MystScriptParser *_scriptParser;
+	Common::Array<MystResource*> _resources;
+	MystResource *_dragResource;
+	Common::Point _mouse;
+	Common::RandomSource *_rnd;
 
 	bool _showResourceRects;
+	MystResource *loadResource(Common::SeekableReadStream *rlstStream, MystResource *parent);
 	void setResourceEnabled(uint16 resourceId, bool enable);
+	void redrawArea(uint16 var, bool update = true);
+	void redrawResource(MystResourceType8 *resource, bool update = true);
+	void drawResourceImages();
+	void drawCardBackground();
+	uint16 getCardBackgroundId();
 
 	void setCacheState(bool state) { _cache.enabled = state; }
-	bool getCacheState(void) { return _cache.enabled; }
+	bool getCacheState() { return _cache.enabled; }
 
 	GUI::Debugger *getDebugger() { return _console; }
 
-	bool canLoadGameStateCurrently() { return !(getFeatures() & GF_DEMO); }
-	bool canSaveGameStateCurrently() { return !(getFeatures() & GF_DEMO); }
+	bool canLoadGameStateCurrently();
+	bool canSaveGameStateCurrently();
 	Common::Error loadGameState(int slot);
 	Common::Error saveGameState(int slot, const char *desc);
 	bool hasFeature(EngineFeature f) const;
@@ -388,6 +207,7 @@ private:
 	MystConsole *_console;
 	GUI::SaveLoadChooser *_loadDialog;
 	MystOptionsDialog *_optionsDialog;
+	MystScriptParser *_prevStack;
 	ResourceCache _cache;
 	void cachePreload(uint32 tag, uint16 id);
 
@@ -403,17 +223,15 @@ private:
 
 	void loadHelp(uint16 id);
 
-	Common::Array<MystResource*> _resources;
 	void loadResources();
 	void drawResourceRects();
 	void checkCurrentResource();
 	int16 _curResource;
+	MystResourceType13 *_hoverResource;
 
 	uint16 _cursorHintCount;
 	MystCursorHint *_cursorHints;
 	void loadCursorHints();
-	void checkCursorHints();
-	Common::Point _mousePos;
 	uint16 _currentCursor;
 	uint16 _mainCursor; // Also defines the current page being held (white, blue, red, or none)
 };

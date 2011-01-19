@@ -19,10 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/teenagent/inventory.cpp $
- * $Id: inventory.cpp 48933 2010-05-04 11:56:52Z fingolfin $
+ * $Id: inventory.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  */
 
-#include "common/stream.h"
+#include "common/memstream.h"
 #include "common/ptr.h"
 
 #include "teenagent/inventory.h"

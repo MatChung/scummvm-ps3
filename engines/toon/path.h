@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/path.h $
-* $Id: path.h 53098 2010-10-09 11:11:26Z lordhoto $
+* $Id: path.h 55051 2010-12-27 21:56:52Z sylvaintv $
 *
 */
 
@@ -37,28 +37,33 @@ struct HeapDataGrid {
 };
 
 class PathFindingHeap {
-
-private:
-	HeapDataGrid *_data;
 public:
+	PathFindingHeap();
+	~PathFindingHeap();
+
 	int32 _alloc;
 	int32 _count;
+
 	int32 push(int32 x, int32 y, int32 weight);
 	int32 pop(int32 *x, int32 *y, int32 *weight);
 	int32 init(int32 size);
 	int32 clear();
 	int32 unload();
-};
 
+private:
+	HeapDataGrid *_data;
+};
 
 class PathFinding {
 public:
 	PathFinding(ToonEngine *vm);
-	~PathFinding(void);
+	~PathFinding();
 
 	int32 findPath(int32 x, int32 y, int32 destX, int32 destY);
 	int32 findClosestWalkingPoint(int32 xx, int32 yy, int32 *fxx, int32 *fyy, int origX = -1, int origY = -1);
 	bool isWalkable(int32 x, int32 y);
+	bool isLikelyWalkable(int32 x, int32 y);
+	bool lineIsWalkable(int32 x, int32 y, int32 x2, int32 y2);
 	void init(Picture *mask);
 
 	void resetBlockingRects();

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/console.h $
- * $Id: console.h 53974 2010-10-31 01:45:24Z thebluegr $
+ * $Id: console.h 55151 2011-01-07 18:25:38Z thebluegr $
  *
  */
 
@@ -36,16 +36,18 @@ namespace Sci {
 class SciEngine;
 struct List;
 
-reg_t disassemble(EngineState *s, reg_t pos, int print_bw_tag, int print_bytecode);
+reg_t disassemble(EngineState *s, reg_t pos, bool printBWTag, bool printBytecode);
 
 class Console : public GUI::Debugger {
 public:
 	Console(SciEngine *engine);
 	virtual ~Console();
-	void preEnter();
-	void postEnter();
 
 	int printObject(reg_t pos);
+
+private:
+	virtual void preEnter();
+	virtual void postEnter();
 
 private:
 	// General
@@ -163,6 +165,13 @@ private:
 	void hexDumpReg(const reg_t *data, int len, int regsPerLine = 4, int startOffset = 0, bool isArray = false);
 
 private:
+	/**
+	 * Prints all the scripts calling the specified kernel function.
+	 * NOTE: The results produced by this aren't 100% correct, as it
+	 * does not dissect script exports
+	 */
+	void printKernelCallsFound(int kernelFuncNum, bool showFoundScripts);
+
 	SciEngine *_engine;
 	DebugState &_debugState;
 	bool _mouseVisible;

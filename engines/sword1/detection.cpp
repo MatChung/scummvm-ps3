@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword1/detection.cpp $
- * $Id: detection.cpp 53924 2010-10-29 16:53:46Z lordhoto $
+ * $Id: detection.cpp 54358 2010-11-19 01:37:04Z fingolfin $
  *
  */
 
@@ -33,6 +33,7 @@
 #include "common/savefile.h"
 #include "common/system.h"
 #include "graphics/thumbnail.h"
+#include "graphics/surface.h"
 
 #include "engines/metaengine.h"
 

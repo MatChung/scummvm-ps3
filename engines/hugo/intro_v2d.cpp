@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/intro_v2d.cpp $
- * $Id: intro_v2d.cpp 53674 2010-10-21 17:09:57Z strangerke $
+ * $Id: intro_v2d.cpp 55128 2011-01-05 23:39:36Z strangerke $
  *
  */
 
@@ -49,20 +49,30 @@ void intro_v2d::preNewGame() {
 }
 
 void intro_v2d::introInit() {
-	_vm->_screen->loadFont(0);
 	_vm->_file->readBackground(_vm->_numScreens - 1); // display splash screen
+	surf.w = 320;
+	surf.h = 200;
+	surf.pixels = _vm->_screen->getFrontBuffer();
+	surf.pitch = 320;
+	surf.bytesPerPixel = 1;
 
 	char buffer[128];
+
+	// TROMAN, size 10-5
+	if (!font.loadFromFON("TMSRB.FON", Graphics::WinFontDirEntry("Tms Rmn", 8)))
+		error("Unable to load font TMSRB.FON, face 'Tms Rmn', size 8");
 
 	if (_boot.registered)
 		sprintf(buffer, "%s  Registered Version", COPYRIGHT);
 	else
 		sprintf(buffer, "%s  Shareware Version", COPYRIGHT);
-	_vm->_screen->writeStr(CENTER, 186, buffer, _TLIGHTRED);
+
+	font.drawString(&surf, buffer, 0, 186, 320, _TLIGHTRED, Graphics::kTextAlignCenter);
 
 	if (scumm_stricmp(_boot.distrib, "David P. Gray")) {
+		// TROMAN, size 10-5
 		sprintf(buffer, "Distributed by %s.", _boot.distrib);
-		_vm->_screen->writeStr(CENTER, 1, buffer, _TLIGHTRED);
+		font.drawString(&surf, buffer, 0, 1, 320, _TLIGHTRED, Graphics::kTextAlignCenter);
 	}
 
 	_vm->_screen->displayBackground();

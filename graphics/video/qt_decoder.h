@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/qt_decoder.h $
- * $Id: qt_decoder.h 52594 2010-09-06 15:15:59Z mthreepwood $
+ * $Id: qt_decoder.h 55203 2011-01-11 17:27:37Z mthreepwood $
  *
  */
 
@@ -52,7 +52,7 @@ namespace Common {
 namespace Graphics {
 
 
-class QuickTimeDecoder : public RewindableVideoDecoder {
+class QuickTimeDecoder : public SeekableVideoDecoder {
 public:
 	QuickTimeDecoder();
 	virtual ~QuickTimeDecoder();
@@ -96,7 +96,7 @@ public:
 	 * Returns the palette of the video
 	 * @return the palette of the video
 	 */
-	byte *getPalette() { _dirtyPalette = false; return _palette; }
+	const byte *getPalette() { _dirtyPalette = false; return _palette; }
 	bool hasDirtyPalette() const { return _dirtyPalette; }
 
 	/**
@@ -107,22 +107,17 @@ public:
 	void setChunkBeginOffset(uint32 offset) { _beginOffset = offset; }
 
 	bool isVideoLoaded() const { return _fd != 0; }
-	Surface *decodeNextFrame();
+	const Surface *decodeNextFrame();
 	bool endOfVideo() const;
 	uint32 getElapsedTime() const;
 	uint32 getTimeToNextFrame() const;
 	PixelFormat getPixelFormat() const;
 
-	// RewindableVideoDecoder API
-	void rewind();
+	// SeekableVideoDecoder API
+	void seekToFrame(uint32 frame);
+	void seekToTime(VideoTimestamp time);
 
-	// TODO: This audio function need to be removed from the public and/or added to
-	// the VideoDecoder API directly. I plan on replacing this function with something
-	// that can figure out how much audio is needed instead of constantly keeping two
-	// chunks in memory.
-	void updateAudioBuffer();
-
-protected:
+private:
 	// This is the file handle from which data is read from. It can be the actual file handle or a decompressed stream.
 	Common::SeekableReadStream *_fd;
 
@@ -148,6 +143,26 @@ protected:
 		uint32 id;
 	};
 
+	struct STSDEntry {
+		STSDEntry();
+		~STSDEntry();
+
+		uint32 codecTag;
+		uint16 bitsPerSample;
+
+		// Video
+		char codecName[32];
+		uint16 colorTableId;
+		byte *palette;
+		Codec *videoCodec;
+
+		// Audio
+		uint16 channels;
+		uint32 sampleRate;
+		uint32 samplesPerFrame;
+		uint32 bytesPerFrame;
+	};
+
 	enum CodecType {
 		CODEC_TYPE_MOV_OTHER,
 		CODEC_TYPE_VIDEO,
@@ -155,35 +170,16 @@ protected:
 	};
 
 	struct MOVStreamContext {
-		MOVStreamContext() { memset(this, 0, sizeof(MOVStreamContext)); }
-		~MOVStreamContext() {
-			delete[] chunk_offsets;
-			delete[] stts_data;
-			delete[] ctts_data;
-			delete[] sample_to_chunk;
-			delete[] sample_sizes;
-			delete[] keyframes;
-			delete extradata;
-		}
+		MOVStreamContext();
+		~MOVStreamContext();
 
-		int ffindex; /* the ffmpeg stream id */
-		int is_ff_stream; /* Is this stream presented to ffmpeg ? i.e. is this an audio or video stream ? */
-		uint32 next_chunk;
 		uint32 chunk_count;
 		uint32 *chunk_offsets;
 		int stts_count;
 		MOVstts *stts_data;
-		int ctts_count;
-		MOVstts *ctts_data;
 		int edit_count; /* number of 'edit' (elst atom) */
 		uint32 sample_to_chunk_sz;
 		MOVstsc *sample_to_chunk;
-		int32 sample_to_chunk_index;
-		int sample_to_time_index;
-		uint32 sample_to_time_sample;
-		uint32 sample_to_time_time;
-		int sample_to_ctime_index;
-		int sample_to_ctime_sample;
 		uint32 sample_size;
 		uint32 sample_count;
 		uint32 *sample_sizes;
@@ -191,24 +187,15 @@ protected:
 		uint32 *keyframes;
 		int32 time_scale;
 		int time_rate;
-		uint32 current_sample;
-		uint32 left_in_chunk; /* how many samples before next chunk */
 
 		uint16 width;
 		uint16 height;
-		int codec_type;
-		uint32 codec_tag;
-		char codec_name[32];
-		uint16 bits_per_sample;
-		uint16 color_table_id;
-		bool palettized;
-		Common::SeekableReadStream *extradata;
+		CodecType codec_type;
 
-		uint16 stsd_version;
-		uint16 channels;
-		uint16 sample_rate;
-		uint32 samples_per_frame;
-		uint32 bytes_per_frame;
+		uint32 stsdEntryCount;
+		STSDEntry *stsdEntries;
+
+		Common::SeekableReadStream *extradata;
 
 		uint32 nb_frames;
 		uint32 duration;
@@ -219,18 +206,13 @@ protected:
 
 	const ParseTable *_parseTable;
 	bool _foundMOOV;
-	bool _foundMDAT;
 	uint32 _timeScale;
 	uint32 _duration;
-	uint32 _mdatOffset;
-	uint32 _mdatSize;
-	MOVStreamContext *_partial;
 	uint32 _numStreams;
-	int _ni;
 	Common::Rational _scaleFactorX;
 	Common::Rational _scaleFactorY;
 	MOVStreamContext *_streams[20];
-	byte _palette[256 * 3];
+	const byte *_palette;
 	bool _dirtyPalette;
 	uint32 _beginOffset;
 	Common::MacResManager *_resFork;
@@ -238,26 +220,29 @@ protected:
 	void initParseTable();
 	Audio::AudioStream *createAudioStream(Common::SeekableReadStream *stream);
 	bool checkAudioCodecSupport(uint32 tag);
-	Common::SeekableReadStream *getNextFramePacket();
+	Common::SeekableReadStream *getNextFramePacket(uint32 &descId);
 	uint32 getFrameDuration();
-	uint32 getCodecTag();
-	byte getBitsPerPixel();
 	void init();
 
 	Audio::QueuingAudioStream *_audStream;
 	void startAudio();
 	void stopAudio();
+	void updateAudioBuffer();
+	void readNextAudioChunk();
+	uint32 getAudioChunkSampleCount(uint chunk);
 	int8 _audioStreamIndex;
 	uint _curAudioChunk;
 	Audio::SoundHandle _audHandle;
+	VideoTimestamp _audioStartOffset;
 
 	Codec *createCodec(uint32 codecTag, byte bitsPerPixel);
-	Codec *_videoCodec;
+	Codec *findDefaultVideoCodec() const;
 	uint32 _nextFrameStartTime;
 	int8 _videoStreamIndex;
+	uint32 findKeyFrame(uint32 frame) const;
 
 	Surface *_scaledSurface;
-	Surface *scaleSurface(Surface *frame);
+	const Surface *scaleSurface(const Surface *frame);
 	Common::Rational getScaleFactorX() const;
 	Common::Rational getScaleFactorY() const;
 
@@ -267,7 +252,6 @@ protected:
 	int readLeaf(MOVatom atom);
 	int readELST(MOVatom atom);
 	int readHDLR(MOVatom atom);
-	int readMDAT(MOVatom atom);
 	int readMDHD(MOVatom atom);
 	int readMOOV(MOVatom atom);
 	int readMVHD(MOVatom atom);

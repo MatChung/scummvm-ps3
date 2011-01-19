@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/kgraphics.cpp $
- * $Id: kgraphics.cpp 53498 2010-10-15 14:33:57Z thebluegr $
+ * $Id: kgraphics.cpp 55216 2011-01-12 23:30:59Z thebluegr $
  *
  */
 
@@ -33,6 +33,7 @@
 
 #include "sci/sci.h"
 #include "sci/debug.h"	// for g_debug_sleeptime_factor
+#include "sci/event.h"
 #include "sci/resource.h"
 #include "sci/engine/features.h"
 #include "sci/engine/state.h"
@@ -208,12 +209,7 @@ reg_t kSetCursor(EngineState *s, int argc, reg_t *argv) {
 }
 
 reg_t kMoveCursor(EngineState *s, int argc, reg_t *argv) {
-	Common::Point pos;
-	if (argc == 2) {
-		pos.y = argv[1].toSint16();
-		pos.x = argv[0].toSint16();
-		g_sci->_gfxCursor->kernelSetPos(pos);
-	}
+	g_sci->_gfxCursor->kernelSetPos(Common::Point(argv[0].toSint16(), argv[1].toSint16()));
 	return s->r_acc;
 }
 
@@ -256,10 +252,11 @@ reg_t kGraphDrawLine(EngineState *s, int argc, reg_t *argv) {
 	int16 priority = (argc > 5) ? argv[5].toSint16() : -1;
 	int16 control = (argc > 6) ? argv[6].toSint16() : -1;
 
-	// TODO: Find out why we get > 15 for color in EGA
-	// FIXME: EGA? Which EGA? SCI0 or SCI1? Check the
-	// workarounds inside kGraphFillBoxAny and kNewWindow
-	if (!g_sci->getResMan()->isVGA() && !g_sci->getResMan()->isAmiga32color())
+	// WORKAROUND: SCI1 EGA games can set invalid colors (above 0 - 15).
+	// Colors above 15 are all white in SCI1 EGA games, which is why this was never
+	// observed. We clip them all to (0, 15) instead, as colors above 15 are used
+	// for the undithering algorithm in EGA games - bug #3048908.
+	if (g_sci->getResMan()->getViewType() == kViewEga && getSciVersion() >= SCI_VERSION_1_EARLY)
 		color &= 0x0F;
 
 	g_sci->_gfxPaint16->kernelGraphDrawLine(getGraphPoint(argv), getGraphPoint(argv + 2), color, priority, control);
@@ -297,7 +294,7 @@ reg_t kGraphFillBoxAny(EngineState *s, int argc, reg_t *argv) {
 	int16 priority = argv[6].toSint16(); // yes, we may read from stack sometimes here
 	int16 control = argv[7].toSint16(); // sierra did the same
 
-	// WORKAROUND: PQ3 EGA is setting invalid colors (above 0 - 15).
+	// WORKAROUND: SCI1 EGA games can set invalid colors (above 0 - 15).
 	// Colors above 15 are all white in SCI1 EGA games, which is why this was never
 	// observed. We clip them all to (0, 15) instead, as colors above 15 are used
 	// for the undithering algorithm in EGA games - bug #3048908.
@@ -342,7 +339,7 @@ reg_t kTextSize(EngineState *s, int argc, reg_t *argv) {
 	int font_nr = argv[2].toUint16();
 
 	if (!dest) {
-		debugC(2, kDebugLevelStrings, "GetTextSize: Empty destination");
+		debugC(kDebugLevelStrings, "GetTextSize: Empty destination");
 		return s->r_acc;
 	}
 
@@ -357,7 +354,7 @@ reg_t kTextSize(EngineState *s, int argc, reg_t *argv) {
 
 	if (text.empty()) { // Empty text
 		dest[2] = dest[3] = make_reg(0, 0);
-		debugC(2, kDebugLevelStrings, "GetTextSize: Empty string");
+		debugC(kDebugLevelStrings, "GetTextSize: Empty string");
 		return s->r_acc;
 	}
 
@@ -371,7 +368,7 @@ reg_t kTextSize(EngineState *s, int argc, reg_t *argv) {
 #endif
 		g_sci->_gfxText16->kernelTextSize(g_sci->strSplit(text.c_str(), sep).c_str(), font_nr, maxwidth, &textWidth, &textHeight);
 	
-	debugC(2, kDebugLevelStrings, "GetTextSize '%s' -> %dx%d", text.c_str(), textWidth, textHeight);
+	debugC(kDebugLevelStrings, "GetTextSize '%s' -> %dx%d", text.c_str(), textWidth, textHeight);
 	dest[2] = make_reg(0, textHeight);
 	dest[3] = make_reg(0, textWidth);
 	return s->r_acc;
@@ -467,7 +464,7 @@ reg_t kNumLoops(EngineState *s, int argc, reg_t *argv) {
 
 	loopCount = g_sci->_gfxCache->kernelViewGetLoopCount(viewId);
 
-	debugC(2, kDebugLevelGraphics, "NumLoops(view.%d) = %d", viewId, loopCount);
+	debugC(kDebugLevelGraphics, "NumLoops(view.%d) = %d", viewId, loopCount);
 
 	return make_reg(0, loopCount);
 }
@@ -480,7 +477,7 @@ reg_t kNumCels(EngineState *s, int argc, reg_t *argv) {
 
 	celCount = g_sci->_gfxCache->kernelViewGetCelCount(viewId, loopNo);
 
-	debugC(2, kDebugLevelGraphics, "NumCels(view.%d, %d) = %d", viewId, loopNo, celCount);
+	debugC(kDebugLevelGraphics, "NumCels(view.%d, %d) = %d", viewId, loopNo, celCount);
 
 	return make_reg(0, celCount);
 }
@@ -799,13 +796,13 @@ void _k_GenericDrawControl(EngineState *s, reg_t controlObject, bool hilite) {
 
 	switch (type) {
 	case SCI_CONTROLS_TYPE_BUTTON:
-		debugC(2, kDebugLevelGraphics, "drawing button %04x:%04x to %d,%d", PRINT_REG(controlObject), x, y);
+		debugC(kDebugLevelGraphics, "drawing button %04x:%04x to %d,%d", PRINT_REG(controlObject), x, y);
 		g_sci->_gfxControls->kernelDrawButton(rect, controlObject, g_sci->strSplit(text.c_str(), NULL).c_str(), fontId, style, hilite);
 		return;
 
 	case SCI_CONTROLS_TYPE_TEXT:
 		alignment = readSelectorValue(s->_segMan, controlObject, SELECTOR(mode));
-		debugC(2, kDebugLevelGraphics, "drawing text %04x:%04x ('%s') to %d,%d, mode=%d", PRINT_REG(controlObject), text.c_str(), x, y, alignment);
+		debugC(kDebugLevelGraphics, "drawing text %04x:%04x ('%s') to %d,%d, mode=%d", PRINT_REG(controlObject), text.c_str(), x, y, alignment);
 		g_sci->_gfxControls->kernelDrawText(rect, controlObject, g_sci->strSplit(text.c_str()).c_str(), fontId, alignment, style, hilite);
 		s->r_acc = g_sci->_gfxText16->allocAndFillReferenceRectArray();
 		return;
@@ -819,7 +816,7 @@ void _k_GenericDrawControl(EngineState *s, reg_t controlObject, bool hilite) {
 			cursorPos = text.size();
 			writeSelectorValue(s->_segMan, controlObject, SELECTOR(cursor), cursorPos);
 		}
-		debugC(2, kDebugLevelGraphics, "drawing edit control %04x:%04x (text %04x:%04x, '%s') to %d,%d", PRINT_REG(controlObject), PRINT_REG(textReference), text.c_str(), x, y);
+		debugC(kDebugLevelGraphics, "drawing edit control %04x:%04x (text %04x:%04x, '%s') to %d,%d", PRINT_REG(controlObject), PRINT_REG(textReference), text.c_str(), x, y);
 		g_sci->_gfxControls->kernelDrawTextEdit(rect, controlObject, g_sci->strSplit(text.c_str(), NULL).c_str(), fontId, mode, style, cursorPos, maxChars, hilite);
 		return;
 
@@ -836,7 +833,7 @@ void _k_GenericDrawControl(EngineState *s, reg_t controlObject, bool hilite) {
 			else
 				priority = -1;
 		}
-		debugC(2, kDebugLevelGraphics, "drawing icon control %04x:%04x to %d,%d", PRINT_REG(controlObject), x, y - 1);
+		debugC(kDebugLevelGraphics, "drawing icon control %04x:%04x to %d,%d", PRINT_REG(controlObject), x, y - 1);
 		g_sci->_gfxControls->kernelDrawIcon(rect, controlObject, viewId, loopNo, celNo, priority, style, hilite);
 		return;
 
@@ -884,7 +881,7 @@ void _k_GenericDrawControl(EngineState *s, reg_t controlObject, bool hilite) {
 			}
 		}
 
-		debugC(2, kDebugLevelGraphics, "drawing list control %04x:%04x to %d,%d, diff %d", PRINT_REG(controlObject), x, y, SCI_MAX_SAVENAME_LENGTH);
+		debugC(kDebugLevelGraphics, "drawing list control %04x:%04x to %d,%d, diff %d", PRINT_REG(controlObject), x, y, SCI_MAX_SAVENAME_LENGTH);
 		g_sci->_gfxControls->kernelDrawList(rect, controlObject, maxChars, listCount, listEntries, fontId, style, upperPos, cursorPos, isAlias, hilite);
 		free(listEntries);
 		delete[] listStrings;
@@ -1088,7 +1085,7 @@ reg_t kNewWindow(EngineState *s, int argc, reg_t *argv) {
 	int colorPen = (argc > 7 + argextra) ? argv[7 + argextra].toSint16() : 0;
 	int colorBack = (argc > 8 + argextra) ? argv[8 + argextra].toSint16() : 255;
 
-	// WORKAROUND: PQ3 EGA is setting invalid colors (above 0 - 15).
+	// WORKAROUND: SCI1 EGA games can set invalid colors (above 0 - 15).
 	// Colors above 15 are all white in SCI1 EGA games, which is why this was never
 	// observed. We clip them all to (0, 15) instead, as colors above 15 are used
 	// for the undithering algorithm in EGA games - bug #3048908.
@@ -1116,6 +1113,14 @@ reg_t kAnimate(EngineState *s, int argc, reg_t *argv) {
 	bool cycle = (argc > 1) ? ((argv[1].toUint16()) ? true : false) : false;
 
 	g_sci->_gfxAnimate->kernelAnimate(castListReference, cycle, argc, argv);
+
+	// WORKAROUND: At the end of Ecoquest 1, during the credits, the game
+	// doesn't call kGetEvent(), so no events are processed (e.g. window
+	// focusing, window moving etc). We poll events for that scene, to
+	// keep ScummVM responsive. Fixes ScummVM "freezing" during the credits,
+	// bug #3101846
+	if (g_sci->getGameId() == GID_ECOQUEST && s->currentRoomNumber() == 680)
+		g_sci->getEventManager()->getSciEvent(SCI_EVENT_PEEK);
 
 	return s->r_acc;
 }
@@ -1259,6 +1264,7 @@ reg_t kIsHiRes(EngineState *s, int argc, reg_t *argv) {
 
 // SCI32 variant, can't work like sci16 variants
 reg_t kCantBeHere32(EngineState *s, int argc, reg_t *argv) {
+	// TODO
 //	reg_t curObject = argv[0];
 //	reg_t listReference = (argc > 1) ? argv[1] : NULL_REG;
 	
@@ -1369,8 +1375,17 @@ reg_t kCreateTextBitmap(EngineState *s, int argc, reg_t *argv) {
 			warning("kCreateTextBitmap(0): expected 4 arguments, got %i", argc);
 			return NULL_REG;
 		}
-		reg_t object = argv[3];
-		Common::String text = s->_segMan->getString(readSelector(s->_segMan, object, SELECTOR(text)));
+		//reg_t object = argv[3];
+		//Common::String text = s->_segMan->getString(readSelector(s->_segMan, object, SELECTOR(text)));
+		break;
+	}
+	case 1: {
+		if (argc != 2) {
+			warning("kCreateTextBitmap(0): expected 2 arguments, got %i", argc);
+			return NULL_REG;
+		}
+		//reg_t object = argv[1];
+		//Common::String text = s->_segMan->getString(readSelector(s->_segMan, object, SELECTOR(text)));
 		break;
 	}
 	default:
@@ -1408,6 +1423,10 @@ reg_t kRobot(EngineState *s, int argc, reg_t *argv) {
 			break;
 		case 8: // sync
 			//warning("kRobot(sync), obj %04x:%04x", PRINT_REG(argv[1]));
+			// HACK: Make robots return immediately for now,
+			// otherwise they just hang for a while.
+			// TODO: Replace with proper robot functionality.
+			writeSelector(s->_segMan, argv[1], SELECTOR(signal), SIGNAL_REG);
 			break;
 		default:
 			warning("kRobot(%d)", subop);
@@ -1453,20 +1472,153 @@ reg_t kSetShowStyle(EngineState *s, int argc, reg_t *argv) {
 	// TODO: This is all a stub/skeleton, thus we're invoking kStub() for now
 	kStub(s, argc, argv);
 
+	// Can be called with 7 or 8 parameters
 	// showStyle matches the style selector of the associated plane object
 	uint16 showStyle = argv[0].toUint16();	// 0 - 15
 	reg_t planeObj = argv[1];
-	//argv[2]
-	//int16 priority = argv[3].toSint16();
-	//argv[4]
-	//argv[5]
-	//argv[6]
-	//argv[7]
-	//int16 unk8 = (argc >= 9) ? argv[8].toSint16() : 0;
+	//argv[2]	// seconds
+	//argv[3]	// back
+	//int16 priority = argv[4].toSint16();
+	//argv[5]	// animate
+	//argv[6]	// refFrame
+	//int16 unk7 = (argc >= 8) ? argv[7].toSint16() : 0;	// divisions
 
 	if (showStyle > 15) {
 		warning("kSetShowStyle: Illegal style %d for plane %04x:%04x", showStyle, PRINT_REG(planeObj));
 		return s->r_acc;
+	}
+
+	// TODO: Check if the plane is in the list of planes to draw
+
+	return s->r_acc;
+}
+
+reg_t kCelInfo(EngineState *s, int argc, reg_t *argv) {
+	// TODO: This is all a stub/skeleton, thus we're invoking kStub() for now
+	kStub(s, argc, argv);
+
+	// Used by Shivers 1, room 23601
+
+	// 6 arguments, all integers:
+	// argv[0] - subop (0 - 4). It's constantly called with 4 in Shivers 1
+	// argv[1] - view (used with view 23602 in Shivers 1)
+	// argv[2] - loop
+	// argv[3] - cel
+	// argv[4] - unknown (row?)
+	// argv[5] - unknown (column?)
+
+	// Subops:
+	// 0 - return the view
+	// 1 - return the loop
+	// 2, 3 - nop
+	// 4 - returns some kind of hash (?) based on the view and the two last params
+
+	// This seems to be a debug function, but it could be used to check if
+	// the jigsaw pieces "stick" together (they currently don't, unless I'm missing
+	// something)
+
+	return s->r_acc;
+}
+
+reg_t kScrollWindow(EngineState *s, int argc, reg_t *argv) {
+	// Used by Phantasmagoria 1 and SQ6. In SQ6, it is used for the messages
+	// shown in the scroll window at the bottom of the screen.
+
+	// TODO: This is all a stub/skeleton, thus we're invoking kStub() for now
+	kStub(s, argc, argv);
+
+	switch (argv[0].toUint16()) {
+	case 0:	// Init
+		// 2 parameters
+		// argv[1] points to the scroll object (e.g. textScroller in SQ6)
+		// argv[2] is an integer (e.g. 0x32)
+		break;
+	case 1: // Show message
+		// 5 or 6 parameters
+		// Seems to be called with 5 parameters when the narrator speaks, and
+		// with 6 when Roger speaks
+		// argv[1] unknown (usually 0)
+		// argv[2] the text to show
+		// argv[3] a small integer (e.g. 0x32)
+		// argv[4] a small integer (e.g. 0x54)
+		// argv[5] optional, unknown (usually 0)
+		warning("kScrollWindow: '%s'", s->_segMan->getString(argv[2]).c_str());
+		break;
+	case 2: // Clear
+		// 2 parameters
+		// TODO
+		break;
+	case 3: // Page up
+		// 2 parameters
+		// TODO
+		break;
+	case 4: // Page down
+		// 2 parameters
+		// TODO
+		break;
+	case 5: // Up arrow
+		// 2 parameters
+		// TODO
+		break;
+	case 6: // Down arrow
+		// 2 parameters
+		// TODO
+		break;
+	case 7: // Home
+		// 2 parameters
+		// TODO
+		break;
+	case 8: // End
+		// 2 parameters
+		// TODO
+		break;
+	case 9: // Resize
+		// 3 parameters
+		// TODO
+		break;
+	case 10: // Where
+		// 3 parameters
+		// TODO
+		break;
+	case 11: // Go
+		// 4 parameters
+		// TODO
+		break;
+	case 12: // Insert
+		// 7 parameters
+		// TODO
+		break;
+	case 13: // Delete
+		// 3 parameters
+		// TODO
+		break;
+	case 14: // Modify
+		// 7 or 8 parameters
+		// TODO
+		break;
+	case 15: // Hide
+		// 2 parameters
+		// TODO
+		break;
+	case 16: // Show
+		// 2 parameters
+		// TODO
+		break;
+	case 17: // Destroy
+		// 2 parameters
+		// TODO
+		break;
+	case 18: // Text
+		// 2 parameters
+		// TODO
+		break;
+	case 19: // Reconstruct
+		// 3 parameters
+		// TODO
+		break;
+	default:
+		error("kScrollWindow: unknown subop %d", argv[0].toUint16());
+		break;
 	}
 
 	return s->r_acc;

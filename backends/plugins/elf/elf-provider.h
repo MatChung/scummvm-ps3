@@ -48,15 +48,14 @@ protected:
 	typedef const char *(*CharFunc)();
 
 	DLObject *_dlHandle;
-	Common::String _filename;
 	void *_dso_handle;
 
 	virtual VoidFunc findSymbol(const char *symbol);
 
 public:
 	ELFPlugin(const Common::String &filename) :
+		DynamicPlugin(filename),
 		_dlHandle(0),
-		_filename(filename),
 		_dso_handle(0) {
 	}
 
@@ -67,8 +66,9 @@ public:
 
 	virtual DLObject *makeDLObject() = 0;
 
-	bool loadPlugin();
-	void unloadPlugin();
+	virtual bool loadPlugin();
+	virtual void unloadPlugin();
+	void trackSize();
 };
 
 template<class T>
@@ -87,6 +87,7 @@ public:
 class ELFPluginProvider : public FilePluginProvider {
 protected:
 	virtual Plugin *createPlugin(const Common::FSNode &node) const = 0;
+	virtual PluginList getPlugins();
 
 	bool isPluginFilename(const Common::FSNode &node) const;
 };

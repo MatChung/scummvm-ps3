@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cine/texte.cpp $
- * $Id: texte.cpp 48764 2010-04-21 21:22:43Z fingolfin $
+ * $Id: texte.cpp 55186 2011-01-09 15:53:03Z tdhs $
  *
  */
 
@@ -605,6 +605,8 @@ void loadErrmessDat(const char *fname) {
 	in.open(fname);
 
 	if (in.isOpen()) {
+		// FIXME - This can leak in some situations in Operation Stealth
+		//         Engine Restart - multiple allocations with no free?
 		char **ptr = (char **)malloc(sizeof(char *) * 6 * 4 + 60 * 6 * 4);
 
 		for (int i = 0; i < 6 * 4; i++) {

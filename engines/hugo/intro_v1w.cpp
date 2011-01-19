@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/intro_v1w.cpp $
- * $Id: intro_v1w.cpp 54018 2010-11-01 20:20:21Z strangerke $
+ * $Id: intro_v1w.cpp 54503 2010-11-26 23:17:16Z strangerke $
  *
  */
 
@@ -49,7 +49,6 @@ intro_v1w::~intro_v1w() {
 * Auto-start a new game
 */
 void intro_v1w::preNewGame() {
-	_vm->_file->restoreGame(-1);
 	_vm->getGameStatus().viewState = V_INTROINIT;
 }
 

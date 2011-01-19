@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/converse.h $
- * $Id: converse.h 48172 2010-03-07 05:06:58Z dreammaster $
+ * $Id: converse.h 54342 2010-11-18 19:27:01Z fingolfin $
  *
  */
 
@@ -191,7 +191,7 @@ private:
 
 	void loadConversation(const char *convName);
 	void loadConversationMads(const char *convName);
-	void readConvEntryActions(Common::SubReadStream *convS, ConvEntry *curEntry);
+	void readConvEntryActions(Common::ReadStream *convS, ConvEntry *curEntry);
 	void setEntryInfo(int32 offset, EntryType type, int32 nodeIndex, int32 entryIndex);
 };
 

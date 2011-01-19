@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/scene.cpp $
- * $Id: scene.cpp 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: scene.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * Starts up new scenes.
  */
@@ -105,6 +105,8 @@ struct ENTRANCE_STRUC {
 
 
 //----------------- LOCAL GLOBAL DATA --------------------
+
+// FIXME: Avoid non-const global vars
 
 #ifdef DEBUG
 static bool ShowPosition = false;	// Set when showpos() has been called
@@ -368,6 +370,10 @@ void EndScene() {
  */
 void PrimeBackground() {
 	// structure for playfields
+	// FIXME: Avoid non-const global vars
+	// TODO: We should simply merge this function with InitBackground
+	//   in order to avoid the static var and the problems associate
+	//   with it.
 	static PLAYFIELD playfield[] = {
 		{	// FIELD WORLD
 			NULL,		// display list
@@ -390,7 +396,7 @@ void PrimeBackground() {
 	};
 
 	// structure for background
-	static BACKGND backgnd = {
+	static const BACKGND backgnd = {
 		BLACK,			// sky colour
 		Common::Point(0, 0),	// initial world pos
 		Common::Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT),	// scroll limits

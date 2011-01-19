@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/global.h $
- * $Id: global.h 52988 2010-10-03 08:08:42Z strangerke $
+ * $Id: global.h 54576 2010-11-29 17:42:08Z strangerke $
  *
  */
 
@@ -38,7 +38,6 @@ namespace Hugo {
 #define MAX_SOUNDS     64                           // Max number of sounds
 #define BOOTFILE       "HUGO.BSF"                   // Name of boot structure file
 #define LEN_MASK       0x3F                         // Lower 6 bits are length
-#define PBFILE         "playback.dat"
 
 // Name scenery and objects picture databases
 #define OBJECTS_FILE   "objects.dat"
@@ -48,7 +47,4 @@ namespace Hugo {
 // User interface database (Windows Only)
 // This file contains, between others, the bitmaps of the fonts used in the application
 #define UIF_FILE   "uif.dat"
-
-static const int kSavegameVersion = 1;
-
 } // End of namespace Hugo

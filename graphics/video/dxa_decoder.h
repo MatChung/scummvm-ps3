@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/dxa_decoder.h $
- * $Id: dxa_decoder.h 51725 2010-08-04 08:25:05Z fingolfin $
+ * $Id: dxa_decoder.h 54928 2010-12-16 01:41:11Z mthreepwood $
  *
  */
 
@@ -50,9 +50,9 @@ public:
 	uint16 getWidth() const { return _width; }
 	uint16 getHeight() const { return _height; }
 	uint32 getFrameCount() const { return _frameCount; }
-	Surface *decodeNextFrame();
+	const Surface *decodeNextFrame();
 	PixelFormat getPixelFormat() const { return PixelFormat::createFormatCLUT8(); }
-	byte *getPalette() { _dirtyPalette = false; return _palette; }
+	const byte *getPalette() { _dirtyPalette = false; return _palette; }
 	bool hasDirtyPalette() const { return _dirtyPalette; }
 
 	/**

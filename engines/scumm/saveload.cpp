@@ -19,11 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/saveload.cpp $
- * $Id: saveload.cpp 53895 2010-10-27 22:52:02Z lordhoto $
+ * $Id: saveload.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "common/config-manager.h"
+#include "common/memstream.h"
 #include "common/savefile.h"
 #include "common/system.h"
 #include "common/zlib.h"
@@ -43,8 +44,9 @@
 #include "scumm/he/sprite_he.h"
 #include "scumm/verbs.h"
 
-#include "sound/audiocd.h"
 #include "sound/mixer.h"
+
+#include "backends/audiocd/audiocd.h"
 
 #include "graphics/thumbnail.h"
 
@@ -1107,7 +1109,7 @@ void ScummEngine::saveOrLoad(Serializer *s) {
 	// as AudioCDManager::Status::playing, and MSVC6 has
 	// a fit with that. This typedef simplifies the notation
 	// to something MSVC6 can grasp.
-	typedef Audio::AudioCDManager::Status AudioCDManager_Status;
+	typedef AudioCDManager::Status AudioCDManager_Status;
 	const SaveLoadEntry audioCDEntries[] = {
 		MKLINE(AudioCDManager_Status, playing, sleUint32, VER(24)),
 		MKLINE(AudioCDManager_Status, track, sleInt32, VER(24)),
@@ -1408,15 +1410,15 @@ void ScummEngine::saveOrLoad(Serializer *s) {
 	// Save/load the Audio CD status
 	//
 	if (s->getVersion() >= VER(24)) {
-		Audio::AudioCDManager::Status info;
+		AudioCDManager::Status info;
 		if (s->isSaving())
-			info = AudioCD.getStatus();
+			info = _system->getAudioCDManager()->getStatus();
 		s->saveLoadArrayOf(&info, 1, sizeof(info), audioCDEntries);
 		// If we are loading, and the music being loaded was supposed to loop
 		// forever, then resume playing it. This helps a lot when the audio CD
 		// is used to provide ambient music (see bug #788195).
 		if (s->isLoading() && info.playing && info.numLoops < 0)
-			AudioCD.play(info.track, info.numLoops, info.start, info.duration);
+			_system->getAudioCDManager()->play(info.track, info.numLoops, info.start, info.duration);
 	}
 
 

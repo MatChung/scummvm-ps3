@@ -19,14 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/player_v2.cpp $
- * $Id: player_v2.cpp 53830 2010-10-25 16:42:24Z fingolfin $
+ * $Id: player_v2.cpp 55091 2011-01-02 14:06:42Z strangerke $
  *
  */
 
 #include "scumm/player_v2.h"
 #include "scumm/scumm.h"
-#include "sound/mididrv.h"
-#include "sound/mixer.h"
 
 namespace Scumm {
 

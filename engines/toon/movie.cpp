@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/movie.cpp $
-* $Id: movie.cpp 53549 2010-10-16 21:58:33Z sylvaintv $
+* $Id: movie.cpp 54927 2010-12-16 01:35:13Z mthreepwood $
 *
 */
 
@@ -46,7 +46,10 @@ bool ToonstruckSmackerDecoder::loadFile(const Common::String &filename, int forc
 		if (forcedflags & 0x10 || _surface->h == 200) {
 
 			_header.flags = 4;
-			delete this->_surface;
+			if (_surface) {
+				_surface->free();
+				delete _surface;
+			}
 			_surface = new Graphics::Surface();
 			_surface->create(640, 400, 1);
 		}
@@ -56,9 +59,9 @@ bool ToonstruckSmackerDecoder::loadFile(const Common::String &filename, int forc
 }
 
 ToonstruckSmackerDecoder::ToonstruckSmackerDecoder(Audio::Mixer *mixer, Audio::Mixer::SoundType soundType) : Graphics::SmackerDecoder(mixer, soundType) {
-
 }
 
+// decoder is deallocated with Movie destruction i.e. new ToonstruckSmackerDecoder is needed
 Movie::Movie(ToonEngine *vm , ToonstruckSmackerDecoder *decoder) {
 	_vm = vm;
 	_playing = false;
@@ -66,6 +69,7 @@ Movie::Movie(ToonEngine *vm , ToonstruckSmackerDecoder *decoder) {
 }
 
 Movie::~Movie() {
+	delete _decoder;
 }
 
 void Movie::init() const {
@@ -93,7 +97,7 @@ bool Movie::playVideo() {
 	int32 y = 0;
 	while (!_vm->shouldQuit() && !_decoder->endOfVideo()) {
 		if (_decoder->needsUpdate()) {
-			Graphics::Surface *frame = _decoder->decodeNextFrame();
+			const Graphics::Surface *frame = _decoder->decodeNextFrame();
 			if (frame)
 				_vm->getSystem()->copyRectToScreen((byte *)frame->pixels, frame->pitch, x, y, frame->w, frame->h);
 			_decoder->setSystemPalette();

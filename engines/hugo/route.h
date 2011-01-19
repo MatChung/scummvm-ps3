@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/route.h $
- * $Id: route.h 53674 2010-10-21 17:09:57Z strangerke $
+ * $Id: route.h 54504 2010-11-26 23:30:31Z strangerke $
  *
  */
 
@@ -56,7 +56,7 @@ public:
 	Route(HugoEngine *vm);
 
 	void processRoute();
-	bool startRoute(go_t go_for, short id, short cx, short cy);
+	bool startRoute(go_t go_for, int16 id, int16 cx, int16 cy);
 	void setDirection(uint16 keyCode);
 	void setWalk(uint16 direction);
 

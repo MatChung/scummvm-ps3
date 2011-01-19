@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/parser.h $
- * $Id: parser.h 53825 2010-10-25 13:31:01Z strangerke $
+ * $Id: parser.h 55114 2011-01-04 08:36:03Z strangerke $
  *
  */
 
@@ -47,12 +47,15 @@ public:
 	Parser(HugoEngine *vm);
 	virtual ~Parser();
 
-	bool  isWordPresent(char **wordArr);
+	bool isWordPresent(char **wordArr);
 
-	void  charHandler();
-	void  command(const char *format, ...);
-	void  keyHandler(uint16 nChar, uint16 nFlags);
+	void charHandler();
+	void command(const char *format, ...);
+	void keyHandler(Common::Event event);
+	void switchTurbo();
+
 	virtual void lineHandler() = 0;
+	virtual void showInventory() = 0;
 
 protected:
 	HugoEngine *_vm;
@@ -60,33 +63,12 @@ protected:
 protected:
 	char *findNoun();
 	char *findVerb();
-
-private:
-	char   _ringBuffer[32];                         // Ring buffer
-	uint16 _putIndex;
-	uint16 _getIndex;                               // Index into ring buffer
-	bool   _checkDoubleF1Fl;                        // Flag used to display user help or instructions
-
 	void  showDosInventory();
-};
 
-class Parser_v1w : public Parser {
-public:
-	Parser_v1w(HugoEngine *vm);
-	~Parser_v1w();
-
-	virtual void  lineHandler();
-
-protected:
-	bool  isBackgroundWord(objectList_t obj);
-	bool  isCatchallVerb(objectList_t obj);
-	bool  isGenericVerb(object_t *obj, char *comment);
-	bool  isObjectVerb(object_t *obj, char *comment);
-	void  takeObject(object_t *obj);
-
-private:
-	bool  isNear(object_t *obj, char *verb, char *comment);
-	void  dropObject(object_t *obj);
+	bool   _checkDoubleF1Fl;                        // Flag used to display user help or instructions
+	uint16 _getIndex;                               // Index into ring buffer
+	uint16 _putIndex;
+	char   _ringBuffer[32];                         // Ring buffer
 };
 
 class Parser_v1d : public Parser {
@@ -95,16 +77,18 @@ public:
 	~Parser_v1d();
 
 	virtual void lineHandler();
+	virtual void showInventory();
 
 protected:
-	bool isNear(char *verb, char *noun, object_t *obj, char *comment);
-	bool isGenericVerb(char *word, object_t *obj);
-	bool isObjectVerb(char *word, object_t *obj);
-	bool isBackgroundWord(char *noun, char *verb, objectList_t obj);
-	bool isCatchallVerb(bool testNounFl, char *noun, char *verb, objectList_t obj);
+	virtual void  dropObject(object_t *obj);
+	virtual bool  isBackgroundWord(char *noun, char *verb, objectList_t obj);
+	virtual bool  isCatchallVerb(bool testNounFl, char *noun, char *verb, objectList_t obj);
+	virtual bool  isGenericVerb(char *word, object_t *obj);
+	virtual bool  isNear(char *verb, char *noun, object_t *obj, char *comment);
+	virtual bool  isObjectVerb(char *word, object_t *obj);
+	virtual void  takeObject(object_t *obj);
+
 	char *findNextNoun(char *noun);
-	void  dropObject(object_t *obj);
-	void  takeObject(object_t *obj);
 };
 
 class Parser_v2d : public Parser_v1d {
@@ -115,12 +99,30 @@ public:
 	void lineHandler();
 };
 
-class Parser_v3d : public Parser_v1w {
+class Parser_v3d : public Parser_v1d {
 public:
 	Parser_v3d(HugoEngine *vm);
 	~Parser_v3d();
 
-	void lineHandler();
+	virtual void lineHandler();
+protected:
+	void  dropObject(object_t *obj);
+	bool  isBackgroundWord(objectList_t obj);
+	bool  isCatchallVerb(objectList_t obj);
+	bool  isGenericVerb(object_t *obj, char *comment);
+	bool  isNear(object_t *obj, char *verb, char *comment);
+	bool  isObjectVerb(object_t *obj, char *comment);
+	void  takeObject(object_t *obj);
+};
+
+class Parser_v1w : public Parser_v3d {
+public:
+	Parser_v1w(HugoEngine *vm);
+	~Parser_v1w();
+
+	virtual void showInventory();
+
+	void  lineHandler();
 };
 
 } // End of namespace Hugo

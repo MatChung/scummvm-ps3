@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/data/background.h $
- * $Id: background.h 53579 2010-10-18 19:17:38Z sev $
+ * $Id: background.h 54358 2010-11-19 01:37:04Z fingolfin $
  *
  */
 
@@ -34,19 +34,21 @@
 	    uint32 {4}   - position Y on screen
 	    uint32 {4}   - image width
 	    uint32 {4}   - image height
-	    uint32 {4}   - red colour channel data size
-	    uint32 {4}   - blue colour channel data size
-	    uint32 {4}   - green colour channel data size
+	    uint32 {4}   - red color channel data size
+	    uint32 {4}   - blue color channel data size
+	    uint32 {4}   - green color channel data size
 
 	data:
-	    byte {x}     - red colour channel data
-	    byte {x}     - blue colour channel data
-	    byte {x}     - green colour channel data
+	    byte {x}     - red color channel data
+	    byte {x}     - blue color channel data
+	    byte {x}     - green color channel data
 */
 
 #include "lastexpress/drawable.h"
 
-#include "common/stream.h"
+namespace Common {
+class SeekableReadStream;
+}
 
 namespace LastExpress {
 

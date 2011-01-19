@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/screen.cpp $
- * $Id: screen.cpp 54068 2010-11-04 18:37:03Z m_kiewitz $
+ * $Id: screen.cpp 55182 2011-01-09 13:21:19Z thebluegr $
  *
  */
 
@@ -147,15 +147,13 @@ void GfxScreen::copyToScreen() {
 }
 
 void GfxScreen::copyFromScreen(byte *buffer) {
-	Graphics::Surface *screen;
-	screen = g_system->lockScreen();
+	Graphics::Surface *screen = g_system->lockScreen();
 	memcpy(buffer, screen->pixels, _displayPixels);
 	g_system->unlockScreen();
 }
 
 void GfxScreen::kernelSyncWithFramebuffer() {
 	Graphics::Surface *screen = g_system->lockScreen();
-
 	memcpy(_displayScreen, screen->pixels, _displayPixels);
 	g_system->unlockScreen();
 }
@@ -654,20 +652,41 @@ void GfxScreen::debugShowMap(int mapNo) {
 	copyToScreen();
 }
 
-void GfxScreen::scale2x(const byte *src, byte *dst, int16 srcWidth, int16 srcHeight) {
+void GfxScreen::scale2x(const byte *src, byte *dst, int16 srcWidth, int16 srcHeight, byte bytesPerPixel) {
+	assert(bytesPerPixel == 1 || bytesPerPixel == 2);
 	const int newWidth = srcWidth * 2;
+	const int pitch = newWidth * bytesPerPixel;
 	const byte *srcPtr = src;
 
-	for (int y = 0; y < srcHeight; y++) {
-		for (int x = 0; x < srcWidth; x++) {
-			const byte color = *srcPtr++;
-			dst[0] = color;
-			dst[1] = color;
-			dst[newWidth] = color;
-			dst[newWidth + 1] = color;
-			dst += 2;
+	if (bytesPerPixel == 1) {
+		for (int y = 0; y < srcHeight; y++) {
+			for (int x = 0; x < srcWidth; x++) {
+				const byte color = *srcPtr++;
+				dst[0] = color;
+				dst[1] = color;
+				dst[newWidth] = color;
+				dst[newWidth + 1] = color;
+				dst += 2;
+			}
+			dst += newWidth;
 		}
-		dst += newWidth;
+	} else if (bytesPerPixel == 2) {
+		for (int y = 0; y < srcHeight; y++) {
+			for (int x = 0; x < srcWidth; x++) {
+				const byte color = *srcPtr++;
+				const byte color2 = *srcPtr++;
+				dst[0] = color;
+				dst[1] = color2;
+				dst[2] = color;
+				dst[3] = color2;
+				dst[pitch] = color;
+				dst[pitch + 1] = color2;
+				dst[pitch + 2] = color;
+				dst[pitch + 3] = color2;
+				dst += 4;
+			}
+			dst += pitch;
+		}
 	}
 }
 

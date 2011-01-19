@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/bitmap.cpp $
- * $Id: bitmap.cpp 47541 2010-01-25 01:39:44Z lordhoto $
+ * $Id: bitmap.cpp 54989 2010-12-21 18:16:37Z fuzzie $
  *
  */
 
@@ -28,6 +28,8 @@
 #include "common/debug.h"
 #include "common/util.h"
 #include "common/endian.h"
+#include "common/memstream.h"
+#include "common/substream.h"
 #include "common/system.h"
 
 namespace Mohawk {
@@ -36,12 +38,28 @@ namespace Mohawk {
 #define DRAW_COMPRESSION (_header.format & kDrawMASK)
 
 MohawkBitmap::MohawkBitmap() {
+	static const PackFunction packTable[] = {
+		{ kPackNone, "Raw", &MohawkBitmap::unpackRaw },
+		{ kPackLZ, "LZ", &MohawkBitmap::unpackLZ },
+		{ kPackRiven, "Riven", &MohawkBitmap::unpackRiven }
+	};
+
+	_packTable = packTable;
+	_packTableSize = ARRAYSIZE(packTable);
+
+	static const DrawFunction drawTable[] = {
+		{ kDrawRaw, "Raw", &MohawkBitmap::drawRaw },
+		{ kDrawRLE8, "RLE8", &MohawkBitmap::drawRLE8 }
+	};
+
+	_drawTable = drawTable;
+	_drawTableSize = ARRAYSIZE(drawTable);
 }
 
 MohawkBitmap::~MohawkBitmap() {
 }
 
-ImageData *MohawkBitmap::decodeImage(Common::SeekableReadStream *stream) {
+void MohawkBitmap::decodeImageData(Common::SeekableReadStream *stream) {
 	_data = stream;
 	_header.colorTable.palette = NULL;
 
@@ -54,7 +72,7 @@ ImageData *MohawkBitmap::decodeImage(Common::SeekableReadStream *stream) {
 
 	debug (2, "Decoding Mohawk Bitmap (%dx%d, %dbpp, %s Packing + %s Drawing)", _header.width, _header.height, getBitsPerPixel(), getPackName(), getDrawName());
 
-	if (getBitsPerPixel() != 8)
+	if (getBitsPerPixel() != 8 && getBitsPerPixel() != 24)
 		error ("Unhandled bpp %d", getBitsPerPixel());
 
 	// Read in the palette if it's here.
@@ -72,14 +90,55 @@ ImageData *MohawkBitmap::decodeImage(Common::SeekableReadStream *stream) {
 		}
 	}
 
-	_surface = new Graphics::Surface();
-	_surface->create(_header.width, _header.height, getBitsPerPixel() >> 3);
-
 	unpackImage();
-	drawImage();
+}
+
+MohawkSurface *MohawkBitmap::decodeImage(Common::SeekableReadStream *stream) {
+	decodeImageData(stream);
+
+	Graphics::Surface *surface = createSurface(_header.width, _header.height);
+	drawImage(surface);
 	delete _data;
 
-	return new ImageData(_surface, _header.colorTable.palette);
+	return new MohawkSurface(surface, _header.colorTable.palette);
+}
+
+Common::Array<MohawkSurface *> MohawkBitmap::decodeImages(Common::SeekableReadStream *stream) {
+	decodeImageData(stream);
+
+	// Some Mohawk games (CSTime, Zoombinis) store 'compound shapes' by
+	// packing several sub-images inside the data portion of an image.
+	// We take a copy of what we need (since it will be overwritten),
+	// and then decodeImage() all these sub-images.
+	Common::SeekableReadStream *data = _data;
+	int32 startPos = data->pos();
+	uint16 count = _header.width;
+
+	Common::Array<uint32> offsets;
+	for (uint i = 0; i < count; i++)
+		offsets.push_back(data->readUint32BE());
+
+	Common::Array<MohawkSurface *> surfaces;
+	for (uint i = 0; i < count; i++) {
+		uint32 start = startPos + offsets[i] - 8;
+		uint32 end;
+		if (i != (uint)count - 1)
+			end = startPos + offsets[i + 1] - 8;
+		else
+			end = data->size();
+		Common::SeekableSubReadStream *substream = new Common::SeekableSubReadStream(data, start, end);
+		surfaces.push_back(decodeImage(substream));
+	}
+
+	delete data;
+	return surfaces;
+}
+
+Graphics::Surface *MohawkBitmap::createSurface(uint16 width, uint16 height) {
+	Graphics::Surface *surface = new Graphics::Surface();
+	byte bytesPerPixel = (getBitsPerPixel() <= 8) ? 1 : g_system->getScreenFormat().bytesPerPixel;
+	surface->create(width, height, bytesPerPixel);
+	return surface;
 }
 
 byte MohawkBitmap::getBitsPerPixel() {
@@ -95,65 +154,46 @@ byte MohawkBitmap::getBitsPerPixel() {
 	case kBitsPerPixel24:
 		return 24;
 	default:
-		error ("Unknown bits per pixel");
+		error("Unknown bits per pixel");
 	}
 
 	return 0;
 }
 
-struct CompressionInfo {
-	uint16 flag;
-	const char *name;
-	void (MohawkBitmap::*func)();
-};
-
-static const CompressionInfo packTable[] = {
-	{ kPackNone, "Raw", &MohawkBitmap::unpackRaw },
-	{ kPackLZ, "LZ", &MohawkBitmap::unpackLZ },
-	{ kPackLZ1, "LZ1", &MohawkBitmap::unpackLZ1 },
-	{ kPackRiven, "Riven", &MohawkBitmap::unpackRiven }
-};
-
 const char *MohawkBitmap::getPackName() {
-	for (uint32 i = 0; i < ARRAYSIZE(packTable); i++)
-		if (PACK_COMPRESSION == packTable[i].flag)
-			return packTable[i].name;
+	for (int i = 0; i < _packTableSize; i++)
+		if (PACK_COMPRESSION == _packTable[i].flag)
+			return _packTable[i].name;
 
 	return "Unknown";
 }
 
 void MohawkBitmap::unpackImage() {
-	for (uint32 i = 0; i < ARRAYSIZE(packTable); i++)
-		if (PACK_COMPRESSION == packTable[i].flag) {
-			(this->*packTable[i].func)();
+	for (int i = 0; i < _packTableSize; i++)
+		if (PACK_COMPRESSION == _packTable[i].flag) {
+			(this->*_packTable[i].func)();
 			return;
 		}
 
-	warning("Unknown Pack Compression");
+	error("Unknown Pack Compression");
 }
 
-static const CompressionInfo drawTable[] = {
-	{ kDrawRaw, "Raw", &MohawkBitmap::drawRaw },
-	{ kDrawRLE8, "RLE8", &MohawkBitmap::drawRLE8 },
-	{ kDrawRLE, "RLE", &MohawkBitmap::drawRLE }
-};
-
 const char *MohawkBitmap::getDrawName() {
-	for (uint32 i = 0; i < ARRAYSIZE(drawTable); i++)
-		if (DRAW_COMPRESSION == drawTable[i].flag)
-			return drawTable[i].name;
+	for (int i = 0; i < _drawTableSize; i++)
+		if (DRAW_COMPRESSION == _drawTable[i].flag)
+			return _drawTable[i].name;
 
 	return "Unknown";
 }
 
-void MohawkBitmap::drawImage() {
-	for (uint32 i = 0; i < ARRAYSIZE(drawTable); i++)
-		if (DRAW_COMPRESSION == drawTable[i].flag) {
-			(this->*drawTable[i].func)();
+void MohawkBitmap::drawImage(Graphics::Surface *surface) {
+	for (int i = 0; i < _drawTableSize; i++)
+		if (DRAW_COMPRESSION == _drawTable[i].flag) {
+			(this->*_drawTable[i].func)(surface);
 			return;
 		}
 
-	warning("Unknown Draw Compression");
+	error("Unknown Draw Compression");
 }
 
 //////////////////////////////////////////
@@ -263,14 +303,6 @@ void MohawkBitmap::unpackLZ() {
 	Common::SeekableReadStream *decompressedData = decompressLZ(_data, uncompressedSize);
 	delete _data;
 	_data = decompressedData;
-}
-
-//////////////////////////////////////////
-// LZ Unpacker
-//////////////////////////////////////////
-
-void MohawkBitmap::unpackLZ1() {
-	error("STUB: unpackLZ1()");
 }
 
 //////////////////////////////////////////
@@ -527,10 +559,28 @@ void MohawkBitmap::handleRivenSubcommandStream(byte count, byte *&dst) {
 // Raw Drawer
 //////////////////////////////////////////
 
-void MohawkBitmap::drawRaw() {
+void MohawkBitmap::drawRaw(Graphics::Surface *surface) {
+	assert(surface);
+
 	for (uint16 y = 0; y < _header.height; y++) {
-		_data->read((byte *)_surface->pixels + y * _header.width, _header.width);
-		_data->skip(_header.bytesPerRow - _header.width);
+		if (getBitsPerPixel() == 24) {
+			Graphics::PixelFormat pixelFormat = g_system->getScreenFormat();
+
+			for (uint16 x = 0; x < _header.width; x++) {
+				byte b = _data->readByte();
+				byte g = _data->readByte();
+				byte r = _data->readByte();
+				if (surface->bytesPerPixel == 2)
+					*((uint16 *)surface->getBasePtr(x, y)) = pixelFormat.RGBToColor(r, g, b);
+				else
+					*((uint32 *)surface->getBasePtr(x, y)) = pixelFormat.RGBToColor(r, g, b);
+			}
+
+			_data->skip(_header.bytesPerRow - _header.width * 3);
+		} else {
+			_data->read((byte *)surface->pixels + y * _header.width, _header.width);
+			_data->skip(_header.bytesPerRow - _header.width);
+		}
 	}
 }
 
@@ -538,19 +588,17 @@ void MohawkBitmap::drawRaw() {
 // RLE8 Drawer
 //////////////////////////////////////////
 
-void MohawkBitmap::drawRLE8() {
+void MohawkBitmap::drawRLE8(Graphics::Surface *surface, bool isLE) {
 	// A very simple RLE8 scheme is used as a secondary compression on
 	// most images in non-Riven tBMP's.
 
-	for (uint16 i = 0; i < _header.height; i++) {
-		uint16 rowByteCount = _data->readUint16BE();
-		int32 startPos = _data->pos();
-		byte *dst = (byte *)_surface->pixels + i * _header.width;
-		int16 remaining = _header.width;
+	assert(surface);
 
-		// HACK: It seems only the bottom 9 bits are valid for images
-		// TODO: Verify if this is still needed after the buffer clearing fix.
-		rowByteCount &= 0x1ff;
+	for (uint16 i = 0; i < _header.height; i++) {
+		uint16 rowByteCount = isLE ? _data->readUint16LE() : _data->readUint16BE();
+		int32 startPos = _data->pos();
+		byte *dst = (byte *)surface->pixels + i * _header.width;
+		int16 remaining = _header.width;
 
 		while (remaining > 0) {
 			byte code = _data->readByte();
@@ -576,18 +624,10 @@ void MohawkBitmap::drawRLE8() {
 }
 
 //////////////////////////////////////////
-// RLE Drawer
-//////////////////////////////////////////
-
-void MohawkBitmap::drawRLE() {
-	warning("STUB: drawRLE()");
-}
-
-//////////////////////////////////////////
 // Myst Bitmap Decoder
 //////////////////////////////////////////
 
-ImageData* MystBitmap::decodeImage(Common::SeekableReadStream* stream) {
+MohawkSurface *MystBitmap::decodeImage(Common::SeekableReadStream* stream) {
 	uint32 uncompressedSize = stream->readUint32LE();
 	Common::SeekableReadStream* bmpStream = decompressLZ(stream, uncompressedSize);
 	delete stream;
@@ -642,12 +682,11 @@ ImageData* MystBitmap::decodeImage(Common::SeekableReadStream* stream) {
 
 	bmpStream->seek(_header.imageOffset);
 
-	Graphics::Surface *surface = new Graphics::Surface();
+	Graphics::Surface *surface = createSurface(_info.width, _info.height);
 	int srcPitch = _info.width * (_info.bitsPerPixel >> 3);
 	const int extraDataLength = (srcPitch % 4) ? 4 - (srcPitch % 4) : 0;
 
 	if (_info.bitsPerPixel == 8) {
-		surface->create(_info.width, _info.height, 1);
 		byte *dst = (byte *)surface->pixels;
 
 		for (uint32 i = 0; i < _info.height; i++) {
@@ -656,7 +695,6 @@ ImageData* MystBitmap::decodeImage(Common::SeekableReadStream* stream) {
 		}
 	} else {
 		Graphics::PixelFormat pixelFormat = g_system->getScreenFormat();
-		surface->create(_info.width, _info.height, pixelFormat.bytesPerPixel);
 
 		byte *dst = (byte *)surface->pixels + (surface->h - 1) * surface->pitch;
 
@@ -681,25 +719,197 @@ ImageData* MystBitmap::decodeImage(Common::SeekableReadStream* stream) {
 
 	delete bmpStream;
 
-	return new ImageData(surface, palData);
+	return new MohawkSurface(surface, palData);
 }
 
-ImageData *OldMohawkBitmap::decodeImage(Common::SeekableReadStream *stream) {
+MohawkSurface *OldMohawkBitmap::decodeImage(Common::SeekableReadStream *stream) {
 	Common::SeekableSubReadStreamEndian *endianStream = (Common::SeekableSubReadStreamEndian *)stream;
 
-	// The format part is just a guess at this point. Note that the width and height roles have been reversed!
-
-	_header.height = endianStream->readUint16() & 0x3FF;
-	_header.width = endianStream->readUint16() & 0x3FF;
-	_header.bytesPerRow = endianStream->readUint16() & 0x3FE;
+	// 12 bytes header for the image
 	_header.format = endianStream->readUint16();
+	_header.bytesPerRow = endianStream->readUint16();
+	_header.width = endianStream->readUint16();
+	_header.height = endianStream->readUint16();
+	int offsetX = endianStream->readSint16();
+	int offsetY = endianStream->readSint16();
 
-	debug(2, "Decoding Old Mohawk Bitmap (%dx%d, %04x Format)", _header.width, _header.height, _header.format);
+	debug(7, "Decoding Old Mohawk Bitmap (%dx%d, %d bytesPerRow, %04x Format)", _header.width, _header.height, _header.bytesPerRow, _header.format);
+	debug(7, "Offset X = %d, Y = %d", offsetX, offsetY);
 
-	warning("Unhandled old Mohawk Bitmap decoding");
+	bool leRLE8 = false;
 
+	if ((_header.format & 0xf0) == kOldPackLZ) {
+		// 12 bytes header for the compressed data
+		uint32 uncompressedSize = endianStream->readUint32();
+		uint32 compressedSize = endianStream->readUint32();
+		uint16 posBits = endianStream->readUint16();
+		uint16 lengthBits = endianStream->readUint16();
+
+		if (compressedSize != (uint32)endianStream->size() - 24)
+			error("More bytes (%d) remaining in stream than header says there should be (%d)", endianStream->size() - 24, compressedSize);
+
+		// These two errors are really just sanity checks and should never go off
+		if (posBits != POS_BITS)
+			error("Position bits modified to %d", posBits);
+		if (lengthBits != LEN_BITS)
+			error("Length bits modified to %d", lengthBits);
+
+		_data = decompressLZ(stream, uncompressedSize);
+
+		if (endianStream->pos() != endianStream->size())
+			error("OldMohawkBitmap decompression failed");
+	} else {
+		if ((_header.format & 0xf0) != 0)
+			error("Tried to use unknown OldMohawkBitmap compression (format %02x)", _header.format & 0xf0);
+
+		// This is so nasty on so many levels. The original Windows LZ decompressor for the
+		// Living Books v1 games had knowledge of the underlying RLE8 data. While going
+		// through the LZ data, it would byte swap the RLE8 length fields to make them LE.
+		// This is an extremely vile thing and there's no way in hell that I'm doing
+		// anything similar. When no LZ compression is used, the underlying RLE8 fields
+		// are LE, so we need to set a swap in this condition for LE vs. BE in the RLE8
+		// decoder. *sigh*
+
+		if (!endianStream->isBE())
+			leRLE8 = true;
+
+		_data = stream;
+		stream = NULL;
+	}
+
+	Graphics::Surface *surface = createSurface(_header.width, _header.height);
+
+	if ((_header.format & 0xf00) == kOldDrawRLE8)
+		drawRLE8(surface, leRLE8);
+	else
+		drawRaw(surface);
+
+	delete _data;
 	delete stream;
-	return new ImageData(NULL, NULL);
+
+	MohawkSurface *mhkSurface = new MohawkSurface(surface);
+	mhkSurface->setOffsetX(offsetX);
+	mhkSurface->setOffsetY(offsetY);
+
+	return mhkSurface;
+}
+
+// Partially based on the Prince of Persia Format Specifications
+// See http://sdfg.com.ar/git/?p=fp-git.git;a=blob;f=FP/doc/FormatSpecifications
+
+MohawkSurface *DOSBitmap::decodeImage(Common::SeekableReadStream *stream) {
+	_header.height = stream->readUint16LE();
+	_header.width = stream->readUint16LE();
+	stream->readByte(); // Always 0
+	_header.format = stream->readByte();
+
+	debug(2, "Decoding DOS Bitmap (%dx%d, %dbpp, Compression %d)", _header.width, _header.height, getBitsPerPixel(), _header.format & 0xf);
+
+	// All the PoP games seem to have this flag, but at least CSWorld Deluxe doesn't...
+	// Perhaps this differentiates between normal bitmap mode and planar mode?
+	if (_header.format & 0x80)
+		error("Unknown EGA flag?");
+
+	// Calculate the bytes per row
+	byte pixelsPerByte = 8 / getBitsPerPixel();
+	_header.bytesPerRow = (_header.width + pixelsPerByte - 1) / pixelsPerByte;
+
+	// Only Raw and LZ L/R are supported currently
+	// Notice how Broderbund used their same LZ compression for every PC game possibly ever?
+	switch (_header.format & 0xf) {
+	case 0: // Raw
+		_data = stream;
+		break;
+	case 3: // LZ Left/Right
+		_data = decompressLZ(stream, _header.bytesPerRow * _header.height);
+		delete stream;
+		break;
+	case 1: // RLE Left/Right (Used by PoP, haven't seen in a CS game)
+	case 2: // RLE Up/Down (Used by PoP, haven't seen in a CS game)
+	case 4: // LZ Up/Down (Used by CS America's Past and CS Space)
+		error("Unhandled DOS bitmap compression %d", _header.format & 0xf);
+		break;
+	default:
+		error("Unknown DOS bitmap compression %d", _header.format & 0xf);
+	}
+
+	Graphics::Surface *surface = createSurface(_header.width, _header.height);
+	memset(surface->pixels, 0, _header.width * _header.height);
+
+	// Expand the <8bpp data to one byte per pixel
+	switch (getBitsPerPixel()) {
+	case 1:
+		expandMonochromePlane(surface, _data);
+		break;
+	case 4:
+		expandEGAPlanes(surface, _data);
+		break;
+	default:
+		error("Unhandled %dbpp", getBitsPerPixel());
+	}
+
+	delete _data;
+
+	return new MohawkSurface(surface);
+}
+
+void DOSBitmap::expandMonochromePlane(Graphics::Surface *surface, Common::SeekableReadStream *rawStream) {
+	assert(surface->bytesPerPixel == 1);
+
+	byte *dst = (byte *)surface->pixels;
+
+	// Expand the 8 pixels in a byte into a full byte per pixel
+
+	for (uint32 i = 0; i < surface->h; i++) {
+		for (uint x = 0; x < surface->w;) {
+			byte temp = rawStream->readByte();
+
+			for (int j = 7; j >= 0 && x < surface->w; j--) {
+				if (temp & (1 << j))
+					*dst++ = 0xf;
+				else
+					*dst++ = 0;
+
+				x++;
+			}
+		}
+	}
+}
+
+#define ADD_BIT(dstPixel, srcBit) \
+	*(dst + j * 4 + dstPixel) = (*(dst + j * 4 + dstPixel) >> 1) | (((temp >> srcBit) & 1) << 3)
+
+void DOSBitmap::expandEGAPlanes(Graphics::Surface *surface, Common::SeekableReadStream *rawStream) {
+	assert(surface->bytesPerPixel == 1);
+
+	// Note that the image is in EGA planar form and not just standard 4bpp
+	// This seems to contradict the PoP specs which seem to do
+
+	byte *dst = (byte *)surface->pixels;
+
+	for (uint32 i = 0; i < surface->h; i++) {
+		uint x = 0;
+
+		for (int32 j = 0; j < surface->w / 4; j++) {
+			byte temp = rawStream->readByte();
+			ADD_BIT(3, 4);
+			ADD_BIT(2, 5);
+			ADD_BIT(1, 6);
+			ADD_BIT(0, 7);
+			j++;
+			ADD_BIT(3, 0);
+			ADD_BIT(2, 1);
+			ADD_BIT(1, 2);
+			ADD_BIT(0, 3);
+
+			if (x < 3 && j + 1 >= surface->w / 4) {
+				j = -1;
+				x++;
+			}
+		}	
+
+		dst += surface->w;
+	}
 }
 
 } // End of namespace Mohawk

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/sound/drivers/midi.cpp $
- * $Id: midi.cpp 53906 2010-10-28 16:26:04Z thebluegr $
+ * $Id: midi.cpp 54498 2010-11-26 14:35:28Z waltervn $
  *
  */
 
@@ -27,11 +27,13 @@
 
 #include "common/config-manager.h"
 #include "common/file.h"
+#include "common/memstream.h"
 
 #include "sound/fmopl.h"
 #include "sound/softsynth/emumidi.h"
 
 #include "sci/resource.h"
+#include "sci/engine/features.h"
 #include "sci/sound/drivers/gm_names.h"
 #include "sci/sound/drivers/mididriver.h"
 #include "sci/sound/drivers/map-mt32-to-gm.h"
@@ -57,12 +59,17 @@ public:
 	void sysEx(const byte *msg, uint16 length);
 	bool hasRhythmChannel() const { return true; }
 	byte getPlayId() const;
-	int getPolyphony() const { return kVoices; }
+	int getPolyphony() const {
+		if (g_sci && g_sci->_features->useAltWinGMSound())
+			return 16;
+		else
+			return kVoices;
+	}
 	int getFirstChannel() const;
 	int getLastChannel() const;
 	void setVolume(byte volume);
 	int getVolume();
-	void setReverb(byte reverb);
+	void setReverb(int8 reverb);
 	void playSwitch(bool play);
 
 private:
@@ -318,8 +325,10 @@ void MidiPlayer_Midi::send(uint32 b) {
 	// In early SCI0, we may also get events for AdLib rhythm channels.
 	// While an MT-32 would ignore those with the default channel mapping,
 	// we filter these out for the benefit of other MIDI devices.
-	if (channel < 1 || channel > 9)
-		return;
+	if (_version == SCI_VERSION_0_EARLY) {
+		if (channel < 1 || channel > 9)
+			return;
+	}
 
 	switch (command) {
 	case 0x80:
@@ -333,6 +342,10 @@ void MidiPlayer_Midi::send(uint32 b) {
 		break;
 	case 0xc0:
 		setPatch(channel, op1);
+		break;
+	// The original MIDI driver from sierra ignores aftertouch completely, so should we
+	case 0xa0: // Polyphonic key pressure (aftertouch)
+	case 0xd0: // Channel pressure (aftertouch)
 		break;
 	case 0xe0:
 		_driver->send(b);
@@ -372,10 +385,13 @@ int MidiPlayer_Midi::getVolume() {
 	return _masterVolume;
 }
 
-void MidiPlayer_Midi::setReverb(byte reverb) {
-	_reverb = CLIP<byte>(reverb, 0, kReverbConfigNr - 1);
-	if (_hasReverb)
-		sendMt32SysEx(0x100001, _reverbConfig[_reverb], 3, true);
+void MidiPlayer_Midi::setReverb(int8 reverb) {
+	assert(reverb < kReverbConfigNr);
+	
+	if (_hasReverb && (_reverb != reverb))
+		sendMt32SysEx(0x100001, _reverbConfig[reverb], 3, true);
+
+	_reverb = reverb;
 }
 
 void MidiPlayer_Midi::playSwitch(bool play) {
@@ -434,9 +450,9 @@ void MidiPlayer_Midi::sendMt32SysEx(const uint32 addr, Common::SeekableReadStrea
 		_sysExBuf[7 + i] = str->readByte();
 
 	for (int i = 4; i < 7 + len; i++)
-		chk += _sysExBuf[i];
+		chk -= _sysExBuf[i];
 
-	_sysExBuf[7 + len] = 128 - chk % 128;
+	_sysExBuf[7 + len] = chk & 0x7f;
 
 	if (noDelay)
 		_driver->sysEx(_sysExBuf, len + 8);
@@ -464,17 +480,18 @@ void MidiPlayer_Midi::readMt32Patch(const byte *data, int size) {
 	setMt32Volume(volume);
 
 	// Reverb default only used in (roughly) SCI0/SCI01
-	_reverb = str->readByte();
+	byte reverb = str->readByte();
+
 	_hasReverb = true;
 
 	// Skip reverb SysEx message
 	str->seek(11, SEEK_CUR);
 
-	// Read reverb data
-	for (int i = 0; i < kReverbConfigNr; i++) {
-		_reverbConfig[i][0] = str->readByte();
-		_reverbConfig[i][1] = str->readByte();
-		_reverbConfig[i][2] = str->readByte();
+	// Read reverb data (stored vertically - patch #3117434)
+	for (int j = 0; j < 3; ++j) {
+		for (int i = 0; i < kReverbConfigNr; i++) {
+			_reverbConfig[i][j] = str->readByte();
+		}
 	}
 
 	// Patches 1-48
@@ -501,6 +518,10 @@ void MidiPlayer_Midi::readMt32Patch(const byte *data, int size) {
 		// Partial reserve
 		sendMt32SysEx(0x100004, str, 9);
 	}
+
+	// Reverb for SCI0
+	if (_version <= SCI_VERSION_0_LATE)
+		setReverb(reverb);
 
 	// Send after-SysEx text
 	str->seek(0);
@@ -833,6 +854,16 @@ int MidiPlayer_Midi::open(ResourceManager *resMan) {
 
 	Resource *res = NULL;
 
+	if (g_sci && g_sci->_features->useAltWinGMSound()) {
+		res = resMan->findResource(ResourceId(kResourceTypePatch, 4), 0);
+		if (!(res && isMt32GmPatch(res->data, res->size))) {
+			// Don't do any mapping when a Windows alternative track is selected
+			// and no MIDI patch is available
+			_useMT32Track = false;
+			return 0;
+		}
+	}
+
 	if (_isMt32) {
 		// MT-32
 		resetMt32();
@@ -857,17 +888,22 @@ int MidiPlayer_Midi::open(ResourceManager *resMan) {
 			// There is a GM patch
 			readMt32GmPatch(res->data, res->size);
 
-			// Detect the format of patch 1, so that we know what play mask to use
-			res = resMan->findResource(ResourceId(kResourceTypePatch, 1), 0);
-			if (!res)
+			if (g_sci && g_sci->_features->useAltWinGMSound()) {
+				// Always use the GM track if an alternative GM Windows soundtrack is selected
 				_useMT32Track = false;
-			else
-				_useMT32Track = !isMt32GmPatch(res->data, res->size);
+			} else {
+				// Detect the format of patch 1, so that we know what play mask to use
+				res = resMan->findResource(ResourceId(kResourceTypePatch, 1), 0);
+				if (!res)
+					_useMT32Track = false;
+				else
+					_useMT32Track = !isMt32GmPatch(res->data, res->size);
 
-			// Check if the songs themselves have a GM track
-			if (!_useMT32Track) {
-				if (!resMan->isGMTrackIncluded())
-					_useMT32Track = true;
+				// Check if the songs themselves have a GM track
+				if (!_useMT32Track) {
+					if (!resMan->isGMTrackIncluded())
+						_useMT32Track = true;
+				}
 			}
 		} else {
 			// No GM patch found, map instruments using MT-32 patch
@@ -893,10 +929,16 @@ int MidiPlayer_Midi::open(ResourceManager *resMan) {
 			res = resMan->findResource(ResourceId(kResourceTypePatch, 1), 0);
 
 			if (res) {
-				if (!isMt32GmPatch(res->data, res->size))
+				if (!isMt32GmPatch(res->data, res->size)) {
 					mapMt32ToGm(res->data, res->size);
-				else
-					error("MT-32 patch has wrong type");
+				} else {
+					if (getSciVersion() <= SCI_VERSION_2_1) {
+						error("MT-32 patch has wrong type");
+					} else {
+						// Happens in the SCI3 interactive demo of Lighthouse
+						warning("TODO: Ignoring new SCI3 type of MT-32 patch for now (size = %d)", res->size);
+					}
+				}
 			} else {
 				// No MT-32 patch present, try to read from MT32.DRV
 				Common::File f;

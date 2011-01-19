@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/codecs/qtrle.h $
- * $Id: qtrle.h 49165 2010-05-23 18:33:55Z mthreepwood $
+ * $Id: qtrle.h 54930 2010-12-16 02:02:53Z mthreepwood $
  *
  */
 
@@ -36,7 +36,7 @@ public:
 	QTRLEDecoder(uint16 width, uint16 height, byte bitsPerPixel);
 	~QTRLEDecoder();
 
-	Surface *decodeImage(Common::SeekableReadStream *stream);
+	const Surface *decodeImage(Common::SeekableReadStream *stream);
 	PixelFormat getPixelFormat() const { return _pixelFormat; }
 
 private:

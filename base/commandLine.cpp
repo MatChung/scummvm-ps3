@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/base/commandLine.cpp $
- * $Id: commandLine.cpp 54090 2010-11-05 10:53:37Z thebluegr $
+ * $Id: commandLine.cpp 54534 2010-11-28 17:26:27Z eriktorbjorn $
  *
  */
 
@@ -383,19 +383,6 @@ Common::String parseCommandLine(Common::StringMap &settings, int argc, const cha
 			END_OPTION
 
 			DO_OPTION('g', "gfx-mode")
-				// Check whether 'option' specifies a valid graphics mode.
-				bool isValid = false;
-				if (!scumm_stricmp(option, "normal") || !scumm_stricmp(option, "default"))
-					isValid = true;
-				if (!isValid) {
-					const OSystem::GraphicsMode *gm = g_system->getSupportedGraphicsModes();
-					while (gm->name && !isValid) {
-						isValid = !scumm_stricmp(gm->name, option);
-						gm++;
-					}
-				}
-				if (!isValid)
-					usage("Unrecognized graphics mode '%s'", option);
 			END_OPTION
 
 			DO_OPTION_INT('m', "music-volume")

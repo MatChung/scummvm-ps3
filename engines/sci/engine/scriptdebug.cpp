@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/scriptdebug.cpp $
- * $Id: scriptdebug.cpp 54037 2010-11-02 09:49:47Z fingolfin $
+ * $Id: scriptdebug.cpp 54463 2010-11-24 21:32:34Z thebluegr $
  *
  */
 
@@ -64,7 +64,7 @@ const char *opcodeNames[] = {
 };
 
 // Disassembles one command from the heap, returns address of next command or 0 if a ret was encountered.
-reg_t disassemble(EngineState *s, reg_t pos, int print_bw_tag, int print_bytecode) {
+reg_t disassemble(EngineState *s, reg_t pos, bool printBWTag, bool printBytecode) {
 	SegmentObj *mobj = s->_segMan->getSegment(pos.segment, SEG_TYPE_SCRIPT);
 	Script *script_entity = NULL;
 	const byte *scr;
@@ -85,7 +85,7 @@ reg_t disassemble(EngineState *s, reg_t pos, int print_bw_tag, int print_bytecod
 
 	if (pos.offset >= scr_size) {
 		warning("Trying to disassemble beyond end of script");
-		return pos;
+		return NULL_REG;
 	}
 
 	int16 opparams[4];
@@ -97,7 +97,7 @@ reg_t disassemble(EngineState *s, reg_t pos, int print_bw_tag, int print_bytecod
 
 	debugN("%04x:%04x: ", PRINT_REG(pos));
 
-	if (print_bytecode) {
+	if (printBytecode) {
 		if (pos.offset + bytecount > scr_size) {
 			warning("Operation arguments extend beyond end of script");
 			return retval;
@@ -110,7 +110,7 @@ reg_t disassemble(EngineState *s, reg_t pos, int print_bw_tag, int print_bytecod
 			debugN("   ");
 	}
 
-	if (print_bw_tag)
+	if (printBWTag)
 		debugN("[%c] ", opsize ? 'B' : 'W');
 
 	debugN("%s", opcodeNames[opcode]);
@@ -124,11 +124,14 @@ reg_t disassemble(EngineState *s, reg_t pos, int print_bw_tag, int print_bytecod
 
 		case Script_SByte:
 		case Script_Byte:
-			debugN(" %02x", scr[retval.offset++]);
+			param_value = scr[retval.offset];
+			debugN(" %02x", scr[retval.offset]);
+			retval.offset++;
 			break;
 
 		case Script_Word:
 		case Script_SWord:
+			param_value = READ_SCI11ENDIAN_UINT16(&scr[retval.offset]);
 			debugN(" %04x", READ_SCI11ENDIAN_UINT16(&scr[retval.offset]));
 			retval.offset += 2;
 			break;
@@ -190,10 +193,14 @@ reg_t disassemble(EngineState *s, reg_t pos, int print_bw_tag, int print_bytecod
 		if ((opcode == op_pTos) || (opcode == op_sTop) || (opcode == op_pToa) || (opcode == op_aTop) ||
 		        (opcode == op_dpToa) || (opcode == op_ipToa) || (opcode == op_dpTos) || (opcode == op_ipTos)) {
 			const Object *obj = s->_segMan->getObject(s->xs->objp);
-			if (!obj)
+			if (!obj) {
 				warning("Attempted to reference on non-object at %04x:%04x", PRINT_REG(s->xs->objp));
-			else
-				debugN("	(%s)", g_sci->getKernel()->getSelectorName(obj->propertyOffsetToId(s->_segMan, scr[pos.offset + 1])).c_str());
+			} else {
+				if (getSciVersion() == SCI_VERSION_3)
+					debugN("\t(%s)", g_sci->getKernel()->getSelectorName(param_value).c_str());
+				else
+					debugN("\t(%s)", g_sci->getKernel()->getSelectorName(obj->propertyOffsetToId(s->_segMan, param_value)).c_str());
+			}
 		}
 	}
 
@@ -335,7 +342,7 @@ void SciEngine::scriptDebug() {
 	}
 
 	debugN("Step #%d\n", s->scriptStepCounter);
-	disassemble(s, s->xs->addr.pc, 0, 1);
+	disassemble(s, s->xs->addr.pc, false, true);
 
 	if (_debugState.runningStep) {
 		_debugState.runningStep--;
@@ -478,8 +485,8 @@ void Kernel::dissectScript(int scriptNumber, Vocabulary *vocab) {
 			Common::hexdump(script->data + seeker, objsize - 4, 16, seeker);
 			break;
 
-		case 3:
-			debugN("<unknown>\n");
+		case SCI_OBJ_SYNONYMS:
+			debugN("Synonyms\n");
 			Common::hexdump(script->data + seeker, objsize - 4, 16, seeker);
 			break;
 

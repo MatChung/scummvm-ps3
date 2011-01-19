@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/dxa_decoder.cpp $
- * $Id: dxa_decoder.cpp 51725 2010-08-04 08:25:05Z fingolfin $
+ * $Id: dxa_decoder.cpp 54927 2010-12-16 01:35:13Z mthreepwood $
  *
  */
 
@@ -27,6 +27,7 @@
 #include "common/endian.h"
 #include "common/archive.h"
 #include "common/system.h"
+#include "common/stream.h"
 #include "common/util.h"
 
 #include "graphics/video/dxa_decoder.h"
@@ -476,7 +477,7 @@ void DXADecoder::decode13(int size) {
 #endif
 }
 
-Surface *DXADecoder::decodeNextFrame() {
+const Surface *DXADecoder::decodeNextFrame() {
 	uint32 tag = _fileStream->readUint32BE();
 	if (tag == MKID_BE('CMAP')) {
 		_fileStream->read(_palette, 256 * 3);

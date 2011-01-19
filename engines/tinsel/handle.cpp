@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/handle.cpp $
- * $Id: handle.cpp 50924 2010-07-16 03:14:03Z eriktorbjorn $
+ * $Id: handle.cpp 54811 2010-12-07 18:00:18Z fingolfin $
  *
  * This file contains the handle based Memory Manager code
  */
@@ -70,6 +70,8 @@ enum {
 
 //----------------- LOCAL GLOBAL DATA --------------------
 
+// FIXME: Avoid non-const global vars
+
 // handle table gets loaded from index file at runtime
 static MEMHANDLE *handleTable = 0;
 
@@ -100,7 +102,7 @@ void SetupHandleTable() {
 	int len;
 	uint i;
 	MEMHANDLE *pH;
-	Common::File f;
+	TinselFile f;
 
 	if (f.open(TinselV1PSX? PSX_INDEX_FILENAME : INDEX_FILENAME)) {
 		// get size of index file
@@ -124,13 +126,13 @@ void SetupHandleTable() {
 			// load data
 			for (i = 0; i < numHandles; i++) {
 				f.read(handleTable[i].szName, 12);
-				handleTable[i].filesize = f.readUint32LE();
+				handleTable[i].filesize = f.readUint32();
 				// The pointer should always be NULL. We don't
 				// need to read that from the file.
 				handleTable[i]._node = NULL;
 				f.seek(4, SEEK_CUR);
 				// For Discworld 2, read in the flags2 field
-				handleTable[i].flags2 = t2Flag ? f.readUint32LE() : 0;
+				handleTable[i].flags2 = t2Flag ? f.readUint32() : 0;
 			}
 
 			if (f.eos() || f.err()) {

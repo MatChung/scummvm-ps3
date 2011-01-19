@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/coroutine.cpp $
- * $Id: coroutine.cpp 54011 2010-11-01 16:04:47Z fingolfin $
+ * $Id: coroutine.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  */
 
 #include "tinsel/coroutine.h"
@@ -29,7 +29,7 @@
 namespace Tinsel {
 
 
-CoroContext nullContext = NULL;
+CoroContext nullContext = NULL;	// FIXME: Avoid non-const global vars
 
 
 #if COROUTINE_DEBUG

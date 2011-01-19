@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/touche/touche.cpp $
- * $Id: touche.cpp 49929 2010-06-17 13:42:02Z Kirben $
+ * $Id: touche.cpp 54137 2010-11-08 03:55:16Z tdhs $
  *
  */
 
@@ -82,11 +82,15 @@ ToucheEngine::ToucheEngine(OSystem *system, Common::Language language)
 	DebugMan.addDebugChannel(kDebugOpcodes,  "Opcodes",  "Opcodes debug level");
 	DebugMan.addDebugChannel(kDebugMenu,     "Menu",     "Menu debug level");
 
+	_console = new ToucheConsole(this);
+
 	g_eventRec.registerRandomSource(_rnd, "touche");
 }
 
 ToucheEngine::~ToucheEngine() {
 	DebugMan.clearAllDebugChannels();
+	delete _console;
+
 	delete _midiPlayer;
 }
 
@@ -324,6 +328,9 @@ void ToucheEngine::processEvents(bool handleKeyEvents) {
 			if (event.kbd.hasFlags(Common::KBD_CTRL)) {
 				if (event.kbd.keycode == Common::KEYCODE_f) {
 					_fastMode = !_fastMode;
+				} else if (event.kbd.keycode == Common::KEYCODE_d) {
+					this->getDebugger()->attach();
+					this->getDebugger()->onFrame();
 				}
 			} else {
 				if (event.kbd.ascii == 't') {

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/token.cpp $
- * $Id: token.cpp 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: token.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * To ensure exclusive use of resources and exclusive control responsibilities.
  */
@@ -37,7 +37,7 @@ struct Token {
 	PROCESS		*proc;
 };
 
-static Token tokens[NUMTOKENS];
+static Token tokens[NUMTOKENS];	// FIXME: Avoid non-const global vars
 
 
 /**

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/drew.cpp $
- * $Id: drew.cpp 53099 2010-10-09 11:18:19Z lordhoto $
+ * $Id: drew.cpp 54221 2010-11-13 01:15:37Z sylvaintv $
  *
  */
 
@@ -35,7 +35,7 @@ CharacterDrew::CharacterDrew(ToonEngine *vm) : Character(vm) {
 	vm->getAnimationManager()->addInstance(_animationInstance);
 }
 
-CharacterDrew::~CharacterDrew(void) {
+CharacterDrew::~CharacterDrew() {
 }
 
 bool CharacterDrew::setupPalette() {
@@ -46,11 +46,6 @@ bool CharacterDrew::setupPalette() {
 		return true;
 	}
 	return false;
-}
-
-void CharacterDrew::setFacing(int32 facing) {
-	debugC(4, kDebugCharacter, "setFacing(%d)", facing);
-	_facing = facing;
 }
 
 void CharacterDrew::setPosition(int32 x, int32 y) {
@@ -88,7 +83,6 @@ void CharacterDrew::playStandingAnim() {
 	_animationInstance->stopAnimation();
 	_animationInstance->setLooping(true);
 	//setVisible(true);
-
 }
 
 void CharacterDrew::playWalkAnim(int32 start, int32 end) {

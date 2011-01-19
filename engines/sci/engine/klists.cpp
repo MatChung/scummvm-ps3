@@ -19,15 +19,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/klists.cpp $
- * $Id: klists.cpp 52182 2010-08-18 07:14:17Z thebluegr $
+ * $Id: klists.cpp 55086 2011-01-01 12:48:12Z thebluegr $
  *
  */
 
+#include "sci/engine/features.h"
 #include "sci/engine/state.h"
 #include "sci/engine/selector.h"
 #include "sci/engine/kernel.h"
 
 namespace Sci {
+//#define CHECK_LISTS	// adds sanity checking for lists and errors out when problems are found
+
+#ifdef CHECK_LISTS
 
 static bool isSaneNodePointer(SegManager *segMan, reg_t addr) {
 	bool havePrev = false;
@@ -121,11 +125,13 @@ static void checkListPointer(SegManager *segMan, reg_t addr) {
 	}
 }
 
+#endif
+
 reg_t kNewList(EngineState *s, int argc, reg_t *argv) {
 	reg_t listRef;
 	List *list = s->_segMan->allocateList(&listRef);
 	list->first = list->last = NULL_REG;
-	debugC(2, kDebugLevelNodes, "New listRef at %04x:%04x", PRINT_REG(listRef));
+	debugC(kDebugLevelNodes, "New listRef at %04x:%04x", PRINT_REG(listRef));
 
 	return listRef; // Return list base address
 }
@@ -144,7 +150,7 @@ reg_t kNewNode(EngineState *s, int argc, reg_t *argv) {
 	reg_t nodeKey = (argc == 2) ? argv[1] : argv[0];
 	s->r_acc = s->_segMan->newNode(nodeValue, nodeKey);
 
-	debugC(2, kDebugLevelNodes, "New nodeRef at %04x:%04x", PRINT_REG(s->r_acc));
+	debugC(kDebugLevelNodes, "New nodeRef at %04x:%04x", PRINT_REG(s->r_acc));
 
 	return s->r_acc;
 }
@@ -156,7 +162,9 @@ reg_t kFirstNode(EngineState *s, int argc, reg_t *argv) {
 	List *list = s->_segMan->lookupList(argv[0]);
 
 	if (list) {
+#ifdef CHECK_LISTS
 		checkListPointer(s->_segMan, argv[0]);
+#endif
 		return list->first;
 	} else {
 		return NULL_REG;
@@ -170,7 +178,9 @@ reg_t kLastNode(EngineState *s, int argc, reg_t *argv) {
 	List *list = s->_segMan->lookupList(argv[0]);
 
 	if (list) {
+#ifdef CHECK_LISTS
 		checkListPointer(s->_segMan, argv[0]);
+#endif
 		return list->last;
 	} else {
 		return NULL_REG;
@@ -182,8 +192,9 @@ reg_t kEmptyList(EngineState *s, int argc, reg_t *argv) {
 		return NULL_REG;
 
 	List *list = s->_segMan->lookupList(argv[0]);
+#ifdef CHECK_LISTS
 	checkListPointer(s->_segMan, argv[0]);
-
+#endif
 	return make_reg(0, ((list) ? list->first.isNull() : 0));
 }
 
@@ -191,11 +202,14 @@ static void addToFront(EngineState *s, reg_t listRef, reg_t nodeRef) {
 	List *list = s->_segMan->lookupList(listRef);
 	Node *newNode = s->_segMan->lookupNode(nodeRef);
 
-	debugC(2, kDebugLevelNodes, "Adding node %04x:%04x to end of list %04x:%04x", PRINT_REG(nodeRef), PRINT_REG(listRef));
+	debugC(kDebugLevelNodes, "Adding node %04x:%04x to end of list %04x:%04x", PRINT_REG(nodeRef), PRINT_REG(listRef));
 
 	if (!newNode)
 		error("Attempt to add non-node (%04x:%04x) to list at %04x:%04x", PRINT_REG(nodeRef), PRINT_REG(listRef));
+
+#ifdef CHECK_LISTS
 	checkListPointer(s->_segMan, listRef);
+#endif
 
 	newNode->pred = NULL_REG;
 	newNode->succ = list->first;
@@ -214,11 +228,14 @@ static void addToEnd(EngineState *s, reg_t listRef, reg_t nodeRef) {
 	List *list = s->_segMan->lookupList(listRef);
 	Node *newNode = s->_segMan->lookupNode(nodeRef);
 
-	debugC(2, kDebugLevelNodes, "Adding node %04x:%04x to end of list %04x:%04x", PRINT_REG(nodeRef), PRINT_REG(listRef));
+	debugC(kDebugLevelNodes, "Adding node %04x:%04x to end of list %04x:%04x", PRINT_REG(nodeRef), PRINT_REG(listRef));
 
 	if (!newNode)
 		error("Attempt to add non-node (%04x:%04x) to list at %04x:%04x", PRINT_REG(nodeRef), PRINT_REG(listRef));
+
+#ifdef CHECK_LISTS
 	checkListPointer(s->_segMan, listRef);
+#endif
 
 	newNode->pred = list->last;
 	newNode->succ = NULL_REG;
@@ -235,26 +252,37 @@ static void addToEnd(EngineState *s, reg_t listRef, reg_t nodeRef) {
 
 reg_t kNextNode(EngineState *s, int argc, reg_t *argv) {
 	Node *n = s->_segMan->lookupNode(argv[0]);
+
+#ifdef CHECK_LISTS
 	if (!isSaneNodePointer(s->_segMan, argv[0]))
 		return NULL_REG;
+#endif
 
 	return n->succ;
 }
 
 reg_t kPrevNode(EngineState *s, int argc, reg_t *argv) {
 	Node *n = s->_segMan->lookupNode(argv[0]);
+
+#ifdef CHECK_LISTS
 	if (!isSaneNodePointer(s->_segMan, argv[0]))
 		return NULL_REG;
+#endif
 
 	return n->pred;
 }
 
 reg_t kNodeValue(EngineState *s, int argc, reg_t *argv) {
 	Node *n = s->_segMan->lookupNode(argv[0]);
+
+#ifdef CHECK_LISTS
 	if (!isSaneNodePointer(s->_segMan, argv[0]))
 		return NULL_REG;
+#endif
 
-	return n->value;
+	// ICEMAN: when plotting a course in room 40, unDrawLast is called by
+	// startPlot::changeState, but there is no previous entry, so we get 0 here
+	return n ? n->value : NULL_REG;
 }
 
 reg_t kAddToFront(EngineState *s, int argc, reg_t *argv) {
@@ -280,7 +308,9 @@ reg_t kAddAfter(EngineState *s, int argc, reg_t *argv) {
 	Node *firstnode = argv[1].isNull() ? NULL : s->_segMan->lookupNode(argv[1]);
 	Node *newnode = s->_segMan->lookupNode(argv[2]);
 
+#ifdef CHECK_LISTS
 	checkListPointer(s->_segMan, argv[0]);
+#endif
 
 	if (!newnode) {
 		error("New 'node' %04x:%04x is not a node", PRINT_REG(argv[2]));
@@ -320,26 +350,28 @@ reg_t kFindKey(EngineState *s, int argc, reg_t *argv) {
 	reg_t key = argv[1];
 	reg_t list_pos = argv[0];
 
-	debugC(2, kDebugLevelNodes, "Looking for key %04x:%04x in list %04x:%04x", PRINT_REG(key), PRINT_REG(list_pos));
+	debugC(kDebugLevelNodes, "Looking for key %04x:%04x in list %04x:%04x", PRINT_REG(key), PRINT_REG(list_pos));
 
+#ifdef CHECK_LISTS
 	checkListPointer(s->_segMan, argv[0]);
+#endif
 
 	node_pos = s->_segMan->lookupList(list_pos)->first;
 
-	debugC(2, kDebugLevelNodes, "First node at %04x:%04x", PRINT_REG(node_pos));
+	debugC(kDebugLevelNodes, "First node at %04x:%04x", PRINT_REG(node_pos));
 
 	while (!node_pos.isNull()) {
 		Node *n = s->_segMan->lookupNode(node_pos);
 		if (n->key == key) {
-			debugC(2, kDebugLevelNodes, " Found key at %04x:%04x", PRINT_REG(node_pos));
+			debugC(kDebugLevelNodes, " Found key at %04x:%04x", PRINT_REG(node_pos));
 			return node_pos;
 		}
 
 		node_pos = n->succ;
-		debugC(2, kDebugLevelNodes, "NextNode at %04x:%04x", PRINT_REG(node_pos));
+		debugC(kDebugLevelNodes, "NextNode at %04x:%04x", PRINT_REG(node_pos));
 	}
 
-	debugC(2, kDebugLevelNodes, "Looking for key without success");
+	debugC(kDebugLevelNodes, "Looking for key without success");
 	return NULL_REG;
 }
 
@@ -618,7 +650,37 @@ reg_t kMoveToEnd(EngineState *s, int argc, reg_t *argv) {
 }
 
 reg_t kArray(EngineState *s, int argc, reg_t *argv) {
-	switch (argv[0].toUint16()) {
+	uint16 op = argv[0].toUint16();
+
+	// Use kString when accessing strings
+	// This is possible, as strings inherit from arrays
+	// and in this case (type 3) arrays are of type char *.
+	// kString is almost exactly the same as kArray, so
+	// this call is possible
+	// TODO: we need to either merge SCI2 strings and
+	// arrays together, and in the future merge them with
+	// the SCI1 strings and arrays in the segment manager
+	if (op == 0) {
+		// New, check if the target type is 3 (string)
+		if (argv[2].toUint16() == 3)
+			return kString(s, argc, argv);
+	} else {
+		if (s->_segMan->getSegmentType(argv[1].segment) == SEG_TYPE_STRING ||
+			s->_segMan->getSegmentType(argv[1].segment) == SEG_TYPE_SCRIPT) {
+			return kString(s, argc, argv);
+		}
+
+#if 0
+		if (op == 6) {
+			if (s->_segMan->getSegmentType(argv[3].segment) == SEG_TYPE_STRING ||
+				s->_segMan->getSegmentType(argv[3].segment) == SEG_TYPE_SCRIPT) {
+				return kString(s, argc, argv);
+			}
+		}
+#endif
+	}
+
+	switch (op) {
 	case 0: { // New
 		reg_t arrayHandle;
 		SciArray<reg_t> *array = s->_segMan->allocateArray(&arrayHandle);
@@ -671,14 +733,20 @@ reg_t kArray(EngineState *s, int argc, reg_t *argv) {
 		return argv[1];
 	}
 	case 6: { // Cpy
-		if (s->_segMan->getSegmentObj(argv[1].segment)->getType() != SEG_TYPE_ARRAY ||
-			s->_segMan->getSegmentObj(argv[3].segment)->getType() != SEG_TYPE_ARRAY) {
-			// Happens in the RAMA demo
-			warning("kArray(Cpy): Request to copy a segment which isn't an array, ignoring");
-			return NULL_REG;
+		if (argv[1].isNull() || argv[3].isNull()) {
+			if (getSciVersion() == SCI_VERSION_3) {
+				// FIXME: Happens in SCI3, probably because of a missing kernel function.
+				warning("kArray(Cpy): Request to copy from or to a null pointer");
+				return NULL_REG;
+			} else {
+				// SCI2-2.1: error out
+				error("kArray(Cpy): Request to copy from or to a null pointer");
+			}
 		}
 
+		reg_t arrayHandle = argv[1];
 		SciArray<reg_t> *array1 = s->_segMan->lookupArray(argv[1]);
+		//SciArray<reg_t> *array1 = !argv[1].isNull() ? s->_segMan->lookupArray(argv[1]) : s->_segMan->allocateArray(&arrayHandle);
 		SciArray<reg_t> *array2 = s->_segMan->lookupArray(argv[3]);
 		uint32 index1 = argv[2].toUint16();
 		uint32 index2 = argv[4].toUint16();
@@ -696,15 +764,47 @@ reg_t kArray(EngineState *s, int argc, reg_t *argv) {
 		for (uint16 i = 0; i < count; i++)
 			array1->setValue(i + index1, array2->getValue(i + index2));
 
-		return argv[1];
+		return arrayHandle;
 	}
 	case 7: // Cmp
 		// Not implemented in SSCI
+		warning("kArray(Cmp) called");
 		return s->r_acc;
 	case 8: { // Dup
-		SciArray<reg_t> *array = s->_segMan->lookupArray(argv[1]);
+		if (argv[1].isNull()) {
+			warning("kArray(Dup): Request to duplicate a null pointer");
+#if 0
+			// Allocate an array anyway
+			reg_t arrayHandle;
+			SciArray<reg_t> *dupArray = s->_segMan->allocateArray(&arrayHandle);
+			dupArray->setType(3);
+			dupArray->setSize(0);
+			return arrayHandle;
+#endif
+			return NULL_REG;
+		}
+		SegmentType sourceType = s->_segMan->getSegmentObj(argv[1].segment)->getType();
+		if (sourceType == SEG_TYPE_SCRIPT) {
+			// A technique used in later SCI2.1 and SCI3 games: the contents of a script
+			// are loaded in an array (well, actually a string).
+			Script *scr = s->_segMan->getScript(argv[1].segment);
+			reg_t stringHandle;
+
+			SciString *dupString = s->_segMan->allocateString(&stringHandle);
+			dupString->setSize(scr->getBufSize());
+			dupString->fromString(Common::String((const char *)scr->getBuf()));
+
+			return stringHandle;
+		} else if (sourceType != SEG_TYPE_ARRAY && sourceType != SEG_TYPE_SCRIPT) {
+			error("kArray(Dup): Request to duplicate a segment which isn't an array or a script");
+		}
+
 		reg_t arrayHandle;
 		SciArray<reg_t> *dupArray = s->_segMan->allocateArray(&arrayHandle);
+		// This must occur after allocateArray, as inserting a new object
+		// in the heap object list might invalidate this pointer. Also refer
+		// to the same issue in kClone()
+		SciArray<reg_t> *array = s->_segMan->lookupArray(argv[1]);
 
 		dupArray->setType(array->getType());
 		dupArray->setSize(array->getSize());
@@ -720,7 +820,7 @@ reg_t kArray(EngineState *s, int argc, reg_t *argv) {
 
 		return readSelector(s->_segMan, argv[1], SELECTOR(data));
 	default:
-		error("Unknown kArray subop %d", argv[0].toUint16());
+		error("Unknown kArray subop %d", op);
 	}
 
 	return NULL_REG;

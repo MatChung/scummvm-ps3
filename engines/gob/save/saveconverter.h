@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/save/saveconverter.h $
- * $Id: saveconverter.h 41079 2009-05-31 17:00:38Z fingolfin $
+ * $Id: saveconverter.h 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -77,7 +77,7 @@ protected:
 	Common::String _fileName;
 
 	byte *_data;
-	Common::MemoryReadStream *_stream;
+	Common::SeekableReadStream *_stream;
 
 	Common::InSaveFile *openSave() const;
 

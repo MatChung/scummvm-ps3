@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/script_func.cpp $
-* $Id: script_func.cpp 54031 2010-11-01 21:37:47Z fingolfin $
+* $Id: script_func.cpp 55042 2010-12-26 14:32:38Z sylvaintv $
 *
 */
 
@@ -223,7 +223,11 @@ ScriptFunc::ScriptFunc(ToonEngine *vm) {
 }
 
 ScriptFunc::~ScriptFunc(void) {
-
+	while(!_opcodes.empty()) {
+		const OpcodeV2 *temp = _opcodes.back();
+		_opcodes.pop_back();
+		delete temp;
+	}
 }
 
 char *GetText(int32 i, EMCState *state) {
@@ -238,7 +242,7 @@ int32 ScriptFunc::sys_Cmd_Dummy(EMCState *state) {
 }
 
 int32 ScriptFunc::sys_Cmd_Change_Actor_X_And_Y(EMCState *state) {
-	_vm->getDrew()->setPosition(stackPos(0), stackPos(1));
+	_vm->getDrew()->forcePosition(stackPos(0), stackPos(1));
 	return 0;
 }
 
@@ -253,7 +257,7 @@ int32 ScriptFunc::sys_Cmd_Draw_Actor_Standing(EMCState *state) {
 	int32 arg2 = stackPos(1);
 
 	if (arg2 > -1)
-		_vm->getDrew()->setFacing(arg2);
+		_vm->getDrew()->forceFacing(arg2);
 
 	if (arg1 < 0) {
 		_vm->getDrew()->setVisible(false);
@@ -343,7 +347,7 @@ int32 ScriptFunc::sys_Cmd_Set_Sack_Visible(EMCState *state) {
 }
 
 int32 ScriptFunc::sys_Cmd_Set_Actor_Facing(EMCState *state) {
-	_vm->getDrew()->setFacing(stackPos(0));
+	_vm->getDrew()->forceFacing(stackPos(0));
 	_vm->getDrew()->playStandingAnim();
 	return 0;
 }
@@ -645,14 +649,14 @@ int32 ScriptFunc::sys_Cmd_Set_Flux_Facing_Point(EMCState *state) {
 }
 
 int32 ScriptFunc::sys_Cmd_Set_Flux_Facing(EMCState *state) {
-	_vm->getFlux()->setFacing(stackPos(0));
+	_vm->getFlux()->forceFacing(stackPos(0));
 	_vm->getFlux()->playStandingAnim();
 	return 0;
 }
 
 int32 ScriptFunc::sys_Cmd_Set_Flux_Coords(EMCState *state) {
 	_vm->getFlux()->stopWalk();
-	_vm->getFlux()->setPosition(stackPos(0), stackPos(1));
+	_vm->getFlux()->forcePosition(stackPos(0), stackPos(1));
 	return 0;
 }
 
@@ -912,9 +916,13 @@ int32 ScriptFunc::sys_Cmd_Init_Scene_Anim(EMCState *state) {
 	if (sceneAnim->_active)
 		return 0;
 
+	delete sceneAnim->_animation;
+	delete sceneAnim->_animInstance;
+
 	sceneAnim->_animation = new Animation(_vm);
 	sceneAnim->_animation->loadAnimation(GetText(12, state));
 	sceneAnim->_animInstance = _vm->getAnimationManager()->createNewInstance(kAnimationScene);
+	sceneAnim->_originalAnimInstance = sceneAnim->_animInstance;
 	sceneAnim->_animInstance->setAnimation(sceneAnim->_animation);
 	sceneAnim->_animInstance->setVisible((flags & 1) != 0);
 	sceneAnim->_animInstance->setAnimationRange(stackPos(11), stackPos(11));
@@ -1151,8 +1159,18 @@ int32 ScriptFunc::sys_Cmd_Remove_Scene_Anim(EMCState *state) {
 	SceneAnimation *sceneAnim = _vm->getSceneAnimation(sceneId);
 	sceneAnim->_active = false;
 	_vm->getAnimationManager()->removeInstance(sceneAnim->_animInstance);
-	sceneAnim->_animation = 0;
-	sceneAnim->_animInstance = 0;
+	delete sceneAnim->_animation;
+	sceneAnim->_animation = NULL;
+
+	// see if one character shares this instance
+	for (int32 c = 0; c < 32; c++) {
+		if (_vm->getCharacter(c) && _vm->getCharacter(c)->getAnimationInstance() == sceneAnim->_originalAnimInstance) {
+			_vm->getCharacter(c)->setAnimationInstance(NULL);
+		}
+	}
+	delete sceneAnim->_originalAnimInstance;
+	sceneAnim->_originalAnimInstance = NULL;
+	sceneAnim->_animInstance = NULL;
 	return 0;
 }
 

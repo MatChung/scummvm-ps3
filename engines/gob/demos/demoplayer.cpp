@@ -19,12 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/demos/demoplayer.cpp $
- * $Id: demoplayer.cpp 53491 2010-10-15 13:55:18Z drmccoy $
+ * $Id: demoplayer.cpp 55262 2011-01-16 16:29:19Z drmccoy $
  *
  */
 
 #include "common/endian.h"
 #include "common/file.h"
+#include "common/memstream.h"
 
 #include "gob/gob.h"
 #include "gob/demos/demoplayer.h"
@@ -155,6 +156,8 @@ void DemoPlayer::playVideo(const char *fileName) {
 
 	props.x = _rebase0 ? 0 : -1;
 	props.y = _rebase0 ? 0 : -1;
+
+	props.switchColorMode = true;
 
 	int slot;
 	if ((slot = _vm->_vidPlayer->openVideo(true, file, props)) >= 0) {

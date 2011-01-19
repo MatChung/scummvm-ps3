@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/midi/seq.cpp $
- * $Id: seq.cpp 53961 2010-10-30 21:27:42Z fingolfin $
+ * $Id: seq.cpp 55248 2011-01-15 09:43:02Z thebluegr $
  */
 
 /*
@@ -147,7 +147,7 @@ void MidiDriver_SEQ::send(uint32 b) {
 		warning("MidiDriver_SEQ::send: unknown : %08x", (int)b);
 		break;
 	}
-	(void)write(device, buf, position);
+	write(device, buf, position);
 }
 
 void MidiDriver_SEQ::sysEx (const byte *msg, uint16 length) {
@@ -172,7 +172,7 @@ void MidiDriver_SEQ::sysEx (const byte *msg, uint16 length) {
 	buf[position++] = _device_num;
 	buf[position++] = 0;
 
-	(void)write(device, buf, position);
+	write(device, buf, position);
 }
 
 

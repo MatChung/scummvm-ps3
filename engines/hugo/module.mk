@@ -11,6 +11,7 @@ MODULE_OBJS := \
 	file_v2d.o \
 	file_v3d.o \
 	file_v1w.o \
+	file_v2w.o \
 	hugo.o \
 	intro.o \
 	intro_v1d.o \
@@ -20,6 +21,7 @@ MODULE_OBJS := \
 	intro_v2w.o \
 	intro_v3w.o \
 	inventory.o \
+	menu.o \
 	mouse.o \
 	object.o \
 	object_v1d.o \

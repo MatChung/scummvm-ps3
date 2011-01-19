@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/drascula/console.h $
- * $Id: console.h 49870 2010-06-15 17:14:38Z wjpalenstijn $
+ * $Id: console.h 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -36,10 +36,6 @@ class Console : public GUI::Debugger {
 public:
 	Console(DrasculaEngine *vm);
 	virtual ~Console(void);
-
-protected:
-	virtual void preEnter();
-	virtual void postEnter();
 
 private:
 	DrasculaEngine *_vm;

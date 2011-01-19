@@ -19,14 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/message.cpp $
- * $Id: message.cpp 53114 2010-10-10 10:32:58Z strangerke $
+ * $Id: message.cpp 54265 2010-11-16 10:19:01Z fingolfin $
  */
 
 #include "common/events.h"
 #include "common/str.h"
 #include "common/system.h"
 #include "gui/message.h"
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 #include "gui/ThemeEval.h"
 #include "gui/widget.h"
 

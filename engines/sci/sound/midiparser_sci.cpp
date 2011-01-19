@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/sound/midiparser_sci.cpp $
- * $Id: midiparser_sci.cpp 52484 2010-09-01 19:20:17Z m_kiewitz $
+ * $Id: midiparser_sci.cpp 54512 2010-11-27 18:27:02Z thebluegr $
  *
  */
 
@@ -495,13 +495,28 @@ void MidiParser_SCI::parseNextEvent(EventInfo &info) {
 	case 0xB:
 		info.basic.param1 = *(_position._play_pos++);
 		info.basic.param2 = *(_position._play_pos++);
-		if (info.channel() == 0xF) {// SCI special
-			// Reference for some events:
-			// http://wiki.scummvm.org/index.php/SCI/Specifications/Sound/SCI0_Resource_Format#Status_Reference
-			// Also, sci/sound/iterator/iterator.cpp, function BaseSongIterator::parseMidiCommand()
+
+		// Reference for some events:
+		// http://wiki.scummvm.org/index.php/SCI/Specifications/Sound/SCI0_Resource_Format#Status_Reference
+		// Handle common special events
+		switch (info.basic.param1) {
+		case kSetReverb:
+			if (info.basic.param2 == 127)		// Set global reverb instead
+				_pSnd->reverb = _music->getGlobalReverb();
+			else
+				_pSnd->reverb = info.basic.param2;
+
+			((MidiPlayer *)_driver)->setReverb(_pSnd->reverb);
+			break;
+		default:
+			break;
+		}
+
+		// Handle events sent to the SCI special channel (15)
+		if (info.channel() == 0xF) {
 			switch (info.basic.param1) {
 			case kSetReverb:
-				((MidiPlayer *)_driver)->setReverb(info.basic.param2);
+				// Already handled above
 				break;
 			case kMidiHold:
 				// Check if the hold ID marker is the same as the hold ID
@@ -624,6 +639,21 @@ void MidiParser_SCI::parseNextEvent(EventInfo &info) {
 	}// switch (info.command())
 }
 
+byte MidiParser_SCI::getSongReverb() {
+	assert(_track);
+
+	if (_soundVersion >= SCI_VERSION_1_EARLY) {
+		for (int i = 0; i < _track->channelCount; i++) {
+			SoundResource::Channel &channel = _track->channels[i];
+			// Peek ahead in the control channel to get the default reverb setting
+			if (channel.number == 15 && channel.size >= 7)
+				return channel.data[6];
+		}
+	}
+
+	return 127;
+}
+
 void MidiParser_SCI::allNotesOff() {
 	if (!_driver)
 		return;
@@ -653,8 +683,10 @@ void MidiParser_SCI::allNotesOff() {
 	// support this...).
 
 	for (i = 0; i < 16; ++i) {
-		if (_channelRemap[i] != -1)
+		if (_channelRemap[i] != -1) {
 			sendToDriver(0xB0 | i, 0x7b, 0); // All notes off
+			sendToDriver(0xB0 | i, 0x40, 0); // Also send a sustain off event (bug #3116608)
+		}
 	}
 
 	memset(_active_notes, 0, sizeof(_active_notes));

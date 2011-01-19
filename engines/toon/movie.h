@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/movie.h $
-* $Id: movie.h 53549 2010-10-16 21:58:33Z sylvaintv $
+* $Id: movie.h 54219 2010-11-12 22:31:04Z sylvaintv $
 *
 */
 
@@ -34,6 +34,7 @@ namespace Toon {
 class ToonstruckSmackerDecoder : public Graphics::SmackerDecoder {
 public:
 	ToonstruckSmackerDecoder(Audio::Mixer *mixer, Audio::Mixer::SoundType soundType = Audio::Mixer::kSFXSoundType);
+	virtual ~ToonstruckSmackerDecoder() {}
 	void handleAudioTrack(byte track, uint32 chunkSize, uint32 unpackedSize);
 	bool loadFile(const Common::String &filename, int forcedflags) ;
 };
@@ -41,7 +42,7 @@ public:
 class Movie {
 public:
 	Movie(ToonEngine *vm, ToonstruckSmackerDecoder *decoder);
-	~Movie(void);
+	virtual ~Movie(void);
 
 	void init() const;
 	void play(Common::String video, int32 flags = 0);

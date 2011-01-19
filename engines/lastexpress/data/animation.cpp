@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/data/animation.cpp $
- * $Id: animation.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: animation.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -31,8 +31,12 @@
 #include "lastexpress/data/snd.h"
 
 #include "lastexpress/debug.h"
+#include "lastexpress/helpers.h"
 
 #include "common/events.h"
+#include "common/rational.h"
+#include "common/stream.h"
+
 #include "engines/engine.h"
 
 namespace LastExpress {
@@ -45,21 +49,17 @@ Animation::~Animation() {
 }
 
 void Animation::reset() {
-	delete _overlay;
-	_overlay = NULL;
-	delete _background1;
-	_background1 = NULL;
-	delete _background2;
-	_background2 = NULL;
-	delete _audio;
-	_audio = NULL;
+	SAFE_DELETE(_overlay);
+	SAFE_DELETE(_background1);
+	SAFE_DELETE(_background2);
+	SAFE_DELETE(_audio);
 
 	_backgroundCurrent = 0;
 	_chunks.clear();
 
 	_currentChunk = NULL;
 
-	delete _stream;
+	SAFE_DELETE(_stream);
 }
 
 bool Animation::load(Common::SeekableReadStream *stream, int flag) {
@@ -106,11 +106,14 @@ bool Animation::process() {
 	if (_stream == NULL || _chunks.size() == 0)
 		error("Trying to show an animation before loading data");
 
-	// TODO: substract the time paused by the GUI
-	uint32 currentFrame = (uint32)(((float)(g_engine->_system->getMillis() - _startTime)) / 33.33f);
+	// TODO: - subtract the time paused by the GUI
+	//       - Re-implement to be closer to the original engine
+	//       - Add support for subtitles
+	//       - Use engine sound queue instead of our own appendable sound instance
+	int32 currentFrame = (g_engine->_system->getMillis() - _startTime) * 3 / 100;
 
 	// Process all chunks until the current frame
-	while (!_changed && currentFrame > _currentChunk->frame && !hasEnded()) {
+	while (!_changed && _currentChunk != NULL && currentFrame > _currentChunk->frame && !hasEnded()) {
 		switch(_currentChunk->type) {
 		//TODO: some info chunks are probably subtitle/sync related
 		case kChunkTypeUnknown1:
@@ -222,7 +225,7 @@ AnimFrame *Animation::processChunkFrame(Common::SeekableReadStream *in, const Ch
 	assert (c.frame == 0);
 
 	// Create a temporary chunk buffer
-	Common::MemoryReadStream *str = in->readStream(c.size);
+	Common::SeekableReadStream *str = in->readStream(c.size);
 
 	// Read the frame information
 	FrameInfo i;

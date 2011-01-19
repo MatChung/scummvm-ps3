@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/inter_v4.cpp $
- * $Id: inter_v4.cpp 53491 2010-10-15 13:55:18Z drmccoy $
+ * $Id: inter_v4.cpp 55289 2011-01-18 07:03:42Z drmccoy $
  *
  */
 
@@ -184,16 +184,19 @@ void Inter_v4::o4_playVmdOrMusic() {
 		if (_vm->_mult->_objects[props.startFrame].videoSlot > 0)
 			_vm->_vidPlayer->closeVideo(_vm->_mult->_objects[props.startFrame].videoSlot - 1);
 
+		uint32 x = props.x;
+		uint32 y = props.y;
+
 		int slot = _vm->_vidPlayer->openVideo(false, fileName, props);
 
 		_vm->_mult->_objects[props.startFrame].videoSlot = slot + 1;
 
-		if (props.x == -1) {
+		if (x == 0xFFFFFFFF) {
 			*_vm->_mult->_objects[props.startFrame].pPosX = _vm->_vidPlayer->getDefaultX(slot);
 			*_vm->_mult->_objects[props.startFrame].pPosY = _vm->_vidPlayer->getDefaultY(slot);
 		} else {
-			*_vm->_mult->_objects[props.startFrame].pPosX = props.x;
-			*_vm->_mult->_objects[props.startFrame].pPosY = props.y;
+			*_vm->_mult->_objects[props.startFrame].pPosX = x;
+			*_vm->_mult->_objects[props.startFrame].pPosY = y;
 		}
 
 		return;

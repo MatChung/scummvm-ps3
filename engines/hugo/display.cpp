@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/display.cpp $
- * $Id: display.cpp 54103 2010-11-07 00:02:48Z strangerke $
+ * $Id: display.cpp 55168 2011-01-08 17:26:39Z strangerke $
  *
  */
 
@@ -33,14 +33,15 @@
 // Display.c - DIB related code for HUGOWIN
 
 #include "common/system.h"
+#include "graphics/cursorman.h"
 
 #include "hugo/hugo.h"
 #include "hugo/display.h"
+#include "hugo/inventory.h"
 #include "hugo/util.h"
 
 namespace Hugo {
 
-#define NUM_COLORS  16              // Num colors to save in palette
 #define DMAX            16              // Size of add/restore rect lists
 #define BMAX                (DMAX * 2)  // Size of dirty rect blit list
 
@@ -48,20 +49,27 @@ namespace Hugo {
 #define INY(Y, B) (Y >= B->y && Y <= B->y + B->dy)
 #define OVERLAP(A, B) ((INX(A->x, B) || INX(A->x + A->dx, B) || INX(B->x, A) || INX(B->x + B->dx, A)) && (INY(A->y, B) || INY(A->y + A->dy, B) || INY(B->y, A) || INY(B->y + B->dy, A)))
 
-Screen::Screen(HugoEngine *vm) : _vm(vm), _palette(0) {
-	for (int j = 0; j < NUM_FONTS; j++) {
-		_arrayFont[j] = 0;
-		fontLoadedFl[j] = false;
+Screen::Screen(HugoEngine *vm) : _vm(vm), _mainPalette(0), _curPalette(0) {
+	for (int i = 0; i < NUM_FONTS; i++) {
+		_arrayFont[i] = 0;
+		fontLoadedFl[i] = false;
 	}
 }
 
 Screen::~Screen() {
 }
 
+/**
+* Replace the palette by the main palette
+*/
 void Screen::createPal() {
 	debugC(1, kDebugDisplay, "createPal");
 
-	g_system->setPalette(_palette, 0, NUM_COLORS);
+	g_system->setPalette(_mainPalette, 0, NUM_COLORS);
+}
+
+void Screen::setCursorPal() {
+	CursorMan.replaceCursorPalette(_curPalette, 0, _paletteSize / 4);
 }
 
 /**
@@ -75,7 +83,7 @@ void Screen::initDisplay() {
 /**
 * Move an image from source to destination
 */
-void Screen::moveImage(image_pt srcImage, uint16 x1, uint16 y1, uint16 dx, uint16 dy, uint16 width1, image_pt dstImage, uint16 x2, uint16 y2, uint16 width2) {
+void Screen::moveImage(image_pt srcImage, int16 x1, int16 y1, int16 dx, int16 dy, int16 width1, image_pt dstImage, int16 x2, int16 y2, int16 width2) {
 	debugC(3, kDebugDisplay, "moveImage(srcImage, %d, %d, %d, %d, %d, dstImage, %d, %d, %d)", x1, y1, dx, dy, width1, x2, y2, width2);
 
 	int16 wrap_src = width1 - dx;                   // Wrap to next src row
@@ -104,47 +112,69 @@ void Screen::displayBackground() {
 void Screen::displayRect(int16 x, int16 y, int16 dx, int16 dy) {
 	debugC(3, kDebugDisplay, "displayRect(%d, %d, %d, %d)", x, y, dx, dy);
 
-	g_system->copyRectToScreen(&_frontBuffer[x + y * 320], 320, x, y, dx, dy);
+	int16 xClip, yClip;
+	xClip = CLIP<int16>(x, 0, 320);
+	yClip = CLIP<int16>(y, 0, 200);
+	g_system->copyRectToScreen(&_frontBuffer[x + y * 320], 320, xClip, yClip, CLIP<int16>(dx, 0, 320 - x), CLIP<int16>(dy, 0, 200 - y));
 }
 
 /**
-* Change a color by remapping supplied palette index with new index
+* Change a color by remapping supplied palette index with new index in main palette.
+* Alse save the new color in the current palette.
 */
 void Screen::remapPal(uint16 oldIndex, uint16 newIndex) {
 	debugC(1, kDebugDisplay, "Remap_pal(%d, %d)", oldIndex, newIndex);
 
 	byte pal[4];
 
-	pal[0] = _palette[newIndex * 4 + 0];
-	pal[1] = _palette[newIndex * 4 + 1];
-	pal[2] = _palette[newIndex * 4 + 2];
-	pal[3] = _palette[newIndex * 4 + 3];
+	pal[0] = _curPalette[4 * oldIndex + 0] = _mainPalette[newIndex * 4 + 0];
+	pal[1] = _curPalette[4 * oldIndex + 1] = _mainPalette[newIndex * 4 + 1];
+	pal[2] = _curPalette[4 * oldIndex + 2] = _mainPalette[newIndex * 4 + 2];
+	pal[3] = _curPalette[4 * oldIndex + 3] = _mainPalette[newIndex * 4 + 3];
 
 	g_system->setPalette(pal, oldIndex, 1);
 }
 
+/**
+* Saves the current palette in a savegame
+*/
 void Screen::savePal(Common::WriteStream *f) {
 	debugC(1, kDebugDisplay, "savePal");
 
-	warning("STUB: savePal()");
-	//fwrite(bminfo.bmiColors, sizeof(bminfo.bmiColors), 1, f);
+	for (int i = 0; i < _paletteSize; i++)
+		f->writeByte(_curPalette[i]);
 }
 
+/**
+* Restore the current palette from a savegame
+*/
 void Screen::restorePal(Common::SeekableReadStream *f) {
 	debugC(1, kDebugDisplay, "restorePal");
 
-	warning("STUB: restorePal()");
-	//fread(bminfo.bmiColors, sizeof(bminfo.bmiColors), 1, f);
+	byte pal[4];
+
+	for (int i = 0; i < _paletteSize; i++)
+		_curPalette[i] = f->readByte();
+
+	for (int i = 0; i < _paletteSize / 4; i++) {
+		pal[0] = _curPalette[i * 4 + 0];
+		pal[1] = _curPalette[i * 4 + 1];
+		pal[2] = _curPalette[i * 4 + 2];
+		pal[3] = _curPalette[i * 4 + 3];
+		g_system->setPalette(pal, i, 1);
+	}
 }
 
 
 /**
-* Set the new background color
+* Set the new background color.
+* This implementation gives the same result than the DOS version.
+* It wasn't implemented in the Win version
 */
 void Screen::setBackgroundColor(long color) {
 	debugC(1, kDebugDisplay, "setBackgroundColor(%ld)", color);
 
-	// How???  Translate existing pixels in dib before objects rendered?
+	remapPal(0, color);
 }
 
 /**
@@ -413,8 +443,9 @@ void Screen::shadowStr(int16 sx, int16 sy, const char *s, byte color) {
 	writeStr(sx, sy, s, color);
 }
 
-/** Introduce user to the game
-* DOS versions Only
+/**
+* Introduce user to the game. In the original games, it was only
+* present in the DOS versions
 */
 void Screen::userHelp() {
 	Utils::Box(BOX_ANY , "%s",
@@ -435,7 +466,7 @@ void Screen::drawStatusText() {
 
 	loadFont(U_FONT8);
 	uint16 sdx = stringLength(_vm->_statusLine);
-	uint16 sdy = fontHeight() + 1;                 // + 1 for shadow
+	uint16 sdy = fontHeight() + 1;                  // + 1 for shadow
 	uint16 posX = 0;
 	uint16 posY = YPIX - sdy;
 
@@ -464,7 +495,7 @@ void Screen::drawShape(int x, int y, int color1, int color2) {
 	}
 }
 
-void Screen::drawRectangle(bool filledFl, uint16 x1, uint16 y1, uint16 x2, uint16 y2, int color) {
+void Screen::drawRectangle(bool filledFl, int16 x1, int16 y1, int16 x2, int16 y2, int color) {
 	assert(x1 <= x2);
 	assert(y1 <= y2);
 
@@ -498,16 +529,18 @@ void Screen::initNewScreenDisplay() {
 void Screen::loadPalette(Common::File &in) {
 	// Read palette
 	_paletteSize = in.readUint16BE();
-	_palette = (byte *)malloc(sizeof(byte) * _paletteSize);
+	_mainPalette = (byte *)malloc(sizeof(byte) * _paletteSize);
+	_curPalette = (byte *)malloc(sizeof(byte) * _paletteSize);
 	for (int i = 0; i < _paletteSize; i++)
-		_palette[i] = in.readByte();
+		_curPalette[i] = _mainPalette[i] = in.readByte();
 }
 
 /**
-* Free palette
+* Free main and current palettes
 */
 void Screen::freePalette() {
-	free(_palette);
+	free(_curPalette);
+	free(_mainPalette);
 }
 
 /**
@@ -518,6 +551,48 @@ void Screen::freeFonts() {
 		if (_arrayFont[i])
 			free(_arrayFont[i]);
 	}
+}
+
+void Screen::selectInventoryObjId(int16 objId) {
+
+	status_t &gameStatus = _vm->getGameStatus();
+
+	gameStatus.inventoryObjId = objId;              // Select new object
+
+	// Find index of icon
+	int16 iconId;                                   // Find index of dragged icon
+	for (iconId = 0; iconId < _vm->_maxInvent; iconId++) {
+		if (gameStatus.inventoryObjId == _vm->_invent[iconId])
+			break;
+	}
+
+	// Compute source coordinates in dib_u
+	int16 ux = (iconId + NUM_ARROWS) * INV_DX % XPIX;
+	int16 uy = (iconId + NUM_ARROWS) * INV_DX / XPIX * INV_DY;
+
+	// Copy the icon and add to display list
+	moveImage(getGUIBuffer(), ux, uy, INV_DX, INV_DY, XPIX, _iconImage, 0, 0, 32);
+
+	for (int i = 0; i < stdMouseCursorHeight; i++) {
+		for (int j = 0; j < stdMouseCursorWidth; j++) {
+			_iconImage[(i * INV_DX) + j] = (stdMouseCursor[(i * stdMouseCursorWidth) + j] == 1) ? _iconImage[(i * INV_DX) + j] : stdMouseCursor[(i * stdMouseCursorWidth) + j];
+		}
+	}
+
+	CursorMan.replaceCursor(_iconImage, INV_DX, INV_DY, 1, 1, 1);
+}
+
+void Screen::resetInventoryObjId() {
+	_vm->getGameStatus().inventoryObjId = -1;       // Unselect object
+	CursorMan.replaceCursor(stdMouseCursor, stdMouseCursorWidth, stdMouseCursorHeight, 1, 1, 1);
+}
+
+void Screen::showCursor() {
+	CursorMan.showMouse(true);
+}
+
+void Screen::hideCursor() {
+	CursorMan.showMouse(false);
 }
 } // End of namespace Hugo
 

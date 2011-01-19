@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/console.cpp $
- * $Id: console.cpp 53985 2010-10-31 20:51:35Z drmccoy $
+ * $Id: console.cpp 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -40,12 +40,6 @@ GobConsole::GobConsole(GobEngine *vm) : GUI::Debugger(), _vm(vm) {
 }
 
 GobConsole::~GobConsole() {
-}
-
-void GobConsole::preEnter() {
-}
-
-void GobConsole::postEnter() {
 }
 
 bool GobConsole::cmd_varSize(int argc, const char **argv) {

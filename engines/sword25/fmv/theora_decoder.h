@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/fmv/theora_decoder.h $
- * $Id: theora_decoder.h 53423 2010-10-13 14:13:48Z thebluegr $
+ * $Id: theora_decoder.h 54927 2010-12-16 01:35:13Z mthreepwood $
  *
  */
 
@@ -67,7 +67,7 @@ public:
 	 * @note the return surface should *not* be freed
 	 * @note this may return 0, in which case the last frame should be kept on screen
 	 */
-	Graphics::Surface *decodeNextFrame();
+	const Graphics::Surface *decodeNextFrame();
 
 	bool isVideoLoaded() const {
 		return _fileStream != 0;

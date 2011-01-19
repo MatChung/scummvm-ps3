@@ -19,14 +19,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/segment.cpp $
- * $Id: segment.cpp 54011 2010-11-01 16:04:47Z fingolfin $
+ * $Id: segment.cpp 55086 2011-01-01 12:48:12Z thebluegr $
  *
  */
 
 #include "common/endian.h"
 
 #include "sci/sci.h"
+#include "sci/engine/kernel.h"
 #include "sci/engine/features.h"
+#include "sci/engine/object.h"
 #include "sci/engine/script.h"	// for SCI_OBJ_EXPORTS and SCI_OBJ_SYNONYMS
 #include "sci/engine/segment.h"
 #include "sci/engine/seg_manager.h"
@@ -49,9 +51,6 @@ SegmentObj *SegmentObj::createSegmentObj(SegmentType type) {
 		break;
 	case SEG_TYPE_LOCALS:
 		mem = new LocalVariables();
-		break;
-	case SEG_TYPE_SYS_STRINGS:
-		mem = new SystemStrings();
 		break;
 	case SEG_TYPE_STACK:
 		mem = new DataStack();
@@ -97,9 +96,6 @@ const char *SegmentObj::getSegmentTypeName(SegmentType type) {
 	case SEG_TYPE_LOCALS:
 		return "locals";
 		break;
-	case SEG_TYPE_SYS_STRINGS:
-		return "strings";
-		break;
 	case SEG_TYPE_STACK:
 		return "stack";
 		break;
@@ -128,30 +124,6 @@ const char *SegmentObj::getSegmentTypeName(SegmentType type) {
 		break;
 	}
 	return NULL;
-}
-
-// This helper function is used by Script::relocateLocal and Object::relocate
-// Duplicate in segment.cpp and script.cpp
-static bool relocateBlock(Common::Array<reg_t> &block, int block_location, SegmentId segment, int location, size_t scriptSize) {
-	int rel = location - block_location;
-
-	if (rel < 0)
-		return false;
-
-	uint idx = rel >> 1;
-
-	if (idx >= block.size())
-		return false;
-
-	if (rel & 1) {
-		error("Attempt to relocate odd variable #%d.5e (relative to %04x)\n", idx, block_location);
-		return false;
-	}
-	block[idx].segment = segment; // Perform relocation
-	if (getSciVersion() >= SCI_VERSION_1_1)
-		block[idx].offset += scriptSize;
-
-	return true;
 }
 
 SegmentRef SegmentObj::dereference(reg_t pointer) {
@@ -223,28 +195,6 @@ SegmentRef DynMem::dereference(reg_t pointer) {
 	return ret;
 }
 
-bool SystemStrings::isValidOffset(uint16 offset) const {
-	return offset < SYS_STRINGS_MAX && !_strings[offset]._name.empty();
-}
-
-SegmentRef SystemStrings::dereference(reg_t pointer) {
-	SegmentRef ret;
-	ret.isRaw = true;
-	ret.maxSize = _strings[pointer.offset]._maxSize;
-	if (isValidOffset(pointer.offset))
-		ret.raw = (byte *)(_strings[pointer.offset]._value);
-	else {
-		if (g_sci->getGameId() == GID_KQ5) {
-			// This occurs in KQ5CD when interacting with certain objects
-		} else {
-			error("SystemStrings::dereference(): Attempt to dereference invalid pointer %04x:%04x", PRINT_REG(pointer));
-		}
-	}
-
-	return ret;
-}
-
-
 //-------------------- clones --------------------
 
 Common::Array<reg_t> CloneTable::listAllOutgoingReferences(reg_t addr) const {
@@ -263,7 +213,7 @@ Common::Array<reg_t> CloneTable::listAllOutgoingReferences(reg_t addr) const {
 
 	// Note that this also includes the 'base' object, which is part of the script and therefore also emits the locals.
 	tmp.push_back(clone->getPos());
-	//debugC(2, kDebugLevelGC, "[GC] Reporting clone-pos %04x:%04x", PRINT_REG(clone->pos));
+	//debugC(kDebugLevelGC, "[GC] Reporting clone-pos %04x:%04x", PRINT_REG(clone->pos));
 
 	return tmp;
 }
@@ -367,117 +317,6 @@ Common::Array<reg_t> NodeTable::listAllOutgoingReferences(reg_t addr) const {
 	tmp.push_back(node->value);
 
 	return tmp;
-}
-
-
-//-------------------- hunk --------------------
-
-//-------------------- object ----------------------------
-
-void Object::init(byte *buf, reg_t obj_pos, bool initVariables) {
-	byte *data = buf + obj_pos.offset;
-	_baseObj = data;
-	_pos = obj_pos;
-
-	if (getSciVersion() < SCI_VERSION_1_1) {
-		_variables.resize(READ_LE_UINT16(data + kOffsetSelectorCounter));
-		_baseVars = (const uint16 *)(_baseObj + _variables.size() * 2);
-		_baseMethod = (const uint16 *)(data + READ_LE_UINT16(data + kOffsetFunctionArea));
-		_methodCount = READ_LE_UINT16(_baseMethod - 1);
-	} else {
-		_variables.resize(READ_SCI11ENDIAN_UINT16(data + 2));
-		_baseVars = (const uint16 *)(buf + READ_SCI11ENDIAN_UINT16(data + 4));
-		_baseMethod = (const uint16 *)(buf + READ_SCI11ENDIAN_UINT16(data + 6));
-		_methodCount = READ_SCI11ENDIAN_UINT16(_baseMethod);
-	}
-
-	if (initVariables) {
-		for (uint i = 0; i < _variables.size(); i++)
-			_variables[i] = make_reg(0, READ_SCI11ENDIAN_UINT16(data + (i * 2)));
-	}
-}
-
-const Object *Object::getClass(SegManager *segMan) const {
-	return isClass() ? this : segMan->getObject(getSuperClassSelector());
-}
-
-int Object::locateVarSelector(SegManager *segMan, Selector slc) const {
-	const byte *buf;
-	uint varnum;
-
-	if (getSciVersion() < SCI_VERSION_1_1) {
-		varnum = getVarCount();
-		int selector_name_offset = varnum * 2 + kOffsetSelectorSegment;
-		buf = _baseObj + selector_name_offset;
-	} else {
-		const Object *obj = getClass(segMan);
-		varnum = obj->getVariable(1).toUint16();
-		buf = (const byte *)obj->_baseVars;
-	}
-
-	for (uint i = 0; i < varnum; i++)
-		if (READ_SCI11ENDIAN_UINT16(buf + (i << 1)) == slc) // Found it?
-			return i; // report success
-
-	return -1; // Failed
-}
-
-bool Object::relocate(SegmentId segment, int location, size_t scriptSize) {
-	return relocateBlock(_variables, getPos().offset, segment, location, scriptSize);
-}
-
-int Object::propertyOffsetToId(SegManager *segMan, int propertyOffset) const {
-	int selectors = getVarCount();
-
-	if (propertyOffset < 0 || (propertyOffset >> 1) >= selectors) {
-		error("Applied propertyOffsetToId to invalid property offset %x (property #%d not in [0..%d])",
-		          propertyOffset, propertyOffset >> 1, selectors - 1);
-		return -1;
-	}
-
-	if (getSciVersion() < SCI_VERSION_1_1) {
-		const byte *selectoroffset = ((const byte *)(_baseObj)) + kOffsetSelectorSegment + selectors * 2;
-		return READ_SCI11ENDIAN_UINT16(selectoroffset + propertyOffset);
-	} else {
-		const Object *obj = this;
-		if (!isClass())
-			obj = segMan->getObject(getSuperClassSelector());
-
-		return READ_SCI11ENDIAN_UINT16((const byte *)obj->_baseVars + propertyOffset);
-	}
-}
-
-void Object::initSpecies(SegManager *segMan, reg_t addr) {
-	uint16 speciesOffset = getSpeciesSelector().offset;
-
-	if (speciesOffset == 0xffff)		// -1
-		setSpeciesSelector(NULL_REG);	// no species
-	else
-		setSpeciesSelector(segMan->getClassAddress(speciesOffset, SCRIPT_GET_LOCK, addr));
-}
-
-void Object::initSuperClass(SegManager *segMan, reg_t addr) {
-	uint16 superClassOffset = getSuperClassSelector().offset;
-
-	if (superClassOffset == 0xffff)			// -1
-		setSuperClassSelector(NULL_REG);	// no superclass
-	else
-		setSuperClassSelector(segMan->getClassAddress(superClassOffset, SCRIPT_GET_LOCK, addr));
-}
-
-bool Object::initBaseObject(SegManager *segMan, reg_t addr, bool doInitSuperClass) {
-	const Object *baseObj = segMan->getObject(getSpeciesSelector());
-
-	if (baseObj) {
-		_variables.resize(baseObj->getVarCount());
-		// Copy base from species class, as we need its selector IDs
-		_baseObj = baseObj->_baseObj;
-		if (doInitSuperClass)
-			initSuperClass(segMan, addr);
-		return true;
-	}
-
-	return false;
 }
 
 //-------------------- dynamic memory --------------------

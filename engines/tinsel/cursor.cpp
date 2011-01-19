@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/cursor.cpp $
- * $Id: cursor.cpp 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: cursor.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * Cursor and cursor trails.
  */
@@ -56,6 +56,8 @@ namespace Tinsel {
 
 
 //----------------- LOCAL GLOBAL DATA --------------------
+
+// FIXME: Avoid non-const global vars
 
 static OBJECT *McurObj = NULL;		// Main cursor object
 static OBJECT *AcurObj = NULL;		// Auxiliary cursor object

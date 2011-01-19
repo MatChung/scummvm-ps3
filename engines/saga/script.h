@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/script.h $
- * $Id: script.h 53779 2010-10-24 22:17:44Z h00ligan $
+ * $Id: script.h 54323 2010-11-18 16:38:03Z fingolfin $
  *
  */
 
@@ -270,7 +270,7 @@ public:
 
 typedef Common::List<ScriptThread> ScriptThreadList;
 
-#define SCRIPTOP_PARAMS ScriptThread *thread, MemoryReadStream *scriptS, bool &stopParsing, bool &breakOut
+#define SCRIPTOP_PARAMS ScriptThread *thread, Common::SeekableReadStream *scriptS, bool &stopParsing, bool &breakOut
 #define SCRIPTFUNC_PARAMS ScriptThread *thread, int nArgs, bool &disContinue
 #define OPCODE(x) {&Script::x, #x}
 

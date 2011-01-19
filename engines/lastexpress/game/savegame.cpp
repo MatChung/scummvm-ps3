@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/savegame.cpp $
- * $Id: savegame.cpp 53883 2010-10-27 19:20:20Z littleboy $
+ * $Id: savegame.cpp 54368 2010-11-19 10:55:56Z littleboy $
  *
  */
 
@@ -124,7 +124,7 @@ uint32 SaveLoad::init(GameId id, bool resetHeaders) {
 
 	// Read the list of entry headers
 	if (_savegame->size() > 32) {
-		while (!_savegame->eos() && !_savegame->err()) {
+		while (_savegame->pos() < _savegame->size() && !_savegame->eos() && !_savegame->err()) {
 
 			// Update sound queue while we go through the savegame
 			getSound()->updateQueue();
@@ -156,6 +156,8 @@ void SaveLoad::loadStream(GameId id) {
 	// Load all savegame data
 	uint8* buf = new uint8[8192];
 	while (!save->eos() && !save->err()) {
+		_engine->pollEvents();
+
 		uint32 count = save->read(buf, sizeof(buf));
 		if (count) {
 			uint32 w = _savegame->write(buf, count);
@@ -485,7 +487,10 @@ bool SaveLoad::isSavegameValid(GameId id) {
 	SavegameMainHeader header;
 
 	Common::InSaveFile *save = openForLoading(id);
-	return loadMainHeader(save, &header);
+	bool isHeaderValid = loadMainHeader(save, &header);
+	delete save;
+
+	return isHeaderValid;
 }
 
 bool SaveLoad::isGameFinished(uint32 menuIndex, uint32 savegameIndex) {

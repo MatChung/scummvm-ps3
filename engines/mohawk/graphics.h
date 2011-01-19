@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/graphics.h $
- * $Id: graphics.h 52661 2010-09-09 17:27:02Z mthreepwood $
+ * $Id: graphics.h 55301 2011-01-18 16:18:10Z mthreepwood $
  *
  */
 
@@ -27,88 +27,117 @@
 #define MOHAWK_GRAPHICS_H
 
 #include "mohawk/bitmap.h"
-#include "mohawk/livingbooks.h"
 
 #include "common/file.h"
+#include "common/hashmap.h"
 #include "graphics/pict.h"
-#include "graphics/video/codecs/mjpeg.h"
+
+namespace Graphics {
+
+class JPEG;
+
+}
 
 namespace Mohawk {
 
+class MohawkEngine;
 class MohawkEngine_Myst;
 class MohawkEngine_Riven;
+class MohawkEngine_LivingBooks;
 class MohawkBitmap;
 class MystBitmap;
 
-enum {
-	kRivenOpenHandCursor = 2003,
-	kRivenClosedHandCursor = 2004,
-	kRivenMainCursor = 3000,
-	kRivenPelletCursor = 5000,
-	kRivenHideCursor = 9000
+enum RectState{
+	kRectEnabled,
+	kRectDisabled,
+	kRectUnreachable
 };
 
-// 803-805 are animated, one large bmp which is in chunks
-// Other cursors (200, 300, 400, 500, 600, 700) are not the same in each stack
-enum {
-	kDefaultMystCursor = 100,				// The default hand
-	kWhitePageCursor = 800,					// Holding a white page
-	kRedPageCursor = 801,					// Holding a red page
-	kBluePageCursor = 802,					// Holding a blue page
-	// kDroppingWhitePageAnimCursor = 803,
-	// kDroppingRedPageAnimCursor = 804,
-	// kDroppingBluePageAnimCursor = 805,
-	kNewMatchCursor = 900,					// Match that has not yet been lit
-	kLitMatchCursor = 901,					// Match that's burning
-	kDeadMatchCursor = 902,					// Match that's been extinguished
-	kKeyCursor = 903, 						// Key in Lighthouse in Stoneship
-	kRotateClockwiseCursor = 904, 			// Rotate gear clockwise (boiler on Myst)
-	kRotateCounterClockwiseCursor = 905,	// Rotate gear counter clockwise (boiler on Myst)
-	kMystZipModeCursor = 999				// Zip Mode cursor
-};
-
-// A simple struct to hold necessary image info
-class ImageData {
+class MohawkSurface {
 public:
-	ImageData() : _surface(0), _palette(0) {}
-	ImageData(Graphics::Surface *surface, byte *palette = NULL) : _surface(surface), _palette(palette) {}
-	~ImageData() {
-		if (_palette)
-			free(_palette);
-		if (_surface) {
-			_surface->free();
-			delete _surface;
-		}
-	}
+	MohawkSurface();
+	MohawkSurface(Graphics::Surface *surface, byte *palette = NULL, int offsetX = 0, int offsetY = 0);
+	~MohawkSurface();
 
-	// getSurface() will convert to the current screen format, if it's not already
-	// in that format. Makes it easy to support both 8bpp and 24bpp images.
-	Graphics::Surface *getSurface();
+	// getSurface() returns the surface in the current format
+	// This will be the initial format unless convertToTrueColor() is called
+	Graphics::Surface *getSurface() const { return _surface; }
+	byte *getPalette() const { return _palette; }
 
-	// These are still public in case the 8bpp surface needs to be accessed
+	// Convert the 8bpp image to the current screen format
+	// Does nothing if _surface is already >8bpp
+	void convertToTrueColor();
+
+	// Functions for OldMohawkBitmap offsets
+	// They both default to 0
+	int getOffsetX() const { return _offsetX; }
+	int getOffsetY() const { return _offsetY; }
+	void setOffsetX(int x) { _offsetX = x; }
+	void setOffsetY(int y) { _offsetY = y; }
+
+private:
 	Graphics::Surface *_surface;
 	byte *_palette;
+	int _offsetX, _offsetY;
 };
 
-class MystGraphics {
+class GraphicsManager {
+public:
+	GraphicsManager();
+	virtual ~GraphicsManager();
+
+	// Free all surfaces in the cache
+	void clearCache();
+
+	void preloadImage(uint16 image);
+	virtual void setPalette(uint16 id);
+	void copyAnimImageToScreen(uint16 image, int left = 0, int top = 0);
+	void copyAnimImageSectionToScreen(uint16 image, Common::Rect src, Common::Rect dest);
+	void copyAnimSubImageToScreen(uint16 image, uint16 subimage, int left = 0, int top = 0);
+
+protected:
+	void copyAnimImageSectionToScreen(MohawkSurface *image, Common::Rect src, Common::Rect dest);
+
+	// findImage will search the cache to find the image.
+	// If not found, it will call decodeImage to get a new one.
+	MohawkSurface *findImage(uint16 id);
+
+	// decodeImage will always return a new image.
+	virtual MohawkSurface *decodeImage(uint16 id) = 0;
+	virtual Common::Array<MohawkSurface *> decodeImages(uint16 id);
+
+	virtual MohawkEngine *getVM() = 0;
+
+private:
+	// An image cache that stores images until clearCache() is called
+	Common::HashMap<uint16, MohawkSurface*> _cache;
+	Common::HashMap<uint16, Common::Array<MohawkSurface*> > _subImageCache;
+};
+
+class MystGraphics : public GraphicsManager {
 public:
 	MystGraphics(MohawkEngine_Myst*);
 	~MystGraphics();
 
 	void loadExternalPictureFile(uint16 stack);
 	void copyImageSectionToScreen(uint16 image, Common::Rect src, Common::Rect dest);
+	void copyImageSectionToBackBuffer(uint16 image, Common::Rect src, Common::Rect dest);
 	void copyImageToScreen(uint16 image, Common::Rect dest);
-	void showCursor();
-	void hideCursor();
-	void changeCursor(uint16);
+	void copyImageToBackBuffer(uint16 image, Common::Rect dest);
+	void copyBackBufferToScreen(Common::Rect r);
+	void runTransition(uint16 type, Common::Rect rect, uint16 steps, uint16 delay);
+	void drawRect(Common::Rect rect, RectState state);
+	void drawLine(const Common::Point &p1, const Common::Point &p2, uint32 color);
 
-	void drawRect(Common::Rect rect, bool active);
+protected:
+	MohawkSurface *decodeImage(uint16 id);
+	MohawkEngine *getVM() { return (MohawkEngine *)_vm; }
+
 private:
 	MohawkEngine_Myst *_vm;
 	MystBitmap *_bmpDecoder;
 	Graphics::PictDecoder *_pictDecoder;
-	Graphics::JPEGDecoder *_jpegDecoder;
-	Graphics::PixelFormat _pixelFormat;
+	Graphics::JPEG *_jpegDecoder;
 
 	struct PictureFile {
 		uint32 pictureCount;
@@ -123,6 +152,10 @@ private:
 
 		Common::File picFile;
 	} _pictureFile;
+
+	Graphics::Surface *_backBuffer;
+	Graphics::PixelFormat _pixelFormat;
+	Common::Rect _viewport;
 };
 
 struct SFXERecord {
@@ -137,15 +170,14 @@ struct SFXERecord {
 	uint32 lastFrameTime;
 };
 
-class RivenGraphics {
+class RivenGraphics : public GraphicsManager {
 public:
 	RivenGraphics(MohawkEngine_Riven *vm);
 	~RivenGraphics();
 
 	void copyImageToScreen(uint16, uint32, uint32, uint32, uint32);
-	void updateScreen();
+	void updateScreen(Common::Rect updateRect = Common::Rect(0, 0, 608, 392));
 	bool _updatesEnabled;
-	void changeCursor(uint16);
 	Common::Array<uint16> _activatedPLSTs;
 	void drawPLST(uint16 x);
 	void drawRect(Common::Rect rect, bool active);
@@ -164,6 +196,10 @@ public:
 	// Inventory
 	void showInventory();
 	void hideInventory();
+
+protected:
+	MohawkSurface *decodeImage(uint16 id);
+	MohawkEngine *getVM() { return (MohawkEngine *)_vm; }
 
 private:
 	MohawkEngine_Riven *_vm;
@@ -187,18 +223,22 @@ private:
 	Graphics::PixelFormat _pixelFormat;
 };
 
-class LBGraphics {
+class LBGraphics : public GraphicsManager {
 public:
-	LBGraphics(MohawkEngine_LivingBooks *vm);
+	LBGraphics(MohawkEngine_LivingBooks *vm, uint16 width, uint16 height);
 	~LBGraphics();
 
-	void copyImageToScreen(uint16 image, uint16 left = 0, uint16 top = 0);
 	void setPalette(uint16 id);
+	void copyOffsetAnimImageToScreen(uint16 image, int left = 0, int top = 0);
+	bool imageIsTransparentAt(uint16 image, bool useOffsets, int x, int y);
+
+protected:
+	MohawkSurface *decodeImage(uint16 id);
+	MohawkEngine *getVM() { return (MohawkEngine *)_vm; }
 
 private:
 	MohawkBitmap *_bmpDecoder;
 	MohawkEngine_LivingBooks *_vm;
-	byte *_palette;
 };
 
 } // End of namespace Mohawk

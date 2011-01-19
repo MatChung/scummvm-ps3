@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lure/menu.cpp $
- * $Id: menu.cpp 48412 2010-03-27 22:00:16Z dreammaster $
+ * $Id: menu.cpp 54747 2010-12-03 09:23:56Z anotherguest $
  *
  */
 
@@ -584,12 +584,12 @@ uint16 PopupMenu::Show(int numEntries, const char *actions[]) {
 			} else if (e.type() == Common::EVENT_LBUTTONDOWN || e.type() == Common::EVENT_MOUSEMOVE) {
 				int16 x = mouse.x();
 				int16 y = mouse.y() - yMiddle + (s->height() / 2);
+				refreshFlag = true;
+
 				if (r.contains(x, y)) {
 					selectedIndex = (y - r.top) / FONT_HEIGHT;
 					if (e.type() == Common::EVENT_LBUTTONDOWN)
 						goto bail_out;
-					else
-						refreshFlag = true;
 				}
 #else
 			} else if ((e.type() == Common::EVENT_LBUTTONDOWN) ||
@@ -629,6 +629,8 @@ uint16 PopupMenu::Show(int numEntries, const char *actions[]) {
 	}
 
 bail_out:
+	delete s;
+
 #ifndef LURE_CLICKABLE_MENUS
 	mouse.setPosition(oldX, oldY);
 	mouse.cursorOn();

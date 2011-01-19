@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/ThemeEngine.cpp $
- * $Id: ThemeEngine.cpp 53160 2010-10-12 02:18:11Z jvprat $
+ * $Id: ThemeEngine.cpp 54684 2010-11-30 18:50:19Z jvprat $
  *
  */
 
@@ -566,7 +566,7 @@ bool ThemeEngine::addFont(TextData textId, const Common::String &file) {
 	if (file == "default") {
 		_texts[textId]->_fontPtr = _font;
 	} else {
-		Common::String localized = genLocalizedFontFilename(file.c_str());
+		Common::String localized = genLocalizedFontFilename(file);
 		// Try built-in fonts
 		_texts[textId]->_fontPtr = FontMan.getFontByName(localized);
 
@@ -575,7 +575,7 @@ bool ThemeEngine::addFont(TextData textId, const Common::String &file) {
 			_texts[textId]->_fontPtr = loadFont(localized);
 
 			if (_texts[textId]->_fontPtr)
-				FontMan.assignFontToName(file, _texts[textId]->_fontPtr);
+				FontMan.assignFontToName(localized, _texts[textId]->_fontPtr);
 
 			// Fallback to non-localized font and default translation
 			else {
@@ -591,7 +591,9 @@ bool ThemeEngine::addFont(TextData textId, const Common::String &file) {
 
 					FontMan.assignFontToName(file, _texts[textId]->_fontPtr);
 				}
+#ifdef USE_TRANSLATION
 				TransMan.setLanguage("C");
+#endif
 				warning("Failed to load localized font '%s'. Using non-localized font and default GUI language instead", file.c_str());
 			}
 		}
@@ -1420,7 +1422,7 @@ const Graphics::Font *ThemeEngine::loadCachedFontFromArchive(const Common::Strin
 
 const Graphics::Font *ThemeEngine::loadFont(const Common::String &filename) {
 	const Graphics::Font *font = 0;
-	Common::String cacheFilename = genCacheFilename(filename.c_str());
+	Common::String cacheFilename = genCacheFilename(filename);
 	Common::File fontFile;
 
 	if (!cacheFilename.empty()) {
@@ -1455,7 +1457,7 @@ const Graphics::Font *ThemeEngine::loadFont(const Common::String &filename) {
 	return font;
 }
 
-Common::String ThemeEngine::genCacheFilename(const char *filename) {
+Common::String ThemeEngine::genCacheFilename(const Common::String &filename) const {
 	Common::String cacheName(filename);
 	for (int i = cacheName.size() - 1; i >= 0; --i) {
 		if (cacheName[i] == '.') {
@@ -1471,25 +1473,20 @@ Common::String ThemeEngine::genCacheFilename(const char *filename) {
 	return Common::String();
 }
 
-Common::String ThemeEngine::genLocalizedFontFilename(const char *filename) {
+Common::String ThemeEngine::genLocalizedFontFilename(const Common::String &filename) const {
 #ifndef USE_TRANSLATION
-	return Common::String(filename);
+	return filename;
 #else
-
 	Common::String result;
 	bool pointPassed = false;
 
-	for (const char *p = filename; *p != 0; p++) {
-		if (!pointPassed) {
-			if (*p != '.') {
-				result += *p;
-			} else {
-				result += "-";
-				result += TransMan.getCurrentCharset();
-				result += *p;
+	for (const char *p = filename.c_str(); *p != 0; p++) {
+		if (!pointPassed && *p == '.') {
+			result += "-";
+			result += TransMan.getCurrentCharset();
+			result += *p;
 
-				pointPassed = true;
-			}
+			pointPassed = true;
 		} else {
 			result += *p;
 		}

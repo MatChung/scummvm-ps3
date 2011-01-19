@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/coktel_decoder.h $
- * $Id: coktel_decoder.h 51919 2010-08-08 01:07:17Z drmccoy $
+ * $Id: coktel_decoder.h 55263 2011-01-16 16:29:43Z drmccoy $
  *
  */
 
@@ -98,6 +98,8 @@ public:
 	void enableSound();
 	void disableSound();
 
+	virtual void colorModeChanged();
+
 	/** Return the coordinates of the specified frame. */
 	virtual bool getFrameCoords(int16 frame, int16 &x, int16 &y, int16 &width, int16 &height);
 
@@ -108,10 +110,13 @@ public:
 	virtual bool hasEmbeddedFile(const Common::String &fileName) const;
 
 	/** Return that embedded file. */
-	virtual Common::MemoryReadStream *getEmbeddedFile(const Common::String &fileName) const;
+	virtual Common::SeekableReadStream *getEmbeddedFile(const Common::String &fileName) const;
 
 	/** Return the current subtitle index. */
 	virtual int32 getSubtitleIndex() const;
+
+	/** Is the video paletted or true color? */
+	virtual bool isPaletted() const;
 
 
 	// VideoDecoder interface
@@ -123,7 +128,7 @@ public:
 
 	uint32 getFrameCount() const;
 
-	byte *getPalette();
+	const byte *getPalette();
 	bool  hasDirtyPalette() const;
 
 
@@ -191,16 +196,16 @@ protected:
 	void freeSurface();
 
 	// Decompression
-	void deLZ77(byte *dest, byte *src);
+	uint32 deLZ77(byte *dest, const byte *src, uint32 srcSize, uint32 destSize);
 	void deRLE(byte *&destPtr, const byte *&srcPtr, int16 destLen, int16 srcLen);
 
 	// Block rendering
-	void renderBlockWhole   (const byte *src, Common::Rect &rect);
-	void renderBlockWhole4X (const byte *src, Common::Rect &rect);
-	void renderBlockWhole2Y (const byte *src, Common::Rect &rect);
-	void renderBlockSparse  (const byte *src, Common::Rect &rect);
-	void renderBlockSparse2Y(const byte *src, Common::Rect &rect);
-	void renderBlockRLE     (const byte *src, Common::Rect &rect);
+	void renderBlockWhole   (Surface &dstSurf, const byte *src, Common::Rect &rect);
+	void renderBlockWhole4X (Surface &dstSurf, const byte *src, Common::Rect &rect);
+	void renderBlockWhole2Y (Surface &dstSurf, const byte *src, Common::Rect &rect);
+	void renderBlockSparse  (Surface &dstSurf, const byte *src, Common::Rect &rect);
+	void renderBlockSparse2Y(Surface &dstSurf, const byte *src, Common::Rect &rect);
+	void renderBlockRLE     (Surface &dstSurf, const byte *src, Common::Rect &rect);
 
 	// Sound helper functions
 	inline void unsignedToSigned(byte *buffer, int length);
@@ -227,7 +232,7 @@ public:
 
 	bool isVideoLoaded() const;
 
-	Surface *decodeNextFrame();
+	const Surface *decodeNextFrame();
 
 	PixelFormat getPixelFormat() const;
 
@@ -260,7 +265,7 @@ public:
 
 	bool isVideoLoaded() const;
 
-	Surface *decodeNextFrame();
+	const Surface *decodeNextFrame();
 
 	PixelFormat getPixelFormat() const;
 
@@ -304,14 +309,9 @@ private:
 	uint32 *_framePos;      ///< Positions of all frames.
 	Coord  *_frameCoords;   ///< Coordinates of all frames.
 
-	// Buffer for raw frame data
-	byte  *_frameData;
-	uint32 _frameDataSize;
-	uint32 _frameDataLen;
-
-	// Buffer for processed frame data
-	byte  *_videoBuffer;
-	uint32 _videoBufferSize;
+	uint32 _videoBufferSize;   ///< Size of the video buffers.
+	byte  *_videoBuffer[2];    ///< Video buffers.
+	uint32 _videoBufferLen[2]; ///< Size of the video buffers filled.
 
 	// Sound properties
 	uint16 _soundFlags;
@@ -348,13 +348,17 @@ public:
 
 	void setXY(uint16 x, uint16 y);
 
+	void colorModeChanged();
+
 	bool getFrameCoords(int16 frame, int16 &x, int16 &y, int16 &width, int16 &height);
 
 	bool hasEmbeddedFiles() const;
 	bool hasEmbeddedFile(const Common::String &fileName) const;
-	Common::MemoryReadStream *getEmbeddedFile(const Common::String &fileName) const;
+	Common::SeekableReadStream *getEmbeddedFile(const Common::String &fileName) const;
 
 	int32 getSubtitleIndex() const;
+
+	virtual bool isPaletted() const;
 
 
 	// VideoDecoder interface
@@ -364,7 +368,7 @@ public:
 
 	bool isVideoLoaded() const;
 
-	Surface *decodeNextFrame();
+	const Surface *decodeNextFrame();
 
 	PixelFormat getPixelFormat() const;
 
@@ -452,23 +456,23 @@ private:
 
 	uint32  _firstFramePos; ///< Position of the first frame's data within the stream.
 
-	// Buffer for raw frame data
-	byte  *_frameData;
-	uint32 _frameDataSize;
-	uint32 _frameDataLen;
+	uint32 _videoBufferSize;   ///< Size of the video buffers.
+	byte  *_videoBuffer[3];    ///< Video buffers.
+	uint32 _videoBufferLen[3]; ///< Size of the video buffers filled.
 
-	// Buffer for processed frame data
-	byte  *_videoBuffer;
-	uint32 _videoBufferSize;
+	Surface _8bppSurface[3]; ///< Fake 8bpp surfaces over the video buffers.
 
 	bool _externalCodec;
 	Codec *_codec;
 
 	int32 _subtitle;
 
+	bool _isPaletted;
+
 	// Loading helper functions
 	bool assessVideoProperties();
 	bool assessAudioProperties();
+	bool openExternalCodec();
 	bool readFrameTable(int &numFiles);
 	bool readFiles();
 
@@ -477,6 +481,8 @@ private:
 
 	// Video
 	bool renderFrame(Common::Rect &rect);
+	void blit16(const Surface &srcSurf, Common::Rect &rect);
+	void blit24(const Surface &srcSurf, Common::Rect &rect);
 
 	// Sound
 	void emptySoundSlice  (uint32 size);

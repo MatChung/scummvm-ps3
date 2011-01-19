@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/n64/osys_n64.h $
- * $Id: osys_n64.h 52277 2010-08-22 14:23:37Z hkz $
+ * $Id: osys_n64.h 54981 2010-12-20 21:46:28Z hkz $
  *
  */
 
@@ -91,6 +91,10 @@ protected:
 	OverlayColor *_overlayBuffer; // Offscreen for the overlay (16 bit)
 
 	uint16 *_screenPalette; // Array for palette entries (256 colors max)
+
+#ifndef N64_EXTREME_MEMORY_SAVING
+	uint32 *_screenExactPalette; // Array for palette entries, as received by setPalette(), no precision loss
+#endif
 	uint16 _cursorPalette[256]; // Palette entries for the cursor
 
 	int _graphicMode; // Graphic mode

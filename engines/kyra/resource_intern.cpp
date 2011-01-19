@@ -19,15 +19,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/resource_intern.cpp $
- * $Id: resource_intern.cpp 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: resource_intern.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "kyra/resource_intern.h"
 #include "kyra/resource.h"
 
-#include "common/stream.h"
 #include "common/endian.h"
+#include "common/memstream.h"
+#include "common/substream.h"
 
 namespace Kyra {
 

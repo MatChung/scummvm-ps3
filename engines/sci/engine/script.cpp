@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/script.cpp $
- * $Id: script.cpp 54077 2010-11-04 23:19:23Z thebluegr $
+ * $Id: script.cpp 55123 2011-01-04 23:19:04Z thebluegr $
  *
  */
 
@@ -90,8 +90,8 @@ void Script::init(int script_nr, ResourceManager *resMan) {
 
 	if (getSciVersion() == SCI_VERSION_0_EARLY) {
 		_bufSize += READ_LE_UINT16(script->data) * 2;
-	} else if (getSciVersion() >= SCI_VERSION_1_1) {
-		// In SCI11, the heap was in a separate space from the script. We append
+	} else if (getSciVersion() >= SCI_VERSION_1_1 && getSciVersion() <= SCI_VERSION_2_1) {
+		// In SCI1.1 - SCI2.1, the heap was in a separate space from the script. We append
 		// it to the end of the script, and adjust addressing accordingly.
 		// However, since we address the heap with a 16-bit pointer, the
 		// combined size of the stack and the heap must be 64KB. So far this has
@@ -113,6 +113,15 @@ void Script::init(int script_nr, ResourceManager *resMan) {
 			error("Script and heap sizes combined exceed 64K. This means a fundamental "
 					"design bug was made regarding SCI1.1 and newer games.\n"
 					"Please report this error to the ScummVM team");
+	} else if (getSciVersion() == SCI_VERSION_3) {
+		// Check for scripts over 64KB. These won't work with the current 16-bit address
+		// scheme. We need an overlaying mechanism, or a mechanism to split script parts
+		// in different segments to handle these. For now, simply stop when such a script
+		// is found.
+		// TODO: Remove this once such a mechanism is in place
+		if (script->size > 65535)
+			error("TODO: SCI script %d is over 64KB - it's %d bytes long. This can't "
+			      "be handled at the moment, thus stopping", script_nr, script->size);
 	}
 }
 
@@ -129,7 +138,7 @@ void Script::load(ResourceManager *resMan) {
 	// Check scripts for matching signatures and patch those, if found
 	matchSignatureAndPatch(_nr, _buf, script->size);
 
-	if (getSciVersion() >= SCI_VERSION_1_1) {
+	if (getSciVersion() >= SCI_VERSION_1_1 && getSciVersion() <= SCI_VERSION_2_1) {
 		Resource *heap = resMan->findResource(ResourceId(kResourceTypeHeap, _nr), 0);
 		assert(heap != 0);
 
@@ -144,14 +153,7 @@ void Script::load(ResourceManager *resMan) {
 	_synonyms = 0;
 	_numSynonyms = 0;
 	
-	if (getSciVersion() >= SCI_VERSION_1_1) {
-		if (READ_LE_UINT16(_buf + 1 + 5) > 0) {	// does the script have an export table?
-			_exportTable = (const uint16 *)(_buf + 1 + 5 + 2);
-			_numExports = READ_SCI11ENDIAN_UINT16(_exportTable - 1);
-		}
-		_localsOffset = _scriptSize + 4;
-		_localsCount = READ_SCI11ENDIAN_UINT16(_buf + _localsOffset - 2);
-	} else {
+	if (getSciVersion() <= SCI_VERSION_1_LATE) {
 		_exportTable = (const uint16 *)findBlockSCI0(SCI_OBJ_EXPORTS);
 		if (_exportTable) {
 			_numExports = READ_SCI11ENDIAN_UINT16(_exportTable + 1);
@@ -167,9 +169,33 @@ void Script::load(ResourceManager *resMan) {
 			_localsOffset = localsBlock - _buf + 4;
 			_localsCount = (READ_LE_UINT16(_buf + _localsOffset - 2) - 4) >> 1;	// half block size
 		}
+	} else if (getSciVersion() >= SCI_VERSION_1_1 && getSciVersion() <= SCI_VERSION_2_1) {
+		if (READ_LE_UINT16(_buf + 1 + 5) > 0) {	// does the script have an export table?
+			_exportTable = (const uint16 *)(_buf + 1 + 5 + 2);
+			_numExports = READ_SCI11ENDIAN_UINT16(_exportTable - 1);
+		}
+		_localsOffset = _scriptSize + 4;
+		_localsCount = READ_SCI11ENDIAN_UINT16(_buf + _localsOffset - 2);
+	} else if (getSciVersion() == SCI_VERSION_3) {
+		_localsCount = READ_LE_UINT16(_buf + 12);
+		_exportTable = (const uint16 *)(_buf + 22);
+		_numExports = READ_LE_UINT16(_buf + 20);
+		// SCI3 local variables always start dword-aligned
+		if (_numExports % 2)
+			_localsOffset = 22 + _numExports * 2;
+		else
+			_localsOffset = 24 + _numExports * 2;
 	}
 
-	if (getSciVersion() > SCI_VERSION_0_EARLY) {
+	if (getSciVersion() == SCI_VERSION_0_EARLY) {
+		// SCI0 early
+		// Old script block. There won't be a localvar block in this case.
+		// Instead, the script starts with a 16 bit int specifying the
+		// number of locals we need; these are then allocated and zeroed.
+		_localsCount = READ_LE_UINT16(_buf);
+		_localsOffset = -_localsCount * 2; // Make sure it's invalid
+	} else {
+		// SCI0 late and newer
 		// Does the script actually have locals? If not, set the locals offset to 0
 		if (!_localsCount)
 			_localsOffset = 0;
@@ -178,13 +204,25 @@ void Script::load(ResourceManager *resMan) {
 			error("Locals extend beyond end of script: offset %04x, count %d vs size %d", _localsOffset, _localsCount, _bufSize);
 			_localsCount = (_bufSize - _localsOffset) >> 1;
 		}
-	} else {
-		// Old script block. There won't be a localvar block in this case.
-		// Instead, the script starts with a 16 bit int specifying the
-		// number of locals we need; these are then allocated and zeroed.
-		_localsCount = READ_LE_UINT16(_buf);
-		_localsOffset = -_localsCount * 2; // Make sure it's invalid
 	}
+}
+
+const byte *Script::getSci3ObjectsPointer() {
+	const byte *ptr = 0;
+
+	// SCI3 local variables always start dword-aligned
+	if (_numExports % 2)
+		ptr = _buf + 22 + _numExports * 2;
+	else
+		ptr = _buf + 24 + _numExports * 2;
+
+	// SCI3 object structures always start dword-aligned
+	if (_localsCount % 2)
+		ptr += 2 + _localsCount * 2;
+	else
+		ptr += _localsCount * 2;
+
+	return ptr;
 }
 
 Object *Script::getObject(uint16 offset) {
@@ -217,13 +255,6 @@ Object *Script::scriptObjInit(reg_t obj_pos, bool fullObjectInit) {
 	return obj;
 }
 
-void Script::scriptObjRemove(reg_t obj_pos) {
-	if (getSciVersion() < SCI_VERSION_1_1)
-		obj_pos.offset += 8;
-
-	_objects.erase(obj_pos.toUint16());
-}
-
 // This helper function is used by Script::relocateLocal and Object::relocate
 // Duplicate in segment.cpp and script.cpp
 static bool relocateBlock(Common::Array<reg_t> &block, int block_location, SegmentId segment, int location, size_t scriptSize) {
@@ -242,10 +273,26 @@ static bool relocateBlock(Common::Array<reg_t> &block, int block_location, Segme
 		return false;
 	}
 	block[idx].segment = segment; // Perform relocation
-	if (getSciVersion() >= SCI_VERSION_1_1)
+	if (getSciVersion() >= SCI_VERSION_1_1 && getSciVersion() <= SCI_VERSION_2_1)
 		block[idx].offset += scriptSize;
 
 	return true;
+}
+
+int Script::relocateOffsetSci3(uint32 offset) {
+	int relocStart = READ_LE_UINT32(_buf + 8);
+	int relocCount = READ_LE_UINT16(_buf + 18);
+	const byte *seeker = _buf + relocStart;
+
+	for (int i = 0; i < relocCount; ++i) {
+		if (READ_SCI11ENDIAN_UINT32(seeker) == offset) {
+			// TODO: Find out what UINT16 at (seeker + 8) means
+			return READ_SCI11ENDIAN_UINT16(_buf + offset) + READ_SCI11ENDIAN_UINT32(seeker + 4);
+		}
+		seeker += 10;
+	}
+
+	return -1;
 }
 
 bool Script::relocateLocal(SegmentId segment, int location) {
@@ -255,12 +302,12 @@ bool Script::relocateLocal(SegmentId segment, int location) {
 		return false;
 }
 
-void Script::relocate(reg_t block) {
+void Script::relocateSci0Sci21(reg_t block) {
 	const byte *heap = _buf;
 	uint16 heapSize = (uint16)_bufSize;
 	uint16 heapOffset = 0;
 
-	if (getSciVersion() >= SCI_VERSION_1_1) {
+	if (getSciVersion() >= SCI_VERSION_1_1 && getSciVersion() <= SCI_VERSION_2_1) {
 		heap = _heapStart;
 		heapSize = (uint16)_heapSize;
 		heapOffset = _scriptSize;
@@ -295,11 +342,29 @@ void Script::relocate(reg_t block) {
 			// object, relocate it.
 			const ObjMap::iterator end = _objects.end();
 			for (ObjMap::iterator it = _objects.begin(); it != end; ++it)
-				if (it->_value.relocate(block.segment, pos, _scriptSize))
+				if (it->_value.relocateSci0Sci21(block.segment, pos, _scriptSize))
 					break;
 		}
 
 		exportIndex++;
+	}
+}
+
+void Script::relocateSci3(reg_t block) {
+	const byte *relocStart = _buf + READ_SCI11ENDIAN_UINT32(_buf + 8);
+	//int count = _bufSize - READ_SCI11ENDIAN_UINT32(_buf + 8);
+
+	ObjMap::iterator it;
+	for (it = _objects.begin(); it != _objects.end(); ++it) {
+		const byte *seeker = relocStart;
+		while (seeker < _buf + _bufSize) {
+			// TODO: Find out what UINT16 at (seeker + 8) means
+			it->_value.relocateSci3(block.segment,
+						READ_SCI11ENDIAN_UINT32(seeker),
+						READ_SCI11ENDIAN_UINT32(seeker + 4),
+						_scriptSize);
+			seeker += 10;
+		}
 	}
 }
 
@@ -320,7 +385,7 @@ void Script::setLockers(int lockers) {
 	_lockers = lockers;
 }
 
-uint16 Script::validateExportFunc(int pubfunct) {
+uint16 Script::validateExportFunc(int pubfunct, bool relocate) {
 	bool exportsAreWide = (g_sci->_features->detectLofsType() == SCI_VERSION_1_MIDDLE);
 
 	if (_numExports <= pubfunct) {
@@ -330,7 +395,15 @@ uint16 Script::validateExportFunc(int pubfunct) {
 
 	if (exportsAreWide)
 		pubfunct *= 2;
-	uint16 offset = READ_SCI11ENDIAN_UINT16(_exportTable + pubfunct);
+
+	uint16 offset;
+
+	if (getSciVersion() != SCI_VERSION_3 || !relocate) {
+		offset = READ_SCI11ENDIAN_UINT16(_exportTable + pubfunct);
+	} else {
+		offset = relocateOffsetSci3(pubfunct * 2 + 22);
+	}
+
 	VERIFY(offset < _bufSize, "invalid export function pointer");
 
 	// Check if the offset found points to a second export table (e.g. script 912
@@ -423,12 +496,15 @@ void Script::initialiseLocals(SegManager *segMan) {
 void Script::initialiseClasses(SegManager *segMan) {
 	const byte *seeker = 0;
 	uint16 mult = 0;
-	
-	if (getSciVersion() >= SCI_VERSION_1_1) {
+
+	if (getSciVersion() <= SCI_VERSION_1_LATE) {
+		seeker = findBlockSCI0(SCI_OBJ_CLASS);
+		mult = 1;
+	} else if (getSciVersion() >= SCI_VERSION_1_1 && getSciVersion() <= SCI_VERSION_2_1) {
 		seeker = _heapStart + 4 + READ_SCI11ENDIAN_UINT16(_heapStart + 2) * 2;
 		mult = 2;
-	} else {
-		seeker = findBlockSCI0(SCI_OBJ_CLASS);
+	} else if (getSciVersion() == SCI_VERSION_3) {
+		seeker = getSci3ObjectsPointer();
 		mult = 1;
 	}
 
@@ -436,7 +512,7 @@ void Script::initialiseClasses(SegManager *segMan) {
 		return;
 
 	uint16 marker;
-	bool isClass;
+	bool isClass = false;
 	uint16 classpos;
 	int16 species = 0;
 
@@ -445,29 +521,37 @@ void Script::initialiseClasses(SegManager *segMan) {
 		marker = READ_SCI11ENDIAN_UINT16(seeker);
 		classpos = seeker - _buf;
 
-		if (!marker)
+		if (getSciVersion() <= SCI_VERSION_1_LATE && !marker)
 			break;
 
-		if (getSciVersion() >= SCI_VERSION_1_1) {
-			isClass = (READ_SCI11ENDIAN_UINT16(seeker + 14) & kInfoFlagClass);	// -info- selector
-			species = READ_SCI11ENDIAN_UINT16(seeker + 10);
-		} else {
+		if (getSciVersion() >= SCI_VERSION_1_1 && marker != 0x1234)
+			break;
+
+		if (getSciVersion() <= SCI_VERSION_1_LATE) {
 			isClass = (marker == SCI_OBJ_CLASS);
 			if (isClass)
 				species = READ_SCI11ENDIAN_UINT16(seeker + 12);
 			classpos += 12;
+		} else if (getSciVersion() >= SCI_VERSION_1_1 && getSciVersion() <= SCI_VERSION_2_1) {
+			isClass = (READ_SCI11ENDIAN_UINT16(seeker + 14) & kInfoFlagClass);	// -info- selector
+			species = READ_SCI11ENDIAN_UINT16(seeker + 10);
+		} else if (getSciVersion() == SCI_VERSION_3) {
+			isClass = (READ_SCI11ENDIAN_UINT16(seeker + 10) & kInfoFlagClass);
+			species = READ_SCI11ENDIAN_UINT16(seeker + 4);
 		}
 
 		if (isClass) {
 			// WORKAROUNDs for off-by-one script errors
-			if (g_sci->getGameId() == GID_LSL2 && g_sci->isDemo() && species == (int)segMan->classTableSize())
-				segMan->resizeClassTable(segMan->classTableSize() + 1);
-			if (g_sci->getGameId() == GID_LSL3 && !g_sci->isDemo() && _nr == 500 && species == (int)segMan->classTableSize())
-				segMan->resizeClassTable(segMan->classTableSize() + 1);
-			if (g_sci->getGameId() == GID_SQ3 && !g_sci->isDemo() && _nr == 93 && species == (int)segMan->classTableSize())
-				segMan->resizeClassTable(segMan->classTableSize() + 1);
-			if (g_sci->getGameId() == GID_SQ3 && !g_sci->isDemo() && _nr == 99 && species == (int)segMan->classTableSize())
-				segMan->resizeClassTable(segMan->classTableSize() + 1);
+			if (species == (int)segMan->classTableSize()) {
+				if (g_sci->getGameId() == GID_LSL2 && g_sci->isDemo())
+					segMan->resizeClassTable(species + 1);
+				else if (g_sci->getGameId() == GID_LSL3 && !g_sci->isDemo() && _nr == 500)
+					segMan->resizeClassTable(species + 1);
+				else if (g_sci->getGameId() == GID_SQ3 && !g_sci->isDemo() && _nr == 93)
+					segMan->resizeClassTable(species + 1);
+				else if (g_sci->getGameId() == GID_SQ3 && !g_sci->isDemo() && _nr == 99)
+					segMan->resizeClassTable(species + 1);
+			}
 
 			if (species < 0 || species >= (int)segMan->classTableSize())
 				error("Invalid species %d(0x%x) unknown max %d(0x%x) while instantiating script %d\n",
@@ -483,44 +567,54 @@ void Script::initialiseClasses(SegManager *segMan) {
 
 void Script::initialiseObjectsSci0(SegManager *segMan, SegmentId segmentId) {
 	bool oldScriptHeader = (getSciVersion() == SCI_VERSION_0_EARLY);
-	const byte *seeker = _buf + (oldScriptHeader ? 2 : 0);
 
-	do {
-		uint16 objType = READ_SCI11ENDIAN_UINT16(seeker);
-		if (!objType)
-			break;
+	// We need to make two passes, as the objects in the script might be in the
+	// wrong order (e.g. in the demo of Iceman) - refer to bug #3034713
+	for (int pass = 1; pass <= 2; pass++) {
+		const byte *seeker = _buf + (oldScriptHeader ? 2 : 0);
 
-		switch (objType) {
-		case SCI_OBJ_OBJECT:
-		case SCI_OBJ_CLASS:
-			{
-				reg_t addr = make_reg(segmentId, seeker - _buf + 4);
-				Object *obj = scriptObjInit(addr);
-				obj->initSpecies(segMan, addr);
+		do {
+			uint16 objType = READ_SCI11ENDIAN_UINT16(seeker);
+			if (!objType)
+				break;
 
-				if (!obj->initBaseObject(segMan, addr)) {
-					if (_nr == 202 && g_sci->getGameId() == GID_KQ5) {
-						// WORKAROUND: Script 202 of KQ5 French and German 
-						// (perhaps Spanish too?) has an invalid object.
-						// This is non-fatal. Refer to bug #3035396.
-					} else {
-						error("Failed to locate base object for object at %04X:%04X; skipping", PRINT_REG(addr));
+			switch (objType) {
+			case SCI_OBJ_OBJECT:
+			case SCI_OBJ_CLASS:
+				{
+					reg_t addr = make_reg(segmentId, seeker - _buf + 4);
+					Object *obj = scriptObjInit(addr);
+					obj->initSpecies(segMan, addr);
+
+					if (pass == 2) {
+						if (!obj->initBaseObject(segMan, addr)) {
+							if ((_nr == 202 || _nr == 764) && g_sci->getGameId() == GID_KQ5) {
+								// WORKAROUND: Script 202 of KQ5 French and German
+								// (perhaps Spanish too?) has an invalid object.
+								// This is non-fatal. Refer to bugs #3035396 and
+								// #3150767.
+								// Same happens with script 764, it seems to
+								// contain junk towards its end.
+								_objects.erase(addr.toUint16() + (getSciVersion() < SCI_VERSION_1_1) ? 8 : 0);
+							} else {
+								error("Failed to locate base object for object at %04X:%04X", PRINT_REG(addr));
+							}
+						}
 					}
-					scriptObjRemove(addr);
 				}
+				break;
+
+			default:
+				break;
 			}
-			break;
 
-		default:
-			break;
-		}
-
-		seeker += READ_SCI11ENDIAN_UINT16(seeker + 2);
-	} while ((uint32)(seeker - _buf) < getScriptSize() - 2);
+			seeker += READ_SCI11ENDIAN_UINT16(seeker + 2);
+		} while ((uint32)(seeker - _buf) < getScriptSize() - 2);
+	}
 
 	byte *relocationBlock = findBlockSCI0(SCI_OBJ_POINTERS);
 	if (relocationBlock)
-		relocate(make_reg(segmentId, relocationBlock - getBuf() + 4));
+		relocateSci0Sci21(make_reg(segmentId, relocationBlock - getBuf() + 4));
 }
 
 void Script::initialiseObjectsSci11(SegManager *segMan, SegmentId segmentId) {
@@ -555,14 +649,30 @@ void Script::initialiseObjectsSci11(SegManager *segMan, SegmentId segmentId) {
 		seeker += READ_SCI11ENDIAN_UINT16(seeker + 2) * 2;
 	}
 
-	relocate(make_reg(segmentId, READ_SCI11ENDIAN_UINT16(_heapStart)));
+	relocateSci0Sci21(make_reg(segmentId, READ_SCI11ENDIAN_UINT16(_heapStart)));
+}
+
+void Script::initialiseObjectsSci3(SegManager *segMan, SegmentId segmentId) {
+	const byte *seeker = getSci3ObjectsPointer();
+
+	while (READ_SCI11ENDIAN_UINT16(seeker) == SCRIPT_OBJECT_MAGIC_NUMBER) {
+		reg_t reg = make_reg(segmentId, seeker - _buf);
+		Object *obj = scriptObjInit(reg);
+
+		obj->setSuperClassSelector(segMan->getClassAddress(obj->getSuperClassSelector().offset, SCRIPT_GET_LOCK, NULL_REG));
+		seeker += READ_SCI11ENDIAN_UINT16(seeker + 2);
+	}
+
+	relocateSci3(make_reg(segmentId, 0));
 }
 
 void Script::initialiseObjects(SegManager *segMan, SegmentId segmentId) {
-	if (getSciVersion() >= SCI_VERSION_1_1)
-		initialiseObjectsSci11(segMan, segmentId);
-	else
+	if (getSciVersion() <= SCI_VERSION_1_LATE)
 		initialiseObjectsSci0(segMan, segmentId);
+	else if (getSciVersion() >= SCI_VERSION_1_1 && getSciVersion() <= SCI_VERSION_2_1)
+		initialiseObjectsSci11(segMan, segmentId);
+	else if (getSciVersion() == SCI_VERSION_3)
+		initialiseObjectsSci3(segMan, segmentId);
 }
 
 reg_t Script::findCanonicAddress(SegManager *segMan, reg_t addr) const {
@@ -572,9 +682,9 @@ reg_t Script::findCanonicAddress(SegManager *segMan, reg_t addr) const {
 
 void Script::freeAtAddress(SegManager *segMan, reg_t addr) {
 	/*
-		debugC(2, kDebugLevelGC, "[GC] Freeing script %04x:%04x", PRINT_REG(addr));
+		debugC(kDebugLevelGC, "[GC] Freeing script %04x:%04x", PRINT_REG(addr));
 		if (_localsSegment)
-			debugC(2, kDebugLevelGC, "[GC] Freeing locals %04x:0000", _localsSegment);
+			debugC(kDebugLevelGC, "[GC] Freeing locals %04x:0000", _localsSegment);
 	*/
 
 	if (_markedAsDeleted)

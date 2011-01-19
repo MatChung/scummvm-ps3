@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/sound_midi.cpp $
- * $Id: sound_midi.cpp 53911 2010-10-28 23:56:36Z lordhoto $
+ * $Id: sound_midi.cpp 54716 2010-12-01 20:03:05Z jvprat $
  *
  */
 
@@ -605,7 +605,7 @@ void SoundMidiPC::loadSoundFile(Common::String file) {
 	if (!_vm->resource()->exists(file.c_str()))
 		return;
 
-	// When loading a new file we stopp all notes
+	// When loading a new file we stop all notes
 	// still running on our own, just to prevent
 	// glitches
 	for (int i = 0; i < 16; ++i)

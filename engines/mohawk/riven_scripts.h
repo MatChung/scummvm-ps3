@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/riven_scripts.h $
- * $Id: riven_scripts.h 52482 2010-09-01 13:28:12Z mthreepwood $
+ * $Id: riven_scripts.h 55312 2011-01-18 20:30:16Z mthreepwood $
  *
  */
 
@@ -57,7 +57,7 @@ public:
 	~RivenScript();
 
 	void runScript();
-	void dumpScript(Common::StringArray varNames, Common::StringArray xNames, byte tabs);
+	void dumpScript(const Common::StringArray &varNames, const Common::StringArray &xNames, byte tabs);
 	uint16 getScriptType() { return _scriptType; }
 	uint16 getParentStack() { return _parentStack; }
 	uint16 getParentCard() { return _parentCard; }
@@ -80,7 +80,7 @@ private:
 	uint16 _scriptType, _parentStack, _parentCard;
 	bool _isRunning, _continueRunning;
 
-	void dumpCommands(Common::StringArray varNames, Common::StringArray xNames, byte tabs);
+	void dumpCommands(const Common::StringArray &varNames, const Common::StringArray &xNames, byte tabs);
 	void processCommands(bool runCommands);
 
 	static uint32 calculateCommandSize(Common::SeekableReadStream *script);
@@ -109,8 +109,8 @@ private:
 	DECLARE_OPCODE(disableMovie);
 	DECLARE_OPCODE(disableAllMovies);
 	DECLARE_OPCODE(enableMovie);
+	DECLARE_OPCODE(playMovieBlocking);
 	DECLARE_OPCODE(playMovie);
-	DECLARE_OPCODE(playMovieBg);
 	DECLARE_OPCODE(stopMovie);
 	DECLARE_OPCODE(unk_36);
 	DECLARE_OPCODE(fadeAmbientSounds);

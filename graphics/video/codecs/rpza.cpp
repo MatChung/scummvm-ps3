@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/codecs/rpza.cpp $
- * $Id: rpza.cpp 49165 2010-05-23 18:33:55Z mthreepwood $
+ * $Id: rpza.cpp 55095 2011-01-02 14:57:49Z fuzzie $
  *
  */
 
@@ -28,6 +28,7 @@
 #include "graphics/video/codecs/rpza.h"
 
 #include "common/system.h"
+#include "common/stream.h"
 #include "graphics/colormasks.h"
 
 namespace Graphics {
@@ -44,6 +45,11 @@ RPZADecoder::RPZADecoder(uint16 width, uint16 height) : Codec() {
 
 	_surface = new Surface();
 	_surface->create(width, height, _pixelFormat.bytesPerPixel);
+}
+
+RPZADecoder::~RPZADecoder() {
+	_surface->free();
+	delete _surface;
 }
 
 #define ADVANCE_BLOCK() \
@@ -68,7 +74,7 @@ RPZADecoder::RPZADecoder(uint16 width, uint16 height) : Codec() {
 	} \
 	blockPtr++
 
-Surface *RPZADecoder::decodeImage(Common::SeekableReadStream *stream) {
+const Surface *RPZADecoder::decodeImage(Common::SeekableReadStream *stream) {
 	uint16 colorA = 0, colorB = 0;
 	uint16 color4[4];
 

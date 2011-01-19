@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/resource_cache.h $
- * $Id: resource_cache.h 48579 2010-04-06 23:38:43Z mthreepwood $
+ * $Id: resource_cache.h 54165 2010-11-09 18:52:29Z mthreepwood $
  *
  */
 
@@ -51,7 +51,7 @@ private:
 		Common::SeekableReadStream *data;
 	};
 
-	Common::Array<DataObject> store;
+	Common::Array<DataObject> _store;
 };
 
 } // End of namespace Mohawk

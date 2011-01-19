@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/unzip.cpp $
- * $Id: unzip.cpp 53762 2010-10-24 13:04:33Z fingolfin $
+ * $Id: unzip.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  */
 
 /* unzip.c -- IO on .zip files using zlib
@@ -106,6 +106,7 @@ typedef struct {
 #include "common/fs.h"
 #include "common/unzip.h"
 #include "common/file.h"
+#include "common/memstream.h"
 
 #include "common/hashmap.h"
 #include "common/hash-str.h"

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/sound.cpp $
- * $Id: sound.cpp 53714 2010-10-22 21:49:21Z dreammaster $
+ * $Id: sound.cpp 54392 2010-11-20 03:14:03Z dreammaster $
  *
  * sound functionality
  */
@@ -37,6 +37,7 @@
 #include "common/config-manager.h"
 #include "common/endian.h"
 #include "common/file.h"
+#include "common/memstream.h"
 #include "common/system.h"
 
 #include "sound/mixer.h"
@@ -104,7 +105,7 @@ bool SoundManager::playSample(int id, Audio::Mixer::SoundType type, Audio::Sound
 		error(FILE_IS_CORRUPT, _vm->getSampleFile(sampleLanguage));
 
 	// read the length of the sample
-	uint32 sampleLen = _sampleStream.readUint32LE();
+	uint32 sampleLen = _sampleStream.readUint32();
 	if (_sampleStream.eos() || _sampleStream.err())
 		error(FILE_IS_CORRUPT, _vm->getSampleFile(sampleLanguage));
 
@@ -263,7 +264,7 @@ bool SoundManager::playSample(int id, int sub, bool bLooped, int x, int y, int p
 		error(FILE_IS_CORRUPT, _vm->getSampleFile(sampleLanguage));
 
 	// read the length of the sample
-	uint32 sampleLen = _sampleStream.readUint32LE();
+	uint32 sampleLen = _sampleStream.readUint32();
 	if (_sampleStream.eos() || _sampleStream.err())
 		error(FILE_IS_CORRUPT, _vm->getSampleFile(sampleLanguage));
 
@@ -276,12 +277,12 @@ bool SoundManager::playSample(int id, int sub, bool bLooped, int x, int y, int p
 
 		// Skipping
 		for (int32 i = 0; i < sub; i++) {
-			sampleLen = _sampleStream.readUint32LE();
+			sampleLen = _sampleStream.readUint32();
 			_sampleStream.skip(sampleLen);
 			if (_sampleStream.eos() || _sampleStream.err())
 				error(FILE_IS_CORRUPT, _vm->getSampleFile(sampleLanguage));
 		}
-		sampleLen = _sampleStream.readUint32LE();
+		sampleLen = _sampleStream.readUint32();
 		if (_sampleStream.eos() || _sampleStream.err())
 			error(FILE_IS_CORRUPT, _vm->getSampleFile(sampleLanguage));
 	}

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/sound/mixer.h $
- * $Id: mixer.h 48869 2010-04-29 21:54:39Z fingolfin $
+ * $Id: mixer.h 55197 2011-01-10 22:20:51Z lordhoto $
  *
  */
 
@@ -28,6 +28,7 @@
 
 #include "common/types.h"
 #include "common/mutex.h"
+#include "common/noncopyable.h"
 
 #include "sound/timestamp.h"
 
@@ -37,8 +38,6 @@ class OSystem;
 namespace Audio {
 
 class AudioStream;
-class RewindableAudioStream;
-class SeekableAudioStream;
 class Channel;
 class Mixer;
 class MixerImpl;
@@ -61,7 +60,7 @@ public:
  * The main audio mixer handles mixing of an arbitrary number of
  * audio streams (in the form of AudioStream instances).
  */
-class Mixer {
+class Mixer : Common::NonCopyable {
 public:
 	enum SoundType {
 		kPlainSoundType = 0,

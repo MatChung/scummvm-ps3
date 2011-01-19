@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/polygons.cpp $
- * $Id: polygons.cpp 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: polygons.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  */
 
 #include "tinsel/actors.h"
@@ -288,6 +288,8 @@ void Poly::nextPoly() {
 }
 
 //----------------- LOCAL GLOBAL DATA --------------------
+
+// FIXME: Avoid non-const global vars
 
 static int MaxPolys = MAX_POLY;
 

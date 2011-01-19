@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/move.cpp $
- * $Id: move.cpp 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: move.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * Handles walking and use of the path system.
  *
@@ -76,6 +76,8 @@ HPOLYGON InitExtraBlock(PMOVER ca, PMOVER ta);
 #define STEPS_MAX (TinselV2 ? 12 : 6)
 
 //----------------- LOCAL GLOBAL DATA --------------------
+
+// FIXME: Avoid non-const global vars
 
 #if SLOW_RINCE_DOWN
 static int Interlude = 0;	// For slowing down walking, for testing

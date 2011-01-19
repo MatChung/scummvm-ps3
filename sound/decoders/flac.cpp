@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/sound/decoders/flac.cpp $
- * $Id: flac.cpp 53961 2010-10-30 21:27:42Z fingolfin $
+ * $Id: flac.cpp 54147 2010-11-08 22:53:36Z fingolfin $
  *
  */
 
@@ -35,7 +35,6 @@
 #include "common/util.h"
 
 #include "sound/audiostream.h"
-#include "sound/audiocd.h"
 
 #define FLAC__NO_DLL // that MS-magic gave me headaches - just link the library you like
 #include <FLAC/export.h>

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/cache.h $
- * $Id: cache.h 49860 2010-06-15 15:44:24Z m_kiewitz $
+ * $Id: cache.h 55182 2011-01-09 13:21:19Z thebluegr $
  *
  */
 
@@ -45,8 +45,8 @@ public:
 	~GfxCache();
 
 	GfxFont *getFont(GuiResourceId fontId);
-
 	GfxView *getView(GuiResourceId viewId);
+
 	int16 kernelViewGetCelWidth(GuiResourceId viewId, int16 loopNo, int16 celNo);
 	int16 kernelViewGetCelHeight(GuiResourceId viewId, int16 loopNo, int16 celNo);
 	int16 kernelViewGetLoopCount(GuiResourceId viewId);

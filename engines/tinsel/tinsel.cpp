@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/tinsel.cpp $
- * $Id: tinsel.cpp 54028 2010-11-01 20:59:17Z thebluegr $
+ * $Id: tinsel.cpp 55091 2011-01-02 14:06:42Z strangerke $
  *
  */
 
@@ -36,16 +36,14 @@
 #include "common/serializer.h"
 #include "common/stream.h"
 
+#include "backends/audiocd/audiocd.h"
+
 #include "engines/util.h"
 
 #include "graphics/cursorman.h"
 
 #include "base/plugins.h"
 #include "base/version.h"
-
-#include "sound/mididrv.h"
-#include "sound/mixer.h"
-#include "sound/audiocd.h"
 
 #include "tinsel/actors.h"
 #include "tinsel/background.h"
@@ -80,7 +78,7 @@ namespace Tinsel {
 // In BG.CPP
 extern void SetDoFadeIn(bool tf);
 extern void DropBackground();
-extern BACKGND *pCurBgnd;
+extern const BACKGND *pCurBgnd;
 
 // In CURSOR.CPP
 extern void CursorProcess(CORO_PARAM, const void *);
@@ -96,6 +94,8 @@ extern SCNHANDLE GetSceneHandle();
 void SetNewScene(SCNHANDLE scene, int entrance, int transition);
 
 //----------------- GLOBAL GLOBAL DATA --------------------
+
+// FIXME: Avoid non-const global vars
 
 bool bRestart = false;
 bool bHasRestarted = false;
@@ -633,6 +633,7 @@ void RestoreMasterProcess(INT_CONTEXT *pic) {
 }
 
 // FIXME: CountOut is used by ChangeScene
+// FIXME: Avoid non-const global vars
 static int CountOut = 1;	// == 1 for immediate start of first scene
 
 /**
@@ -718,15 +719,15 @@ void LoadBasicChunks() {
 	// CHUNK_TOTAL_ACTORS seems to be missing in the released version, hard coding a value
 	// TODO: Would be nice to just change 511 to MAX_SAVED_ALIVES
 	cptr = FindChunk(MASTER_SCNHANDLE, CHUNK_TOTAL_ACTORS);
-	RegisterActors((cptr != NULL) ? READ_LE_UINT32(cptr) : 511);
+	RegisterActors((cptr != NULL) ? READ_32(cptr) : 511);
 
 	// CHUNK_TOTAL_GLOBALS seems to be missing in some versions.
 	// So if it is missing, set a reasonably high value for the number of globals.
 	cptr = FindChunk(MASTER_SCNHANDLE, CHUNK_TOTAL_GLOBALS);
-	RegisterGlobals((cptr != NULL) ? READ_LE_UINT32(cptr) : 512);
+	RegisterGlobals((cptr != NULL) ? READ_32(cptr) : 512);
 
 	cptr = FindChunk(INV_OBJ_SCNHANDLE, CHUNK_TOTAL_OBJECTS);
-	numObjects = (cptr != NULL) ? READ_LE_UINT32(cptr) : 0;
+	numObjects = (cptr != NULL) ? READ_32(cptr) : 0;
 
 	cptr = FindChunk(INV_OBJ_SCNHANDLE, CHUNK_OBJECTS);
 
@@ -759,7 +760,7 @@ void LoadBasicChunks() {
 		// CdPlay() stuff
 		cptr = FindChunk(MASTER_SCNHANDLE, CHUNK_CDPLAY_HANDLE);
 		assert(cptr);
-		uint32 playHandle = READ_LE_UINT32(cptr);
+		uint32 playHandle = READ_32(cptr);
 		assert(playHandle < 512);
 		SetCdPlayHandle(playHandle);
 	}
@@ -853,7 +854,7 @@ TinselEngine::TinselEngine(OSystem *syst, const TinselGameDescription *gameDesc)
 
 	int cd_num = ConfMan.getInt("cdrom");
 	if (cd_num >= 0)
-		_system->openCD(cd_num);
+		_system->getAudioCDManager()->openCD(cd_num);
 
 	MidiDriver::DeviceHandle dev = MidiDriver::detectDevice(MDT_MIDI | MDT_ADLIB | MDT_PREFER_GM);
 	bool native_mt32 = ((MidiDriver::getMusicType(dev) == MT_MT32) || ConfMan.getBool("native_mt32"));
@@ -889,7 +890,7 @@ TinselEngine::~TinselEngine() {
 	if (_bmv->MoviePlaying())
 		_bmv->FinishBMV();
 
-	AudioCD.stop();
+	_system->getAudioCDManager()->stop();
 	delete _bmv;
 	delete _sound;
 	delete _midiMusic;
@@ -999,7 +1000,7 @@ Common::Error TinselEngine::run() {
 		// Check for time to do next game cycle
 		if ((g_system->getMillis() > timerVal + GAME_FRAME_DELAY)) {
 			timerVal = g_system->getMillis();
-			AudioCD.updateCD();
+			_system->getAudioCDManager()->updateCD();
 			NextGameCycle();
 		}
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/scumm.cpp $
- * $Id: scumm.cpp 54031 2010-11-01 21:37:47Z fingolfin $
+ * $Id: scumm.cpp 54265 2010-11-16 10:19:01Z fingolfin $
  *
  */
 
@@ -34,7 +34,7 @@
 #include "engines/util.h"
 
 #include "gui/message.h"
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 
 #include "graphics/cursorman.h"
 
@@ -74,6 +74,8 @@
 #include "scumm/he/cup_player_he.h"
 #include "scumm/util.h"
 #include "scumm/verbs.h"
+
+#include "backends/audiocd/audiocd.h"
 
 #include "sound/mixer.h"
 
@@ -1200,7 +1202,7 @@ void ScummEngine::setupScumm() {
 
 		int cd_num = ConfMan.getInt("cdrom");
 		if (cd_num >= 0)
-			_system->openCD(cd_num);
+			_system->getAudioCDManager()->openCD(cd_num);
 	}
 
 	// Create the sound manager

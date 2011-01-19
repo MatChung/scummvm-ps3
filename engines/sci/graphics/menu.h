@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/menu.h $
- * $Id: menu.h 50724 2010-07-06 14:10:09Z m_kiewitz $
+ * $Id: menu.h 55254 2011-01-15 23:55:35Z thebluegr $
  *
  */
 
@@ -119,7 +119,6 @@ private:
 	GfxScreen *_screen;
 	GfxCursor *_cursor;
 
-	uint16 _listCount;
 	GuiMenuList _list;
 	GuiMenuItemList _itemList;
 

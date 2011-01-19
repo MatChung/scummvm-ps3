@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/sound/decoders/adpcm.h $
- * $Id: adpcm.h 53578 2010-10-18 19:10:57Z sev $
+ * $Id: adpcm.h 54204 2010-11-11 17:04:07Z mthreepwood $
  *
  */
 
@@ -58,7 +58,8 @@ enum typesADPCM {
 	kADPCMTinsel6,             // 6-bit ADPCM used by the Tinsel engine
 	kADPCMTinsel8,             // 8-bit ADPCM used by the Tinsel engine
 	kADPCMIma,                 // Standard IMA ADPCM
-	kADPCMApple                // Apple QuickTime IMA ADPCM
+	kADPCMApple,               // Apple QuickTime IMA ADPCM
+	kADPCMDK3                  // Duck DK3 IMA ADPCM
 };
 
 /**

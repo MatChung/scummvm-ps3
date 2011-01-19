@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/midi/timidity.cpp $
- * $Id: timidity.cpp 53961 2010-10-30 21:27:42Z fingolfin $
+ * $Id: timidity.cpp 55248 2011-01-15 09:43:02Z thebluegr $
  */
 
 /*
@@ -337,7 +337,7 @@ char *MidiDriver_TIMIDITY::timidity_ctl_command(const char *fmt, ...) {
 			buff[len++] = '\n';
 
 		/* write command to control socket */
-		(void)write(_control_fd, buff, len);
+		write(_control_fd, buff, len);
 	}
 
 	while (1) {

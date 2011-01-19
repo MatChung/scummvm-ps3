@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/object.cpp $
- * $Id: object.cpp 54124 2010-11-07 18:52:47Z strangerke $
+ * $Id: object.cpp 55307 2011-01-18 18:26:33Z strangerke $
  *
  */
 
@@ -47,6 +47,8 @@
 namespace Hugo {
 
 ObjectHandler::ObjectHandler(HugoEngine *vm) : _vm(vm), _objects(0) {
+	_numObj = 0;
+	_objCount = 0;
 }
 
 ObjectHandler::~ObjectHandler() {
@@ -59,13 +61,13 @@ void ObjectHandler::saveSeq(object_t *obj) {
 	debugC(1, kDebugObject, "saveSeq");
 
 	bool found = false;
-	for (int j = 0; !found && (j < obj->seqNumb); j++) {
-		seq_t *q = obj->seqList[j].seqPtr;
-		for (int k = 0; !found && (k < obj->seqList[j].imageNbr); k++) {
+	for (int i = 0; !found && (i < obj->seqNumb); i++) {
+		seq_t *q = obj->seqList[i].seqPtr;
+		for (int j = 0; !found && (j < obj->seqList[i].imageNbr); j++) {
 			if (obj->currImagePtr == q) {
 				found = true;
-				obj->curSeqNum = j;
-				obj->curImageNum = k;
+				obj->curSeqNum = i;
+				obj->curImageNum = j;
 			} else {
 				q = q->nextSeqPtr;
 			}
@@ -98,12 +100,8 @@ void ObjectHandler::useObject(int16 objId) {
 		// Get or use objid directly
 		if ((obj->genericCmd & TAKE) || obj->objValue)  // Get collectible item
 			sprintf(_line, "%s %s", _vm->_arrayVerbs[_vm->_take][0], _vm->_arrayNouns[obj->nounIndex][0]);
-		else if (obj->genericCmd & LOOK)            // Look item
-			sprintf(_line, "%s %s", _vm->_arrayVerbs[_vm->_look][0], _vm->_arrayNouns[obj->nounIndex][0]);
-		else if (obj->genericCmd & DROP)            // Drop item
-			sprintf(_line, "%s %s", _vm->_arrayVerbs[_vm->_drop][0], _vm->_arrayNouns[obj->nounIndex][0]);
 		else if (obj->cmdIndex != 0)                // Use non-collectible item if able
-			sprintf(_line, "%s %s", _vm->_arrayVerbs[_vm->_cmdList[obj->cmdIndex][1].verbIndex][0], _vm->_arrayNouns[obj->nounIndex][0]);
+			sprintf(_line, "%s %s", _vm->_arrayVerbs[_vm->_cmdList[obj->cmdIndex][0].verbIndex][0], _vm->_arrayNouns[obj->nounIndex][0]);
 		else if ((verb = _vm->useBG(_vm->_arrayNouns[obj->nounIndex][0])) != 0)
 			sprintf(_line, "%s %s", verb, _vm->_arrayNouns[obj->nounIndex][0]);
 		else
@@ -111,17 +109,18 @@ void ObjectHandler::useObject(int16 objId) {
 	} else {
 		// Use status.objid on objid
 		// Default to first cmd verb
-		sprintf(_line, "%s %s %s", _vm->_arrayVerbs[_vm->_cmdList[_objects[_vm->getGameStatus().inventoryObjId].cmdIndex][1].verbIndex][0],
+		sprintf(_line, "%s %s %s", _vm->_arrayVerbs[_vm->_cmdList[_objects[_vm->getGameStatus().inventoryObjId].cmdIndex][0].verbIndex][0],
 			                       _vm->_arrayNouns[_objects[_vm->getGameStatus().inventoryObjId].nounIndex][0],
 			                       _vm->_arrayNouns[obj->nounIndex][0]);
 
 		// Check valid use of objects and override verb if necessary
-		for (uses_t *use = _vm->_uses; use->objId != _vm->_numObj; use++) {
+		for (uses_t *use = _vm->_uses; use->objId != _numObj; use++) {
 			if (_vm->getGameStatus().inventoryObjId == use->objId) {
 				// Look for secondary object, if found use matching verb
 				bool foundFl = false;
-				for (target_t *target = use->targets; _vm->_arrayNouns[target->nounIndex] != 0; target++)
-					if (_vm->_arrayNouns[target->nounIndex][0] == _vm->_arrayNouns[obj->nounIndex][0]) {
+				
+				for (target_t *target = use->targets; target->nounIndex != 0; target++)
+					if (target->nounIndex == obj->nounIndex) {
 						foundFl = true;
 						sprintf(_line, "%s %s %s", _vm->_arrayVerbs[target->verbIndex][0],
 							                       _vm->_arrayNouns[_objects[_vm->getGameStatus().inventoryObjId].nounIndex][0],
@@ -132,7 +131,7 @@ void ObjectHandler::useObject(int16 objId) {
 				if (!foundFl) {
 					// Deselect dragged icon if inventory not active
 					if (_vm->getGameStatus().inventoryState != I_ACTIVE)
-						_vm->getGameStatus().inventoryObjId  = -1;
+						_vm->_screen->resetInventoryObjId();
 					Utils::Box(BOX_ANY, "%s", _vm->_textData[use->dataIndex]);
 					return;
 				}
@@ -140,10 +139,12 @@ void ObjectHandler::useObject(int16 objId) {
 		}
 	}
 
-	if (_vm->getGameStatus().inventoryState == I_ACTIVE)         // If inventory active, remove it
+	if (_vm->getGameStatus().inventoryState == I_ACTIVE) // If inventory active, remove it
 		_vm->getGameStatus().inventoryState = I_UP;
-	_vm->getGameStatus().inventoryObjId  = -1;                   // Deselect any dragged icon
-	_vm->_parser->lineHandler();                         // and process command
+
+	_vm->_screen->resetInventoryObjId();
+
+	_vm->_parser->lineHandler();                    // and process command
 }
 
 /**
@@ -157,7 +158,7 @@ int16 ObjectHandler::findObject(uint16 x, uint16 y) {
 	uint16    y2Max = 0;                            // Greatest y2
 	object_t *obj = _objects;
 	// Check objects on screen
-	for (int i = 0; i < _vm->_numObj; i++, obj++) {
+	for (int i = 0; i < _numObj; i++, obj++) {
 		// Object must be in current screen and "useful"
 		if (obj->screenIndex == *_vm->_screen_p && (obj->genericCmd || obj->objValue || obj->cmdIndex)) {
 			seq_t *curImage = obj->currImagePtr;
@@ -210,21 +211,32 @@ void ObjectHandler::freeObjects() {
 	debugC(1, kDebugObject, "freeObjects");
 
 	// Nothing to do if not allocated yet
-	if (_vm->_hero->seqList[0].seqPtr == 0)
+	if (_vm->_hero == 0 || _vm->_hero->seqList[0].seqPtr == 0)
 		return;
 
 	// Free all sequence lists and image data
-	for (int i = 0; i < _vm->_numObj; i++) {
+	for (int i = 0; i < _numObj; i++) {
 		object_t *obj = &_objects[i];
-		for (int j = 0; j < obj->seqNumb; j++) {    // for each sequence
-			seq_t *seq = obj->seqList[j].seqPtr;    // Free image
-			if (seq == 0)                           // Failure during database load
+		for (int j = 0; j < obj->seqNumb; j++) {
+			seq_t *seq = obj->seqList[j].seqPtr;
+			seq_t *next;
+			if (seq == 0) // Failure during database load
 				break;
-			do {
+			if (seq->imagePtr != 0) {
 				free(seq->imagePtr);
-				seq = seq->nextSeqPtr;
-			} while (seq != obj->seqList[j].seqPtr);
-			free(seq);                              // Free sequence record
+				seq->imagePtr = 0;
+			}
+			seq = seq->nextSeqPtr;
+			while (seq != obj->seqList[j].seqPtr) {
+				if (seq->imagePtr != 0) {
+					free(seq->imagePtr);
+					seq->imagePtr = 0;
+				}
+				next = seq->nextSeqPtr;
+				free(seq);
+				seq = next;
+			}
+			free(seq);
 		}
 	}
 }
@@ -268,7 +280,7 @@ int ObjectHandler::y2comp(const void *a, const void *b) {
 bool ObjectHandler::isCarrying(uint16 wordIndex) {
 	debugC(1, kDebugObject, "isCarrying(%d)", wordIndex);
 
-	for (int i = 0; i < _vm->_numObj; i++) {
+	for (int i = 0; i < _numObj; i++) {
 		if ((wordIndex == _objects[i].nounIndex) && _objects[i].carriedFl)
 			return true;
 	}
@@ -281,7 +293,7 @@ bool ObjectHandler::isCarrying(uint16 wordIndex) {
 void ObjectHandler::showTakeables() {
 	debugC(1, kDebugObject, "showTakeables");
 
-	for (int j = 0; j < _vm->_numObj; j++) {
+	for (int j = 0; j < _numObj; j++) {
 		object_t *obj = &_objects[j];
 		if ((obj->cycling != INVISIBLE) &&
 		    (obj->screenIndex == *_vm->_screen_p) &&
@@ -340,7 +352,12 @@ bool ObjectHandler::findObjectSpace(object_t *obj, int16 *destx, int16 *desty) {
 * Free ObjectArr (before exiting)
 */
 void ObjectHandler::freeObjectArr() {
+	for(int16 i = 0; i < _objCount; i++) {
+		free(_objects[i].stateDataIndex);
+		_objects[i].stateDataIndex = 0;
+	}
 	free(_objects);
+	_objects = 0;
 }
 
 /**
@@ -349,7 +366,6 @@ void ObjectHandler::freeObjectArr() {
 void ObjectHandler::loadObjectArr(Common::File &in) {
 	debugC(6, kDebugObject, "loadObject(&in)");
 
-// TODO: For Hugo3, if not in story mode, set _objects[2].state to 3
 	for (int varnt = 0; varnt < _vm->_numVariant; varnt++) {
 		uint16 numElem = in.readUint16BE();
 		if (varnt == _vm->_gameVariant) {
@@ -449,6 +465,126 @@ void ObjectHandler::loadObjectArr(Common::File &in) {
 			}
 		}
 	}
+}
+
+/**
+* Set the screenindex property of the carried objets to the given screen
+* number
+*/
+void ObjectHandler::setCarriedScreen(int screenNum) {
+	for (int i = HERO + 1; i < _numObj; i++) {      // Any others
+		if (isCarried(i))                           // being carried
+			_objects[i].screenIndex = screenNum;
+	}
+}
+
+/**
+* Load _numObj from Hugo.dat
+*/
+void ObjectHandler::loadNumObj(Common::File &in) {
+	int numElem;
+
+	for (int varnt = 0; varnt < _vm->_numVariant; varnt++) {
+		numElem = in.readUint16BE();
+		if (varnt == _vm->_gameVariant)
+			_numObj = numElem;
+	}
+}
+
+/**
+* Restore all sequences
+*/
+void ObjectHandler::restoreAllSeq() {
+	// Restore ptrs to currently loaded objects
+	for (int i = 0; i < _numObj; i++)
+		restoreSeq(&_objects[i]);
+}
+
+/**
+* Save objects
+*/
+void ObjectHandler::saveObjects(Common::WriteStream *out) {
+	for (int i = 0; i < _numObj; i++) {
+		// Save where curr_seq_p is pointing to
+		saveSeq(&_objects[i]);
+
+		out->writeByte(_objects[i].pathType);
+		out->writeSint16BE(_objects[i].vxPath);
+		out->writeSint16BE(_objects[i].vyPath);
+		out->writeByte(_objects[i].cycling);
+		out->writeByte(_objects[i].cycleNumb);
+		out->writeByte(_objects[i].frameTimer);
+		out->writeByte(_objects[i].screenIndex);
+		out->writeSint16BE(_objects[i].x);
+		out->writeSint16BE(_objects[i].y);
+		out->writeSint16BE(_objects[i].oldx);
+		out->writeSint16BE(_objects[i].oldy);
+		out->writeSByte(_objects[i].vx);
+		out->writeSByte(_objects[i].vy);
+		out->writeByte(_objects[i].objValue);
+		out->writeByte((_objects[i].carriedFl) ? 1 : 0);
+		out->writeByte(_objects[i].state);
+		out->writeByte(_objects[i].priority);
+		out->writeSint16BE(_objects[i].viewx);
+		out->writeSint16BE(_objects[i].viewy);
+		out->writeSint16BE(_objects[i].direction);
+		out->writeByte(_objects[i].curSeqNum);
+		out->writeByte(_objects[i].curImageNum);
+		out->writeSByte(_objects[i].oldvx);
+		out->writeSByte(_objects[i].oldvy);
+	}
+}
+
+/**
+* Restore objects
+*/
+void ObjectHandler::restoreObjects(Common::SeekableReadStream *in) {
+	for (int i = 0; i < _numObj; i++) {
+		_objects[i].pathType = (path_t) in->readByte();
+		_objects[i].vxPath = in->readSint16BE();
+		_objects[i].vyPath = in->readSint16BE();
+		_objects[i].cycling = (cycle_t) in->readByte();
+		_objects[i].cycleNumb = in->readByte();
+		_objects[i].frameTimer = in->readByte();
+		_objects[i].screenIndex = in->readByte();
+		_objects[i].x = in->readSint16BE();
+		_objects[i].y = in->readSint16BE();
+		_objects[i].oldx = in->readSint16BE();
+		_objects[i].oldy = in->readSint16BE();
+		_objects[i].vx = in->readSByte();
+		_objects[i].vy = in->readSByte();
+		_objects[i].objValue = in->readByte();
+		_objects[i].carriedFl = (in->readByte() == 1);
+		_objects[i].state = in->readByte();
+		_objects[i].priority = in->readByte();
+		_objects[i].viewx = in->readSint16BE();
+		_objects[i].viewy = in->readSint16BE();
+		_objects[i].direction = in->readSint16BE();
+		_objects[i].curSeqNum = in->readByte();
+		_objects[i].curImageNum = in->readByte();
+		_objects[i].oldvx = in->readSByte();
+		_objects[i].oldvy = in->readSByte();
+	}
+}
+
+/**
+* Compute max object score
+*/
+int ObjectHandler::calcMaxScore() {
+	int score = 0;
+	for (int i = 0; i < _numObj; i++)
+		score += _objects[i].objValue;
+	return(score);
+}
+
+/**
+* Read Object images
+*/
+void ObjectHandler::readObjectImages() {
+	debugC(1, kDebugObject, "readObjectImages");
+
+	for (int i = 0; i < _numObj; i++)
+		_vm->_file->readImage(i, &_objects[i]);
 }
 
 } // End of namespace Hugo

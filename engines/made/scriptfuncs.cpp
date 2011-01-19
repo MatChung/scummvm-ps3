@@ -19,15 +19,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/made/scriptfuncs.cpp $
- * $Id: scriptfuncs.cpp 51066 2010-07-20 16:05:25Z mthreepwood $
+ * $Id: scriptfuncs.cpp 54148 2010-11-08 23:07:42Z fingolfin $
  *
  */
 
 #include "common/endian.h"
 #include "common/util.h"
 #include "common/events.h"
+
+#include "backends/audiocd/audiocd.h"
 #include "graphics/cursorman.h"
-#include "sound/audiocd.h"
 #include "sound/softsynth/pcspk.h"
 
 #include "made/made.h"
@@ -654,9 +655,9 @@ int16 ScriptFunctions::sfPlayVoice(int16 argc, int16 *argv) {
 }
 
 int16 ScriptFunctions::sfPlayCd(int16 argc, int16 *argv) {
-	AudioCD.play(argv[0] - 1, 1, 0, 0);
+	g_system->getAudioCDManager()->play(argv[0] - 1, 1, 0, 0);
 	_vm->_cdTimeStart = _vm->_system->getMillis();
-	if (AudioCD.isPlaying()) {
+	if (g_system->getAudioCDManager()->isPlaying()) {
 		return 1;
 	} else {
 		return 0;
@@ -664,8 +665,8 @@ int16 ScriptFunctions::sfPlayCd(int16 argc, int16 *argv) {
 }
 
 int16 ScriptFunctions::sfStopCd(int16 argc, int16 *argv) {
-	if (AudioCD.isPlaying()) {
-		AudioCD.stop();
+	if (g_system->getAudioCDManager()->isPlaying()) {
+		g_system->getAudioCDManager()->stop();
 		return 1;
 	} else {
 		return 0;
@@ -673,11 +674,11 @@ int16 ScriptFunctions::sfStopCd(int16 argc, int16 *argv) {
 }
 
 int16 ScriptFunctions::sfGetCdStatus(int16 argc, int16 *argv) {
-	return AudioCD.isPlaying() ? 1 : 0;
+	return g_system->getAudioCDManager()->isPlaying() ? 1 : 0;
 }
 
 int16 ScriptFunctions::sfGetCdTime(int16 argc, int16 *argv) {
-	if (AudioCD.isPlaying()) {
+	if (g_system->getAudioCDManager()->isPlaying()) {
 		uint32 deltaTime = _vm->_system->getMillis() - _vm->_cdTimeStart;
 		// This basically converts the time from milliseconds to MSF format to MADE's format
 		return (deltaTime / 1000 * 30) + (deltaTime % 1000 / 75 * 30 / 75);

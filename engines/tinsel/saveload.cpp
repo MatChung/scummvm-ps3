@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/saveload.cpp $
- * $Id: saveload.cpp 53991 2010-10-31 21:50:48Z fingolfin $
+ * $Id: saveload.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * Save and restore scene and game.
  */
@@ -119,6 +119,8 @@ struct SFILES {
 };
 
 //----------------- LOCAL GLOBAL DATA --------------------
+
+// FIXME: Avoid non-const global vars
 
 static int	numSfiles = 0;
 static SFILES	savedFiles[MAX_SAVED_FILES];
@@ -287,7 +289,7 @@ static void syncSavedData(Common::Serializer &s, SAVED_DATA &sd) {
  * Generates a new, unique, filename.
  */
 static char *NewName() {
-	static char result[FNAMELEN];
+	static char result[FNAMELEN];	// FIXME: Avoid non-const global vars
 	int	i;
 	int	ano = 1;	// Allocated number
 

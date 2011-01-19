@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/surface.h $
- * $Id: surface.h 52950 2010-09-30 13:03:51Z drmccoy $
+ * $Id: surface.h 55273 2011-01-16 22:29:49Z drmccoy $
  *
  */
 
@@ -82,12 +82,14 @@ public:
 
 	uint16 getWidth () const;
 	uint16 getHeight() const;
-	uint16 getBPP   () const;
+	uint8  getBPP   () const;
 
 	byte *getData(uint16 x = 0, uint16 y = 0);
 	const byte *getData(uint16 x = 0, uint16 y = 0) const;
 
 	void resize(uint16 width, uint16 height);
+
+	void setBPP(uint8 bpp);
 
 	Pixel get(uint16 x = 0, uint16 y = 0);
 	ConstPixel get(uint16 x = 0, uint16 y = 0) const;
@@ -105,6 +107,9 @@ public:
 	void fillRect(uint16 left, uint16 top, uint16 right, uint16 bottom, uint32 color);
 	void fill(uint32 color);
 	void clear();
+
+	void shadeRect(uint16 left, uint16 top, uint16 right, uint16 bottom,
+			uint32 color, uint8 strength);
 
 	void putPixel(uint16 x, uint16 y, uint32 color);
 	void drawLine(uint16 x0, uint16 y0, uint16 x1, uint16 y1, uint32 color);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/parser.h $
- * $Id: parser.h 49628 2010-06-13 09:07:15Z peres001 $
+ * $Id: parser.h 54879 2010-12-12 07:17:13Z peres001 $
  *
  */
 
@@ -179,6 +179,7 @@ public:
 	virtual void parseMergeData(ZonePtr z);
 	virtual void parseHearData(ZonePtr z);
 	virtual void parseSpeakData(ZonePtr z);
+	virtual void parseNoneData(ZonePtr z);
 protected:
 	Common::String	parseComment();
 	Common::String	parseDialogueString();
@@ -409,13 +410,6 @@ public:
 	virtual void parse(Script *script, ProgramPtr program);
 };
 
-
-} // namespace Parallaction
+} // End of namespace Parallaction
 
 #endif
-
-
-
-
-
-

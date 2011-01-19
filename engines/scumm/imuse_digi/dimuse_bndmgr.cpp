@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/imuse_digi/dimuse_bndmgr.cpp $
- * $Id: dimuse_bndmgr.cpp 48162 2010-03-04 17:46:18Z lordhoto $
+ * $Id: dimuse_bndmgr.cpp 54434 2010-11-23 22:25:10Z fingolfin $
  */
 
 
@@ -157,7 +157,7 @@ BundleMgr::~BundleMgr() {
 	delete _file;
 }
 
-Common::File *BundleMgr::getFile(const char *filename, int32 &offset, int32 &size) {
+Common::SeekableReadStream *BundleMgr::getFile(const char *filename, int32 &offset, int32 &size) {
 	BundleDirCache::IndexNode target;
 	strcpy(target.filename, filename);
 	BundleDirCache::IndexNode *found = (BundleDirCache::IndexNode *)bsearch(&target, _indexTable, _numFiles,

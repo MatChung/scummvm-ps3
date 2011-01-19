@@ -19,15 +19,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/fs/ds/ds-fs-factory.cpp $
- * $Id: ds-fs-factory.cpp 50687 2010-07-05 16:09:27Z fingolfin $
+ * $Id: ds-fs-factory.cpp 54321 2010-11-18 15:42:52Z fingolfin $
  */
+
+// Disable symbol overrides for FILE as that is used in FLAC headers
+#define FORBIDDEN_SYMBOL_EXCEPTION_FILE
 
 #if defined(__DS__)
 #include "backends/fs/ds/ds-fs-factory.h"
 #include "backends/fs/ds/ds-fs.h"
 #include "dsmain.h" //for the isGBAMPAvailable() function
 
-DECLARE_SINGLETON(DSFilesystemFactory)
+DECLARE_SINGLETON(DSFilesystemFactory);
 
 AbstractFSNode *DSFilesystemFactory::makeRootFileNode() const {
 	if (DS::isGBAMPAvailable()) {

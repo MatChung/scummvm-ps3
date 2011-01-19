@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/variables.cpp $
- * $Id: variables.cpp 53491 2010-10-15 13:55:18Z drmccoy $
+ * $Id: variables.cpp 55294 2011-01-18 10:42:26Z drmccoy $
  *
  */
 
@@ -68,18 +68,27 @@ void Variables::writeVarString(uint32 var, const char *value) {
 }
 
 void Variables::writeOff8(uint32 offset, uint8 value) {
+	assert(offset < _size);
+
 	write8(_vars + offset, value);
 }
 
 void Variables::writeOff16(uint32 offset, uint16 value) {
+	assert((offset + 1) < _size);
+
 	write16(_vars + offset, value);
 }
 
 void Variables::writeOff32(uint32 offset, uint32 value) {
+	assert((offset + 3) < _size);
+
 	write32(_vars + offset, value);
 }
 
 void Variables::writeOffString(uint32 offset, const char *value) {
+	uint32 length = strlen(value);
+	assert((offset + length + 1) < _size);
+
 	strcpy((char *)(_vars + offset), value);
 }
 
@@ -100,19 +109,27 @@ void Variables::readVarString(uint32 var, char *value, uint32 length) {
 }
 
 uint8 Variables::readOff8(uint32 offset) const {
+	assert(offset < _size);
+
 	return read8(_vars + offset);
 }
 
 uint16 Variables::readOff16(uint32 offset) const {
+	assert((offset + 1) < _size);
+
 	return read16(_vars + offset);
 }
 
 uint32 Variables::readOff32(uint32 offset) const {
+	assert((offset + 3) < _size);
+
 	return read32(_vars + offset);
 }
 
 void Variables::readOffString(uint32 offset, char *value, uint32 length) {
-	Common::strlcpy(value, (const char *)(_vars + offset), length);
+	assert(offset < _size);
+
+	Common::strlcpy(value, (const char *)(_vars + offset), MIN<int>(length, _size - offset));
 }
 
 const uint8 *Variables::getAddressVar8(uint32 var) const {
@@ -284,6 +301,67 @@ VariableReference &VariableReference::operator+=(uint32 value) {
 
 VariableReference &VariableReference::operator*=(uint32 value) {
 	return (*this = (*this * value));
+}
+
+
+VariableStack::VariableStack(uint32 size) : _size(size), _position(0) {
+	_stack = new byte[_size];
+
+	memset(_stack, 0, _size);
+}
+
+VariableStack::~VariableStack() {
+	delete[] _stack;
+}
+
+void VariableStack::pushData(const Variables &vars, uint32 offset, uint32 size) {
+	// Sanity checks
+	assert(size < 256);
+	assert((_position + size) < _size);
+
+	vars.copyTo(offset, _stack + _position, size);
+
+	_position += size;
+	_stack[_position++] = size;
+	_stack[_position++] = 0;
+}
+
+void VariableStack::pushInt(uint32 value) {
+	// Sanity check
+	assert((_position + 4) < _size);
+
+	memcpy(_stack + _position, &value, 4);
+
+	_position += 4;
+	_stack[_position++] = 4;
+	_stack[_position++] = 1;
+}
+
+void VariableStack::pop(Variables &vars, uint32 offset) {
+	// Sanity check
+	assert(_position >= 2);
+
+	bool   isInt = _stack[--_position] == 1;
+	uint32 size  = _stack[--_position];
+
+	// Sanity check
+	assert(_position >= size);
+
+	_position -= size;
+
+	if (isInt) {
+		// If it's an int, explicitely call the int variable writing method,
+		// to make sure the variable space endianness is preserved.
+
+		assert(size == 4);
+
+		uint32 value;
+		memcpy(&value, _stack + _position, 4);
+
+		vars.writeOff32(offset, value);
+	} else
+		// Otherwise, use do a raw copy
+		vars.copyFrom(offset, _stack + _position, size);
 }
 
 } // End of namespace Gob

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/music.cpp $
- * $Id: music.cpp 53779 2010-10-24 22:17:44Z h00ligan $
+ * $Id: music.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -36,6 +36,7 @@
 #include "sound/decoders/raw.h"
 #include "common/config-manager.h"
 #include "common/file.h"
+#include "common/substream.h"
 
 namespace Saga {
 

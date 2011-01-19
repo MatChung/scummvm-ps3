@@ -19,13 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/resource.cpp $
- * $Id: resource.cpp 54047 2010-11-03 09:44:03Z dreammaster $
+ * $Id: resource.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "m4/m4.h"
 #include "m4/resource.h"
 #include "m4/events.h"
+
+#include "common/substream.h"
 
 namespace M4 {
 

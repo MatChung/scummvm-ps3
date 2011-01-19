@@ -19,9 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/plugins/psp/psp-provider.cpp $
- * $Id: psp-provider.cpp 54082 2010-11-05 01:20:34Z fingolfin $
+ * $Id: psp-provider.cpp 54573 2010-11-29 16:18:43Z fingolfin $
  *
  */
+
+#include "common/scummsys.h"
 
 #if defined(DYNAMIC_MODULES) && defined(__PSP__)
 

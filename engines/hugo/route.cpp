@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/route.cpp $
- * $Id: route.cpp 54095 2010-11-05 12:36:20Z strangerke $
+ * $Id: route.cpp 54977 2010-12-20 17:25:58Z strangerke $
  *
  */
 
@@ -55,27 +55,35 @@ void Route::setDirection(uint16 keyCode) {
 	// Set first image in sequence
 	switch (keyCode) {
 	case Common::KEYCODE_UP:
+	case Common::KEYCODE_KP8:
 		obj->currImagePtr = obj->seqList[_UP].seqPtr;
 		break;
 	case Common::KEYCODE_DOWN:
+	case Common::KEYCODE_KP2:
 		obj->currImagePtr = obj->seqList[DOWN].seqPtr;
 		break;
 	case Common::KEYCODE_LEFT:
+	case Common::KEYCODE_KP4:
 		obj->currImagePtr = obj->seqList[LEFT].seqPtr;
 		break;
 	case Common::KEYCODE_RIGHT:
+	case Common::KEYCODE_KP6:
 		obj->currImagePtr = obj->seqList[RIGHT].seqPtr;
 		break;
 	case Common::KEYCODE_HOME:
+	case Common::KEYCODE_KP7:
 		obj->currImagePtr = obj->seqList[LEFT].seqPtr;
 		break;
 	case Common::KEYCODE_END:
+	case Common::KEYCODE_KP1:
 		obj->currImagePtr = obj->seqList[LEFT].seqPtr;
 		break;
 	case Common::KEYCODE_PAGEUP:
+	case Common::KEYCODE_KP9:
 		obj->currImagePtr = obj->seqList[RIGHT].seqPtr;
 		break;
 	case Common::KEYCODE_PAGEDOWN:
+	case Common::KEYCODE_KP3:
 		obj->currImagePtr = obj->seqList[RIGHT].seqPtr;
 		break;
 	}
@@ -103,33 +111,41 @@ void Route::setWalk(uint16 direction) {
 		obj->vx = obj->vy = 0;
 		switch (direction) {                        // And set correct velocity
 		case Common::KEYCODE_UP:
+		case Common::KEYCODE_KP8:
 			obj->vy = -DY;
 			break;
 		case Common::KEYCODE_DOWN:
+		case Common::KEYCODE_KP2:
 			obj->vy =  DY;
 			break;
 		case Common::KEYCODE_LEFT:
+		case Common::KEYCODE_KP4:
 			obj->vx = -DX;
 			break;
 		case Common::KEYCODE_RIGHT:
+		case Common::KEYCODE_KP6:
 			obj->vx =  DX;
 			break;
 		case Common::KEYCODE_HOME:
+		case Common::KEYCODE_KP7:
 			obj->vx = -DX;
 			// Note: in v1 Dos and v2 Dos, obj->vy is set to DY
 			obj->vy = -DY / 2;
 			break;
 		case Common::KEYCODE_END:
+		case Common::KEYCODE_KP1:
 			obj->vx = -DX;
 			// Note: in v1 Dos and v2 Dos, obj->vy is set to -DY
 			obj->vy =  DY / 2;
 			break;
 		case Common::KEYCODE_PAGEUP:
+		case Common::KEYCODE_KP9:
 			obj->vx =  DX;
 			// Note: in v1 Dos and v2 Dos, obj->vy is set to -DY
 			obj->vy = -DY / 2;
 			break;
 		case Common::KEYCODE_PAGEDOWN:
+		case Common::KEYCODE_KP3:
 			obj->vx =  DX;
 			// Note: in v1 Dos and v2 Dos, obj->vy is set to DY
 			obj->vy =  DY / 2;
@@ -275,9 +291,10 @@ void Route::segment(int16 x, int16 y) {
 Point *Route::newNode() {
 	debugC(1, kDebugRoute, "newNode");
 
+	_routeListIndex++;
 	if (_routeListIndex >= kMaxNodes)               // Too many nodes
 		return 0;                                   // Incomplete route - failure
-	_routeListIndex++;
+
 	_route[_routeListIndex] = _route[_routeListIndex - 1];  // Initialize with previous node
 	return &_route[_routeListIndex];
 }
@@ -307,7 +324,7 @@ bool Route::findRoute(int16 cx, int16 cy) {
 	// Store all object baselines into objbound (except hero's = [0])
 	object_t  *obj;                                 // Ptr to object
 	int i;
-	for (i = 1, obj = &_vm->_object->_objects[i]; i < _vm->_numObj; i++, obj++) {
+	for (i = 1, obj = &_vm->_object->_objects[i]; i < _vm->_object->_numObj; i++, obj++) {
 		if ((obj->screenIndex == *_vm->_screen_p) && (obj->cycling != INVISIBLE) && (obj->priority == FLOATING))
 			_vm->storeBoundary(obj->oldx + obj->currImagePtr->x1, obj->oldx + obj->currImagePtr->x2, obj->oldy + obj->currImagePtr->y2);
 	}
@@ -321,7 +338,7 @@ bool Route::findRoute(int16 cx, int16 cy) {
 	}
 
 	// Clear all object baselines from objbound
-	for (i = 0, obj = _vm->_object->_objects; i < _vm->_numObj; i++, obj++) {
+	for (i = 0, obj = _vm->_object->_objects; i < _vm->_object->_numObj; i++, obj++) {
 		if ((obj->screenIndex == *_vm->_screen_p) && (obj->cycling != INVISIBLE) && (obj->priority == FLOATING))
 			_vm->clearBoundary(obj->oldx + obj->currImagePtr->x1, obj->oldx + obj->currImagePtr->x2, obj->oldy + obj->currImagePtr->y2);
 	}

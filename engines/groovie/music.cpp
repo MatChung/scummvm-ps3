@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/groovie/music.cpp $
- * $Id: music.cpp 52736 2010-09-15 22:00:20Z lordhoto $
+ * $Id: music.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -27,9 +27,10 @@
 #include "groovie/groovie.h"
 #include "groovie/resource.h"
 
+#include "backends/audiocd/audiocd.h"
 #include "common/config-manager.h"
 #include "common/macresman.h"
-#include "sound/audiocd.h"
+#include "common/memstream.h"
 #include "sound/midiparser.h"
 
 namespace Groovie {
@@ -42,7 +43,7 @@ MusicPlayer::MusicPlayer(GroovieEngine *vm) :
 }
 
 MusicPlayer::~MusicPlayer() {
-	AudioCD.stop();
+	g_system->getAudioCDManager()->stop();
 }
 
 void MusicPlayer::playSong(uint32 fileref) {
@@ -90,7 +91,7 @@ void MusicPlayer::playCD(uint8 track) {
 		// the song number (it's track 2 on the 2nd CD)
 	} else if ((track == 98) && (_prevCDtrack == 3)) {
 		// Track 98 is used as a hack to stop the credits song
-		AudioCD.stop();
+		g_system->getAudioCDManager()->stop();
 		return;
 	}
 
@@ -101,20 +102,20 @@ void MusicPlayer::playCD(uint8 track) {
 	// It was in the original interpreter, but it introduces a big delay
 	// in the middle of the introduction, so it's disabled right now
 	/*
-	AudioCD.updateCD();
-	while (AudioCD.isPlaying()) {
+	g_system->getAudioCDManager()->updateCD();
+	while (g_system->getAudioCDManager()->isPlaying()) {
 		// Wait a bit and try again
 		_vm->_system->delayMillis(100);
-		AudioCD.updateCD();
+		g_system->getAudioCDManager()->updateCD();
 	}
 	*/
 
 	// Play the track starting at the requested offset (1000ms = 75 frames)
-	AudioCD.play(track - 1, 1, startms * 75 / 1000, 0);
+	g_system->getAudioCDManager()->play(track - 1, 1, startms * 75 / 1000, 0);
 
 	// If the audio is not playing from the CD, play the "fallback" MIDI.
 	// The Mac version has no CD tracks, so it will always use the MIDI.
-	if (!AudioCD.isPlaying()) {
+	if (!g_system->getAudioCDManager()->isPlaying()) {
 		if (track == 2) {
 			// Intro MIDI fallback
 			if (_vm->getPlatform() == Common::kPlatformMacintosh)

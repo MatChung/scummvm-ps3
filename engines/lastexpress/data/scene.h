@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/data/scene.h $
- * $Id: scene.h 53588 2010-10-18 21:03:28Z littleboy $
+ * $Id: scene.h 54358 2010-11-19 01:37:04Z fingolfin $
  *
  */
 
@@ -72,7 +72,10 @@
 #include "lastexpress/shared.h"
 
 #include "common/array.h"
-#include "common/stream.h"
+
+namespace Common {
+class SeekableReadStream;
+}
 
 namespace LastExpress {
 
@@ -151,6 +154,7 @@ public:
 	uint32 next;
 
 	SceneHotspot() {}
+	~SceneHotspot();
 	static SceneHotspot *load(Common::SeekableReadStream *stream);
 
 	bool isInside(const Common::Point &point);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/woodscript.h $
- * $Id: woodscript.h 48256 2010-03-14 05:39:47Z dreammaster $
+ * $Id: woodscript.h 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -77,7 +77,7 @@ public:
 	uint32 pos() const { return _code->pos() / 4; }
 protected:
 	WoodScript *_ws;
-	Common::MemoryReadStream *_code;
+	Common::SeekableReadStream *_code;
 	Sequence *_sequence;
 	static int32 _dataFormats[];
 	bool decodeArgument(int32 format, int32 data, long *&arg, long &value);

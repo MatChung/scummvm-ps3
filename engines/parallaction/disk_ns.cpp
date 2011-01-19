@@ -19,12 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/disk_ns.cpp $
- * $Id: disk_ns.cpp 48936 2010-05-04 12:00:16Z fingolfin $
+ * $Id: disk_ns.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "common/config-manager.h"
 #include "common/fs.h"
+#include "common/memstream.h"
+#include "common/substream.h"
 #include "parallaction/parser.h"
 #include "parallaction/parallaction.h"
 
@@ -1087,4 +1089,4 @@ Common::SeekableReadStream* AmigaDisk_ns::loadSound(const char* name) {
 	return tryOpenFile(path);
 }
 
-} // namespace Parallaction
+} // End of namespace Parallaction

@@ -19,13 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/sound_2gs.cpp $
- * $Id: sound_2gs.cpp 54121 2010-11-07 17:16:59Z fingolfin $
+ * $Id: sound_2gs.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "common/config-manager.h"
 #include "common/fs.h"
 #include "common/md5.h"
+#include "common/memstream.h"
 #include "common/str-array.h"
 
 #include "agi/agi.h"
@@ -839,7 +840,7 @@ bool SoundGen2GS::loadInstrumentHeaders(const Common::FSNode &exePath, const IIg
 	}
 
 	// Read the whole executable file into memory
-	Common::SharedPtr<Common::MemoryReadStream> data(file.readStream(file.size()));
+	Common::SharedPtr<Common::SeekableReadStream> data(file.readStream(file.size()));
 	file.close();
 
 	// Check that we got enough data to be able to parse the instruments
@@ -891,7 +892,7 @@ bool SoundGen2GS::loadWaveFile(const Common::FSNode &wavePath, const IIgsExeInfo
 
 	// Open the wave file and read it into memory
 	file.open(wavePath);
-	Common::SharedPtr<Common::MemoryReadStream> uint8Wave(file.readStream(file.size()));
+	Common::SharedPtr<Common::SeekableReadStream> uint8Wave(file.readStream(file.size()));
 	file.close();
 
 	// Check that we got the whole wave file

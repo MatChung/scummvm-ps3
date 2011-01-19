@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/console.h $
- * $Id: console.h 52292 2010-08-23 04:14:30Z mthreepwood $
+ * $Id: console.h 54933 2010-12-16 16:12:38Z bgk $
  *
  */
 
@@ -39,10 +39,6 @@ public:
 	MystConsole(MohawkEngine_Myst *vm);
 	virtual ~MystConsole(void);
 
-protected:
-	virtual void preEnter();
-	virtual void postEnter();
-
 private:
 	MohawkEngine_Myst *_vm;
 
@@ -59,16 +55,13 @@ private:
 	bool Cmd_PlayMovie(int argc, const char **argv);
 	bool Cmd_DisableInitOpcodes(int argc, const char **argv);
 	bool Cmd_Cache(int argc, const char **argv);
+	bool Cmd_Resources(int argc, const char **argv);
 };
 
 class RivenConsole : public GUI::Debugger {
 public:
 	RivenConsole(MohawkEngine_Riven *vm);
 	virtual ~RivenConsole(void);
-
-protected:
-	virtual void preEnter();
-	virtual void postEnter();
 
 private:
 	MohawkEngine_Riven *_vm;
@@ -97,16 +90,13 @@ public:
 	LivingBooksConsole(MohawkEngine_LivingBooks *vm);
 	virtual ~LivingBooksConsole(void);
 
-protected:
-	virtual void preEnter();
-	virtual void postEnter();
-
 private:
 	MohawkEngine_LivingBooks *_vm;
 
 	bool Cmd_PlaySound(int argc, const char **argv);
 	bool Cmd_StopSound(int argc, const char **argv);
 	bool Cmd_DrawImage(int argc, const char **argv);
+	bool Cmd_ChangePage(int argc, const char **argv);
 };
 
 } // End of namespace Mohawk

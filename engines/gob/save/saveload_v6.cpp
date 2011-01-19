@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/save/saveload_v6.cpp $
- * $Id: saveload_v6.cpp 43570 2009-08-20 20:59:22Z drmccoy $
+ * $Id: saveload_v6.cpp 55297 2011-01-18 11:52:44Z drmccoy $
  *
  */
 
@@ -32,6 +32,7 @@ namespace Gob {
 
 SaveLoad_v6::SaveFile SaveLoad_v6::_saveFiles[] = {
 	{  "cat.inf", kSaveModeSave,   0, "savegame"}, // Save file
+	{"cata1.inf", kSaveModeSave,   0, "autosave"}, // Autosave file
 	{  "mdo.def", kSaveModeExists, 0, 0},
 	{"no_cd.txt", kSaveModeExists, 0, 0},
 };
@@ -275,15 +276,113 @@ void SaveLoad_v6::GameHandler::refreshProps() {
 }
 
 
+SaveLoad_v6::AutoHandler::File::File(GobEngine *vm, const Common::String &base) :
+	SlotFileStatic(vm, base, "aut") {
+}
+
+SaveLoad_v6::AutoHandler::File::~File() {
+}
+
+
+SaveLoad_v6::AutoHandler::AutoHandler(GobEngine *vm, const Common::String &target) :
+	SaveHandler(vm), _file(vm, target) {
+}
+
+SaveLoad_v6::AutoHandler::~AutoHandler() {
+}
+
+int32 SaveLoad_v6::AutoHandler::getSize() {
+	Common::String fileName = _file.build();
+	if (fileName.empty())
+		return -1;
+
+	SaveReader reader(1, 0, fileName);
+	SaveHeader header;
+
+	if (!reader.load())
+		return -1;
+
+	if (!reader.readPartHeader(0, &header))
+		return -1;
+
+	// Return the part's size
+	return header.getSize() + 2900;
+}
+
+bool SaveLoad_v6::AutoHandler::load(int16 dataVar, int32 size, int32 offset) {
+	uint32 varSize = SaveHandler::getVarSize(_vm);
+	if (varSize == 0)
+		return false;
+
+	if ((size != 0) || (offset != 2900)) {
+		warning("Invalid autoloading procedure (%d, %d, %d)", dataVar, size, offset);
+		return false;
+	}
+
+	Common::String fileName = _file.build();
+	if (fileName.empty())
+		return false;
+
+	SaveReader reader(1, 0, fileName);
+	SaveHeader header;
+	SavePartVars vars(_vm, varSize);
+
+	if (!reader.load())
+		return false;
+
+	if (!reader.readPartHeader(0, &header))
+		return false;
+
+	if (header.getSize() != varSize) {
+		warning("Autosave mismatch (%d, %d)", header.getSize(), varSize);
+		return false;
+	}
+
+	if (!reader.readPart(0, &vars))
+		return false;
+
+	if (!vars.writeInto(0, 0, varSize))
+		return false;
+
+	return true;
+}
+
+bool SaveLoad_v6::AutoHandler::save(int16 dataVar, int32 size, int32 offset) {
+	uint32 varSize = SaveHandler::getVarSize(_vm);
+	if (varSize == 0)
+		return false;
+
+	if ((size != 0) || (offset != 2900)) {
+		warning("Invalid autosaving procedure (%d, %d, %d)", dataVar, size, offset);
+		return false;
+	}
+
+	Common::String fileName = _file.build();
+	if (fileName.empty())
+		return false;
+
+	SaveWriter writer(1, 0, fileName);
+	SavePartVars vars(_vm, varSize);
+
+	if (!vars.readFrom(0, 0, varSize))
+		return false;
+
+	return writer.writePart(0, &vars);
+}
+
+
 SaveLoad_v6::SaveLoad_v6(GobEngine *vm, const char *targetName) :
 		SaveLoad(vm) {
 
 	_gameHandler = new GameHandler(vm, targetName);
+	_autoHandler = new AutoHandler(vm, targetName);
 
 	_saveFiles[0].handler = _gameHandler;
+	_saveFiles[1].handler = _autoHandler;
 }
 
 SaveLoad_v6::~SaveLoad_v6() {
+	delete _autoHandler;
 	delete _gameHandler;
 }
 

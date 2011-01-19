@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/data/snd.cpp $
- * $Id: snd.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: snd.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -32,6 +32,7 @@
 
 #include "sound/decoders/adpcm.h"
 #include "sound/audiostream.h"
+#include "common/memstream.h"
 
 namespace LastExpress {
 

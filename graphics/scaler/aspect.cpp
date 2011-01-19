@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/scaler/aspect.cpp $
- * $Id: aspect.cpp 48213 2010-03-09 01:20:23Z robinwatts $
+ * $Id: aspect.cpp 54287 2010-11-17 12:21:37Z fingolfin $
  *
  */
 
@@ -114,7 +114,7 @@ void makeRectStretchable(int &x, int &y, int &w, int &h) {
 	int m = real2Aspect(y) % 6;
 
 	// Ensure that the rect will start on a line that won't have its
-	// colours changed by the stretching function.
+	// colors changed by the stretching function.
 	if (m != 0 && m != 5) {
 		y -= m;
 		h += m;

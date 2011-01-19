@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/imuse_digi/dimuse_sndmgr.h $
- * $Id: dimuse_sndmgr.h 47064 2010-01-06 00:01:27Z lordhoto $
+ * $Id: dimuse_sndmgr.h 54434 2010-11-23 22:25:10Z fingolfin $
  */
 
 #ifndef SCUMM_IMUSE_DIGI_SNDMGR_H
@@ -113,7 +113,7 @@ private:
 	bool checkForProperHandle(SoundDesc *soundDesc);
 	SoundDesc *allocSlot();
 	void prepareSound(byte *ptr, SoundDesc *sound);
-	void prepareSoundFromRMAP(Common::File *file, SoundDesc *sound, int32 offset, int32 size);
+	void prepareSoundFromRMAP(Common::SeekableReadStream *file, SoundDesc *sound, int32 offset, int32 size);
 
 	ScummEngine *_vm;
 	byte _disk;

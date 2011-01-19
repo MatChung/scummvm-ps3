@@ -19,11 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/map_v1.cpp $
- * $Id: map_v1.cpp 53984 2010-10-31 20:07:14Z drmccoy $
+ * $Id: map_v1.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
-#include "common/stream.h"
+#include "common/memstream.h"
 
 #include "gob/gob.h"
 #include "gob/map.h"

@@ -19,9 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/shorten.cpp $
- * $Id: shorten.cpp 53738 2010-10-23 15:46:50Z fingolfin $
+ * $Id: shorten.cpp 55155 2011-01-08 03:14:31Z wjpalenstijn $
  *
  */
+
+#include "common/scummsys.h"
 
 #include "saga/shorten.h"
 

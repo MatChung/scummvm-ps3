@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/saveload.cpp $
- * $Id: saveload.cpp 48287 2010-03-18 15:54:40Z fingolfin $
+ * $Id: saveload.cpp 54442 2010-11-23 22:27:40Z fingolfin $
  */
 
 // ---------------------------------------------------------------------------
@@ -35,6 +35,7 @@
 // ---------------------------------------------------------------------------
 
 
+#include "common/memstream.h"
 #include "common/savefile.h"
 
 #include "sword2/sword2.h"

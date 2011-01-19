@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/sound/softsynth/mt32/freeverb.cpp $
- * $Id: freeverb.cpp 28966 2007-09-19 08:40:12Z peres001 $
+ * $Id: freeverb.cpp 54909 2010-12-14 22:25:10Z tdhs $
  *
  */
 
@@ -125,12 +125,12 @@ revmodel::revmodel() {
 	allpassR[2].setfeedback(0.5f);
 	allpassL[3].setfeedback(0.5f);
 	allpassR[3].setfeedback(0.5f);
+	setmode(initialmode);
 	setwet(initialwet);
 	setroomsize(initialroom);
 	setdry(initialdry);
 	setdamp(initialdamp);
 	setwidth(initialwidth);
-	setmode(initialmode);
 
 	// Buffer will be full of rubbish - so we MUST mute them
 	mute();

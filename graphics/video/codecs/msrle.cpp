@@ -19,13 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/codecs/msrle.cpp $
- * $Id: msrle.cpp 47894 2010-02-05 03:29:04Z mthreepwood $
+ * $Id: msrle.cpp 54930 2010-12-16 02:02:53Z mthreepwood $
  *
  */
 
 // Based off ffmpeg's msrledec.c
 
 #include "graphics/video/codecs/msrle.h"
+#include "common/stream.h"
 
 namespace Graphics {
 
@@ -40,7 +41,7 @@ MSRLEDecoder::~MSRLEDecoder() {
 	delete _surface;
 }
 
-Surface *MSRLEDecoder::decodeImage(Common::SeekableReadStream *stream) {
+const Surface *MSRLEDecoder::decodeImage(Common::SeekableReadStream *stream) {
 	if (_bitsPerPixel == 8) {
 		decode8(stream);
 	} else

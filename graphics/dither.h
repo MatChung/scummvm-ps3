@@ -19,14 +19,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/dither.h $
- * $Id: dither.h 44802 2009-10-08 21:28:57Z fingolfin $
+ * $Id: dither.h 54358 2010-11-19 01:37:04Z fingolfin $
  */
 
 #ifndef GRAPHICS_DITHER_H
 #define GRAPHICS_DITHER_H
 
 #include "common/util.h"
-#include "common/stream.h"
+
+namespace Common {
+class SeekableReadStream;
+class WriteStream;
+}
 
 namespace Graphics {
 

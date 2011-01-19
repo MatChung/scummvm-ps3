@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/resource.cpp $
- * $Id: resource.cpp 54077 2010-11-04 23:19:23Z thebluegr $
+ * $Id: resource.cpp 54916 2010-12-14 23:30:22Z tdhs $
  *
  */
 
@@ -114,16 +114,21 @@ static const char *s_resourceTypeNames[] = {
 	"patch", "bitmap", "palette", "cdaudio",
 	"audio", "sync", "message", "map", "heap",
 	"audio36", "sync36", "xlate", "robot", "vmd",
-	"chunk", "macibin", "macibis", "macpict"
+	"chunk", "animation", "etc", "duck", "clut",
+	"tga", "zzz", "macibin", "macibis", "macpict"
 };
 
+// Resource type suffixes. Note that the
+// suffic of SCI3 scripts has been changed from
+// scr to csc
 static const char *s_resourceTypeSuffixes[] = {
 	"v56", "p56", "scr", "tex", "snd",
 	   "", "voc", "fon", "cur", "pat",
 	"bit", "pal", "cda", "aud", "syn",
 	"msg", "map", "hep",    "",    "",
 	"trn", "rbt", "vmd", "chk",    "",
-	   "",    ""
+	"etc", "duk", "clu", "tga", "zzz",
+	   "",    "",    ""
 }; 
 
 const char *getResourceTypeName(ResourceType restype) {
@@ -144,18 +149,19 @@ static const ResourceType s_resTypeMapSci0[] = {
 
 // TODO: 12 should be "Wave", but SCI seems to just store it in Audio resources
 static const ResourceType s_resTypeMapSci21[] = {
-	kResourceTypeView, kResourceTypePic, kResourceTypeScript, kResourceTypeText,          // 0x00-0x03
-	kResourceTypeSound, kResourceTypeMemory, kResourceTypeVocab, kResourceTypeFont,       // 0x04-0x07
+	kResourceTypeView, kResourceTypePic, kResourceTypeScript, kResourceTypeAnimation,     // 0x00-0x03
+	kResourceTypeSound, kResourceTypeEtc, kResourceTypeVocab, kResourceTypeFont,          // 0x04-0x07
 	kResourceTypeCursor, kResourceTypePatch, kResourceTypeBitmap, kResourceTypePalette,   // 0x08-0x0B
 	kResourceTypeInvalid, kResourceTypeAudio, kResourceTypeSync, kResourceTypeMessage,    // 0x0C-0x0F
 	kResourceTypeMap, kResourceTypeHeap, kResourceTypeChunk, kResourceTypeAudio36,        // 0x10-0x13
-	kResourceTypeSync36, kResourceTypeTranslation, kResourceTypeRobot, kResourceTypeVMD   // 0x14-0x17
+	kResourceTypeSync36, kResourceTypeTranslation, kResourceTypeRobot, kResourceTypeVMD,  // 0x14-0x17
+	kResourceTypeDuck, kResourceTypeClut, kResourceTypeTGA, kResourceTypeZZZ              // 0x18-0x1B
 };
 
 ResourceType ResourceManager::convertResType(byte type) {
 	type &= 0x7f;
 
-	if (_mapVersion != kResVersionSci32) {
+	if (_mapVersion < kResVersionSci2) {
 		// SCI0 - SCI2
 		if (type < ARRAYSIZE(s_resTypeMapSci0))
 			return s_resTypeMapSci0[type];
@@ -189,6 +195,7 @@ Resource::Resource(ResourceManager *resMan, ResourceId id) : _resMan(resMan), _i
 
 Resource::~Resource() {
 	delete[] data;
+	delete[] _header;
 	if (_source && _source->getSourceType() == kSourcePatch)
 		delete _source;
 }
@@ -587,6 +594,8 @@ int ResourceManager::addAppropriateSources() {
 
 int ResourceManager::addAppropriateSources(const Common::FSList &fslist) {
 	ResourceSource *map = 0;
+	Common::Array<ResourceSource *> sci21Maps;
+
 #ifdef ENABLE_SCI32
 	ResourceSource *sci21PatchMap = 0;
 	const Common::FSNode *sci21PatchRes = 0;
@@ -605,8 +614,13 @@ int ResourceManager::addAppropriateSources(const Common::FSList &fslist) {
 
 		if (filename.contains("resmap.0")) {
 			const char *dot = strrchr(file->getName().c_str(), '.');
-			int number = atoi(dot + 1);
-			map = addExternalMap(file, number);
+			uint number = atoi(dot + 1);
+
+			// We need to store each of these maps for use later on
+			if (number >= sci21Maps.size())
+				sci21Maps.resize(number + 1);
+
+			sci21Maps[number] = addExternalMap(file, number);
 		}
 
 #ifdef ENABLE_SCI32
@@ -619,7 +633,7 @@ int ResourceManager::addAppropriateSources(const Common::FSList &fslist) {
 #endif
 	}
 
-	if (!map)
+	if (!map && sci21Maps.empty())
 		return 0;
 
 #ifdef ENABLE_SCI32
@@ -635,11 +649,17 @@ int ResourceManager::addAppropriateSources(const Common::FSList &fslist) {
 		Common::String filename = file->getName();
 		filename.toLowercase();
 
-		if (filename.contains("resource.0")	|| filename.contains("ressci.0")) {
+		if (filename.contains("resource.0")) {
 			const char *dot = strrchr(filename.c_str(), '.');
 			int number = atoi(dot + 1);
 
 			addSource(new VolumeResourceSource(file->getName(), map, number, file));
+		} else if (filename.contains("ressci.0")) {
+			const char *dot = strrchr(filename.c_str(), '.');
+			int number = atoi(dot + 1);
+
+			// Match this volume to its own map
+			addSource(new VolumeResourceSource(file->getName(), sci21Maps[number], number, file));
 		}
 	}
 
@@ -660,11 +680,29 @@ int ResourceManager::addInternalSources() {
 			addSource(new AudioVolumeResourceSource(this, "RESOURCE.SFX", src, 0));
 		else if (Common::File::exists("RESOURCE.AUD"))
 			addSource(new AudioVolumeResourceSource(this, "RESOURCE.AUD", src, 0));
+		else
+			return 0;
 
 		++itr;
 	}
 
 	delete resources;
+
+#ifdef ENABLE_SCI32
+	if (_mapVersion >= kResVersionSci2) {
+		// If we have no scripts, but chunk 0 is present, open up the chunk
+		// to try to get to any scripts in there. The Lighthouse SCI2.1 demo
+		// does exactly this.
+
+		resources = listResources(kResourceTypeScript);
+
+		if (resources->empty() && testResource(ResourceId(kResourceTypeChunk, 0)))
+			addResourcesFromChunk(0);
+
+		delete resources;
+	}
+#endif
+
 	return 1;
 }
 
@@ -795,7 +833,7 @@ void ResourceManager::freeResourceSources() {
 ResourceManager::ResourceManager() {
 }
 
-void ResourceManager::init() {
+void ResourceManager::init(bool initFromFallbackDetector) {
 	_memoryLocked = 0;
 	_memoryLRU = 0;
 	_LRU.clear();
@@ -806,6 +844,13 @@ void ResourceManager::init() {
 
 	_mapVersion = detectMapVersion();
 	_volVersion = detectVolVersion();
+
+	// TODO/FIXME: Remove once SCI3 resource detection is finished
+	if ((_mapVersion == kResVersionSci3 || _volVersion == kResVersionSci3) && (_mapVersion != _volVersion)) {
+		warning("FIXME: Incomplete SCI3 detection: setting map and volume version to SCI3");
+		_mapVersion = _volVersion = kResVersionSci3;
+	}
+
 	if ((_volVersion == kResVersionUnknown) && (_mapVersion != kResVersionUnknown)) {
 		warning("Volume version not detected, but map version has been detected. Setting volume version to map version");
 		_volVersion = _mapVersion;
@@ -826,8 +871,17 @@ void ResourceManager::init() {
 	}
 
 	scanNewSources();
-	addInternalSources();
-	scanNewSources();
+
+	if (!initFromFallbackDetector) {
+		if (!addInternalSources()) {
+			// FIXME: This error message is not always correct.
+			// OTOH, it is nice to be able to detect missing files/sources
+			// So we should definitely fix addInternalSources so this error
+			// only pops up when necessary. Disabling for now.
+			//error("Somehow I can't seem to find the sound files I need (RESOURCE.AUD/RESOURCE.SFX), aborting");
+		}
+		scanNewSources();
+	}
 
 	detectSciVersion();
 
@@ -858,21 +912,6 @@ void ResourceManager::init() {
 		}
 #endif
 	}
-
-#ifdef ENABLE_SCI32
-	if (getSciVersion() >= SCI_VERSION_2_1) {
-		// If we have no scripts, but chunk 0 is present, open up the chunk
-		// to try to get to any scripts in there. The Lighthouse SCI2.1 demo
-		// does exactly this.
-
-		Common::List<ResourceId> *scriptList = listResources(kResourceTypeScript);
-
-		if (scriptList->empty() && testResource(ResourceId(kResourceTypeChunk, 0)))
-			addResourcesFromChunk(0);
-
-		delete scriptList;
-	}
-#endif
 }
 
 ResourceManager::~ResourceManager() {
@@ -1024,8 +1063,10 @@ const char *ResourceManager::versionDescription(ResVersion version) const {
 		return "SCI1.1";
 	case kResVersionSci11Mac:
 		return "Mac SCI1.1+";
-	case kResVersionSci32:
-		return "SCI32";
+	case kResVersionSci2:
+		return "SCI2/2.1";
+	case kResVersionSci3:
+		return "SCI3";
 	}
 
 	return "Version not valid";
@@ -1035,6 +1076,8 @@ ResVersion ResourceManager::detectMapVersion() {
 	Common::SeekableReadStream *fileStream = 0;
 	byte buff[6];
 	ResourceSource *rsrc= 0;
+
+	// TODO: Add SCI3 support
 
 	for (Common::List<ResourceSource *>::iterator it = _sources.begin(); it != _sources.end(); ++it) {
 		rsrc = *it;
@@ -1049,8 +1092,10 @@ ResVersion ResourceManager::detectMapVersion() {
 					fileStream = file;
 			}
 			break;
-		} else if (rsrc->getSourceType() == kSourceMacResourceFork)
+		} else if (rsrc->getSourceType() == kSourceMacResourceFork) {
+			delete fileStream;
 			return kResVersionSci11Mac;
+		}
 	}
 
 	if (!fileStream)
@@ -1064,9 +1109,12 @@ ResVersion ResourceManager::detectMapVersion() {
 		// check if 0 or 01 - try to read resources in SCI0 format and see if exists
 		fileStream->seek(0, SEEK_SET);
 		while (fileStream->read(buff, 6) == 6 && !(buff[0] == 0xFF && buff[1] == 0xFF && buff[2] == 0xFF)) {
-			if (findVolume(rsrc, (buff[5] & 0xFC) >> 2) == NULL)
+			if (findVolume(rsrc, (buff[5] & 0xFC) >> 2) == NULL) {
+				delete fileStream;
 				return kResVersionSci1Middle;
+			}
 		}
+		delete fileStream;
 		return kResVersionSci0Sci1Early;
 	}
 
@@ -1084,8 +1132,8 @@ ResVersion ResourceManager::detectMapVersion() {
 		directoryOffset = fileStream->readUint16LE();
 
 		// Only SCI32 has directory type < 0x80
-		if (directoryType < 0x80 && (mapDetected == kResVersionUnknown || mapDetected == kResVersionSci32))
-			mapDetected = kResVersionSci32;
+		if (directoryType < 0x80 && (mapDetected == kResVersionUnknown || mapDetected == kResVersionSci2))
+			mapDetected = kResVersionSci2;
 		else if (directoryType < 0x80 || ((directoryType & 0x7f) > 0x20 && directoryType != 0xFF))
 			break;
 
@@ -1127,7 +1175,7 @@ ResVersion ResourceManager::detectVolVersion() {
 
 	for (Common::List<ResourceSource *>::iterator it = _sources.begin(); it != _sources.end(); ++it) {
 		rsrc = *it;
-
+	
 		if (rsrc->getSourceType() == kSourceVolume) {
 			if (rsrc->_resourceFile) {
 				fileStream = rsrc->_resourceFile->createReadStream();
@@ -1163,23 +1211,38 @@ ResVersion ResourceManager::detectVolVersion() {
 	bool failed = false;
 	bool sci11Align = false;
 
-	// Check for SCI0, SCI1, SCI1.1 and SCI32 v2 (Gabriel Knight 1 CD) formats
+	// Check for SCI0, SCI1, SCI1.1, SCI32 v2 (Gabriel Knight 1 CD) and SCI32 v3 (LSL7) formats
 	while (!fileStream->eos() && fileStream->pos() < 0x100000) {
 		if (curVersion > kResVersionSci0Sci1Early)
 			fileStream->readByte();
 		resId = fileStream->readUint16LE();
-		dwPacked = (curVersion < kResVersionSci32) ? fileStream->readUint16LE() : fileStream->readUint32LE();
-		dwUnpacked = (curVersion < kResVersionSci32) ? fileStream->readUint16LE() : fileStream->readUint32LE();
+		dwPacked = (curVersion < kResVersionSci2) ? fileStream->readUint16LE() : fileStream->readUint32LE();
+		dwUnpacked = (curVersion < kResVersionSci2) ? fileStream->readUint16LE() : fileStream->readUint32LE();
+
+		// The compression field is present, but bogus when
+		// loading SCI3 volumes, the format is otherwise
+		// identical to SCI2. We therefore get the compression
+		// indicator here, but disregard it in the following
+		// code. 
 		wCompression = fileStream->readUint16LE();
+
 		if (fileStream->eos()) {
 			delete fileStream;
 			return curVersion;
 		}
 
-		int chk = (curVersion == kResVersionSci0Sci1Early) ? 4 : 20;
+		int chk;
+
+		if (curVersion == kResVersionSci0Sci1Early)
+			chk = 4;
+		else if (curVersion < kResVersionSci2)
+			chk = 20;
+		else
+			chk = 32; // We don't need this, but include it for completeness
+
 		int offs = curVersion < kResVersionSci11 ? 4 : 0;
-		if ((curVersion < kResVersionSci32 && wCompression > chk)
-				|| (curVersion == kResVersionSci32 && wCompression != 0 && wCompression != 32)
+		if ((curVersion < kResVersionSci2 && wCompression > chk)
+				|| (curVersion == kResVersionSci2 && wCompression != 0 && wCompression != 32)
 				|| (wCompression == 0 && dwPacked != dwUnpacked + offs)
 		        || (dwUnpacked < dwPacked - offs)) {
 
@@ -1192,7 +1255,9 @@ ResVersion ResourceManager::detectVolVersion() {
 				// Later versions (e.g. QFG1VGA) have resources word-aligned
 				sci11Align = true;
 			} else if (curVersion == kResVersionSci11) {
-				curVersion = kResVersionSci32;
+				curVersion = kResVersionSci2;
+			} else if (curVersion == kResVersionSci2) {
+				curVersion = kResVersionSci3;
 			} else {
 				// All version checks failed, exit loop
 				failed = true;
@@ -1207,7 +1272,7 @@ ResVersion ResourceManager::detectVolVersion() {
 			fileStream->seek(dwPacked - 4, SEEK_CUR);
 		else if (curVersion == kResVersionSci11)
 			fileStream->seek(sci11Align && ((9 + dwPacked) % 2) ? dwPacked + 1 : dwPacked, SEEK_CUR);
-		else if (curVersion == kResVersionSci32)
+		else if (curVersion >= kResVersionSci2)
 			fileStream->seek(dwPacked, SEEK_CUR);
 	}
 
@@ -1390,7 +1455,7 @@ void ResourceManager::readResourcePatches() {
 
 	for (int i = kResourceTypeView; i < kResourceTypeInvalid; ++i) {
 		// Ignore the types that can't be patched (and Robot/VMD is handled externally for now)
-		if (!s_resourceTypeSuffixes[i] || i == kResourceTypeRobot || i == kResourceTypeVMD)
+		if (!s_resourceTypeSuffixes[i] || (i >= kResourceTypeRobot && i != kResourceTypeChunk))
 			continue;
 
 		files.clear();
@@ -1403,6 +1468,12 @@ void ResourceManager::readResourcePatches() {
 		mask = "*.";
 		mask += s_resourceTypeSuffixes[i];
 		SearchMan.listMatchingMembers(files, mask);
+
+		if (i == kResourceTypeScript && files.size() == 0) {
+			// SCI3 (we can't use getSciVersion() at this point)
+			mask = "*.csc";
+			SearchMan.listMatchingMembers(files, mask);
+		}
 
 		for (Common::ArchiveMemberList::const_iterator x = files.begin(); x != files.end(); ++x) {
 			bool bAdd = false;
@@ -1557,10 +1628,8 @@ int ResourceManager::readResourceMapSCI1(ResourceSource *map) {
 			// the actual resource file.
 			int mapVolumeNr = volume_nr + map->_volumeNumber;
 			ResourceSource *source = findVolume(map, mapVolumeNr);
-			// FIXME: this code has serious issues with multiple RESMAP.* files (like in unmodified gk2)
-			//         adding a resource with source == NULL would crash later on
-			if (!source)
-				error("Unable to find volume for map %s volumeNr %d", map->getLocationName().c_str(), mapVolumeNr);
+
+			assert(source);
 
 			Resource *resource = _resMap.getVal(resId, NULL);
 			if (!resource) {
@@ -1733,12 +1802,22 @@ int Resource::readResourceInfo(ResVersion volVersion, Common::SeekableReadStream
 		wCompression = 0;
 		break;
 #ifdef ENABLE_SCI32
-	case kResVersionSci32:
+	case kResVersionSci2:
+	case kResVersionSci3:
 		type = _resMan->convertResType(file->readByte());
 		number = file->readUint16LE();
 		szPacked = file->readUint32LE();
 		szUnpacked = file->readUint32LE();
+
+		// The same comment applies here as in
+		// detectVolVersion regarding SCI3. We ignore the
+		// compression field for SCI3 games, but must presume
+		// it exists in the file.
 		wCompression = file->readUint16LE();
+
+		if (volVersion == kResVersionSci3)
+			wCompression = szPacked != szUnpacked ? 32 : 0;
+
 		break;
 #endif
 	default:
@@ -1955,7 +2034,7 @@ void ResourceManager::detectSciVersion() {
 #ifdef ENABLE_SCI32	
 	viewCompression = getViewCompression();
 #else
-	if (_volVersion == kResVersionSci32) {
+	if (_volVersion >= kResVersionSci2) {
 		// SCI32 support isn't built in, thus view detection will fail
 		viewCompression = kCompUnknown;
 	} else {
@@ -1977,7 +2056,7 @@ void ResourceManager::detectSciVersion() {
 		|| _volVersion == kResVersionSci11Mac
 #ifdef ENABLE_SCI32
 		|| viewCompression == kCompSTACpack
-		|| _volVersion == kResVersionSci32 // kq7
+		|| _volVersion == kResVersionSci2 // kq7
 #endif
 		) {
 		// SCI1.1 VGA views
@@ -1987,7 +2066,7 @@ void ResourceManager::detectSciVersion() {
 		// Otherwise we detect it from a view
 		_viewType = detectViewType();
 #else
-		if (_volVersion == kResVersionSci32 && viewCompression == kCompUnknown) {
+		if (_volVersion == kResVersionSci2 && viewCompression == kCompUnknown) {
 			// A SCI32 game, but SCI32 support is disabled. Force the view type
 			// to kViewVga11, as we can't read from the game's resource files
 			_viewType = kViewVga11;
@@ -2011,16 +2090,19 @@ void ResourceManager::detectSciVersion() {
 	}
 
 	// Handle SCI32 versions here
-	if (_volVersion == kResVersionSci32) {
+	if (_volVersion >= kResVersionSci2) {
+		Common::List<ResourceId> *heaps = listResources(kResourceTypeHeap);
 		// SCI2.1/3 and SCI1 Late resource maps are the same, except that
 		// SCI1 Late resource maps have the resource types or'd with
 		// 0x80. We differentiate between SCI2 and SCI2.1/3 based on that.
-		// TODO: Differentiate between SCI2.1 and SCI3
 		if (_mapVersion == kResVersionSci1Late) {
 			s_sciVersion = SCI_VERSION_2;
 			return;
-		} else {
+		} else if (!heaps->empty()) {
 			s_sciVersion = SCI_VERSION_2_1;
+			return;
+		} else {
+			s_sciVersion = SCI_VERSION_3;
 			return;
 		}
 	}
@@ -2312,6 +2394,24 @@ static byte *findSci0ExportsBlock(byte *buffer) {
 	return NULL;
 }
 
+// This code duplicates Script::relocateOffsetSci3, but we can't use
+// that here since we can't instantiate scripts at this point.
+static int relocateOffsetSci3(const byte *buf, uint32 offset) {
+	int relocStart = READ_LE_UINT32(buf + 8);
+	int relocCount = READ_LE_UINT16(buf + 18);
+	const byte *seeker = buf + relocStart;
+
+	for (int i = 0; i < relocCount; ++i) {
+		if (READ_SCI11ENDIAN_UINT32(seeker) == offset) {
+			// TODO: Find out what UINT16 at (seeker + 8) means
+			return READ_SCI11ENDIAN_UINT16(buf + offset) + READ_SCI11ENDIAN_UINT32(seeker + 4);
+		}
+		seeker += 10;
+	}
+
+	return -1;
+}
+
 reg_t ResourceManager::findGameObject(bool addSci11ScriptOffset) {
 	Resource *script = findResource(ResourceId(kResourceTypeScript, 0), false);
 
@@ -2320,7 +2420,7 @@ reg_t ResourceManager::findGameObject(bool addSci11ScriptOffset) {
 
 	byte *offsetPtr = 0;
 
-	if (getSciVersion() < SCI_VERSION_1_1) {
+	if (getSciVersion() <= SCI_VERSION_1_LATE) {
 		byte *buf = (getSciVersion() == SCI_VERSION_0_EARLY) ? script->data + 2 : script->data;
 
 		// Check if the first block is the exports block (in most cases, it is)
@@ -2333,35 +2433,42 @@ reg_t ResourceManager::findGameObject(bool addSci11ScriptOffset) {
 				error("Unable to find exports block from script 0");
 			offsetPtr += 4 + 2;
 		}
-	} else {
+
+		int16 offset = !isSci11Mac() ? READ_LE_UINT16(offsetPtr) : READ_BE_UINT16(offsetPtr);
+		return make_reg(1, offset);
+	} else if (getSciVersion() >= SCI_VERSION_1_1 && getSciVersion() <= SCI_VERSION_2_1) {
 		offsetPtr = script->data + 4 + 2 + 2;
+
+		// In SCI1.1 - SCI2.1, the heap is appended at the end of the script,
+		// so adjust the offset accordingly if requested
+		int16 offset = !isSci11Mac() ? READ_LE_UINT16(offsetPtr) : READ_BE_UINT16(offsetPtr);
+		if (addSci11ScriptOffset) {
+			offset += script->size;
+
+			// Ensure that the start of the heap is word-aligned - same as in Script::init()
+			if (script->size & 2)
+				offset++;
+		}
+
+		return make_reg(1, offset);
+	} else {
+		return make_reg(1, relocateOffsetSci3(script->data, 22));
 	}
-	
-	int16 offset = !isSci11Mac() ? READ_LE_UINT16(offsetPtr) : READ_BE_UINT16(offsetPtr);
-
-	// In SCI1.1 and newer, the heap is appended at the end of the script,
-	// so adjust the offset accordingly
-	if (getSciVersion() >= SCI_VERSION_1_1 && addSci11ScriptOffset) {
-		offset += script->size;
-
-		// Ensure that the start of the heap is word-aligned - same as in Script::init()
-		if (script->size & 2)
-			offset++;
-	}
-
-	return make_reg(1, offset);
 }
 
 Common::String ResourceManager::findSierraGameId() {
-	// In SCI0-SCI1, the heap is embedded in the script. In SCI1.1+, it's separated
+	// In SCI0-SCI1, the heap is embedded in the script. In SCI1.1 - SCI2.1,
+	// it's in a separate heap resource
 	Resource *heap = 0;
 	int nameSelector = 3;
 
 	if (getSciVersion() < SCI_VERSION_1_1) {
 		heap = findResource(ResourceId(kResourceTypeScript, 0), false);
-	} else {
+	} else if (getSciVersion() >= SCI_VERSION_1_1 && getSciVersion() <= SCI_VERSION_2_1) {
 		heap = findResource(ResourceId(kResourceTypeHeap, 0), false);
 		nameSelector += 5;
+	} else if (getSciVersion() == SCI_VERSION_3) {
+		warning("TODO: findSierraGameId(): SCI3 equivalent");
 	}
 
 	if (!heap)

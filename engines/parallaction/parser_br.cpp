@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/parser_br.cpp $
- * $Id: parser_br.cpp 49628 2010-06-13 09:07:15Z peres001 $
+ * $Id: parser_br.cpp 55232 2011-01-13 21:58:54Z tdhs $
  *
  */
 
@@ -786,7 +786,7 @@ void LocationParser_br::parseDoorData(ZonePtr z) {
 		_vm->_location._slideText[1] = _tokens[2];
 	} else
 	if (!scumm_stricmp(_tokens[0], "location")) {
-		data->_doorLocation = strdup(_tokens[1]);
+		data->_doorLocation = _tokens[1];
 	} else
 	if (!scumm_stricmp(_tokens[0], "file")) {
 		GfxObj *obj = _vm->_gfx->loadDoor(_tokens[1]);

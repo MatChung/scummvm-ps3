@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tucker/sequences.cpp $
- * $Id: sequences.cpp 49458 2010-06-06 14:18:16Z cyx $
+ * $Id: sequences.cpp 54927 2010-12-16 01:35:13Z mthreepwood $
  *
  */
 
@@ -765,7 +765,7 @@ void AnimationSequencePlayer::openAnimation(int index, const char *fileName) {
 }
 
 bool AnimationSequencePlayer::decodeNextAnimationFrame(int index, bool copyDirtyRects) {
-	::Graphics::Surface *surface = _flicPlayer[index].decodeNextFrame();
+	const ::Graphics::Surface *surface = _flicPlayer[index].decodeNextFrame();
 
 	if (!copyDirtyRects) {
 		for (uint16 y = 0; (y < surface->h) && (y < kScreenHeight); y++)
@@ -804,7 +804,7 @@ void AnimationSequencePlayer::playIntroSeq19_20() {
 	// The intro credits animation. This uses 2 animations: the foreground one, which
 	// is the actual intro credits, and the background one, which is an animation of
 	// cogs, and is being replayed when an intro credit appears
-	::Graphics::Surface *surface = 0;
+	const ::Graphics::Surface *surface = 0;
 
 	if (_flicPlayer[0].getCurFrame() >= 115) {
 		surface = _flicPlayer[1].decodeNextFrame();

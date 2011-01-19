@@ -19,14 +19,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/jpeg.cpp $
- * $Id: jpeg.cpp 52791 2010-09-18 10:55:16Z eriktorbjorn $
+ * $Id: jpeg.cpp 55301 2011-01-18 16:18:10Z mthreepwood $
  *
  */
 
+#include "graphics/conversion.h"
 #include "graphics/jpeg.h"
+#include "graphics/pixelformat.h"
 
 #include "common/endian.h"
 #include "common/util.h"
+#include "common/stream.h"
 
 namespace Graphics {
 
@@ -70,6 +73,37 @@ JPEG::JPEG() :
 
 JPEG::~JPEG() {
 	reset();
+}
+
+Surface *JPEG::getSurface(const PixelFormat &format) {
+	// Make sure we have loaded data
+	if (!isLoaded())
+		return 0;
+
+	// Only accept >8bpp surfaces
+	if (format.bytesPerPixel == 1)
+		return 0;
+
+	// Get our component surfaces
+	Graphics::Surface *yComponent = getComponent(1);
+	Graphics::Surface *uComponent = getComponent(2);
+	Graphics::Surface *vComponent = getComponent(3);
+
+	Graphics::Surface *output = new Graphics::Surface();
+	output->create(yComponent->w, yComponent->h, format.bytesPerPixel);
+
+	for (uint16 i = 0; i < output->h; i++) {
+		for (uint16 j = 0; j < output->w; j++) {
+			byte r = 0, g = 0, b = 0;
+			YUV2RGB(*((byte *)yComponent->getBasePtr(j, i)), *((byte *)uComponent->getBasePtr(j, i)), *((byte *)vComponent->getBasePtr(j, i)), r, g, b);
+			if (format.bytesPerPixel == 2)
+				*((uint16 *)output->getBasePtr(j, i)) = format.RGBToColor(r, g, b);
+			else
+				*((uint32 *)output->getBasePtr(j, i)) = format.RGBToColor(r, g, b);
+		}
+	}
+
+	return output;
 }
 
 void JPEG::reset() {

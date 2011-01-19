@@ -19,17 +19,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/drascula/sound.cpp $
- * $Id: sound.cpp 48637 2010-04-12 09:14:17Z fingolfin $
+ * $Id: sound.cpp 54148 2010-11-08 23:07:42Z fingolfin $
  *
  */
 
-#include "sound/audiocd.h"
 #include "sound/audiostream.h"
 #include "sound/mixer.h"
 #include "sound/decoders/raw.h"
 #include "sound/decoders/voc.h"
 
 #include "common/config-manager.h"
+
+#include "backends/audiocd/audiocd.h"
 
 #include "drascula/drascula.h"
 
@@ -123,20 +124,20 @@ void DrasculaEngine::finishSound() {
 }
 
 void DrasculaEngine::playMusic(int p) {
-	AudioCD.stop();
-	AudioCD.play(p - 1, 1, 0, 0);
+	_system->getAudioCDManager()->stop();
+	_system->getAudioCDManager()->play(p - 1, 1, 0, 0);
 }
 
 void DrasculaEngine::stopMusic() {
-	AudioCD.stop();
+	_system->getAudioCDManager()->stop();
 }
 
 void DrasculaEngine::updateMusic() {
-	AudioCD.updateCD();
+	_system->getAudioCDManager()->updateCD();
 }
 
 int DrasculaEngine::musicStatus() {
-	return AudioCD.isPlaying();
+	return _system->getAudioCDManager()->isPlaying();
 }
 
 void DrasculaEngine::stopSound() {
@@ -157,7 +158,7 @@ void DrasculaEngine::MusicFadeout() {
 		_system->updateScreen();
 		_system->delayMillis(50);
 	}
-	AudioCD.stop();
+	_system->getAudioCDManager()->stop();
 	_system->delayMillis(100);
 	_mixer->setVolumeForSoundType(Audio::Mixer::kMusicSoundType, org_vol);
 }

@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/script.cpp $
-* $Id: script.cpp 53401 2010-10-13 07:14:38Z anotherguest $
+* $Id: script.cpp 54221 2010-11-13 01:15:37Z sylvaintv $
 *
 */
 
@@ -66,9 +66,13 @@ EMCInterpreter::EMCInterpreter(ToonEngine *vm) : _vm(vm), _scriptData(0), _filen
 #undef OPCODE
 }
 
+EMCInterpreter::~EMCInterpreter() {
+}
+
 bool EMCInterpreter::callback(Common::IFFChunk &chunk) {
 	switch (chunk._type) {
 	case MKID_BE('TEXT'):
+		delete[] _scriptData->text;
 		_scriptData->text = new byte[chunk._size];
 		assert(_scriptData->text);
 		if (chunk._stream->read(_scriptData->text, chunk._size) != chunk._size)
@@ -76,6 +80,7 @@ bool EMCInterpreter::callback(Common::IFFChunk &chunk) {
 		break;
 
 	case MKID_BE('ORDR'):
+		delete[] _scriptData->ordr;
 		_scriptData->ordr = new uint16[chunk._size >> 1];
 		assert(_scriptData->ordr);
 		if (chunk._stream->read(_scriptData->ordr, chunk._size) != chunk._size)
@@ -86,6 +91,7 @@ bool EMCInterpreter::callback(Common::IFFChunk &chunk) {
 		break;
 
 	case MKID_BE('DATA'):
+		delete[] _scriptData->data;
 		_scriptData->data = new uint16[chunk._size >> 1];
 		assert(_scriptData->data);
 		if (chunk._stream->read(_scriptData->data, chunk._size) != chunk._size)
@@ -145,11 +151,13 @@ void EMCInterpreter::unload(EMCData *data) {
 		return;
 
 	delete[] data->text;
-	delete[] data->ordr;
-	delete[] data->data;
+	data->text = NULL;
 
-	data->text = 0;
-	data->ordr = data->data = 0;
+	delete[] data->ordr;
+	data->ordr = NULL;
+
+	delete[] data->data;
+	 data->data = NULL;
 }
 
 void EMCInterpreter::init(EMCState *scriptStat, const EMCData *data) {
@@ -181,7 +189,6 @@ bool EMCInterpreter::isValid(EMCState *script) {
 }
 
 bool EMCInterpreter::run(EMCState *script) {
-
 	if (script->running)
 		return false;
 
@@ -191,7 +198,6 @@ bool EMCInterpreter::run(EMCState *script) {
 		return false;
 
 	script->running = true;
-
 
 	// Should be no Problem at all to cast to uint32 here, since that's the biggest ptrdiff the original
 	// would allow, of course that's not realistic to happen to be somewhere near the limit of uint32 anyway.
@@ -216,7 +222,7 @@ bool EMCInterpreter::run(EMCState *script) {
 		static bool EMCDebug = false;
 		if (EMCDebug)
 			debugC(5, 0, "[0x%.08X] EMCInterpreter::%s([%d/%u])", instOffset * 2, _opcodes[opcode].desc, _parameter, (uint)_parameter);
-		//debug(0, "[0x%.08X] EMCInterpreter::%s([%d/%u])", instOffset, _opcodes[opcode].desc, _parameter, (uint)_parameter);
+		//printf( "[0x%.08X] EMCInterpreter::%s([%d/%u])\n", instOffset, _opcodes[opcode].desc, _parameter, (uint)_parameter);
 
 		(this->*(_opcodes[opcode].proc))(script);
 	}

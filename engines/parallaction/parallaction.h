@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/parallaction.h $
- * $Id: parallaction.h 53484 2010-10-15 12:48:19Z fingolfin $
+ * $Id: parallaction.h 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -606,7 +606,7 @@ private:
 extern Parallaction *_vm;
 
 
-} // namespace Parallaction
+} // End of namespace Parallaction
 
 
 #endif

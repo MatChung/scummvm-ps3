@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/debugger.cpp $
- * $Id: debugger.cpp 54032 2010-11-01 22:19:16Z lordhoto $
+ * $Id: debugger.cpp 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -51,16 +51,6 @@ Debugger::Debugger(KyraEngine_v1 *vm)
 	DCmd_Register("queryflag",			WRAP_METHOD(Debugger, cmd_queryFlag));
 	DCmd_Register("timers",				WRAP_METHOD(Debugger, cmd_listTimers));
 	DCmd_Register("settimercountdown",	WRAP_METHOD(Debugger, cmd_setTimerCountdown));
-}
-
-void Debugger::preEnter() {
-	_vm->pauseEngine(true);
-	::GUI::Debugger::preEnter();
-}
-
-void Debugger::postEnter() {
-	::GUI::Debugger::postEnter();
-	_vm->pauseEngine(false);
 }
 
 bool Debugger::cmd_setScreenDebug(int argc, const char **argv) {

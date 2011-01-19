@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/seg_manager.cpp $
- * $Id: seg_manager.cpp 54037 2010-11-02 09:49:47Z fingolfin $
+ * $Id: seg_manager.cpp 54925 2010-12-15 23:35:21Z thebluegr $
  *
  */
 
@@ -82,22 +82,19 @@ void SegManager::resetSegMan() {
 }
 
 void SegManager::initSysStrings() {
-	_sysStrings = (SystemStrings *)allocSegment(new SystemStrings(), &_sysStringsSegId);
+	if (getSciVersion() <= SCI_VERSION_1_1) {
+		// We need to allocate system strings in one segment, for compatibility reasons
+		allocDynmem(512, "system strings", &_saveDirPtr);
+		_parserPtr = make_reg(_saveDirPtr.segment, _saveDirPtr.offset + 256);
+#ifdef ENABLE_SCI32
+	} else {
+		SciString *saveDirString = allocateString(&_saveDirPtr);
+		saveDirString->setSize(256);
+		saveDirString->setValue(0, 0);
 
-	// Allocate static buffer for savegame and CWD directories
-	SystemString *strSaveDir = getSystemString(SYS_STRING_SAVEDIR);
-	strSaveDir->_name = "savedir";
-	strSaveDir->_maxSize = MAX_SAVE_DIR_SIZE;
-	strSaveDir->_value = (char *)calloc(MAX_SAVE_DIR_SIZE, sizeof(char));
-	// Set the savegame dir (actually, we set it to a fake value,
-	// since we cannot let the game control where saves are stored)
-	::strcpy(strSaveDir->_value, "");
-
-	// Allocate static buffer for the parser base
-	SystemString *strParserBase = getSystemString(SYS_STRING_PARSER_BASE);
-	strParserBase->_name = "parser-base";
-	strParserBase->_maxSize = MAX_PARSER_BASE;
-	strParserBase->_value = (char *)calloc(MAX_PARSER_BASE, sizeof(char));
+		_parserPtr = NULL_REG;	// no SCI2 game had a parser
+#endif
+	}
 }
 
 SegmentId SegManager::findFreeSegment() const {
@@ -149,11 +146,10 @@ Script *SegManager::allocateScript(int script_nr, SegmentId *segid) {
 	return (Script *)mem;
 }
 
-int SegManager::deallocate(SegmentId seg, bool recursive) {
-	SegmentObj *mobj;
+void SegManager::deallocate(SegmentId seg, bool recursive) {
 	VERIFY(check(seg), "invalid seg id");
 
-	mobj = _heap[seg];
+	SegmentObj *mobj = _heap[seg];
 
 	if (mobj->getType() == SEG_TYPE_SCRIPT) {
 		Script *scr = (Script *)mobj;
@@ -164,8 +160,6 @@ int SegManager::deallocate(SegmentId seg, bool recursive) {
 
 	delete mobj;
 	_heap[seg] = NULL;
-
-	return 1;
 }
 
 bool SegManager::isHeapObject(reg_t pos) const {
@@ -600,7 +594,11 @@ static inline char getChar(const SegmentRef &ref, uint offset) {
 		if (!((val.segment == 0xFFFF) && (offset > 1)))
 			warning("Attempt to read character from non-raw data");
 
-	return (offset & 1 ? val.offset >> 8 : val.offset & 0xff);
+	bool oddOffset = offset & 1;
+	if (g_sci->getPlatform() == Common::kPlatformAmiga)
+		oddOffset = !oddOffset;		// Amiga versions are BE
+
+	return (oddOffset ? val.offset >> 8 : val.offset & 0xff);
 }
 
 static inline void setChar(const SegmentRef &ref, uint offset, char value) {
@@ -611,7 +609,11 @@ static inline void setChar(const SegmentRef &ref, uint offset, char value) {
 
 	val->segment = 0;
 
-	if (offset & 1)
+	bool oddOffset = offset & 1;
+	if (g_sci->getPlatform() == Common::kPlatformAmiga)
+		oddOffset = !oddOffset;		// Amiga versions are BE
+
+	if (oddOffset)
 		val->offset = (val->offset & 0x00ff) | (value << 8);
 	else
 		val->offset = (val->offset & 0xff00) | value;

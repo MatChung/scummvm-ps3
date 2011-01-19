@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/video/seq_decoder.h $
- * $Id: seq_decoder.h 51725 2010-08-04 08:25:05Z fingolfin $
+ * $Id: seq_decoder.h 54928 2010-12-16 01:41:11Z mthreepwood $
  *
  */
 
@@ -47,9 +47,9 @@ public:
 	uint16 getWidth() const { return SEQ_SCREEN_WIDTH; }
 	uint16 getHeight() const { return SEQ_SCREEN_HEIGHT; }
 	uint32 getFrameCount() const { return _frameCount; }
-	Graphics::Surface *decodeNextFrame();
+	const Graphics::Surface *decodeNextFrame();
 	Graphics::PixelFormat getPixelFormat() const { return Graphics::PixelFormat::createFormatCLUT8(); }
-	byte *getPalette() { _dirtyPalette = false; return _palette; }
+	const byte *getPalette() { _dirtyPalette = false; return _palette; }
 	bool hasDirtyPalette() const { return _dirtyPalette; }
   
 protected:

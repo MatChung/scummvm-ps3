@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/events.h $
- * $Id: events.h 50830 2010-07-12 20:17:42Z lordhoto $
+ * $Id: events.h 55087 2011-01-01 22:36:33Z fuzzie $
  *
  */
 
@@ -354,8 +354,8 @@ public:
 
 	/**
 	 * Return a bitmask with the button states:
-	 * - bit 0: left button up=1, down=0
-	 * - bit 1: right button up=1, down=0
+	 * - bit 0: left button up=0, down=1
+	 * - bit 1: right button up=0, down=1
 	 */
 	virtual int getButtonState() const = 0;
 

@@ -19,12 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/sound/sounddesc.cpp $
- * $Id: sounddesc.cpp 47579 2010-01-26 22:48:45Z fingolfin $
+ * $Id: sounddesc.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "common/util.h"
-#include "common/stream.h"
+#include "common/memstream.h"
 #include "sound/mixer.h"
 #include "sound/decoders/raw.h"
 #include "sound/decoders/wave.h"

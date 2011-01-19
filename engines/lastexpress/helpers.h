@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/helpers.h $
- * $Id: helpers.h 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: helpers.h 54207 2010-11-11 18:22:55Z fingolfin $
  *
  */
 
@@ -81,11 +81,11 @@
 #define clearBg(type) _engine->getGraphicsManager()->clear(type)
 #define showScene(index, type) _engine->getGraphicsManager()->draw(getScenes()->get(index), type);
 
-#define askForRedraw() _engine->getGraphicsManager()->change();
-#define redrawScreen() _engine->getGraphicsManager()->update(); _engine->_system->updateScreen();
+#define askForRedraw() _engine->getGraphicsManager()->change()
+#define redrawScreen() do { _engine->getGraphicsManager()->update(); _engine->_system->updateScreen(); } while (false)
 
 // Used to delete entity sequences
-#define SAFE_DELETE(_p) { if(_p) { delete (_p); (_p) = NULL; } }
+#define SAFE_DELETE(_p) do { delete (_p); (_p) = NULL; } while (false)
 
 //////////////////////////////////////////////////////////////////////////
 // Output

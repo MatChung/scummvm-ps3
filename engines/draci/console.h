@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/draci/console.h $
- * $Id: console.h 54116 2010-11-07 15:03:54Z tdhs $
+ * $Id: console.h 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -36,10 +36,6 @@ class DraciConsole : public GUI::Debugger {
 public:
 	DraciConsole(DraciEngine *vm);
 	virtual ~DraciConsole(void);
-
-protected:
-	virtual void preEnter();
-	virtual void postEnter();
 
 private:
 	DraciEngine *_vm;

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/savegame.h $
- * $Id: savegame.h 54014 2010-11-01 16:42:54Z m_kiewitz $
+ * $Id: savegame.h 55032 2010-12-24 14:47:47Z thebluegr $
  *
  */
 
@@ -35,8 +35,30 @@ namespace Sci {
 
 struct EngineState;
 
+/*
+ * Savegame format history:
+ *
+ * Version - new/changed feature
+ * =============================
+ *      30 - synonyms
+ *      29 - system strings
+ *      28 - heap
+ *      27 - script created windows
+ *      26 - play time
+ *      25 - palette intensity
+ *      24 - palvary
+ *      23 - script buffer and heap size
+ *      22 - game signature
+ *      21 - script local variables
+ *      20 - exports/synonyms
+ *      19 - exportsAreWide
+ *      18 - SCI32 arrays/strings
+ *      17 - sound
+ * 
+ */
+
 enum {
-	CURRENT_SAVEGAME_VERSION = 27,
+	CURRENT_SAVEGAME_VERSION = 30,
 	MINIMUM_SAVEGAME_VERSION = 14
 };
 

@@ -22,11 +22,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/icons.cpp $
- * $Id: icons.cpp 39896 2009-04-07 19:52:46Z Hkz $
+ * $Id: icons.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  */
 
 
-#include "common/stream.h"
+#include "common/memstream.h"
 #include "common/rect.h"
 
 #include "sword2/sword2.h"

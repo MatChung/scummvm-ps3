@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/hugo.cpp $
- * $Id: hugo.cpp 54124 2010-11-07 18:52:47Z strangerke $
+ * $Id: hugo.cpp 55307 2011-01-18 18:26:33Z strangerke $
  *
  */
 
@@ -62,13 +62,14 @@ char        _textBoxBuffer[MAX_BOX];            // Buffer for text box
 command_t   _line;                              // Line of user text input
 
 HugoEngine::HugoEngine(OSystem *syst, const HugoGameDescription *gd) : Engine(syst), _gameDescription(gd), _mouseX(0), _mouseY(0),
-	_textData(0), _stringtData(0), _screenNames(0), _textEngine(0), _textIntro(0), _textMouse(0), _textParser(0), _textSchedule(0),
-	_textUtil(0), _arrayNouns(0), _arrayVerbs(0), _arrayReqs(0), _hotspots(0), _invent(0), _uses(0), _catchallList(0),
-	_backgroundObjects(0), _points(0), _cmdList(0), _screenActs(0), _heroImage(0), _defltTunes(0), _introX(0),
-	_introY(0), _maxInvent(0), _numBonuses(0), _numScreens(0), _tunesNbr(0), _soundSilence(0), _soundTest(0), _screenStates(0),
-	_numObj(0), _score(0), _maxscore(0), _backgroundObjectsSize(0), _screenActsSize(0), _usesSize(0)
+	_textData(0), _stringtData(0), _screenNames(0), _textEngine(0), _textIntro(0), _textMouse(0), _textParser(0), _textUtil(0),
+	_arrayNouns(0), _arrayVerbs(0), _arrayReqs(0), _hotspots(0), _invent(0), _uses(0), _catchallList(0), _backgroundObjects(0),
+	_points(0), _cmdList(0), _screenActs(0), _hero(0), _heroImage(0), _defltTunes(0), _introX(0), _introY(0), _maxInvent(0), _numBonuses(0),
+	_numScreens(0), _tunesNbr(0), _soundSilence(0), _soundTest(0), _screenStates(0), _score(0), _maxscore(0),
+	_backgroundObjectsSize(0), _screenActsSize(0), _usesSize(0)
 
 {
+	_system = syst;
 	DebugMan.addDebugChannel(kDebugSchedule, "Schedule", "Script Schedule debug level");
 	DebugMan.addDebugChannel(kDebugEngine, "Engine", "Engine debug level");
 	DebugMan.addDebugChannel(kDebugDisplay, "Display", "Display debug level");
@@ -78,37 +79,46 @@ HugoEngine::HugoEngine(OSystem *syst, const HugoGameDescription *gd) : Engine(sy
 	DebugMan.addDebugChannel(kDebugRoute, "Route", "Route debug level");
 	DebugMan.addDebugChannel(kDebugInventory, "Inventory", "Inventory debug level");
 	DebugMan.addDebugChannel(kDebugObject, "Object", "Object debug level");
+	DebugMan.addDebugChannel(kDebugMusic, "Music", "Music debug level");
 
 	_console = new HugoConsole(this);
+	_rnd = 0;
 }
 
 HugoEngine::~HugoEngine() {
-	free(_textData);
-	free(_stringtData);
+	shutdown();
+
+	freeTexts(_textData);
+	freeTexts(_stringtData);
 
 	if (_arrayNouns) {
 		for (int i = 0; _arrayNouns[i]; i++)
-			free(_arrayNouns[i]);
+			freeTexts(_arrayNouns[i]);
 		free(_arrayNouns);
 	}
 
 	if (_arrayVerbs) {
 		for (int i = 0; _arrayVerbs[i]; i++)
-			free(_arrayVerbs[i]);
+			freeTexts(_arrayVerbs[i]);
 		free(_arrayVerbs);
 	}
 
-	free(_screenNames);
+	freeTexts(_screenNames);
 	_screen->freePalette();
-	free(_textEngine);
-	free(_textIntro);
+	freeTexts(_textEngine);
+	freeTexts(_textIntro);
 	free(_introX);
 	free(_introY);
-	free(_textMouse);
-	free(_textParser);
-	free(_textSchedule);
-	free(_textUtil);
-	free(_arrayReqs);
+	freeTexts(_textMouse);
+	freeTexts(_textParser);
+	freeTexts(_textUtil);
+
+	if (_arrayReqs) {
+		for (int i = 0; _arrayReqs[i] != 0; i++)
+			free(_arrayReqs[i]);
+		free(_arrayReqs);
+	}
+
 	free(_hotspots);
 	free(_invent);
 
@@ -148,6 +158,8 @@ HugoEngine::~HugoEngine() {
 
 	_screen->freeFonts();
 
+	delete _topMenu;
+
 	delete _object;
 	delete _sound;
 	delete _route;
@@ -155,11 +167,13 @@ HugoEngine::~HugoEngine() {
 	delete _inventory;
 	delete _mouse;
 	delete _screen;
+	delete _intro;
 	delete _scheduler;
 	delete _file;
 
 	DebugMan.clearAllDebugChannels();
 	delete _console;
+	delete _rnd;
 }
 
 GameType HugoEngine::getGameType() const {
@@ -183,72 +197,76 @@ Common::Error HugoEngine::run() {
 	_route = new Route(this);
 	_sound = new SoundHandler(this);
 
+	_topMenu = new TopMenu(this);
+
 	switch (_gameVariant) {
-	case 0: // H1 Win
+	case kGameVariantH1Win: // H1 Win
 		_file = new FileManager_v1w(this);
 		_scheduler = new Scheduler_v1w(this);
 		_intro = new intro_v1w(this);
 		_screen = new Screen_v1w(this);
 		_parser = new Parser_v1w(this);
 		_object = new ObjectHandler_v1w(this);
+		_normalTPS = 9;
 		break;
-	case 1:
-		_file = new FileManager_v2d(this);
+	case kGameVariantH2Win:
+		_file = new FileManager_v2w(this);
 		_scheduler = new Scheduler_v1w(this);
 		_intro = new intro_v2w(this);
 		_screen = new Screen_v1w(this);
 		_parser = new Parser_v1w(this);
 		_object = new ObjectHandler_v1w(this);
+		_normalTPS = 9;
 		break;
-	case 2:
-		_file = new FileManager_v2d(this);
+	case kGameVariantH3Win:
+		_file = new FileManager_v2w(this);
 		_scheduler = new Scheduler_v1w(this);
 		_intro = new intro_v3w(this);
 		_screen = new Screen_v1w(this);
 		_parser = new Parser_v1w(this);
 		_object = new ObjectHandler_v1w(this);
+		_normalTPS = 9;
 		break;
-	case 3: // H1 DOS
+	case kGameVariantH1Dos: // H1 DOS
 		_file = new FileManager_v1d(this);
 		_scheduler = new Scheduler_v1d(this);
 		_intro = new intro_v1d(this);
 		_screen = new Screen_v1d(this);
 		_parser = new Parser_v1d(this);
 		_object = new ObjectHandler_v1d(this);
+		_normalTPS = 8;
 		break;
-	case 4:
+	case kGameVariantH2Dos:
 		_file = new FileManager_v2d(this);
 		_scheduler = new Scheduler_v2d(this);
 		_intro = new intro_v2d(this);
 		_screen = new Screen_v1d(this);
 		_parser = new Parser_v2d(this);
 		_object = new ObjectHandler_v2d(this);
+		_normalTPS = 8;
 		break;
-	case 5:
+	case kGameVariantH3Dos:
 		_file = new FileManager_v3d(this);
 		_scheduler = new Scheduler_v3d(this);
 		_intro = new intro_v3d(this);
 		_screen = new Screen_v1d(this);
 		_parser = new Parser_v3d(this);
-		_object = new ObjectHandler_v1d(this);
+		_object = new ObjectHandler_v3d(this);
+		_normalTPS = 9;
 		break;
 	}
 
 	if (!loadHugoDat())
 		return Common::kUnknownError;
 
-	// Interesting situation: We have no cursor to show, since
-	// the DOS version had none, and the Windows version just used
-	// the windows default one. Meaning this call will just use whatever
-	// was used last, i.e. the launcher GUI cursor. What to do?
-	g_system->showMouse(true);
+	/* Use Windows-looking mouse cursor */
+	_screen->setCursorPal();
+	_screen->resetInventoryObjId();
 
 	initStatus();                                   // Initialize game status
 	initConfig(INSTALL);                            // Initialize user's config
 	initialize();
 	initConfig(RESET);                              // Reset user's config
-
-	_file->restoreGame(-1);
 
 	initMachine();
 
@@ -259,7 +277,7 @@ Common::Error HugoEngine::run() {
 
 	while (!_status.doQuitFl) {
 		g_system->updateScreen();
-
+		_sound->pcspkr_player();
 		runMachine();
 		// Handle input
 		Common::Event event;
@@ -270,7 +288,7 @@ Common::Error HugoEngine::run() {
 					this->getDebugger()->attach();
 					this->getDebugger()->onFrame();
 				}
-				_parser->keyHandler(event.kbd.keycode, 0);
+				_parser->keyHandler(event);
 				break;
 			case Common::EVENT_MOUSEMOVE:
 				_mouseX = event.mouse.x;
@@ -305,7 +323,7 @@ void HugoEngine::initMachine() {
 		readScreenFiles(0);
 	else
 		_file->readBackground(_numScreens - 1);     // Splash screen
-	readObjectImages();                             // Read all object images
+	_object->readObjectImages();                    // Read all object images
 	if (_platform == Common::kPlatformWindows)
 		_file->readUIFImages();                     // Read all uif images (only in Win versions)
 }
@@ -315,6 +333,7 @@ void HugoEngine::initMachine() {
 */
 void HugoEngine::runMachine() {
 	static uint32 lastTime;
+	uint32 curTime;
 
 	status_t &gameStatus = getGameStatus();
 	// Don't process if we're in a textbox
@@ -325,28 +344,31 @@ void HugoEngine::runMachine() {
 	if (gameStatus.gameOverFl)
 		return;
 
+	curTime = g_system->getMillis();
 	// Process machine once every tick
-	if (g_system->getMillis() - lastTime < (uint32)(1000 / TPS))
-		return;
-	lastTime = g_system->getMillis();
+	while (curTime - lastTime < (uint32)(1000 / getTPS())) {
+		g_system->delayMillis(5);
+		curTime = g_system->getMillis();
+	}
+	lastTime = curTime;
 
 	switch (gameStatus.viewState) {
 	case V_IDLE:                                    // Not processing state machine
+		_screen->hideCursor();
 		_intro->preNewGame();                       // Any processing before New Game selected
 		break;
 	case V_INTROINIT:                               // Initialization before intro begins
 		_intro->introInit();
-		g_system->showMouse(false);
 		gameStatus.viewState = V_INTRO;
 		break;
 	case V_INTRO:                                   // Do any game-dependant preamble
-		if (_intro->introPlay())    {               // Process intro screen
+		if (_intro->introPlay()) {                  // Process intro screen
 			_scheduler->newScreen(0);               // Initialize first screen
 			gameStatus.viewState = V_PLAY;
 		}
 		break;
 	case V_PLAY:                                    // Playing game
-		g_system->showMouse(true);
+		_screen->showCursor();
 		_parser->charHandler();                     // Process user cmd input
 		_object->moveObjects();                     // Process object movement
 		_scheduler->runScheduler();                 // Process any actions
@@ -355,6 +377,7 @@ void HugoEngine::runMachine() {
 		_mouse->mouseHandler();                     // Mouse activity - adds to display list
 		_screen->drawStatusText();
 		_screen->displayList(D_DISPLAY);            // Blit the display list to screen
+		_sound->checkMusic();
 		break;
 	case V_INVENT:                                  // Accessing inventory
 		_inventory->runInventory();                 // Process Inventory state machine
@@ -454,11 +477,8 @@ bool HugoEngine::loadHugoDat() {
 	// Read textParser
 	_textParser = loadTexts(in);
 
-	// Read textSchedule
-	_textSchedule = loadTexts(in);
-
 	// Read textUtil
-	_textUtil = loadTexts(in);
+	_textUtil = loadTextsVariante(in, 0);
 
 	// Read _arrayReqs
 	_arrayReqs = loadLongArray(in);
@@ -650,7 +670,6 @@ bool HugoEngine::loadHugoDat() {
 	}
 
 	// Read _screenActs
-	// TODO: For Hugo2 and Hugo3, if not in story mode, increment _screenActs[0][0] (ex: kALcrashStory + 1 == kALcrashNoStory)
 	for (int varnt = 0; varnt < _numVariant; varnt++) {
 		numElem = in.readUint16BE();
 		if (varnt == _gameVariant) {
@@ -699,7 +718,6 @@ bool HugoEngine::loadHugoDat() {
 	for (int varnt = 0; varnt < _numVariant; varnt++) {
 		numElem = in.readUint16BE();
 		if (varnt == _gameVariant) {
-			_maxInvent = numElem;
 			_defltTunes = (int16 *)malloc(sizeof(int16) * numElem);
 			for (int i = 0; i < numElem; i++)
 				_defltTunes[i] = in.readSint16BE();
@@ -732,15 +750,11 @@ bool HugoEngine::loadHugoDat() {
 		}
 	}
 
-	//Read LASTOBJ
-	for (int varnt = 0; varnt < _numVariant; varnt++) {
-		numElem = in.readUint16BE();
-		if (varnt == _gameVariant)
-			_numObj = numElem;
-	}
-
+	_object->loadNumObj(in);
 	_scheduler->loadAlNewscrIndex(in);
+	_sound->loadIntroSong(in);
 	_screen->loadFontArr(in);
+	_topMenu->loadBmpArr(in);
 
 	return true;
 }
@@ -751,6 +765,7 @@ char **HugoEngine::loadTextsVariante(Common::File &in, uint16 *arraySize) {
 	int  len;
 	char **res = 0;
 	char *pos = 0;
+	char *posBck = 0;
 
 	for (int varnt = 0; varnt < _numVariant; varnt++) {
 		numTexts = in.readUint16BE();
@@ -765,6 +780,7 @@ char **HugoEngine::loadTextsVariante(Common::File &in, uint16 *arraySize) {
 			res[0] += DATAALIGNMENT;
 		} else {
 			in.read(pos, entryLen);
+			posBck = pos;
 		}
 
 		pos += DATAALIGNMENT;
@@ -778,6 +794,9 @@ char **HugoEngine::loadTextsVariante(Common::File &in, uint16 *arraySize) {
 			if (varnt == _gameVariant)
 				res[i] = pos;
 		}
+
+		if (varnt != _gameVariant)
+			free(posBck);
 	}
 
 	return res;
@@ -822,6 +841,7 @@ char ***HugoEngine::loadTextsArray(Common::File &in) {
 			int numTexts = in.readUint16BE();
 			int entryLen = in.readUint16BE();
 			char *pos = (char *)malloc(entryLen);
+			char *posBck = 0;
 			char **res = 0;
 			if (varnt == _gameVariant) {
 				res = (char **)malloc(sizeof(char *) * numTexts);
@@ -830,6 +850,7 @@ char ***HugoEngine::loadTextsArray(Common::File &in) {
 				res[0] += DATAALIGNMENT;
 			} else {
 				in.read(pos, entryLen);
+				posBck = pos;
 			}
 
 			pos += DATAALIGNMENT;
@@ -845,6 +866,8 @@ char ***HugoEngine::loadTextsArray(Common::File &in) {
 
 			if (varnt == _gameVariant)
 				resArray[i] = res;
+			else
+				free(posBck);
 		}
 	}
 
@@ -876,7 +899,7 @@ void HugoEngine::freeTexts(char **ptr) {
 	if (!ptr)
 		return;
 
-	free(*ptr);
+	free(*ptr - DATAALIGNMENT);
 	free(ptr);
 }
 
@@ -897,16 +920,10 @@ void HugoEngine::initPlaylist(bool playlist[MAX_TUNES]) {
 */
 void HugoEngine::initStatus() {
 	debugC(1, kDebugEngine, "initStatus");
-	_status.initSaveFl    = true;                   // Force initial save
 	_status.storyModeFl   = false;                  // Not in story mode
 	_status.gameOverFl    = false;                  // Hero not knobbled yet
-// Strangerke - Suppress as related to playback
-//	_status.recordFl      = false;                  // Not record mode
-//	_status.playbackFl    = false;                  // Not playback mode
 	_status.demoFl        = false;                  // Not demo mode
 	_status.textBoxFl     = false;                  // Not processing a text box
-// Strangerke - Not used ?
-//	_status.mmtime        = false;                   // Multimedia timer support
 	_status.lookFl        = false;                  // Toolbar "look" button
 	_status.recallFl      = false;                  // Toolbar "recall" button
 	_status.leftButtonFl  = false;                  // Left mouse button pressed
@@ -916,13 +933,11 @@ void HugoEngine::initStatus() {
 	_status.godModeFl     = false;                  // No special cheats allowed
 	_status.helpFl        = false;                  // Not calling WinHelp()
 	_status.doQuitFl      = false;
+	_status.skipIntroFl   = false;
 	_status.path[0]       = 0;                      // Path to write files
-	_status.saveSlot      = 0;                      // Slot to save/restore game
-	_status.screenWidth   = 0;                      // Desktop screen width
 
 	// Initialize every start of new game
 	_status.tick            = 0;                    // Tick count
-	_status.saveTick        = 0;                    // Time of last save
 	_status.viewState       = V_IDLE;               // View state
 	_status.inventoryState  = I_OFF;                // Inventory icon bar state
 	_status.inventoryHeight = 0;                    // Inventory icon bar pos
@@ -930,6 +945,15 @@ void HugoEngine::initStatus() {
 	_status.routeIndex      = -1;                   // Hero not following a route
 	_status.go_for          = GO_SPACE;             // Hero walking to space
 	_status.go_id           = -1;                   // Hero not walking to anything
+
+// Strangerke - Suppress as related to playback
+//	_status.recordFl      = false;                  // Not record mode
+//	_status.playbackFl    = false;                  // Not playback mode
+// Strangerke - Not used ?
+//	_status.mmtime        = false;                  // Multimedia timer support
+//	_status.screenWidth   = 0;                      // Desktop screen width
+//	_status.saveTick      = 0;                      // Time of last save
+//	_status.saveSlot      = 0;                      // Slot to save/restore game
 }
 
 /**
@@ -944,12 +968,8 @@ void HugoEngine::initConfig(inst_t action) {
 		_config.musicFl = true;                     // Music state initially on
 		_config.soundFl = true;                     // Sound state initially on
 		_config.turboFl = false;                    // Turbo state initially off
-		_config.backgroundMusicFl = false;          // No music when inactive
-		_config.musicVolume = 85;                   // Music volume %
-		_config.soundVolume = 100;                  // Sound volume %
 		initPlaylist(_config.playlist);             // Initialize default tune playlist
-
-		_file->readBootFile();    // Read startup structure
+		_file->readBootFile();                      // Read startup structure
 		break;
 	case RESET:
 		// Find first tune and play it
@@ -959,8 +979,6 @@ void HugoEngine::initConfig(inst_t action) {
 				break;
 			}
 		}
-
-		_file->initSavedGame();   // Initialize saved game
 		break;
 	case RESTORE:
 		warning("Unhandled action RESTORE");
@@ -982,19 +1000,30 @@ void HugoEngine::initialize() {
 
 	_rnd = new Common::RandomSource();
 	g_eventRec.registerRandomSource(*_rnd, "hugo");
-
 	_rnd->setSeed(42);                              // Kick random number generator
 
-	switch (getGameType()) {
-	case kGameTypeHugo1:
-		_episode = "\"HUGO'S HOUSE OF HORRORS\"";
+	switch (_gameVariant) {
+	case kGameVariantH1Dos:
+		_episode = "\"Hugo's House of Horrors\"";
 		_picDir = "";
 		break;
-	case kGameTypeHugo2:
+	case kGameVariantH2Dos:
+		_episode = "\"Hugo II: Whodunit?\"";
+		_picDir = "";
+		break;
+	case kGameVariantH3Dos:
+		_episode = "\"Hugo III: Jungle of Doom\"";
+		_picDir = "pictures/";
+		break;
+	case kGameVariantH1Win:
+		_episode = "\"Hugo's Horrific Adventure\"";
+		_picDir = "hugo1/";
+		break;
+	case kGameVariantH2Win:
 		_episode = "\"Hugo's Mystery Adventure\"";
 		_picDir = "hugo2/";
 		break;
-	case kGameTypeHugo3:
+	case kGameVariantH3Win:
 		_episode = "\"Hugo's Amazon Adventure\"";
 		_picDir = "hugo3/";
 		break;
@@ -1013,13 +1042,6 @@ void HugoEngine::shutdown() {
 	_object->freeObjects();
 }
 
-void HugoEngine::readObjectImages() {
-	debugC(1, kDebugEngine, "readObjectImages");
-
-	for (int i = 0; i < _numObj; i++)
-		_file->readImage(i, &_object->_objects[i]);
-}
-
 /**
 * Read scenery, overlay files for given screen number
 */
@@ -1031,6 +1053,12 @@ void HugoEngine::readScreenFiles(int screenNum) {
 	_file->readOverlay(screenNum, _boundary, BOUNDARY); // Boundary file
 	_file->readOverlay(screenNum, _overlay, OVERLAY);   // Overlay file
 	_file->readOverlay(screenNum, _ovlBase, OVLBASE);   // Overlay base file
+
+	// Suppress a boundary used in H3 DOS in 'Crash' screen, which blocks
+	// pathfinding and is useless.
+	if ((screenNum == 0) && (_gameVariant == kGameVariantH3Dos))
+		clearScreenBoundary(50, 311, 152);
+
 }
 
 /**
@@ -1149,6 +1177,24 @@ void HugoEngine::clearBoundary(int x1, int x2, int y) {
 }
 
 /**
+* Clear a horizontal line segment in the screen boundary file
+* Used to fix some data issues
+*/
+void HugoEngine::clearScreenBoundary(int x1, int x2, int y) {
+	debugC(5, kDebugEngine, "clearScreenBoundary(%d, %d, %d)", x1, x2, y);
+
+	for (int i = x1 >> 3; i <= x2 >> 3; i++) {      // For each byte in line
+		byte *b = &_boundary[y * XBYTES + i];       // get boundary byte
+		if (i == x2 >> 3)                           // Adjust right end
+			*b &= ~(0xff << ((i << 3) + 7 - x2));
+		else if (i == x1 >> 3)                      // Adjust left end
+			*b &= ~(0xff >> (x1 - (i << 3)));
+		else
+			*b = 0;
+	}
+}
+
+/**
 * Search background command list for this screen for supplied object.
 * Return first associated verb (not "look") or 0 if none found.
 */
@@ -1156,7 +1202,7 @@ char *HugoEngine::useBG(char *name) {
 	debugC(1, kDebugEngine, "useBG(%s)", name);
 
 	objectList_t p = _backgroundObjects[*_screen_p];
-	for (int i = 0; *_arrayVerbs[p[i].verbIndex]; i++) {
+	for (int i = 0; p[i].verbIndex != 0; i++) {
 		if ((name == _arrayNouns[p[i].nounIndex][0] &&
 		     p[i].verbIndex != _look) &&
 		    ((p[i].roomState == DONT_CARE) || (p[i].roomState == _screenStates[*_screen_p])))
@@ -1186,10 +1232,7 @@ void HugoEngine::setNewScreen(int screenNum) {
 	debugC(1, kDebugEngine, "setNewScreen(%d)", screenNum);
 
 	*_screen_p = screenNum;                         // HERO object
-	for (int i = HERO + 1; i < _numObj; i++) {      // Any others
-		if (_object->isCarried(i))                  // being carried
-			_object->_objects[i].screenIndex = screenNum;
-	}
+	_object->setCarriedScreen(screenNum);           // Carried objects
 }
 
 /**
@@ -1234,8 +1277,7 @@ void HugoEngine::boundaryCollision(object_t *obj) {
 void HugoEngine::calcMaxScore() {
 	debugC(1, kDebugEngine, "calcMaxScore");
 
-	for (int i = 0; i < _numObj; i++)
-		_maxscore += _object->_objects[i].objValue;
+	_maxscore = _object->calcMaxScore();
 
 	for (int i = 0; i < _numBonuses; i++)
 		_maxscore += _points[i].score;
@@ -1252,5 +1294,24 @@ void HugoEngine::endGame() {
 	Utils::Box(BOX_ANY, "%s\n%s", _episode, COPYRIGHT);
 	_status.viewState = V_EXIT;
 }
+
+bool HugoEngine::canLoadGameStateCurrently() {
+	return true;
+}
+
+bool HugoEngine::canSaveGameStateCurrently() {
+	return (_status.viewState == V_PLAY);
+}
+
+int8 HugoEngine::getTPS() {
+	return ((_config.turboFl) ? TURBO_TPS : _normalTPS);
+}
+
+void HugoEngine::syncSoundSettings() {
+	Engine::syncSoundSettings();
+
+	_sound->syncVolume();
+}
+
 
 } // End of namespace Hugo

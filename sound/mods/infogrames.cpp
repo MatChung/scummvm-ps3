@@ -19,13 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/sound/mods/infogrames.cpp $
- * $Id: infogrames.cpp 46941 2010-01-03 19:37:43Z eriktorbjorn $
+ * $Id: infogrames.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "sound/mods/infogrames.h"
 #include "common/endian.h"
 #include "common/file.h"
+#include "common/memstream.h"
 
 namespace Audio {
 

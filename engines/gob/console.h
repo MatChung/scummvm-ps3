@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/console.h $
- * $Id: console.h 53985 2010-10-31 20:51:35Z drmccoy $
+ * $Id: console.h 55074 2010-12-31 11:00:50Z tdhs $
  *
  */
 
@@ -37,10 +37,6 @@ public:
 	GobConsole(GobEngine *vm);
 	virtual ~GobConsole(void);
 
-protected:
-	virtual void preEnter();
-	virtual void postEnter();
-
 private:
 	GobEngine *_vm;
 
@@ -53,6 +49,6 @@ private:
 	bool cmd_listArchives(int argc, const char **argv);
 };
 
-} // End of namespace Mohawk
+} // End of namespace Gob
 
 #endif

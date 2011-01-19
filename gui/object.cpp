@@ -19,13 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/object.cpp $
- * $Id: object.cpp 48275 2010-03-18 15:04:15Z fingolfin $
+ * $Id: object.cpp 54265 2010-11-16 10:19:01Z fingolfin $
  */
 
 #include "common/system.h"
 #include "gui/object.h"
 #include "gui/widget.h"
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 #include "gui/ThemeEval.h"
 
 namespace GUI {

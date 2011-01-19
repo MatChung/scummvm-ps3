@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/macresman.cpp $
- * $Id: macresman.cpp 54122 2010-11-07 17:17:21Z fingolfin $
+ * $Id: macresman.cpp 55200 2011-01-11 03:03:40Z jvprat $
  *
  */
 
@@ -30,6 +30,8 @@
 #include "common/fs.h"
 #include "common/macresman.h"
 #include "common/md5.h"
+#include "common/substream.h"
+#include "common/memstream.h"
 
 #ifdef MACOSX
 #include "common/config-manager.h"
@@ -239,8 +241,8 @@ bool MacResManager::loadFromAppleDouble(SeekableReadStream &stream) {
 		uint32 offset = stream.readUint32BE();
 		uint32 length = stream.readUint32BE(); // length
 
-		if (id == 1) {
-			// Found the data fork!
+		if (id == 2) {
+			// Found the resource fork!
 			_resForkOffset = offset;
 			_mode = kResForkAppleDouble;
 			_resForkSize = length;
@@ -366,7 +368,7 @@ MacResIDArray MacResManager::getResIDArray(uint32 typeID) {
 	MacResIDArray res;
 
 	for (int i = 0; i < _resMap.numTypes; i++)
-		if (_resTypes[i].id ==  typeID) {
+		if (_resTypes[i].id == typeID) {
 			typeNum = i;
 			break;
 		}

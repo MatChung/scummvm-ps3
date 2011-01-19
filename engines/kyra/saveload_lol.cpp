@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/saveload_lol.cpp $
- * $Id: saveload_lol.cpp 53912 2010-10-28 23:57:24Z lordhoto $
+ * $Id: saveload_lol.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -31,6 +31,7 @@
 
 #include "common/endian.h"
 #include "common/savefile.h"
+#include "common/substream.h"
 #include "common/system.h"
 
 #include "graphics/scaler.h"

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/util.cpp $
- * $Id: util.cpp 54021 2010-11-01 20:40:33Z fingolfin $
+ * $Id: util.cpp 54530 2010-11-28 16:38:01Z strangerke $
  *
  */
 
@@ -98,7 +98,7 @@ char *Utils::Box(box_t dismiss, const char *s, ...) {
 		return 0;
 
 	if (strlen(s) > MAX_STRLEN - 100) {             // Test length
-		warning("String too big: '%s'", s);
+		warning("String too long: '%s'", s);
 		return 0;
 	}
 
@@ -136,56 +136,10 @@ char *Utils::Box(box_t dismiss, const char *s, ...) {
 }
 
 /**
- * Fatal error handler.  Reset environment, print error and exit
- * Arguments are same as printf
- */
-void Utils::Error(int error_type, const char *format, ...) {
-	char buffer[ERRLEN + 1];
-	bool fatal = true;                              // Fatal error, else continue
-
-	switch (error_type) {
-	case FILE_ERR:
-		strcpy(buffer, HugoEngine::get()._textUtil[kErr1]);
-		break;
-	case WRITE_ERR:
-		strcpy(buffer, HugoEngine::get()._textUtil[kErr2]);
-		fatal = false;                              // Allow continuation
-		break;
-	case PCCH_ERR:
-		strcpy(buffer, HugoEngine::get()._textUtil[kErr3]);
-		break;
-	case HEAP_ERR:
-		strcpy(buffer, HugoEngine::get()._textUtil[kErr4]);
-		break;
-	case SOUND_ERR:
-		strcpy(buffer, HugoEngine::get()._textUtil[kErr5]);
-		break;
-	default:
-		strcpy(buffer, HugoEngine::get()._textUtil[kErr6]);
-		break;
-	}
-
-	if (fatal)
-		HugoEngine::get().shutdown();                                   // Restore any devices before exit
-
-	va_list marker;
-	va_start(marker, format);
-	vsnprintf(&buffer[strlen(buffer)], ERRLEN - strlen(buffer), format, marker);
-	va_end(marker);
-	//MessageBeep(MB_ICONEXCLAMATION);
-	//MessageBox(hwnd, buffer, "HugoWin Error", MB_OK | MB_ICONEXCLAMATION);
-	warning("Hugo Error: %s", buffer);
-
-	if (fatal)
-		exit(1);
-}
-
-/**
  * Print options for user when dead
  */
 void Utils::gameOverMsg(void) {
-	//MessageBox(hwnd, gameoverstring, "Be more careful next time!", MB_OK | MB_ICONINFORMATION);
-	warning("STUB: Gameover_msg(): %s", HugoEngine::get()._textUtil[kGameOver]);
+	Utils::Box(BOX_OK, "%s", HugoEngine::get()._textUtil[kGameOver]);
 }
 
 char *Utils::strlwr(char *buffer) {

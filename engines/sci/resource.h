@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/resource.h $
- * $Id: resource.h 52667 2010-09-10 14:07:32Z thebluegr $
+ * $Id: resource.h 54220 2010-11-13 00:20:23Z mthreepwood $
  *
  */
 
@@ -96,9 +96,19 @@ enum ResourceType {
 	kResourceTypeAudio36,
 	kResourceTypeSync36,
 	kResourceTypeTranslation, // Currently unsupported
+
+	// SCI2.1+ Resources
 	kResourceTypeRobot,
 	kResourceTypeVMD,
 	kResourceTypeChunk,
+	kResourceTypeAnimation,
+
+	// SCI3 Resources
+	kResourceTypeEtc,
+	kResourceTypeDuck,
+	kResourceTypeClut,
+	kResourceTypeTGA,
+	kResourceTypeZZZ,
 
 	// Mac-only resources
 	kResourceTypeMacIconBarPictN, // IBIN resources (icon bar, not selected)
@@ -117,7 +127,8 @@ enum ResVersion {
 	kResVersionSci1Late,
 	kResVersionSci11,
 	kResVersionSci11Mac,
-	kResVersionSci32
+	kResVersionSci2,
+	kResVersionSci3
 };
 
 class ResourceManager;
@@ -272,7 +283,7 @@ public:
 	/**
 	 * Initializes the resource manager.
 	 */
-	void init();
+	void init(bool initFromFallbackDetector = false);
 
 	int addAppropriateSources();
 	int addAppropriateSources(const Common::FSList &fslist);	// TODO: Switch from FSList to Common::Archive?

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/detection.cpp $
- * $Id: detection.cpp 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: detection.cpp 55139 2011-01-07 00:19:54Z thebluegr $
  *
  */
 
@@ -29,6 +29,7 @@
 #include "common/savefile.h"
 #include "common/system.h"
 #include "graphics/thumbnail.h"
+#include "graphics/surface.h"
 
 #include "sci/sci.h"
 #include "sci/engine/kernel.h"
@@ -51,17 +52,17 @@ static const PlainGameDescriptor s_sciGameTitles[] = {
 	{"funseeker",       "Fun Seeker's Guide"},
 	{"hoyle1",          "Hoyle Official Book of Games: Volume 1"},
 	{"hoyle2",          "Hoyle Official Book of Games: Volume 2"},
-	{"kq4sci",          "King's Quest IV: The Perils of Rosella, SCI Remake"},
+	{"kq4sci",          "King's Quest IV: The Perils of Rosella"},	// Note: There was also an AGI version of this
 	{"laurabow",        "Laura Bow: The Colonel's Bequest"},
 	{"lsl2",            "Leisure Suit Larry 2: Goes Looking for Love (in Several Wrong Places)"},
 	{"lsl3",            "Leisure Suit Larry 3: Passionate Patti in Pursuit of the Pulsating Pectorals"},
 	{"mothergoose",     "Mixed-Up Mother Goose"},
 	{"pq2",             "Police Quest II: The Vengeance"},
-	{"qfg1",            "Quest for Glory I: So You Want to Be a Hero"},
+	{"qfg1",            "Quest for Glory I: So You Want to Be a Hero"},	// Note: There was also a SCI11 VGA remake of this (further down)
 	{"sq3",             "Space Quest III: The Pirates of Pestulon"},
 	// === SCI01 games ========================================================
 	{"qfg2",            "Quest for Glory II: Trial by Fire"},
-	{"kq1sci",          "King's Quest I: Quest for the Crown, SCI Remake"},
+	{"kq1sci",          "King's Quest I: Quest for the Crown"},	// Note: There was also an AGI version of this
 	// === SCI1 games =========================================================
 	{"castlebrain",     "Castle of Dr. Brain"},
 	{"christmas1990",   "Christmas Card 1990: The Seasoned Professional"},
@@ -76,13 +77,13 @@ static const PlainGameDescriptor s_sciGameTitles[] = {
 	{"jones",           "Jones in the Fast Lane"},
 	{"kq5",             "King's Quest V: Absence Makes the Heart Go Yonder"},
 	{"longbow",         "Conquests of the Longbow: The Adventures of Robin Hood"},
-	{"lsl1sci",         "Leisure Suit Larry in the Land of the Lounge Lizards"},
+	{"lsl1sci",         "Leisure Suit Larry in the Land of the Lounge Lizards"},	// Note: There was also an AGI version of this
 	{"lsl5",            "Leisure Suit Larry 5: Passionate Patti Does a Little Undercover Work"},
 	{"mothergoose256",  "Mixed-Up Mother Goose"},
 	{"msastrochicken",  "Ms. Astro Chicken"},
-	{"pq1sci",          "Police Quest: In Pursuit of the Death Angel"},
+	{"pq1sci",          "Police Quest: In Pursuit of the Death Angel"},	// Note: There was also an AGI version of this
 	{"pq3",             "Police Quest III: The Kindred"},
-	{"sq1sci",          "Space Quest I: The Sarien Encounter"},
+	{"sq1sci",          "Space Quest I: The Sarien Encounter"},	// Note: There was also an AGI version of this
 	{"sq4",             "Space Quest IV: Roger Wilco and the Time Rippers"},	// floppy is SCI1, CD SCI1.1
 	// === SCI1.1 games =======================================================
 	{"christmas1992",   "Christmas Card 1992"},
@@ -91,7 +92,7 @@ static const PlainGameDescriptor s_sciGameTitles[] = {
 	{"hoyle4",          "Hoyle Classic Card Games"},
 	{"kq6",             "King's Quest VI: Heir Today, Gone Tomorrow"},
 	{"laurabow2",       "Laura Bow 2: The Dagger of Amon Ra"},
-	{"qfg1vga",         "Quest for Glory I: So You Want to Be a Hero"},
+	{"qfg1vga",         "Quest for Glory I: So You Want to Be a Hero"},	// Note: There was also a SCI0 version of this (further up)
 	{"qfg3",            "Quest for Glory III: Wages of War"},
 	{"sq5",             "Space Quest V: The Next Mutation"},
 	{"islandbrain",     "The Island of Dr. Brain"},
@@ -108,7 +109,7 @@ static const PlainGameDescriptor s_sciGameTitles[] = {
 	{"kq7",             "King's Quest VII: The Princeless Bride"},
 	// TODO: King's Questions
 	{"lsl6hires",       "Leisure Suit Larry 6: Shape Up or Slip Out!"},
-	{"mothergoosehires","Mixed-Up Mother Goose"},
+	{"mothergoosehires","Mixed-Up Mother Goose Deluxe"},
 	{"phantasmagoria",  "Phantasmagoria"},
 	{"pqswat",          "Police Quest: SWAT"},
 	{"shivers",         "Shivers"},
@@ -118,7 +119,7 @@ static const PlainGameDescriptor s_sciGameTitles[] = {
 	{"lsl7",            "Leisure Suit Larry 7: Love for Sail!"},
 	{"lighthouse",      "Lighthouse: The Dark Being"},
 	{"phantasmagoria2", "Phantasmagoria II: A Puzzle of Flesh"},
-	{"shivers2",        "Shivers II: Harvest of Souls"},
+	//{"shivers2",        "Shivers II: Harvest of Souls"},	// Not SCI
 	{"rama",            "RAMA"},
 	{0, 0}
 };
@@ -190,7 +191,7 @@ static const GameIdStrToEnum s_gameIdStrToEnum[] = {
 	{ "rama",            GID_RAMA },
 	{ "sci-fanmade",     GID_FANMADE },	// FIXME: Do we really need/want this?
 	{ "shivers",         GID_SHIVERS },
-	{ "shivers2",        GID_SHIVERS2 },
+	//{ "shivers2",        GID_SHIVERS2 },	// Not SCI
 	{ "slater",          GID_SLATER },
 	{ "sq1sci",          GID_SQ1 },
 	{ "sq3",             GID_SQ3 },
@@ -513,7 +514,7 @@ const ADGameDescription *SciMetaEngine::fallbackDetect(const Common::FSList &fsl
 	ResourceManager *resMan = new ResourceManager();
 	assert(resMan);
 	resMan->addAppropriateSources(fslist);
-	resMan->init();
+	resMan->init(true);
 	// TODO: Add error handling.
 
 #ifndef ENABLE_SCI32
@@ -534,10 +535,6 @@ const ADGameDescription *SciMetaEngine::fallbackDetect(const Common::FSList &fsl
 		delete resMan;
 		return 0;
 	}
-
-	// EGA views
-	if (gameViews == kViewEga && s_fallbackDesc.platform != Common::kPlatformAmiga)
-		s_fallbackDesc.extra = "EGA";
 
 	// Set the platform to Amiga if the game is using Amiga views
 	if (gameViews == kViewAmiga)
@@ -588,17 +585,21 @@ const ADGameDescription *SciMetaEngine::fallbackDetect(const Common::FSList &fsl
 
 
 	// Fill in extras field
-	if (!strcmp(s_fallbackDesc.gameid, "lsl1sci") ||
-		!strcmp(s_fallbackDesc.gameid, "pq1sci") ||
-		!strcmp(s_fallbackDesc.gameid, "sq1sci"))
-		s_fallbackDesc.extra = "VGA Remake";
 
-	if (!strcmp(s_fallbackDesc.gameid, "qfg1vga") && getSciVersion() == SCI_VERSION_1_1)
-		s_fallbackDesc.extra = "VGA Remake";
+	if (gameId.hasSuffix("sci")) {
+		s_fallbackDesc.extra = "SCI";
+
+		// Differentiate EGA versions from the VGA ones, where needed
+		if (gameViews == kViewEga && s_fallbackDesc.platform != Common::kPlatformAmiga)
+			s_fallbackDesc.extra = "SCI/EGA";
+	} else {
+		if (gameViews == kViewEga && s_fallbackDesc.platform != Common::kPlatformAmiga)
+			s_fallbackDesc.extra = "EGA";
+	}
 
 	// Add "demo" to the description for demos
 	if (s_fallbackDesc.flags & ADGF_DEMO)
-		s_fallbackDesc.extra = "demo";
+		s_fallbackDesc.extra = (gameId.hasSuffix("sci")) ? "SCI/Demo" : "Demo";
 
 	delete resMan;
 

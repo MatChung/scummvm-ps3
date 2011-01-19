@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/screen.h $
- * $Id: screen.h 54068 2010-11-04 18:37:03Z m_kiewitz $
+ * $Id: screen.h 54210 2010-11-11 19:22:56Z thebluegr $
  *
  */
 
@@ -109,7 +109,7 @@ public:
 	void getPalette(Palette *pal);
 	void setPalette(Palette *pal);
 
-	void scale2x(const byte *src, byte *dst, int16 srcWidth, int16 srcHeight);
+	void scale2x(const byte *src, byte *dst, int16 srcWidth, int16 srcHeight, byte bytesPerPixel = 1);
 
 	void adjustToUpscaledCoordinates(int16 &y, int16 &x);
 	void adjustBackUpscaledCoordinates(int16 &y, int16 &x);

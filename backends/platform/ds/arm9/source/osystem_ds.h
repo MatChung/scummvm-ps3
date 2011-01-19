@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/ds/arm9/source/osystem_ds.h $
- * $Id: osystem_ds.h 50741 2010-07-07 23:22:53Z fingolfin $
+ * $Id: osystem_ds.h 54318 2010-11-18 13:17:25Z fingolfin $
  *
  */
 
@@ -124,9 +124,12 @@ public:
 	virtual void unlockMutex(MutexRef mutex);
 	virtual void deleteMutex(MutexRef mutex);
 
+
+	// FIXME/TODO: The CD API as follows is *obsolete*
+	// and should be replaced by an AudioCDManager subclass,
+	// see backends/audiocd/ and common/system.h
 	virtual bool openCD(int drive);
 	virtual bool pollCD();
-
 	virtual void playCD(int track, int num_loops, int start_frame, int duration);
 	virtual void stopCD();
 	virtual void updateCD();

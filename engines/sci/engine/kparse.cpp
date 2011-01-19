@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/kparse.cpp $
- * $Id: kparse.cpp 54037 2010-11-02 09:49:47Z fingolfin $
+ * $Id: kparse.cpp 55086 2011-01-01 12:48:12Z thebluegr $
  *
  */
 
@@ -97,7 +97,7 @@ reg_t kParse(EngineState *s, int argc, reg_t *argv) {
 	g_sci->checkVocabularySwitch();
 	Vocabulary *voc = g_sci->getVocabulary();
 	voc->parser_event = event;
-	reg_t params[2] = { voc->parser_base, stringpos };
+	reg_t params[2] = { s->_segMan->getParserPtr(), stringpos };
 
 	ResultWordListList words;
 	bool res = voc->tokenizeString(words, string.c_str(), &error);
@@ -109,7 +109,7 @@ reg_t kParse(EngineState *s, int argc, reg_t *argv) {
 		s->r_acc = make_reg(0, 1);
 
 #ifdef DEBUG_PARSER
-		debugC(2, kDebugLevelParser, "Parsed to the following blocks:");
+		debugC(kDebugLevelParser, "Parsed to the following blocks:");
 
 		for (ResultWordListList::const_iterator i = words.begin(); i != words.end(); ++i) {
 			debugCN(2, kDebugLevelParser, "   ");
@@ -129,7 +129,7 @@ reg_t kParse(EngineState *s, int argc, reg_t *argv) {
 			invokeSelector(s, g_sci->getGameObject(), SELECTOR(syntaxFail), argc, argv, 2, params);
 			/* Issue warning */
 
-			debugC(2, kDebugLevelParser, "Tree building failed");
+			debugC(kDebugLevelParser, "Tree building failed");
 
 		} else {
 			voc->parserIsValid = true;
@@ -143,19 +143,11 @@ reg_t kParse(EngineState *s, int argc, reg_t *argv) {
 	} else {
 
 		s->r_acc = make_reg(0, 0);
-		// FIXME: When typing something wrong in the fanmade game Demo Quest,
-		// after the error dialog, the game checks for claimed to be 0 before
-		// showing a subsequent dialog. The following selector change causes
-		// it to be 1, thus causing the game to hang in an endless loop (bug
-		// #3038870. Thus, this seems to be wrong (since fanmade games use
-		// the original SCI interpreter), but we need to check against
-		// dissassembly. Since kParse is in the process of being dissassembled
-		// again, I'm leaving this FIXME in for now, so that it won't be
-		// forgotten :)
 		writeSelectorValue(segMan, event, SELECTOR(claimed), 1);
+
 		if (error) {
-			s->_segMan->strcpy(voc->parser_base, error);
-			debugC(2, kDebugLevelParser, "Word unknown: %s", error);
+			s->_segMan->strcpy(s->_segMan->getParserPtr(), error);
+			debugC(kDebugLevelParser, "Word unknown: %s", error);
 			/* Issue warning: */
 
 			invokeSelector(s, g_sci->getGameObject(), SELECTOR(wordFail), argc, argv, 2, params);
@@ -199,7 +191,7 @@ reg_t kSetSynonyms(EngineState *s, int argc, reg_t *argv) {
 			const byte *synonyms = s->_segMan->getScript(seg)->getSynonyms();
 
 			if (synonyms) {
-				debugC(2, kDebugLevelParser, "Setting %d synonyms for script.%d",
+				debugC(kDebugLevelParser, "Setting %d synonyms for script.%d",
 				          numSynonyms, script);
 
 				if (numSynonyms > 16384) {
@@ -210,8 +202,8 @@ reg_t kSetSynonyms(EngineState *s, int argc, reg_t *argv) {
 				} else
 					for (int i = 0; i < numSynonyms; i++) {
 						synonym_t tmp;
-						tmp.replaceant = (int16)READ_LE_UINT16(synonyms + i * 4);
-						tmp.replacement = (int16)READ_LE_UINT16(synonyms + i * 4 + 2);
+						tmp.replaceant = READ_LE_UINT16(synonyms + i * 4);
+						tmp.replacement = READ_LE_UINT16(synonyms + i * 4 + 2);
 						voc->addSynonym(tmp);
 					}
 			} else
@@ -222,7 +214,7 @@ reg_t kSetSynonyms(EngineState *s, int argc, reg_t *argv) {
 		node = s->_segMan->lookupNode(node->succ);
 	}
 
-	debugC(2, kDebugLevelParser, "A total of %d synonyms are active now.", numSynonyms);
+	debugC(kDebugLevelParser, "A total of %d synonyms are active now.", numSynonyms);
 
 	return s->r_acc;
 }

@@ -19,15 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/gph/gph-main.cpp $
- * $Id: gph-main.cpp 53964 2010-10-30 22:43:25Z fingolfin $
+ * $Id: gph-main.cpp 54572 2010-11-29 16:16:50Z fingolfin $
  *
  */
 
-// Disable symbol overrides so that we can use system headers.
-#define FORBIDDEN_SYMBOL_ALLOW_ALL
-
-#include "common/scummsys.h"
-#include <SDL/SDL.h>
+#include "backends/platform/sdl/sdl-sys.h"
 
 // #include "backends/platform/gph/gph-options.h"
 #include "backends/platform/gph/gph-sdl.h"
@@ -82,7 +78,7 @@ void OSystem_GPH::initBackend() {
 	char workDirName[PATH_MAX+1];
 
 	if (getcwd(workDirName, PATH_MAX) == NULL) {
-		error("Could not obtain current working directory.");
+		error("Could not obtain current working directory");
 	} else {
 		printf("Current working directory: %s\n", workDirName);
 	}
@@ -177,7 +173,7 @@ void OSystem_GPH::addSysArchivesToSearchSet(Common::SearchSet &s, int priority) 
 	char workDirName[PATH_MAX+1];
 
 	if (getcwd(workDirName, PATH_MAX) == NULL) {
-		error("Error: Could not obtain current working directory.");
+		error("Error: Could not obtain current working directory");
 	}
 
 	Common::FSNode workdirNode(workDirName);

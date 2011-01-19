@@ -19,12 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/zlib.cpp $
- * $Id: zlib.cpp 44495 2009-09-30 16:16:53Z fingolfin $
+ * $Id: zlib.cpp 54353 2010-11-19 00:10:09Z fingolfin $
  *
  */
 
 #include "common/zlib.h"
 #include "common/util.h"
+#include "common/stream.h"
 
 #if defined(USE_ZLIB)
   #ifdef __SYMBIAN32__

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/detection_tables.h $
- * $Id: detection_tables.h 53724 2010-10-22 23:39:29Z dreammaster $
+ * $Id: detection_tables.h 54811 2010-12-07 18:00:18Z fingolfin $
  *
  */
 
@@ -77,7 +77,27 @@ static const TinselGameDescription gameDescriptions[] = {
 		GF_CD,
 		TINSEL_V1,
 	},
-
+#if 0
+	{	// Macintosh CD Demo V1 version, with *.scn files, see tracker #3110936
+		{
+			"dw",
+			"CD Demo",
+			{
+				{"dw.scn", 0, "cfc40a8d5d476a1c9d3abf826fa46f8c", 1272686},
+				{"english.txt", 0, "c69b5d2067e9114a63569a61e9a82faa", 228878},
+				{"english.smp", 0, NULL, -1},
+			},
+			Common::EN_ANY,
+			Common::kPlatformMacintosh,
+			ADGF_DEMO,
+			GUIO_NONE
+		},
+		GID_DW1,
+		0,
+		GF_CD | GF_SCNFILES | GF_BIG_ENDIAN,
+		TINSEL_V1,
+	},
+#endif
 	{	// Multilingual Floppy V1 with *.gra files.
 		// Note: It contains no english subtitles.
 		{
@@ -444,7 +464,7 @@ static const TinselGameDescription gameDescriptions[] = {
 		},
 		GID_DW1,
 		0,
-		GF_CD | GF_SCNFILES | GF_ENHANCED_AUDIO_SUPPORT,
+		GF_CD | GF_SCNFILES | GF_ENHANCED_AUDIO_SUPPORT | GF_BIG_ENDIAN,
 		TINSEL_V1,
 	},
 

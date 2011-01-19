@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cine/gfx.cpp $
- * $Id: gfx.cpp 51937 2010-08-09 11:38:01Z sev $
+ * $Id: gfx.cpp 55201 2011-01-11 16:50:26Z tdhs $
  *
  */
 
@@ -1429,10 +1429,13 @@ void OSRenderer::loadCt256(const byte *ct, const char *name) {
  * @param idx Background index
  */
 void OSRenderer::selectBg(unsigned int idx) {
-	assert(idx < 9 && _bgTable[idx].bg);
-	assert(_bgTable[idx].pal.isValid() && !(_bgTable[idx].pal.empty()));
+	assert(idx < 9);
 
+	if (_bgTable[idx].bg) {
+		assert(_bgTable[idx].pal.isValid() && !(_bgTable[idx].pal.empty()));
 	_currentBg = idx;
+	} else
+		warning("OSRenderer::selectBg(%d) - attempt to select null background", idx);
 	reloadPalette();
 }
 

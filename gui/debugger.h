@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/debugger.h $
- * $Id: debugger.h 54007 2010-11-01 16:03:35Z fingolfin $
+ * $Id: debugger.h 54815 2010-12-07 18:54:21Z fingolfin $
  */
 
 #ifndef GUI_DEBUGGER_H
@@ -155,14 +155,18 @@ protected:
 	/**
 	 * Hook for subclasses which is called just before enter() is run.
 	 * A typical usage example is pausing music and sound effects.
+	 *
+	 * The default implementation invokes Engine::pauseEngine(true).
 	 */
-	virtual void preEnter() {}
+	virtual void preEnter();
 
 	/**
 	 * Hook for subclasses which is called just after enter() was run.
 	 * A typical usage example is resuming music and sound effects.
+	 *
+	 * The default implementation invokes Engine::pauseEngine(false).
 	 */
-	virtual void postEnter() {}
+	virtual void postEnter();
 
 	/**
 	 * Subclasses should invoke the detach() method in their Cmd_FOO methods

@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/flux.h $
-* $Id: flux.h 53157 2010-10-11 23:16:15Z sylvaintv $
+* $Id: flux.h 54185 2010-11-10 06:22:18Z tdhs $
 *
 */
 
@@ -36,7 +36,7 @@ namespace Toon {
 class CharacterFlux : public Character {
 public:
 	CharacterFlux(ToonEngine *vm);
-	virtual ~CharacterFlux(void);
+	virtual ~CharacterFlux();
 
 	void setPosition(int32 x, int32 y);
 	void playStandingAnim();

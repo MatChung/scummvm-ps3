@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/sound/softsynth/fmtowns_pc98/towns_euphony.cpp $
- * $Id: towns_euphony.cpp 53589 2010-10-18 21:16:58Z athrxx $
+ * $Id: towns_euphony.cpp 54950 2010-12-18 12:17:33Z athrxx $
  *
  */
 
@@ -857,7 +857,7 @@ void TownsEuphonyDriver::sendChanVolume() {
 	while (*chan != -1) {
 		_intf->callback(8, *chan, _para[1] & 0x7f);
 		chan = &_assignedChannels[*chan].next;
-	};
+	}
 }
 
 void TownsEuphonyDriver::sendPanPosition() {
@@ -865,7 +865,7 @@ void TownsEuphonyDriver::sendPanPosition() {
 	while (*chan != -1) {
 		_intf->callback(3, *chan, _para[1] & 0x7f);
 		chan = &_assignedChannels[*chan].next;
-	};
+	}
 }
 
 void TownsEuphonyDriver::sendAllNotesOff() {
@@ -882,7 +882,7 @@ void TownsEuphonyDriver::sendAllNotesOff() {
 			_intf->callback(2, *chan);
 		}
 		chan = &_assignedChannels[*chan].next;
-	};
+	}
 }
 
 void TownsEuphonyDriver::sendSetInstrument() {
@@ -891,7 +891,7 @@ void TownsEuphonyDriver::sendSetInstrument() {
 		_intf->callback(4, *chan, _para[0]);
 		_intf->callback(7, *chan, 0);
 		chan = &_assignedChannels[*chan].next;
-	};
+	}
 }
 
 void TownsEuphonyDriver::sendPitch() {
@@ -901,5 +901,5 @@ void TownsEuphonyDriver::sendPitch() {
 		int16 pitch = (((READ_LE_UINT16(_para)) >> 1) & 0x3fff) - 0x2000;
 		_intf->callback(7, *chan, pitch);
 		chan = &_assignedChannels[*chan].next;
-	};
+	}
 }

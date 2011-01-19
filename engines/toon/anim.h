@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/anim.h $
- * $Id: anim.h 53865 2010-10-26 22:18:14Z sylvaintv $
+ * $Id: anim.h 54223 2010-11-13 02:44:34Z sylvaintv $
  *
  */
 
@@ -172,6 +172,7 @@ protected:
 
 class SceneAnimation {
 public:
+	AnimationInstance *_originalAnimInstance;
 	AnimationInstance *_animInstance;
 	Animation *_animation;
 	int32 _id;

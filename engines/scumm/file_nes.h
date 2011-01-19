@@ -19,14 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/file_nes.h $
- * $Id: file_nes.h 43223 2009-08-10 19:31:08Z sev $
+ * $Id: file_nes.h 54435 2010-11-23 22:25:36Z fingolfin $
  *
  */
 
 #ifndef SCUMM_FILE_NES_H
 #define SCUMM_FILE_NES_H
-
-#include "common/file.h"
 
 #include "scumm/file.h"
 
@@ -70,7 +68,7 @@ public:
 
 
 private:
-	Common::MemoryReadStream *_stream;
+	Common::SeekableReadStream *_stream;
 	ROMset _ROMset;
 	byte *_buf;
 
@@ -83,7 +81,6 @@ private:
 
 public:
 	ScummNESFile();
-	void setEnc(byte value);
 
 	bool open(const Common::String &filename);
 	bool openSubFile(const Common::String &filename);
@@ -93,7 +90,7 @@ public:
 	int32 pos() const { return _stream->pos(); }
 	int32 size() const { return _stream->size(); }
 	bool seek(int32 offs, int whence = SEEK_SET) { return _stream->seek(offs, whence); }
-	uint32 read(void *dataPtr, uint32 dataSize) { return _stream->read(dataPtr, dataSize); }
+	uint32 read(void *dataPtr, uint32 dataSize);
 };
 
 } // End of namespace Scumm

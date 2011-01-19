@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/animation.cpp $
- * $Id: animation.cpp 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: animation.cpp 54927 2010-12-16 01:35:13Z mthreepwood $
  *
  */
 
@@ -267,7 +267,7 @@ void MoviePlayerDXA::copyFrameToBuffer(byte *dst, uint x, uint y, uint pitch) {
 	uint h = getHeight();
 	uint w = getWidth();
 
-	Graphics::Surface *surface = decodeNextFrame();
+	const Graphics::Surface *surface = decodeNextFrame();
 	byte *src = (byte *)surface->pixels;
 	dst += y * pitch + x;
 
@@ -428,7 +428,7 @@ void MoviePlayerSMK::copyFrameToBuffer(byte *dst, uint x, uint y, uint pitch) {
 	uint h = getHeight();
 	uint w = getWidth();
 
-	Graphics::Surface *surface = decodeNextFrame();
+	const Graphics::Surface *surface = decodeNextFrame();
 	byte *src = (byte *)surface->pixels;
 	dst += y * pitch + x;
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/sword25.h $
- * $Id: sword25.h 53837 2010-10-25 22:41:48Z fingolfin $
+ * $Id: sword25.h 54184 2010-11-10 04:30:24Z tdhs $
  *
  */
 
@@ -32,6 +32,7 @@
 #include "engines/engine.h"
 
 #include "sword25/kernel/log.h"
+#include "sword25/console.h"
 
 struct ADGameDescription;
 
@@ -70,6 +71,8 @@ private:
 
 	bool loadPackages();
 
+	Sword25Console *_console;
+
 protected:
 	virtual Common::Error run();
 	bool hasFeature(EngineFeature f) const;
@@ -79,6 +82,8 @@ protected:
 // 	Common::Error saveGameState(int slot, const char *desc);	// TODO: Implement this?
 // 	bool canLoadGameStateCurrently();	// TODO: Implement this?
 // 	bool canSaveGameStateCurrently();	// TODO: Implement this?
+
+	GUI::Debugger *getDebugger() { return _console; }
 
 	void shutdown();
 

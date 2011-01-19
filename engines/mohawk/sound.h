@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/sound.h $
- * $Id: sound.h 52643 2010-09-08 20:50:56Z mthreepwood $
+ * $Id: sound.h 55314 2011-01-18 21:10:58Z mthreepwood $
  *
  */
 
@@ -59,12 +59,14 @@ struct SLSTRecord {
 
 enum SndHandleType {
 	kFreeHandle,
-	kUsedHandle
+	kUsedHandle,
+	kBackgroundHandle
 };
 
 struct SndHandle {
 	Audio::SoundHandle handle;
 	SndHandleType type;
+	uint16 id;
 };
 
 struct SLSTSndHandle {
@@ -72,7 +74,7 @@ struct SLSTSndHandle {
 	uint16 id;
 };
 
-struct ADPC_Chunk {            // Holds ADPCM status data, but is irrelevant for us.
+struct ADPCMStatus { // Holds ADPCM status data, but is irrelevant for us.
 	uint32 size;
 	uint16 itemCount;
 	uint16 channels;
@@ -83,14 +85,13 @@ struct ADPC_Chunk {            // Holds ADPCM status data, but is irrelevant for
 	} *statusItems;
 };
 
-struct Cue_Chunk {
+struct CueList {
 	uint32 size;
-	uint16 point_count;
+	uint16 pointCount;
 	struct {
-		uint32 position;
-		byte length;
+		uint32 sampleFrame;
 		Common::String name;
-	} cueList[CUE_MAX];
+	} points[CUE_MAX];
 };
 
 enum {
@@ -99,16 +100,16 @@ enum {
 	kCodecMPEG2 = 2
 };
 
-struct Data_Chunk {
-	uint16 sample_rate;
-	uint32 sample_count;
+struct DataChunk {
+	uint16 sampleRate;
+	uint32 sampleCount;
 	byte bitsPerSample;
 	byte channels;
 	uint16 encoding;
 	uint16 loop;
 	uint32 loopStart;
 	uint32 loopEnd;
-	Common::SeekableReadStream *audio_data;
+	Common::SeekableReadStream *audioData;
 };
 
 class MohawkEngine;
@@ -118,14 +119,26 @@ public:
 	Sound(MohawkEngine *vm);
 	~Sound();
 
+	// Generic sound functions
 	Audio::SoundHandle *playSound(uint16 id, byte volume = Audio::Mixer::kMaxChannelVolume, bool loop = false);
 	void playSoundBlocking(uint16 id, byte volume = Audio::Mixer::kMaxChannelVolume);
 	void playMidi(uint16 id);
+	void stopMidi();
 	void stopSound();
+	void stopSound(uint16 id);
 	void pauseSound();
 	void resumeSound();
+	bool isPlaying(uint16 id);
 
-	// Riven-specific
+	// Myst-specific sound functions
+	Audio::SoundHandle *replaceSoundMyst(uint16 id, byte volume = Audio::Mixer::kMaxChannelVolume, bool loop = false);
+	Audio::SoundHandle *replaceBackgroundMyst(uint16 id, uint16 volume = 0xFFFF);
+	void pauseBackgroundMyst();
+	void resumeBackgroundMyst();
+	void stopBackgroundMyst();
+	void changeBackgroundVolumeMyst(uint16 vol);
+
+	// Riven-specific sound functions
 	void playSLST(uint16 index, uint16 card);
 	void playSLST(SLSTRecord slstRecord);
 	void pauseSLST();
@@ -137,6 +150,7 @@ private:
 	MohawkEngine *_vm;
 	MidiDriver *_midiDriver;
 	MidiParser *_midiParser;
+	byte *_midiData;
 
 	static Audio::AudioStream *makeMohawkWaveStream(Common::SeekableReadStream *stream);
 	static Audio::AudioStream *makeOldMohawkWaveStream(Common::SeekableReadStream *stream);
@@ -144,6 +158,8 @@ private:
 
 	Common::Array<SndHandle> _handles;
 	SndHandle *getHandle();
+	Audio::AudioStream *makeAudioStream(uint16 id);
+	uint16 convertMystID(uint16 id);
 
 	// Riven-specific
 	void playSLSTSound(uint16 index, bool fade, bool loop, uint16 volume, int16 balance);

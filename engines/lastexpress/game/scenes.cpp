@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/scenes.cpp $
- * $Id: scenes.cpp 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: scenes.cpp 54201 2010-11-11 14:19:44Z littleboy $
  *
  */
 
@@ -51,8 +51,6 @@ SceneManager::SceneManager(LastExpressEngine *engine) : _engine(engine),
 }
 
 SceneManager::~SceneManager() {
-	delete _sceneLoader;
-
 	// Clear frames
 	for (Common::List<SequenceFrame *>::iterator door = _doors.begin(); door != _doors.end(); ++door)
 		SAFE_DELETE(*door);
@@ -61,6 +59,11 @@ SceneManager::~SceneManager() {
 
 	SAFE_DELETE(_clockHours);
 	SAFE_DELETE(_clockMinutes);
+
+	// Clear frame queue
+	_queue.clear();
+
+	SAFE_DELETE(_sceneLoader);
 
 	// Zero-out passed pointers
 	_engine = NULL;

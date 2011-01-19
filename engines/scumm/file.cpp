@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/file.cpp $
- * $Id: file.cpp 54001 2010-11-01 16:00:17Z fingolfin $
+ * $Id: file.cpp 54435 2010-11-23 22:25:36Z fingolfin $
  *
  */
 
@@ -27,17 +27,16 @@
 
 #include "scumm/scumm.h"
 
+#include "common/memstream.h"
+#include "common/substream.h"
+
 namespace Scumm {
 
 #pragma mark -
 #pragma mark --- ScummFile ---
 #pragma mark -
 
-ScummFile::ScummFile() : _encbyte(0), _subFileStart(0), _subFileLen(0) {
-}
-
-void ScummFile::setEnc(byte value) {
-	_encbyte = value;
+ScummFile::ScummFile() : _subFileStart(0), _subFileLen(0) {
 }
 
 void ScummFile::setSubfileRange(int32 start, int32 len) {
@@ -244,10 +243,6 @@ ScummDiskImage::ScummDiskImage(const char *disk1, const char *disk2, GameSetting
 		_numSounds = 127;
 		_resourcesPerFile = zakResourcesPerFile;
 	}
-}
-
-void ScummDiskImage::setEnc(byte enc) {
-	_stream->setEnc(enc);
 }
 
 byte ScummDiskImage::fileReadByte() {
@@ -495,6 +490,19 @@ bool ScummDiskImage::openSubFile(const Common::String &filename) {
 	}
 
 	return true;
+}
+
+uint32 ScummDiskImage::read(void *dataPtr, uint32 dataSize) {
+	uint32 realLen = _stream->read(dataPtr, dataSize);
+
+	if (_encbyte) {
+		byte *p = (byte *)dataPtr;
+		byte *end = p + realLen;
+		while (p < end)
+			*p++ ^= _encbyte;
+	}
+
+	return realLen;
 }
 
 } // End of namespace Scumm

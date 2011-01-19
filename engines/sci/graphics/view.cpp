@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/view.cpp $
- * $Id: view.cpp 53855 2010-10-26 20:19:17Z m_kiewitz $
+ * $Id: view.cpp 54924 2010-12-15 22:36:55Z tdhs $
  *
  */
 
@@ -217,7 +217,7 @@ void GfxView::initData(GuiResourceId resourceId) {
 		case 0:
 			break; // don't do anything, we already have _isScaleable set
 		default:
-			error("unsupported flags byte inside sci1.1 view");
+			error("unsupported flags byte (%d) inside sci1.1 view", _resourceData[3]);
 			break;
 		}
 
@@ -429,7 +429,9 @@ void GfxView::unpackCel(int16 loopNo, int16 celNo, byte *outPtr, uint32 pixelCou
 					pixel = *rlePtr++;
 					runLength = pixel & 0x3F;
 					switch (pixel & 0xC0) {
-					case 0: // copy bytes as-is
+					case 0x40: // copy bytes as is (In copy case, runLength can go upto 127 i.e. pixel & 0x40)
+						runLength += 64;
+					case 0x00: // copy bytes as-is
 						while (runLength-- && pixelNo < pixelCount)
 							outPtr[pixelNo++] = *rlePtr++;
 						break;

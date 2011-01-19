@@ -19,13 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/dataio.cpp $
- * $Id: dataio.cpp 53985 2010-10-31 20:51:35Z drmccoy $
+ * $Id: dataio.cpp 54826 2010-12-07 23:55:27Z drmccoy $
  *
  */
 
 #include "common/endian.h"
 #include "common/types.h"
-#include "common/stream.h"
+#include "common/memstream.h"
 
 #include "gob/gob.h"
 #include "gob/dataio.h"
@@ -316,7 +316,7 @@ byte *DataIO::getFile(const Common::String &name, int32 &size) {
 		return 0;
 	}
 
-	return 0;
+	return data;
 }
 
 DataIO::File *DataIO::findFile(const Common::String &name) {

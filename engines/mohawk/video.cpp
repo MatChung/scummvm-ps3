@@ -19,10 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/video.cpp $
- * $Id: video.cpp 52509 2010-09-03 19:13:58Z mthreepwood $
+ * $Id: video.cpp 55312 2011-01-18 20:30:16Z mthreepwood $
  *
  */
 
+#include "mohawk/mohawk.h"
 #include "mohawk/resource.h"
 #include "mohawk/video.h"
 
@@ -30,6 +31,22 @@
 #include "graphics/video/qt_decoder.h"
 
 namespace Mohawk {
+
+void VideoEntry::clear() {
+	video = 0;
+	x = 0;
+	y = 0;
+	loop = false;
+	enabled = false;
+	start = Graphics::VideoTimestamp(0);
+	end = Graphics::VideoTimestamp(0xFFFFFFFF); // Largest possible, there is an endOfVideo() check anyway
+	filename.clear();
+	id = 0;
+}
+
+bool VideoEntry::endOfVideo() {
+	return !video || video->endOfVideo() || video->getElapsedTime() >= end.getUnitsInScale(1000);
+}
 
 VideoManager::VideoManager(MohawkEngine* vm) : _vm(vm) {
 }
@@ -53,10 +70,11 @@ void VideoManager::resumeVideos() {
 void VideoManager::stopVideos() {
 	for (uint16 i = 0; i < _videoStreams.size(); i++)
 		delete _videoStreams[i].video;
+
 	_videoStreams.clear();
 }
 
-void VideoManager::playMovie(Common::String filename, uint16 x, uint16 y, bool clearScreen) {
+void VideoManager::playMovieBlocking(const Common::String &filename, uint16 x, uint16 y, bool clearScreen) {
 	VideoHandle videoHandle = createVideoHandle(filename, x, y, false);
 	if (videoHandle == NULL_VID_HANDLE)
 		return;
@@ -70,7 +88,7 @@ void VideoManager::playMovie(Common::String filename, uint16 x, uint16 y, bool c
 	waitUntilMovieEnds(videoHandle);
 }
 
-void VideoManager::playMovieCentered(Common::String filename, bool clearScreen) {
+void VideoManager::playMovieBlockingCentered(const Common::String &filename, bool clearScreen) {
 	VideoHandle videoHandle = createVideoHandle(filename, 0, 0, false);
 	if (videoHandle == NULL_VID_HANDLE)
 		return;
@@ -88,10 +106,13 @@ void VideoManager::playMovieCentered(Common::String filename, bool clearScreen) 
 }
 
 void VideoManager::waitUntilMovieEnds(VideoHandle videoHandle) {
+	if (videoHandle == NULL_VID_HANDLE)
+		return;
+
 	bool continuePlaying = true;
 
-	while (_videoStreams[videoHandle].video && !_videoStreams[videoHandle]->endOfVideo() && !_vm->shouldQuit() && continuePlaying) {
-		if (updateBackgroundMovies())
+	while (!_videoStreams[videoHandle].endOfVideo() && !_vm->shouldQuit() && continuePlaying) {
+		if (updateMovies())
 			_vm->_system->updateScreen();
 
 		Common::Event event;
@@ -122,15 +143,28 @@ void VideoManager::waitUntilMovieEnds(VideoHandle videoHandle) {
 	}
 
 	delete _videoStreams[videoHandle].video;
-	_videoStreams[videoHandle].video = 0;
-	_videoStreams[videoHandle].id = 0xffff;
-	_videoStreams[videoHandle].filename.clear();
+	_videoStreams[videoHandle].clear();
 }
 
-void VideoManager::playBackgroundMovie(Common::String filename, int16 x, int16 y, bool loop) {
+void VideoManager::delayUntilMovieEnds(VideoHandle videoHandle) {
+	bool continuePlaying = true;
+
+	while (!_videoStreams[videoHandle].endOfVideo() && !_vm->shouldQuit() && continuePlaying) {
+		if (updateMovies())
+			_vm->_system->updateScreen();
+
+		// Cut down on CPU usage
+		_vm->_system->delayMillis(10);
+	}
+
+	delete _videoStreams[videoHandle].video;
+	_videoStreams[videoHandle].clear();
+}
+
+VideoHandle VideoManager::playMovie(const Common::String &filename, int16 x, int16 y, bool loop) {
 	VideoHandle videoHandle = createVideoHandle(filename, x, y, loop);
 	if (videoHandle == NULL_VID_HANDLE)
-		return;
+		return NULL_VID_HANDLE;
 
 	// Center x if requested
 	if (x < 0)
@@ -139,9 +173,27 @@ void VideoManager::playBackgroundMovie(Common::String filename, int16 x, int16 y
 	// Center y if requested
 	if (y < 0)
 		_videoStreams[videoHandle].y = (_vm->_system->getHeight() - _videoStreams[videoHandle]->getHeight()) / 2;
+
+	return videoHandle;
 }
 
-bool VideoManager::updateBackgroundMovies() {
+VideoHandle VideoManager::playMovie(uint16 id, int16 x, int16 y, bool loop) {
+	VideoHandle videoHandle = createVideoHandle(id, x, y, loop);
+	if (videoHandle == NULL_VID_HANDLE)
+		return NULL_VID_HANDLE;
+
+	// Center x if requested
+	if (x < 0)
+		_videoStreams[videoHandle].x = (_vm->_system->getWidth() - _videoStreams[videoHandle]->getWidth()) / 2;
+
+	// Center y if requested
+	if (y < 0)
+		_videoStreams[videoHandle].y = (_vm->_system->getHeight() - _videoStreams[videoHandle]->getHeight()) / 2;
+
+	return videoHandle;
+}
+
+bool VideoManager::updateMovies() {
 	bool updateScreen = false;
 
 	for (uint32 i = 0; i < _videoStreams.size() && !_vm->shouldQuit(); i++) {
@@ -150,48 +202,51 @@ bool VideoManager::updateBackgroundMovies() {
 			continue;
 
 		// Remove any videos that are over
-		if (_videoStreams[i]->endOfVideo()) {
+		if (_videoStreams[i].endOfVideo()) {
 			if (_videoStreams[i].loop) {
-				_videoStreams[i]->rewind();
+				_videoStreams[i]->seekToTime(_videoStreams[i].start);
 			} else {
 				delete _videoStreams[i].video;
-				_videoStreams[i].video = 0;
-				_videoStreams[i].id = 0xffff;
-				_videoStreams[i].filename.clear();
+				_videoStreams[i].clear();
 				continue;
 			}
 		}
 
 		// Check if we need to draw a frame
 		if (_videoStreams[i]->needsUpdate()) {
-			Graphics::Surface *frame = _videoStreams[i]->decodeNextFrame();
-			bool deleteFrame = false;
+			const Graphics::Surface *frame = _videoStreams[i]->decodeNextFrame();
+			Graphics::Surface *convertedFrame = 0;
 
 			if (frame && _videoStreams[i].enabled) {
 				// Convert from 8bpp to the current screen format if necessary
+				Graphics::PixelFormat pixelFormat = _vm->_system->getScreenFormat();
+
 				if (frame->bytesPerPixel == 1) {
-					Graphics::Surface *newFrame = new Graphics::Surface();
-					Graphics::PixelFormat pixelFormat = _vm->_system->getScreenFormat();
-					byte *palette = _videoStreams[i]->getPalette();
-					assert(palette);
+					if (pixelFormat.bytesPerPixel == 1) {
+						if (_videoStreams[i]->hasDirtyPalette())
+							_videoStreams[i]->setSystemPalette();
+					} else {
+						convertedFrame = new Graphics::Surface();
+						const byte *palette = _videoStreams[i]->getPalette();
+						assert(palette);
 
-					newFrame->create(frame->w, frame->h, pixelFormat.bytesPerPixel);
+						convertedFrame->create(frame->w, frame->h, pixelFormat.bytesPerPixel);
 
-					for (uint16 j = 0; j < frame->h; j++) {
-						for (uint16 k = 0; k < frame->w; k++) {
-							byte palIndex = *((byte *)frame->getBasePtr(k, j));
-							byte r = palette[palIndex * 3];
-							byte g = palette[palIndex * 3 + 1];
-							byte b = palette[palIndex * 3 + 2];
-							if (pixelFormat.bytesPerPixel == 2)
-								*((uint16 *)newFrame->getBasePtr(k, j)) = pixelFormat.RGBToColor(r, g, b);
-							else
-								*((uint32 *)newFrame->getBasePtr(k, j)) = pixelFormat.RGBToColor(r, g, b);
+						for (uint16 j = 0; j < frame->h; j++) {
+							for (uint16 k = 0; k < frame->w; k++) {
+								byte palIndex = *((byte *)frame->getBasePtr(k, j));
+								byte r = palette[palIndex * 3];
+								byte g = palette[palIndex * 3 + 1];
+								byte b = palette[palIndex * 3 + 2];
+								if (pixelFormat.bytesPerPixel == 2)
+									*((uint16 *)convertedFrame->getBasePtr(k, j)) = pixelFormat.RGBToColor(r, g, b);
+								else
+									*((uint32 *)convertedFrame->getBasePtr(k, j)) = pixelFormat.RGBToColor(r, g, b);
+							}
 						}
-					}
 
-					frame = newFrame;
-					deleteFrame = true;
+						frame = convertedFrame;
+					}
 				}
 
 				// Clip the width/height to make sure we stay on the screen (Myst does this a few times)
@@ -202,16 +257,13 @@ bool VideoManager::updateBackgroundMovies() {
 				// We've drawn something to the screen, make sure we update it
 				updateScreen = true;
 
-				// Delete the frame if we're using the buffer from the 8bpp conversion
-				if (deleteFrame) {
-					frame->free();
-					delete frame;
+				// Delete 8bpp conversion surface
+				if (convertedFrame) {
+					convertedFrame->free();
+					delete convertedFrame;
 				}
 			}
 		}
-
-		// Update the audio buffer too
-		_videoStreams[i]->updateAudioBuffer();
 	}
 
 	// Return true if we need to update the screen
@@ -219,7 +271,7 @@ bool VideoManager::updateBackgroundMovies() {
 }
 
 void VideoManager::activateMLST(uint16 mlstId, uint16 card) {
-	Common::SeekableReadStream *mlstStream = _vm->getRawData(ID_MLST, card);
+	Common::SeekableReadStream *mlstStream = _vm->getResource(ID_MLST, card);
 	uint16 recordCount = mlstStream->readUint16BE();
 
 	for (uint16 i = 0; i < recordCount; i++) {
@@ -265,16 +317,17 @@ void VideoManager::clearMLST() {
 	_mlstRecords.clear();
 }
 
-void VideoManager::playMovie(uint16 id) {
+VideoHandle VideoManager::playMovieRiven(uint16 id) {
 	for (uint16 i = 0; i < _mlstRecords.size(); i++)
 		if (_mlstRecords[i].code == id) {
 			debug(1, "Play tMOV %d (non-blocking) at (%d, %d) %s", _mlstRecords[i].movieID, _mlstRecords[i].left, _mlstRecords[i].top, _mlstRecords[i].loop != 0 ? "looping" : "non-looping");
-			createVideoHandle(_mlstRecords[i].movieID, _mlstRecords[i].left, _mlstRecords[i].top, _mlstRecords[i].loop != 0);
-			return;
+			return createVideoHandle(_mlstRecords[i].movieID, _mlstRecords[i].left, _mlstRecords[i].top, _mlstRecords[i].loop != 0);
 		}
+
+	return NULL_VID_HANDLE;
 }
 
-void VideoManager::playMovieBlocking(uint16 id) {
+void VideoManager::playMovieBlockingRiven(uint16 id) {
 	for (uint16 i = 0; i < _mlstRecords.size(); i++)
 		if (_mlstRecords[i].code == id) {
 			debug(1, "Play tMOV %d (blocking) at (%d, %d)", _mlstRecords[i].movieID, _mlstRecords[i].left, _mlstRecords[i].top);
@@ -284,21 +337,19 @@ void VideoManager::playMovieBlocking(uint16 id) {
 		}
 }
 
-void VideoManager::stopMovie(uint16 id) {
+void VideoManager::stopMovieRiven(uint16 id) {
 	debug(2, "Stopping movie %d", id);
 	for (uint16 i = 0; i < _mlstRecords.size(); i++)
 		if (_mlstRecords[i].code == id)
 			for (uint16 j = 0; j < _videoStreams.size(); j++)
 				if (_mlstRecords[i].movieID == _videoStreams[j].id) {
 					delete _videoStreams[j].video;
-					_videoStreams[j].video = 0;
-					_videoStreams[j].id = 0xffff;
-					_videoStreams[j].filename.clear();
+					_videoStreams[j].clear();
 					return;
 				}
 }
 
-void VideoManager::enableMovie(uint16 id) {
+void VideoManager::enableMovieRiven(uint16 id) {
 	debug(2, "Enabling movie %d", id);
 	for (uint16 i = 0; i < _mlstRecords.size(); i++)
 		if (_mlstRecords[i].code == id)
@@ -309,7 +360,7 @@ void VideoManager::enableMovie(uint16 id) {
 				}
 }
 
-void VideoManager::disableMovie(uint16 id) {
+void VideoManager::disableMovieRiven(uint16 id) {
 	debug(2, "Disabling movie %d", id);
 	for (uint16 i = 0; i < _mlstRecords.size(); i++)
 		if (_mlstRecords[i].code == id)
@@ -333,16 +384,18 @@ VideoHandle VideoManager::createVideoHandle(uint16 id, uint16 x, uint16 y, bool 
 			return i;
 
 	// Otherwise, create a new entry
+	Graphics::QuickTimeDecoder *decoder = new Graphics::QuickTimeDecoder();
+	decoder->setChunkBeginOffset(_vm->getResourceOffset(ID_TMOV, id));
+	decoder->load(_vm->getResource(ID_TMOV, id));
+
 	VideoEntry entry;
-	entry.video = new Graphics::QuickTimeDecoder();
+	entry.clear();
+	entry.video = decoder;
 	entry.x = x;
 	entry.y = y;
-	entry.filename = "";
 	entry.id = id;
 	entry.loop = loop;
 	entry.enabled = true;
-	entry->setChunkBeginOffset(_vm->getResourceOffset(ID_TMOV, id));
-	entry->load(_vm->getRawData(ID_TMOV, id));
 
 	// Search for any deleted videos so we can take a formerly used slot
 	for (uint32 i = 0; i < _videoStreams.size(); i++)
@@ -356,7 +409,7 @@ VideoHandle VideoManager::createVideoHandle(uint16 id, uint16 x, uint16 y, bool 
 	return _videoStreams.size() - 1;
 }
 
-VideoHandle VideoManager::createVideoHandle(Common::String filename, uint16 x, uint16 y, bool loop) {
+VideoHandle VideoManager::createVideoHandle(const Common::String &filename, uint16 x, uint16 y, bool loop) {
 	// First, check to see if that video is already playing
 	for (uint32 i = 0; i < _videoStreams.size(); i++)
 		if (_videoStreams[i].filename == filename)
@@ -364,11 +417,11 @@ VideoHandle VideoManager::createVideoHandle(Common::String filename, uint16 x, u
 
 	// Otherwise, create a new entry
 	VideoEntry entry;
+	entry.clear();
 	entry.video = new Graphics::QuickTimeDecoder();
 	entry.x = x;
 	entry.y = y;
 	entry.filename = filename;
-	entry.id = 0xffff;
 	entry.loop = loop;
 	entry.enabled = true;
 	
@@ -392,34 +445,86 @@ VideoHandle VideoManager::createVideoHandle(Common::String filename, uint16 x, u
 	return _videoStreams.size() - 1;
 }
 
-VideoHandle VideoManager::findVideoHandle(uint16 id) {
+VideoHandle VideoManager::findVideoHandleRiven(uint16 id) {
 	for (uint16 i = 0; i < _mlstRecords.size(); i++)
 		if (_mlstRecords[i].code == id)
-			for (uint16 j = 0; j < _videoStreams.size(); j++)
+			for (uint32 j = 0; j < _videoStreams.size(); j++)
 				if (_videoStreams[j].video && _mlstRecords[i].movieID == _videoStreams[j].id)
 					return j;
 
 	return NULL_VID_HANDLE;
 }
 
-int32 VideoManager::getCurFrame(const VideoHandle &handle) {
+VideoHandle VideoManager::findVideoHandle(uint16 id) {
+	if (!id)
+		return NULL_VID_HANDLE;
+
+	for (uint32 i = 0; i < _videoStreams.size(); i++)
+		if (_videoStreams[i].video && _videoStreams[i].id == id)
+			return i;
+
+	return NULL_VID_HANDLE;
+}
+
+VideoHandle VideoManager::findVideoHandle(const Common::String &filename) {
+	if (filename.empty())
+		return NULL_VID_HANDLE;
+
+	for (uint32 i = 0; i < _videoStreams.size(); i++)
+		if (_videoStreams[i].video && _videoStreams[i].filename.equalsIgnoreCase(filename))
+			return i;
+
+	return NULL_VID_HANDLE;
+}
+
+int32 VideoManager::getCurFrame(VideoHandle handle) {
 	assert(handle != NULL_VID_HANDLE);
 	return _videoStreams[handle]->getCurFrame();
 }
 
-uint32 VideoManager::getFrameCount(const VideoHandle &handle) {
+uint32 VideoManager::getFrameCount(VideoHandle handle) {
 	assert(handle != NULL_VID_HANDLE);
 	return _videoStreams[handle]->getFrameCount();
 }
 
-uint32 VideoManager::getElapsedTime(const VideoHandle &handle) {
+uint32 VideoManager::getElapsedTime(VideoHandle handle) {
 	assert(handle != NULL_VID_HANDLE);
 	return _videoStreams[handle]->getElapsedTime();
 }
 
-bool VideoManager::endOfVideo(const VideoHandle &handle) {
+bool VideoManager::endOfVideo(VideoHandle handle) {
 	assert(handle != NULL_VID_HANDLE);
-	return _videoStreams[handle]->endOfVideo();
+	return _videoStreams[handle].endOfVideo();
+}
+
+bool VideoManager::isVideoPlaying() {
+	for (uint32 i = 0; i < _videoStreams.size(); i++)
+		if (!_videoStreams[i].endOfVideo())
+			return true;
+
+	return false;
+}
+
+void VideoManager::setVideoBounds(VideoHandle handle, Graphics::VideoTimestamp start, Graphics::VideoTimestamp end) {
+	assert(handle != NULL_VID_HANDLE);
+	_videoStreams[handle].start = start;
+	_videoStreams[handle].end = end;
+	_videoStreams[handle]->seekToTime(start);
+}
+
+void VideoManager::seekToTime(VideoHandle handle, Graphics::VideoTimestamp time) {
+	assert(handle != NULL_VID_HANDLE);
+	_videoStreams[handle]->seekToTime(time);
+}
+
+void VideoManager::seekToFrame(VideoHandle handle, uint32 frame) {
+	assert(handle != NULL_VID_HANDLE);
+	_videoStreams[handle]->seekToFrame(frame);
+}
+
+void VideoManager::setVideoLooping(VideoHandle handle, bool loop) {
+	assert(handle != NULL_VID_HANDLE);
+	_videoStreams[handle].loop = loop;
 }
 
 } // End of namespace Mohawk

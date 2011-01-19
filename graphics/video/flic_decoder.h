@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/flic_decoder.h $
- * $Id: flic_decoder.h 51725 2010-08-04 08:25:05Z fingolfin $
+ * $Id: flic_decoder.h 54928 2010-12-16 01:41:11Z mthreepwood $
  *
  */
 
@@ -59,7 +59,7 @@ public:
 	 * @note the return surface should *not* be freed
 	 * @note this may return 0, in which case the last frame should be kept on screen
 	 */
-	Surface *decodeNextFrame();
+	const Surface *decodeNextFrame();
 
 	bool isVideoLoaded() const { return _fileStream != 0; }
 	uint16 getWidth() const { return _surface->w; }
@@ -71,7 +71,7 @@ public:
 	void clearDirtyRects() { _dirtyRects.clear(); }
 	void copyDirtyRectsToBuffer(uint8 *dst, uint pitch);
 
-	byte *getPalette() { _paletteChanged = false; return _palette; }
+	const byte *getPalette() { _paletteChanged = false; return _palette; }
 	bool hasDirtyPalette() const { return _paletteChanged; }
 	void reset();
 

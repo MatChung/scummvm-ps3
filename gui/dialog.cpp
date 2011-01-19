@@ -19,15 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/dialog.cpp $
- * $Id: dialog.cpp 53765 2010-10-24 13:26:58Z wjpalenstijn $
+ * $Id: dialog.cpp 54265 2010-11-16 10:19:01Z fingolfin $
  */
 
 #include "common/events.h"
 
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 #include "gui/dialog.h"
 #include "gui/widget.h"
-#include "gui/PopUpWidget.h"
+#include "gui/widgets/popup.h"
 
 #include "common/system.h"
 

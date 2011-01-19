@@ -19,12 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/compression.cpp $
- * $Id: compression.cpp 47705 2010-01-30 09:21:07Z dreammaster $
+ * $Id: compression.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "m4/compression.h"
 #include "m4/m4.h"
+
+#include "common/memstream.h"
 
 namespace M4 {
 
@@ -88,6 +90,10 @@ void MadsPack::initialise(Common::SeekableReadStream *stream) {
 
 	delete[] headerData;
 	_dataOffset = stream->pos();
+}
+
+Common::SeekableReadStream *MadsPack::getItemStream(int index) {
+	return new Common::MemoryReadStream(_items[index].data, _items[index].size, DisposeAfterUse::NO);
 }
 
 MadsPack::~MadsPack() {

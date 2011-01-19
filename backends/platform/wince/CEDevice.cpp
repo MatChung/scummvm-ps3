@@ -19,16 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/wince/CEDevice.cpp $
- * $Id: CEDevice.cpp 53978 2010-10-31 17:10:45Z fingolfin $
+ * $Id: CEDevice.cpp 54572 2010-11-29 16:16:50Z fingolfin $
  *
  */
 
-// Disable symbol overrides so that we can use system headers.
-#define FORBIDDEN_SYMBOL_ALLOW_ALL
-
 #include "CEDevice.h"
 
-#include <SDL.h>
+#include "backends/platform/sdl/sdl-sys.h"
 
 #include "backends/platform/wince/wince-sdl.h"
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/actor.cpp $
- * $Id: actor.cpp 53842 2010-10-26 04:20:20Z Kirben $
+ * $Id: actor.cpp 55053 2010-12-28 06:05:57Z Kirben $
  *
  */
 
@@ -2037,7 +2037,7 @@ void ScummEngine_v7::actorTalk(const byte *msg) {
 	_haveMsg = 1;
 	if (_game.id == GID_FT)
 		VAR(VAR_HAVE_MSG) = 0xFF;
-	_haveActorSpeechMsg = true;
+	_haveActorSpeechMsg = (_game.id == GID_FT) ? true : (!_sound->isSoundRunning(kTalkSoundID));
 	if (_game.id == GID_DIG || _game.id == GID_CMI) {
 		stringWrap = _string[0].wrapping;
 		_string[0].wrapping = true;

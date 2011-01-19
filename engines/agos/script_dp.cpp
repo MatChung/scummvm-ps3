@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/script_dp.cpp $
- * $Id: script_dp.cpp 44286 2009-09-24 03:53:06Z Kirben $
+ * $Id: script_dp.cpp 54288 2010-11-17 12:22:08Z fingolfin $
  *
  */
 
@@ -281,7 +281,7 @@ void AGOSEngine_DIMP::setupOpcodes() {
 		OPCODE(opp_setPathValues),
 		OPCODE(off_stopClock),
 		OPCODE(off_restartClock),
-		OPCODE(off_setColour),
+		OPCODE(off_setColor),
 	};
 
 	_opcodesDIMP = opcodes;

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/saga.h $
- * $Id: saga.h 53780 2010-10-24 22:25:16Z h00ligan $
+ * $Id: saga.h 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -30,7 +30,7 @@
 
 #include "common/array.h"
 #include "common/random.h"
-#include "common/stream.h"
+#include "common/memstream.h"
 #include "sound/mididrv.h"
 
 #include "saga/gfx.h"
@@ -82,9 +82,6 @@ class Puzzle;
 class Resource;
 
 class ResourceContext;
-
-using Common::MemoryReadStream;
-using Common::MemoryReadStreamEndian;
 
 // #define SAGA_DEBUG 1		// define for test functions
 #define SAGA_IMAGE_DATA_OFFSET 776
@@ -480,9 +477,10 @@ public:
 	}
 };
 
-class ByteArrayReadStreamEndian : public MemoryReadStreamEndian {
+class ByteArrayReadStreamEndian : public Common::MemoryReadStreamEndian {
 public:
-	ByteArrayReadStreamEndian(const ByteArray & byteArray, bool bigEndian = false) : MemoryReadStreamEndian(byteArray.getBuffer(), byteArray.size(), bigEndian) {
+	ByteArrayReadStreamEndian(const ByteArray & byteArray, bool bigEndian = false)
+		: Common::MemoryReadStreamEndian(byteArray.getBuffer(), byteArray.size(), bigEndian) {
 	}
 };
 

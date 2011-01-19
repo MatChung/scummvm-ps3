@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/debugger.h $
- * $Id: debugger.h 40548 2009-05-14 07:05:51Z Kirben $
+ * $Id: debugger.h 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -37,11 +37,8 @@ public:
 	Debugger(AGOSEngine *vm);
 	virtual ~Debugger() {}  // we need this for __SYMBIAN32__ archaic gcc/UIQ
 
-protected:
+private:
 	AGOSEngine *_vm;
-
-	virtual void preEnter();
-	virtual void postEnter();
 
 	bool Cmd_DebugLevel(int argc, const char **argv);
 	bool Cmd_PlayMusic(int argc, const char **argv);

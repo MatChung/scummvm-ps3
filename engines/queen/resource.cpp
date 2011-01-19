@@ -19,13 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/queen/resource.cpp $
- * $Id: resource.cpp 50964 2010-07-17 18:41:38Z fingolfin $
+ * $Id: resource.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "common/debug.h"
 #include "common/endian.h"
 #include "common/config-manager.h"
+#include "common/substream.h"
 #include "queen/resource.h"
 
 namespace Queen {

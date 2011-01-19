@@ -19,13 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/entity.cpp $
- * $Id: entity.cpp 53845 2010-10-26 06:55:34Z littleboy $
+ * $Id: entity.cpp 54270 2010-11-16 14:06:59Z littleboy $
  *
  */
 
 #include "lastexpress/entities/entity.h"
 
 #include "lastexpress/entities/entity_intern.h"
+
+#include "lastexpress/data/sequence.h"
 
 #include "lastexpress/game/action.h"
 #include "lastexpress/game/entities.h"
@@ -45,6 +47,15 @@ namespace LastExpress {
 //////////////////////////////////////////////////////////////////////////
 // EntityData
 //////////////////////////////////////////////////////////////////////////
+
+EntityData::EntityCallData::~EntityCallData() {
+	SAFE_DELETE(frame);
+	SAFE_DELETE(frame1);
+
+	SAFE_DELETE(sequence);
+	SAFE_DELETE(sequence2);
+	SAFE_DELETE(sequence3);
+}
 
 void EntityData::EntityCallData::saveLoadWithSerializer(Common::Serializer &s) {
 	for (uint i = 0; i < ARRAYSIZE(callbacks); i++)
@@ -150,9 +161,11 @@ Entity::Entity(LastExpressEngine *engine, EntityIndex index) : _engine(engine), 
 
 Entity::~Entity() {
 	for (uint i = 0; i < _callbacks.size(); i++)
-		delete _callbacks[i];
+		SAFE_DELETE(_callbacks[i]);
 
-	delete _data;
+	_callbacks.clear();
+
+	SAFE_DELETE(_data);
 
 	// Zero-out passed pointers
 	_engine = NULL;

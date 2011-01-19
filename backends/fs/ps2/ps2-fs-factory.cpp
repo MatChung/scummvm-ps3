@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/fs/ps2/ps2-fs-factory.cpp $
- * $Id: ps2-fs-factory.cpp 53977 2010-10-31 17:01:47Z fingolfin $
+ * $Id: ps2-fs-factory.cpp 54258 2010-11-16 08:23:13Z fingolfin $
  */
 
 #if defined(__PLAYSTATION2__)
@@ -30,7 +30,7 @@
 #include "backends/fs/ps2/ps2-fs-factory.h"
 #include "backends/fs/ps2/ps2-fs.cpp"
 
-DECLARE_SINGLETON(Ps2FilesystemFactory)
+DECLARE_SINGLETON(Ps2FilesystemFactory);
 
 AbstractFSNode *Ps2FilesystemFactory::makeRootFileNode() const {
 	return new Ps2FilesystemNode();

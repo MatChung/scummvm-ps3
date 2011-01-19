@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/debugger.h $
- * $Id: debugger.h 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: debugger.h 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -33,15 +33,16 @@ namespace Tinsel {
 class TinselEngine;
 
 class Console: public GUI::Debugger {
-protected:
+public:
+	Console();
+	virtual ~Console();
+
+private:
 	bool cmd_item(int argc, const char **argv);
 	bool cmd_scene(int argc, const char **argv);
 	bool cmd_music(int argc, const char **argv);
 	bool cmd_sound(int argc, const char **argv);
 	bool cmd_string(int argc, const char **argv);
-public:
-	Console();
-	virtual ~Console();
 };
 
 } // End of namespace Tinsel

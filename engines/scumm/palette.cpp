@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/palette.cpp $
- * $Id: palette.cpp 53785 2010-10-25 03:21:49Z Kirben $
+ * $Id: palette.cpp 54288 2010-11-17 12:22:08Z fingolfin $
  *
  */
 
@@ -1092,7 +1092,7 @@ void ScummEngine::updatePalette() {
 		else
 			data = _currentPalette + i * 3;
 
-		// Sam & Max film noir mode. Convert the colours to grayscale
+		// Sam & Max film noir mode. Convert the colors to grayscale
 		// before uploading them to the backend.
 
 		if (noir_mode) {

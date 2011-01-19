@@ -19,12 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/converse.cpp $
- * $Id: converse.cpp 54047 2010-11-03 09:44:03Z dreammaster $
+ * $Id: converse.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "common/array.h"
 #include "common/hashmap.h"
+#include "common/substream.h"
 
 #include "m4/converse.h"
 #include "m4/resource.h"
@@ -950,7 +951,7 @@ void Converse::loadConversationMads(const char *convName) {
 		for (j = 0; j < _convNodes[i]->entryCount; j++) {
 			debugCN(kDebugConversations, "*** Node %i entry %i data size %i\n", i, j, _convNodes[i]->entries[j]->size);
 			debugCN(kDebugConversations, "Entry ID %i, text %s\n", _convNodes[i]->entries[j]->id, _convNodes[i]->entries[j]->text);
-			Common::SubReadStream *entryStream = new Common::SubReadStream(convS, _convNodes[i]->entries[j]->size);
+			Common::ReadStream *entryStream = new Common::SubReadStream(convS, _convNodes[i]->entries[j]->size);
 			readConvEntryActions(entryStream, _convNodes[i]->entries[j]);
 			delete entryStream;
 			debugCN(kDebugConversations, "--------------------\n");
@@ -960,7 +961,7 @@ void Converse::loadConversationMads(const char *convName) {
 	delete convS;
 }
 
-void Converse::readConvEntryActions(Common::SubReadStream *convS, ConvEntry *curEntry) {
+void Converse::readConvEntryActions(Common::ReadStream *convS, ConvEntry *curEntry) {
 	uint8 chunk;
 	uint8 type;	// 255: normal, 11: conditional
 	uint8 hasText1, hasText2;

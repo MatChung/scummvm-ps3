@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/animation.cpp $
- * $Id: animation.cpp 53997 2010-11-01 11:25:11Z eriktorbjorn $
+ * $Id: animation.cpp 54928 2010-12-16 01:41:11Z mthreepwood $
  */
 
 #include "common/file.h"
@@ -279,7 +279,7 @@ bool MoviePlayer::playVideo() {
 
 	while (!_vm->shouldQuit() && !_decoder->endOfVideo()) {
 		if (_decoder->needsUpdate()) {
-			Graphics::Surface *frame = _decoder->decodeNextFrame();
+			const Graphics::Surface *frame = _decoder->decodeNextFrame();
 			if (frame)
 				_vm->_system->copyRectToScreen((byte *)frame->pixels, frame->pitch, x, y, frame->w, frame->h);
 
@@ -291,7 +291,7 @@ bool MoviePlayer::playVideo() {
 				uint32 weight;
 				byte r, g, b;
 				
-				byte *palette = _decoder->getPalette();
+				const byte *palette = _decoder->getPalette();
 
 				for (int i = 0; i < 256; i++) {
 					r = *palette++;

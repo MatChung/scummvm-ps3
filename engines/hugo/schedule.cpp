@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/schedule.cpp $
- * $Id: schedule.cpp 54124 2010-11-07 18:52:47Z strangerke $
+ * $Id: schedule.cpp 55318 2011-01-19 00:49:49Z strangerke $
  *
  */
 
@@ -39,6 +39,9 @@
 #include "hugo/file.h"
 #include "hugo/display.h"
 #include "hugo/util.h"
+#include "hugo/object.h"
+#include "hugo/sound.h"
+#include "hugo/parser.h"
 
 namespace Hugo {
 
@@ -75,7 +78,7 @@ event_t *Scheduler::getQueue() {
 	debugC(4, kDebugSchedule, "getQueue");
 
 	if (!_freeEvent)                                // Error: no more events available
-		Utils::Error(EVNT_ERR, "%s", "getQueue");
+		error("An error has occurred: %s", "getQueue");
 	event_t *resEvent = _freeEvent;
 	_freeEvent = _freeEvent->nextEvent;
 	resEvent->nextEvent = 0;
@@ -111,7 +114,7 @@ void Scheduler::decodeString(char *line) {
 * Return system time in ticks.  A tick is 1/TICKS_PER_SEC mS
 */
 uint32 Scheduler::getWinTicks() {
-	debugC(3, kDebugSchedule, "getTicks");
+	debugC(5, kDebugSchedule, "getWinTicks()");
 
 	return _vm->getGameStatus().tick;
 }
@@ -123,7 +126,7 @@ uint32 Scheduler::getWinTicks() {
 * a real tick, in which case the system tick is simply incremented
 */
 uint32 Scheduler::getDosTicks(bool updateFl) {
-	debugC(5, kDebugSchedule, "getTicks");
+	debugC(5, kDebugSchedule, "getDosTicks(%s)", (updateFl) ? "TRUE" : "FALSE");
 
 	static  uint32 tick = 0;                        // Current system time in ticks
 	static  uint32 t_old = 0;                       // The previous wall time in ticks
@@ -133,10 +136,10 @@ uint32 Scheduler::getDosTicks(bool updateFl) {
 	if (!updateFl)
 		return(tick);
 
-	if (t_old == 0) 
-		t_old = (uint32) floor((double) (g_system->getMillis() * TPS / 1000));
+	if (t_old == 0)
+		t_old = (uint32) floor((double) (g_system->getMillis() * _vm->getTPS() / 1000));
 	/* Calculate current wall time in ticks */
-	t_now = g_system->getMillis() * TPS / 1000	;
+	t_now = g_system->getMillis() * _vm->getTPS() / 1000	;
 
 	if ((t_now - t_old) > 0) {
 		t_old = t_now;
@@ -172,8 +175,8 @@ void Scheduler::newScreen(int screenIndex) {
 	if (!_vm->isPacked()) {
 		char line[32];
 		if (!_vm->_file->fileExists(strcat(strncat(strcpy(line, _vm->_picDir), _vm->_screenNames[screenIndex], NAME_LEN), BKGEXT)) &&
-		        !_vm->_file->fileExists(strcat(strcpy(line, _vm->_screenNames[screenIndex]), ".ART"))) {
-			Utils::Box(BOX_ANY, "%s", _vm->_textSchedule[kSsNoBackground]);
+		    !_vm->_file->fileExists(strcat(strcpy(line, _vm->_screenNames[screenIndex]), ".ART"))) {
+				error("Unable to find background file for %s", _vm->_screenNames[screenIndex]);
 			return;
 		}
 	}
@@ -227,7 +230,7 @@ void Scheduler::restoreScreen(int screenIndex) {
 * Note: DOS Versions only
 */
 void Scheduler::waitForRefresh(void) {
-	debugC(1, kDebugSchedule, "waitForRefresh()");
+	debugC(5, kDebugSchedule, "waitForRefresh()");
 
 	static uint32 timeout = 0;
 	uint32 t;
@@ -280,13 +283,13 @@ void Scheduler::loadActListArr(Common::File &in) {
 						break;
 					case START_OBJ:          // 1
 						_actListArr[i][j].a1.timer = in.readSint16BE();
-						_actListArr[i][j].a1.objNumb = in.readSint16BE();
+						_actListArr[i][j].a1.objIndex = in.readSint16BE();
 						_actListArr[i][j].a1.cycleNumb = in.readSint16BE();
 						_actListArr[i][j].a1.cycle = (cycle_t) in.readByte();
 						break;
 					case INIT_OBJXY:         // 2
 						_actListArr[i][j].a2.timer = in.readSint16BE();
-						_actListArr[i][j].a2.objNumb = in.readSint16BE();
+						_actListArr[i][j].a2.objIndex = in.readSint16BE();
 						_actListArr[i][j].a2.x = in.readSint16BE();
 						_actListArr[i][j].a2.y = in.readSint16BE();
 						break;
@@ -307,18 +310,18 @@ void Scheduler::loadActListArr(Common::File &in) {
 						break;
 					case INIT_OBJVXY:        // 5
 						_actListArr[i][j].a5.timer = in.readSint16BE();
-						_actListArr[i][j].a5.objNumb = in.readSint16BE();
+						_actListArr[i][j].a5.objIndex = in.readSint16BE();
 						_actListArr[i][j].a5.vx = in.readSint16BE();
 						_actListArr[i][j].a5.vy = in.readSint16BE();
 						break;
 					case INIT_CARRY:         // 6
 						_actListArr[i][j].a6.timer = in.readSint16BE();
-						_actListArr[i][j].a6.objNumb = in.readSint16BE();
+						_actListArr[i][j].a6.objIndex = in.readSint16BE();
 						_actListArr[i][j].a6.carriedFl = (in.readByte() == 1) ? true : false;
 						break;
 					case INIT_HF_COORD:      // 7
 						_actListArr[i][j].a7.timer = in.readSint16BE();
-						_actListArr[i][j].a7.objNumb = in.readSint16BE();
+						_actListArr[i][j].a7.objIndex = in.readSint16BE();
 						break;
 					case NEW_SCREEN:         // 8
 						_actListArr[i][j].a8.timer = in.readSint16BE();
@@ -326,19 +329,19 @@ void Scheduler::loadActListArr(Common::File &in) {
 						break;
 					case INIT_OBJSTATE:      // 9
 						_actListArr[i][j].a9.timer = in.readSint16BE();
-						_actListArr[i][j].a9.objNumb = in.readSint16BE();
+						_actListArr[i][j].a9.objIndex = in.readSint16BE();
 						_actListArr[i][j].a9.newState = in.readByte();
 						break;
 					case INIT_PATH:          // 10
 						_actListArr[i][j].a10.timer = in.readSint16BE();
-						_actListArr[i][j].a10.objNumb = in.readSint16BE();
+						_actListArr[i][j].a10.objIndex = in.readSint16BE();
 						_actListArr[i][j].a10.newPathType = in.readSint16BE();
 						_actListArr[i][j].a10.vxPath = in.readByte();
 						_actListArr[i][j].a10.vyPath = in.readByte();
 						break;
 					case COND_R:             // 11
 						_actListArr[i][j].a11.timer = in.readSint16BE();
-						_actListArr[i][j].a11.objNumb = in.readSint16BE();
+						_actListArr[i][j].a11.objIndex = in.readSint16BE();
 						_actListArr[i][j].a11.stateReq = in.readByte();
 						_actListArr[i][j].a11.actPassIndex = in.readUint16BE();
 						_actListArr[i][j].a11.actFailIndex = in.readUint16BE();
@@ -349,41 +352,41 @@ void Scheduler::loadActListArr(Common::File &in) {
 						break;
 					case SWAP_IMAGES:        // 13
 						_actListArr[i][j].a13.timer = in.readSint16BE();
-						_actListArr[i][j].a13.obj1 = in.readSint16BE();
-						_actListArr[i][j].a13.obj2 = in.readSint16BE();
+						_actListArr[i][j].a13.objIndex1 = in.readSint16BE();
+						_actListArr[i][j].a13.objIndex2 = in.readSint16BE();
 						break;
 					case COND_SCR:           // 14
 						_actListArr[i][j].a14.timer = in.readSint16BE();
-						_actListArr[i][j].a14.objNumb = in.readSint16BE();
+						_actListArr[i][j].a14.objIndex = in.readSint16BE();
 						_actListArr[i][j].a14.screenReq = in.readSint16BE();
 						_actListArr[i][j].a14.actPassIndex = in.readUint16BE();
 						_actListArr[i][j].a14.actFailIndex = in.readUint16BE();
 						break;
 					case AUTOPILOT:          // 15
 						_actListArr[i][j].a15.timer = in.readSint16BE();
-						_actListArr[i][j].a15.obj1 = in.readSint16BE();
-						_actListArr[i][j].a15.obj2 = in.readSint16BE();
+						_actListArr[i][j].a15.objIndex1 = in.readSint16BE();
+						_actListArr[i][j].a15.objIndex2 = in.readSint16BE();
 						_actListArr[i][j].a15.dx = in.readByte();
 						_actListArr[i][j].a15.dy = in.readByte();
 						break;
 					case INIT_OBJ_SEQ:       // 16
 						_actListArr[i][j].a16.timer = in.readSint16BE();
-						_actListArr[i][j].a16.objNumb = in.readSint16BE();
+						_actListArr[i][j].a16.objIndex = in.readSint16BE();
 						_actListArr[i][j].a16.seqIndex = in.readSint16BE();
 						break;
 					case SET_STATE_BITS:     // 17
 						_actListArr[i][j].a17.timer = in.readSint16BE();
-						_actListArr[i][j].a17.objNumb = in.readSint16BE();
+						_actListArr[i][j].a17.objIndex = in.readSint16BE();
 						_actListArr[i][j].a17.stateMask = in.readSint16BE();
 						break;
 					case CLEAR_STATE_BITS:   // 18
 						_actListArr[i][j].a18.timer = in.readSint16BE();
-						_actListArr[i][j].a18.objNumb = in.readSint16BE();
+						_actListArr[i][j].a18.objIndex = in.readSint16BE();
 						_actListArr[i][j].a18.stateMask = in.readSint16BE();
 						break;
 					case TEST_STATE_BITS:    // 19
 						_actListArr[i][j].a19.timer = in.readSint16BE();
-						_actListArr[i][j].a19.objNumb = in.readSint16BE();
+						_actListArr[i][j].a19.objIndex = in.readSint16BE();
 						_actListArr[i][j].a19.stateMask = in.readSint16BE();
 						_actListArr[i][j].a19.actPassIndex = in.readUint16BE();
 						_actListArr[i][j].a19.actFailIndex = in.readUint16BE();
@@ -397,7 +400,7 @@ void Scheduler::loadActListArr(Common::File &in) {
 						break;
 					case INIT_HH_COORD:      // 22
 						_actListArr[i][j].a22.timer = in.readSint16BE();
-						_actListArr[i][j].a22.objNumb = in.readSint16BE();
+						_actListArr[i][j].a22.objIndex = in.readSint16BE();
 						break;
 					case EXIT:               // 23
 						_actListArr[i][j].a23.timer = in.readSint16BE();
@@ -408,7 +411,7 @@ void Scheduler::loadActListArr(Common::File &in) {
 						break;
 					case COND_BOX:           // 25
 						_actListArr[i][j].a25.timer = in.readSint16BE();
-						_actListArr[i][j].a25.objNumb = in.readSint16BE();
+						_actListArr[i][j].a25.objIndex = in.readSint16BE();
 						_actListArr[i][j].a25.x1 = in.readSint16BE();
 						_actListArr[i][j].a25.y1 = in.readSint16BE();
 						_actListArr[i][j].a25.x2 = in.readSint16BE();
@@ -422,15 +425,15 @@ void Scheduler::loadActListArr(Common::File &in) {
 						break;
 					case ADD_SCORE:          // 27
 						_actListArr[i][j].a27.timer = in.readSint16BE();
-						_actListArr[i][j].a27.objNumb = in.readSint16BE();
+						_actListArr[i][j].a27.objIndex = in.readSint16BE();
 						break;
 					case SUB_SCORE:          // 28
 						_actListArr[i][j].a28.timer = in.readSint16BE();
-						_actListArr[i][j].a28.objNumb = in.readSint16BE();
+						_actListArr[i][j].a28.objIndex = in.readSint16BE();
 						break;
 					case COND_CARRY:         // 29
 						_actListArr[i][j].a29.timer = in.readSint16BE();
-						_actListArr[i][j].a29.objNumb = in.readSint16BE();
+						_actListArr[i][j].a29.objIndex = in.readSint16BE();
 						_actListArr[i][j].a29.actPassIndex = in.readUint16BE();
 						_actListArr[i][j].a29.actFailIndex = in.readUint16BE();
 						break;
@@ -450,12 +453,12 @@ void Scheduler::loadActListArr(Common::File &in) {
 						break;
 					case INIT_PRIORITY:      // 32
 						_actListArr[i][j].a32.timer = in.readSint16BE();
-						_actListArr[i][j].a32.objNumb = in.readSint16BE();
+						_actListArr[i][j].a32.objIndex = in.readSint16BE();
 						_actListArr[i][j].a32.priority = in.readByte();
 						break;
 					case INIT_SCREEN:        // 33
 						_actListArr[i][j].a33.timer = in.readSint16BE();
-						_actListArr[i][j].a33.objNumb = in.readSint16BE();
+						_actListArr[i][j].a33.objIndex = in.readSint16BE();
 						_actListArr[i][j].a33.screenIndex = in.readSint16BE();
 						break;
 					case AGSCHEDULE:         // 34
@@ -480,8 +483,8 @@ void Scheduler::loadActListArr(Common::File &in) {
 						break;
 					case INIT_LIPS:          // 38
 						_actListArr[i][j].a38.timer = in.readSint16BE();
-						_actListArr[i][j].a38.lipsObjNumb = in.readSint16BE();
-						_actListArr[i][j].a38.objNumb = in.readSint16BE();
+						_actListArr[i][j].a38.lipsObjIndex = in.readSint16BE();
+						_actListArr[i][j].a38.objIndex = in.readSint16BE();
 						_actListArr[i][j].a38.dxLips = in.readByte();
 						_actListArr[i][j].a38.dyLips = in.readByte();
 						break;
@@ -501,7 +504,7 @@ void Scheduler::loadActListArr(Common::File &in) {
 						break;
 					case TEXT_TAKE:          // 42
 						_actListArr[i][j].a42.timer = in.readSint16BE();
-						_actListArr[i][j].a42.objNumb = in.readSint16BE();
+						_actListArr[i][j].a42.objIndex = in.readSint16BE();
 						break;
 					case YESNO:              // 43
 						_actListArr[i][j].a43.timer = in.readSint16BE();
@@ -524,20 +527,20 @@ void Scheduler::loadActListArr(Common::File &in) {
 						break;
 					case INIT_VIEW:          // 47
 						_actListArr[i][j].a47.timer = in.readSint16BE();
-						_actListArr[i][j].a47.objNumb = in.readSint16BE();
+						_actListArr[i][j].a47.objIndex = in.readSint16BE();
 						_actListArr[i][j].a47.viewx = in.readSint16BE();
 						_actListArr[i][j].a47.viewy = in.readSint16BE();
 						_actListArr[i][j].a47.direction = in.readSint16BE();
 						break;
 					case INIT_OBJ_FRAME:     // 48
 						_actListArr[i][j].a48.timer = in.readSint16BE();
-						_actListArr[i][j].a48.objNumb = in.readSint16BE();
+						_actListArr[i][j].a48.objIndex = in.readSint16BE();
 						_actListArr[i][j].a48.seqIndex = in.readSint16BE();
 						_actListArr[i][j].a48.frameIndex = in.readSint16BE();
 						break;
 					case OLD_SONG:           //49
 						_actListArr[i][j].a49.timer = in.readSint16BE();
-						_actListArr[i][j].a49.soundIndex = in.readUint16BE();
+						_actListArr[i][j].a49.songIndex = in.readUint16BE();
 						break;
 					default:
 						error("Engine - Unknown action type encountered: %d", _actListArr[i][j].a0.actType);
@@ -830,8 +833,13 @@ void Scheduler::freeActListArr() {
 	debugC(6, kDebugSchedule, "freeActListArr()");
 
 	if (_actListArr) {
-		for (int i = 0; i < _actListArrSize; i++)
+		for (int i = 0; i < _actListArrSize; i++) {
+			for (int j = 0; _actListArr[i][j].a0.actType != ANULL; j++) {
+				if (_actListArr[i][j].a0.actType == PROMPT)
+					free(_actListArr[i][j].a3.responsePtr);
+			}
 			free(_actListArr[i]);
+		}
 		free(_actListArr);
 	}
 }
@@ -876,4 +884,374 @@ void Scheduler::processMaze(int x1, int x2, int y1, int y2) {
 	}
 }
 
+/**
+* Write the event queue to the file with handle f
+* Note that we convert all the event structure ptrs to indexes
+* using -1 for NULL.  We can't convert the action ptrs to indexes
+* so we save address of first dummy action ptr to compare on restore.
+*/
+void Scheduler::saveEvents(Common::WriteStream *f) {
+	debugC(1, kDebugSchedule, "saveEvents()");
+
+	f->writeUint32BE(getTicks());
+
+	int16 freeIndex = (_freeEvent == 0) ? -1 : _freeEvent - _events;
+	int16 headIndex = (_headEvent == 0) ? -1 : _headEvent - _events;
+	int16 tailIndex = (_tailEvent == 0) ? -1 : _tailEvent - _events;
+
+	f->writeSint16BE(freeIndex);
+	f->writeSint16BE(headIndex);
+	f->writeSint16BE(tailIndex);
+
+	// Convert event ptrs to indexes
+	event_t  saveEventArr[kMaxEvents];              // Convert event ptrs to indexes
+	for (int16 i = 0; i < kMaxEvents; i++) {
+		event_t *wrkEvent = &_events[i];
+		saveEventArr[i] = *wrkEvent;
+		saveEventArr[i].prevEvent = (wrkEvent->prevEvent == 0) ? (event_t *) - 1 : (event_t *)(wrkEvent->prevEvent - _events);
+		saveEventArr[i].nextEvent = (wrkEvent->nextEvent == 0) ? (event_t *) - 1 : (event_t *)(wrkEvent->nextEvent - _events);
+	}
+
+	f->write(saveEventArr, sizeof(saveEventArr));
+	warning("TODO: serialize saveEventArr");
+}
+
+/**
+* Restore the event list from file with handle f
+*/
+void Scheduler::restoreEvents(Common::SeekableReadStream *f) {
+	debugC(1, kDebugSchedule, "restoreEvents");
+
+	event_t  savedEvents[kMaxEvents];               // Convert event ptrs to indexes
+
+	uint32 saveTime = f->readUint32BE();            // time of save
+	int16 freeIndex = f->readSint16BE();            // Free list index
+	int16 headIndex = f->readSint16BE();            // Head of list index
+	int16 tailIndex = f->readSint16BE();            // Tail of list index
+	f->read(savedEvents, sizeof(savedEvents));
+
+	event_t *wrkEvent;
+	// Restore events indexes to pointers
+	for (int i = 0; i < kMaxEvents; i++) {
+		wrkEvent = &savedEvents[i];
+		_events[i] = *wrkEvent;
+		_events[i].prevEvent = (wrkEvent->prevEvent == (event_t *) - 1) ? (event_t *)0 : &_events[(size_t)wrkEvent->prevEvent ];
+		_events[i].nextEvent = (wrkEvent->nextEvent == (event_t *) - 1) ? (event_t *)0 : &_events[(size_t)wrkEvent->nextEvent ];
+	}
+	_freeEvent = (freeIndex == -1) ? 0 : &_events[freeIndex];
+	_headEvent = (headIndex == -1) ? 0 : &_events[headIndex];
+	_tailEvent = (tailIndex == -1) ? 0 : &_events[tailIndex];
+
+	// Adjust times to fit our time
+	uint32 curTime = getTicks();
+	wrkEvent = _headEvent;                              // The earliest event
+	while (wrkEvent) {                              // While mature events found
+		wrkEvent->time = wrkEvent->time - saveTime + curTime;
+		wrkEvent = wrkEvent->nextEvent;
+	}
+}
+
+/**
+* Insert the action pointed to by p into the timer event queue
+* The queue goes from head (earliest) to tail (latest) timewise
+*/
+void Scheduler::insertAction(act *action) {
+	debugC(1, kDebugSchedule, "insertAction() - Action type A%d", action->a0.actType);
+
+	// First, get and initialise the event structure
+	event_t *curEvent = getQueue();
+	curEvent->action = action;
+	switch (action->a0.actType) {                   // Assign whether local or global
+	case AGSCHEDULE:
+		curEvent->localActionFl = false;            // Lasts over a new screen
+		break;
+	default:
+		curEvent->localActionFl = true;             // Rest are for current screen only
+		break;
+	}
+
+	curEvent->time = action->a0.timer + getTicks(); // Convert rel to abs time
+
+	// Now find the place to insert the event
+	if (!_tailEvent) {                              // Empty queue
+		_tailEvent = _headEvent = curEvent;
+		curEvent->nextEvent = curEvent->prevEvent = 0;
+	} else {
+		event_t *wrkEvent = _tailEvent;             // Search from latest time back
+		bool found = false;
+
+		while (wrkEvent && !found) {
+			if (wrkEvent->time <= curEvent->time) { // Found if new event later
+				found = true;
+				if (wrkEvent == _tailEvent)         // New latest in list
+					_tailEvent = curEvent;
+				else
+					wrkEvent->nextEvent->prevEvent = curEvent;
+				curEvent->nextEvent = wrkEvent->nextEvent;
+				wrkEvent->nextEvent = curEvent;
+				curEvent->prevEvent = wrkEvent;
+			}
+			wrkEvent = wrkEvent->prevEvent;
+		}
+
+		if (!found) {                               // Must be earliest in list
+			_headEvent->prevEvent = curEvent;       // So insert as new head
+			curEvent->nextEvent = _headEvent;
+			curEvent->prevEvent = 0;
+			_headEvent = curEvent;
+		}
+	}
+}
+
+/**
+* This function performs the action in the event structure pointed to by p
+* It dequeues the event and returns it to the free list.  It returns a ptr
+* to the next action in the list, except special case of NEW_SCREEN
+*/
+event_t *Scheduler::doAction(event_t *curEvent) {
+	debugC(1, kDebugSchedule, "doAction - Event action type : %d", curEvent->action->a0.actType);
+
+	status_t &gameStatus = _vm->getGameStatus();
+	act *action = curEvent->action;
+	object_t *obj1;
+	int       dx, dy;
+	event_t  *wrkEvent;                             // Save ev_p->next_p for return
+
+	switch (action->a0.actType) {
+	case ANULL:                                     // Big NOP from DEL_EVENTS
+		break;
+	case ASCHEDULE:                                 // act0: Schedule an action list
+		insertActionList(action->a0.actIndex);
+		break;
+	case START_OBJ:                                 // act1: Start an object cycling
+		_vm->_object->_objects[action->a1.objIndex].cycleNumb = action->a1.cycleNumb;
+		_vm->_object->_objects[action->a1.objIndex].cycling = action->a1.cycle;
+		break;
+	case INIT_OBJXY:                                // act2: Initialise an object
+		_vm->_object->_objects[action->a2.objIndex].x = action->a2.x;          // Coordinates
+		_vm->_object->_objects[action->a2.objIndex].y = action->a2.y;
+		break;
+	case PROMPT:                                    // act3: Prompt user for key phrase
+		promptAction(action);
+		break;
+	case BKGD_COLOR:                                // act4: Set new background color
+		_vm->_screen->setBackgroundColor(action->a4.newBackgroundColor);
+		break;
+	case INIT_OBJVXY:                               // act5: Initialise an object velocity
+		_vm->_object->setVelocity(action->a5.objIndex, action->a5.vx, action->a5.vy);
+		break;
+	case INIT_CARRY:                                // act6: Initialise an object
+		_vm->_object->setCarry(action->a6.objIndex, action->a6.carriedFl);  // carried status
+		break;
+	case INIT_HF_COORD:                             // act7: Initialise an object to hero's "feet" coords
+		_vm->_object->_objects[action->a7.objIndex].x = _vm->_hero->x - 1;
+		_vm->_object->_objects[action->a7.objIndex].y = _vm->_hero->y + _vm->_hero->currImagePtr->y2 - 1;
+		_vm->_object->_objects[action->a7.objIndex].screenIndex = *_vm->_screen_p;  // Don't forget screen!
+		break;
+	case NEW_SCREEN:                                // act8: Start new screen
+		newScreen(action->a8.screenIndex);
+		break;
+	case INIT_OBJSTATE:                             // act9: Initialise an object state
+		_vm->_object->_objects[action->a9.objIndex].state = action->a9.newState;
+		break;
+	case INIT_PATH:                                 // act10: Initialise an object path and velocity
+		_vm->_object->setPath(action->a10.objIndex, (path_t) action->a10.newPathType, action->a10.vxPath, action->a10.vyPath);
+		break;
+	case COND_R:                                    // act11: action lists conditional on object state
+		if (_vm->_object->_objects[action->a11.objIndex].state == action->a11.stateReq)
+			insertActionList(action->a11.actPassIndex);
+		else
+			insertActionList(action->a11.actFailIndex);
+		break;
+	case TEXT:                                      // act12: Text box (CF WARN)
+		Utils::Box(BOX_ANY, "%s", _vm->_file->fetchString(action->a12.stringIndex));   // Fetch string from file
+		break;
+	case SWAP_IMAGES:                               // act13: Swap 2 object images
+		_vm->_object->swapImages(action->a13.objIndex1, action->a13.objIndex2);
+		break;
+	case COND_SCR:                                  // act14: Conditional on current screen
+		if (_vm->_object->_objects[action->a14.objIndex].screenIndex == action->a14.screenReq)
+			insertActionList(action->a14.actPassIndex);
+		else
+			insertActionList(action->a14.actFailIndex);
+		break;
+	case AUTOPILOT:                                 // act15: Home in on a (stationary) object
+		_vm->_object->homeIn(action->a15.objIndex1, action->a15.objIndex2, action->a15.dx, action->a15.dy);
+		break;
+	case INIT_OBJ_SEQ:                              // act16: Set sequence number to use
+		// Note: Don't set a sequence at time 0 of a new screen, it causes
+		// problems clearing the boundary bits of the object!  t>0 is safe
+		_vm->_object->_objects[action->a16.objIndex].currImagePtr = _vm->_object->_objects[action->a16.objIndex].seqList[action->a16.seqIndex].seqPtr;
+		break;
+	case SET_STATE_BITS:                            // act17: OR mask with curr obj state
+		_vm->_object->_objects[action->a17.objIndex].state |= action->a17.stateMask;
+		break;
+	case CLEAR_STATE_BITS:                          // act18: AND ~mask with curr obj state
+		_vm->_object->_objects[action->a18.objIndex].state &= ~action->a18.stateMask;
+		break;
+	case TEST_STATE_BITS:                           // act19: If all bits set, do apass else afail
+		if ((_vm->_object->_objects[action->a19.objIndex].state & action->a19.stateMask) == action->a19.stateMask)
+			insertActionList(action->a19.actPassIndex);
+		else
+			insertActionList(action->a19.actFailIndex);
+		break;
+	case DEL_EVENTS:                                // act20: Remove all events of this action type
+		delEventType(action->a20.actTypeDel);
+		break;
+	case GAMEOVER:                                  // act21: Game over!
+		// NOTE: Must wait at least 1 tick before issuing this action if
+		// any objects are to be made invisible!
+		gameStatus.gameOverFl = true;
+		break;
+	case INIT_HH_COORD:                             // act22: Initialise an object to hero's actual coords
+		_vm->_object->_objects[action->a22.objIndex].x = _vm->_hero->x;
+		_vm->_object->_objects[action->a22.objIndex].y = _vm->_hero->y;
+		_vm->_object->_objects[action->a22.objIndex].screenIndex = *_vm->_screen_p;// Don't forget screen!
+		break;
+	case EXIT:                                      // act23: Exit game back to DOS
+		_vm->endGame();
+		break;
+	case BONUS:                                     // act24: Get bonus score for action
+		processBonus(action->a24.pointIndex);
+		break;
+	case COND_BOX:                                  // act25: Conditional on bounding box
+		obj1 = &_vm->_object->_objects[action->a25.objIndex];
+		dx = obj1->x + obj1->currImagePtr->x1;
+		dy = obj1->y + obj1->currImagePtr->y2;
+		if ((dx >= action->a25.x1) && (dx <= action->a25.x2) &&
+		        (dy >= action->a25.y1) && (dy <= action->a25.y2))
+			insertActionList(action->a25.actPassIndex);
+		else
+			insertActionList(action->a25.actFailIndex);
+		break;
+	case SOUND:                                     // act26: Play a sound (or tune)
+		if (action->a26.soundIndex < _vm->_tunesNbr)
+			_vm->_sound->playMusic(action->a26.soundIndex);
+		else
+			_vm->_sound->playSound(action->a26.soundIndex, BOTH_CHANNELS, MED_PRI);
+		break;
+	case ADD_SCORE:                                 // act27: Add object's value to score
+		_vm->adjustScore(_vm->_object->_objects[action->a27.objIndex].objValue);
+		break;
+	case SUB_SCORE:                                 // act28: Subtract object's value from score
+		_vm->adjustScore(-_vm->_object->_objects[action->a28.objIndex].objValue);
+		break;
+	case COND_CARRY:                                // act29: Conditional on object being carried
+		if (_vm->_object->isCarried(action->a29.objIndex))
+			insertActionList(action->a29.actPassIndex);
+		else
+			insertActionList(action->a29.actFailIndex);
+		break;
+	case INIT_MAZE:                                 // act30: Enable and init maze structure
+		_maze.enabledFl = true;
+		_maze.size = action->a30.mazeSize;
+		_maze.x1 = action->a30.x1;
+		_maze.y1 = action->a30.y1;
+		_maze.x2 = action->a30.x2;
+		_maze.y2 = action->a30.y2;
+		_maze.x3 = action->a30.x3;
+		_maze.x4 = action->a30.x4;
+		_maze.firstScreenIndex = action->a30.firstScreenIndex;
+		break;
+	case EXIT_MAZE:                                 // act31: Disable maze mode
+		_maze.enabledFl = false;
+		break;
+	case INIT_PRIORITY:
+		_vm->_object->_objects[action->a32.objIndex].priority = action->a32.priority;
+		break;
+	case INIT_SCREEN:
+		_vm->_object->_objects[action->a33.objIndex].screenIndex = action->a33.screenIndex;
+		break;
+	case AGSCHEDULE:                                // act34: Schedule a (global) action list
+		insertActionList(action->a34.actIndex);
+		break;
+	case REMAPPAL:                                  // act35: Remap a palette color
+		_vm->_screen->remapPal(action->a35.oldColorIndex, action->a35.newColorIndex);
+		break;
+	case COND_NOUN:                                 // act36: Conditional on noun mentioned
+		if (_vm->_parser->isWordPresent(_vm->_arrayNouns[action->a36.nounIndex]))
+			insertActionList(action->a36.actPassIndex);
+		else
+			insertActionList(action->a36.actFailIndex);
+		break;
+	case SCREEN_STATE:                              // act37: Set new screen state
+		_vm->_screenStates[action->a37.screenIndex] = action->a37.newState;
+		break;
+	case INIT_LIPS:                                 // act38: Position lips on object
+		_vm->_object->_objects[action->a38.lipsObjIndex].x = _vm->_object->_objects[action->a38.objIndex].x + action->a38.dxLips;
+		_vm->_object->_objects[action->a38.lipsObjIndex].y = _vm->_object->_objects[action->a38.objIndex].y + action->a38.dyLips;
+		_vm->_object->_objects[action->a38.lipsObjIndex].screenIndex = *_vm->_screen_p; // Don't forget screen!
+		_vm->_object->_objects[action->a38.lipsObjIndex].cycling = CYCLE_FORWARD;
+		break;
+	case INIT_STORY_MODE:                           // act39: Init story_mode flag
+		// This is similar to the QUIET path mode, except that it is
+		// independant of it and it additionally disables the ">" prompt
+		gameStatus.storyModeFl = action->a39.storyModeFl;
+
+		// End the game after story if this is special vendor demo mode
+		if (gameStatus.demoFl && action->a39.storyModeFl == false)
+			_vm->endGame();
+		break;
+	case WARN:                                      // act40: Text box (CF TEXT)
+		Utils::Box(BOX_OK, "%s", _vm->_file->fetchString(action->a40.stringIndex));
+		break;
+	case COND_BONUS:                                // act41: Perform action if got bonus
+		if (_vm->_points[action->a41.BonusIndex].scoredFl)
+			insertActionList(action->a41.actPassIndex);
+		else
+			insertActionList(action->a41.actFailIndex);
+		break;
+	case TEXT_TAKE:                                 // act42: Text box with "take" message
+		Utils::Box(BOX_ANY, TAKE_TEXT, _vm->_arrayNouns[_vm->_object->_objects[action->a42.objIndex].nounIndex][TAKE_NAME]);
+		break;
+	case YESNO:                                     // act43: Prompt user for Yes or No
+		if (Utils::Box(BOX_YESNO, "%s", _vm->_file->fetchString(action->a43.promptIndex)) != 0)
+			insertActionList(action->a43.actYesIndex);
+		else
+			insertActionList(action->a43.actNoIndex);
+		break;
+	case STOP_ROUTE:                                // act44: Stop any route in progress
+		gameStatus.routeIndex = -1;
+		break;
+	case COND_ROUTE:                                // act45: Conditional on route in progress
+		if (gameStatus.routeIndex >= action->a45.routeIndex)
+			insertActionList(action->a45.actPassIndex);
+		else
+			insertActionList(action->a45.actFailIndex);
+		break;
+	case INIT_JUMPEXIT:                             // act46: Init status.jumpexit flag
+		// This is to allow left click on exit to get there immediately
+		// For example the plane crash in Hugo2 where hero is invisible
+		// Couldn't use INVISIBLE flag since conflicts with boat in Hugo1
+		gameStatus.jumpExitFl = action->a46.jumpExitFl;
+		break;
+	case INIT_VIEW:                                 // act47: Init object.viewx, viewy, dir
+		_vm->_object->_objects[action->a47.objIndex].viewx = action->a47.viewx;
+		_vm->_object->_objects[action->a47.objIndex].viewy = action->a47.viewy;
+		_vm->_object->_objects[action->a47.objIndex].direction = action->a47.direction;
+		break;
+	case INIT_OBJ_FRAME:                            // act48: Set seq,frame number to use
+		// Note: Don't set a sequence at time 0 of a new screen, it causes
+		// problems clearing the boundary bits of the object!  t>0 is safe
+		_vm->_object->_objects[action->a48.objIndex].currImagePtr = _vm->_object->_objects[action->a48.objIndex].seqList[action->a48.seqIndex].seqPtr;
+		for (dx = 0; dx < action->a48.frameIndex; dx++)
+			_vm->_object->_objects[action->a48.objIndex].currImagePtr = _vm->_object->_objects[action->a48.objIndex].currImagePtr->nextSeqPtr;
+		break;
+	case OLD_SONG:
+		// Replaces ACT26 for DOS games.
+		_vm->_sound->DOSSongPtr = _vm->_textData[action->a49.songIndex];
+		break;
+	default:
+		error("An error has occurred: %s", "doAction");
+		break;
+	}
+
+	if (action->a0.actType == NEW_SCREEN) {         // New_screen() deletes entire list
+		return 0;                                   // next_p = 0 since list now empty
+	} else {
+		wrkEvent = curEvent->nextEvent;
+		delQueue(curEvent);                         // Return event to free list
+		return wrkEvent;                            // Return next event ptr
+	}
+}
 } // End of namespace Hugo

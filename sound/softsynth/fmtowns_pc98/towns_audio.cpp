@@ -19,13 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/sound/softsynth/fmtowns_pc98/towns_audio.cpp $
- * $Id: towns_audio.cpp 53589 2010-10-18 21:16:58Z athrxx $
+ * $Id: towns_audio.cpp 54950 2010-12-18 12:17:33Z athrxx $
  *
  */
 
 #include "sound/softsynth/fmtowns_pc98/towns_audio.h"
-#include "sound/audiocd.h"
 #include "common/endian.h"
+#include "backends/audiocd/audiocd.h"
 
 
 class TownsAudio_PcmChannel {
@@ -212,7 +212,6 @@ TownsAudioInterface::TownsAudioInterface(Audio::Mixer *mixer, TownsAudioInterfac
 		// 80
 		INTCB(pcmUpdateEnvelopeGenerator),
 		INTCB(notImpl)
-
 	};
 #undef INTCB
 
@@ -788,8 +787,7 @@ void TownsAudioInterface::fmReset() {
 	memset(&_fmSaveReg[0][240], 0x7f, 16);
 	memset(_fmSaveReg[1], 0, 256);
 	memset(&_fmSaveReg[1][240], 0x7f, 16);
-	_fmSaveReg[0][243] = _fmSaveReg[0][247] = _fmSaveReg[0][251] = _fmSaveReg[0][255] =
-	                         _fmSaveReg[1][243] = _fmSaveReg[1][247] = _fmSaveReg[1][251] = _fmSaveReg[1][255] = 0xff;
+	_fmSaveReg[0][243] = _fmSaveReg[0][247] = _fmSaveReg[0][251] = _fmSaveReg[0][255] = _fmSaveReg[1][243] = _fmSaveReg[1][247] = _fmSaveReg[1][251] = _fmSaveReg[1][255] = 0xff;
 
 	for (int i = 0; i < 128; i++)
 		fmLoadInstrument(i, _fmDefaultInstrument);
@@ -1405,8 +1403,8 @@ void TownsAudioInterface::updateOutputVolume() {
 	int volume = (int)(((float)(maxVol * 255) / 63.0f));
 	int balance = maxVol ? (int)( ( ((int)_outputLevel[13] - _outputLevel[12]) * 127) / (float)maxVol) : 0;
 
-	AudioCD.setVolume(volume);
-	AudioCD.setBalance(balance);
+	g_system->getAudioCDManager()->setVolume(volume);
+	g_system->getAudioCDManager()->setBalance(balance);
 }
 
 const uint8 TownsAudioInterface::_chanFlags[] = {

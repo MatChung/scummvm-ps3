@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/saveload.cpp $
- * $Id: saveload.cpp 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: saveload.cpp 54358 2010-11-19 01:37:04Z fingolfin $
  *
  */
 
@@ -27,6 +27,7 @@
 #include "common/savefile.h"
 #include "common/system.h"
 #include "graphics/thumbnail.h"
+#include "graphics/surface.h"
 
 #include "kyra/kyra_v1.h"
 #include "kyra/util.h"

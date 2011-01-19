@@ -19,13 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/midi/coreaudio.cpp $
- * $Id: coreaudio.cpp 53961 2010-10-30 21:27:42Z fingolfin $
+ * $Id: coreaudio.cpp 54573 2010-11-29 16:18:43Z fingolfin $
  */
-
-#ifdef MACOSX
 
 // Disable symbol overrides so that we can use system headers.
 #define FORBIDDEN_SYMBOL_ALLOW_ALL
+
+#include "common/scummsys.h"
+
+#ifdef MACOSX
 
 // HACK to disable deprecated warnings under Mac OS X 10.5.
 // Apple depracted the AUGraphNewNode & AUGraphGetNodeInfo APIs

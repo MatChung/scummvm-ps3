@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/object.cpp $
- * $Id: object.cpp 54011 2010-11-01 16:04:47Z fingolfin $
+ * $Id: object.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * This file contains the Object Manager code.
  */
@@ -35,6 +35,8 @@
 #define	OID_EFFECTS	0x2000			// generic special effects object id
 
 namespace Tinsel {
+
+// FIXME: Avoid non-const global vars
 
 // list of all objects
 static OBJECT *objectList = 0;

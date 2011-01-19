@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/kyra/sound_towns.cpp $
- * $Id: sound_towns.cpp 53915 2010-10-29 00:40:35Z lordhoto $
+ * $Id: sound_towns.cpp 55039 2010-12-25 22:10:51Z athrxx $
  *
  */
 
@@ -30,7 +30,8 @@
 #include "kyra/sound_intern.h"
 #include "kyra/screen.h"
 
-#include "sound/audiocd.h"
+#include "backends/audiocd/audiocd.h"
+
 #include "sound/audiostream.h"
 #include "sound/decoders/raw.h"
 
@@ -46,7 +47,7 @@ SoundTowns::SoundTowns(KyraEngine_v1 *vm, Audio::Mixer *mixer)
 }
 
 SoundTowns::~SoundTowns() {
-	AudioCD.stop();
+	g_system->getAudioCDManager()->stop();
 	haltTrack();
 	delete _driver;
 	delete[] _musicTrackData;
@@ -75,7 +76,7 @@ bool SoundTowns::init() {
 }
 
 void SoundTowns::process() {
-	AudioCD.updateCD();
+	g_system->getAudioCDManager()->updateCD();
 }
 
 void SoundTowns::playTrack(uint8 track) {
@@ -83,7 +84,7 @@ void SoundTowns::playTrack(uint8 track) {
 		return;
 	track -= 2;
 
-	const int32 * const tTable = (const int32 *)cdaData();
+	const int32 *const tTable = (const int32 *const)cdaData();
 	int tTableIndex = 3 * track;
 
 	int trackNum = (int)READ_LE_UINT32(&tTable[tTableIndex + 2]);
@@ -96,8 +97,8 @@ void SoundTowns::playTrack(uint8 track) {
 
 	if (_musicEnabled == 2 && trackNum != -1) {
 		_driver->setOutputVolume(1, 118, 118);
-		AudioCD.play(trackNum+1, loop ? -1 : 1, 0, 0);
-		AudioCD.updateCD();
+		g_system->getAudioCDManager()->play(trackNum + 1, loop ? -1 : 1, 0, 0);
+		g_system->getAudioCDManager()->updateCD();
 		_cdaPlaying = true;
 	} else if (_musicEnabled) {
 		playEuphonyTrack(READ_LE_UINT32(&tTable[tTableIndex]), loop);
@@ -109,8 +110,8 @@ void SoundTowns::playTrack(uint8 track) {
 
 void SoundTowns::haltTrack() {
 	_lastTrack = -1;
-	AudioCD.stop();
-	AudioCD.updateCD();
+	g_system->getAudioCDManager()->stop();
+	g_system->getAudioCDManager()->updateCD();
 	_cdaPlaying = false;
 	
 	for (int i = 0; i < 6; i++)
@@ -247,8 +248,10 @@ void SoundTowns::beginFadeOut() {
 			_vm->delay(_vm->tickLength());
 		}
 
-		for (int i = 58; i > 0; i--)
+		for (int i = 58; i > 0; i--) {
 			_driver->setOutputVolume(1, i, i);
+			_vm->delay(1);
+		}
 
 		_driver->setOutputVolume(1, 0, 0);
 
@@ -437,8 +440,8 @@ void SoundPC98::playTrack(uint8 track) {
 
 void SoundPC98::haltTrack() {
 	_lastTrack = -1;
-	AudioCD.stop();
-	AudioCD.updateCD();
+	g_system->getAudioCDManager()->stop();
+	g_system->getAudioCDManager()->updateCD();
 	_driver->reset();
 }
 
@@ -521,7 +524,7 @@ void SoundTownsPC98_v2::loadSoundFile(Common::String file) {
 }
 
 void SoundTownsPC98_v2::process() {
-	AudioCD.updateCD();
+	g_system->getAudioCDManager()->updateCD();
 }
 
 void SoundTownsPC98_v2::playTrack(uint8 track) {
@@ -530,7 +533,7 @@ void SoundTownsPC98_v2::playTrack(uint8 track) {
 	if (track == _lastTrack && _musicEnabled)
 		return;
 
-	const uint16 * const cdaTracks = (const uint16 *)cdaData();
+	const uint16 *const cdaTracks = (const uint16 *const) cdaData();
 
 	int trackNum = -1;
 	if (_vm->gameFlags().platform == Common::kPlatformFMTowns) {
@@ -558,8 +561,8 @@ void SoundTownsPC98_v2::playTrack(uint8 track) {
 	_driver->loadMusicData(_musicTrackData, true);
 
 	if (_musicEnabled == 2 && trackNum != -1) {
-		AudioCD.play(trackNum+1, _driver->looping() ? -1 : 1, 0, 0);
-		AudioCD.updateCD();
+		g_system->getAudioCDManager()->play(trackNum+1, _driver->looping() ? -1 : 1, 0, 0);
+		g_system->getAudioCDManager()->updateCD();
 	} else if (_musicEnabled) {
 		_driver->cont();
 	}
@@ -569,8 +572,8 @@ void SoundTownsPC98_v2::playTrack(uint8 track) {
 
 void SoundTownsPC98_v2::haltTrack() {
 	_lastTrack = -1;
-	AudioCD.stop();
-	AudioCD.updateCD();
+	g_system->getAudioCDManager()->stop();
+	g_system->getAudioCDManager()->updateCD();
 	_driver->reset();
 }
 

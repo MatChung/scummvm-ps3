@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword1/resman.cpp $
- * $Id: resman.cpp 53488 2010-10-15 13:07:31Z thebluegr $
+ * $Id: resman.cpp 54265 2010-11-16 10:19:01Z fingolfin $
  *
  */
 
@@ -36,7 +36,7 @@
 #include "sword1/swordres.h"
 
 #include "gui/message.h"
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 
 namespace Sword1 {
 	void guiFatalError(char *msg) {

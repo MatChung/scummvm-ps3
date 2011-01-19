@@ -19,14 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/console.h $
- * $Id: console.h 54006 2010-11-01 16:03:02Z fingolfin $
+ * $Id: console.h 54267 2010-11-16 10:29:31Z fingolfin $
  */
 
 #ifndef CONSOLE_DIALOG_H
 #define CONSOLE_DIALOG_H
 
 #include "gui/dialog.h"
-#include "gui/GuiManager.h"
 
 namespace GUI {
 

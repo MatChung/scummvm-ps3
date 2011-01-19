@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/script_patches.cpp $
- * $Id: script_patches.cpp 53738 2010-10-23 15:46:50Z fingolfin $
+ * $Id: script_patches.cpp 55056 2010-12-28 21:05:30Z thebluegr $
  *
  */
 
@@ -59,6 +59,8 @@ struct SciScriptSignature {
 //  - then another counter of bytes (0 for EOS)
 //  - if not EOS, an adjust offset and the actual bytes
 //  - rinse and repeat
+
+#if 0
 
 // ===========================================================================
 // Castle of Dr. Brain
@@ -104,6 +106,8 @@ const SciScriptSignature castlebrainSignatures[] = {
 	{    391, "cipher puzzle save/restore break",            1, PATCH_MAGICDWORD(0xa3, 0x26, 0xa3, 0x25),    -2, castlebrainSignatureCipherPuzzle, castlebrainPatchCipherPuzzle },
 	SCI_SIGNATUREENTRY_TERMINATOR
 };
+
+#endif
 
 // ===========================================================================
 // stayAndHelp::changeState (0) is called when ego swims to the left or right
@@ -227,9 +231,100 @@ const uint16 ecoquest2PatchEcorder[] = {
 	PATCH_END
 };
 
+// ===========================================================================
+// Same patch as above for the ecorder introduction. Fixes bug #3092115.
+// Two workarounds are needed for this patch in workarounds.cpp (when calling
+// kGraphFillBoxAny and kGraphUpdateBox), as there isn't enough space to patch
+// the function otherwise.
+const byte ecoquest2SignatureEcorderTutorial[] = {
+	36,
+	0x30, 0x23, 0x00,  // bnt [next state]
+	0x39, 0x0a,        // pushi 0a
+	0x5b, 0x04, 0x1f,  // lea temp[1f]
+	0x36,              // push
+	0x39, 0x64,        // pushi 64
+	0x39, 0x7d,        // pushi 7d
+	0x39, 0x32,        // pushi 32
+	0x39, 0x66,        // pushi 66
+	0x39, 0x17,        // pushi 17
+	0x39, 0x69,        // pushi 69
+	0x38, 0x31, 0x26,  // pushi 2631
+	0x39, 0x6a,        // pushi 6a
+	0x39, 0x64,        // pushi 64
+	0x43, 0x1b, 0x14,  // call kDisplay
+	0x35, 0x1e,        // ldi 1e
+	0x65, 0x20,        // aTop ticks
+	0x32,              // jmp [end]
+	// 2 extra bytes, jmp offset
+	0
+};
+
+const uint16 ecoquest2PatchEcorderTutorial[] = {
+	0x31, 0x23,        // bnt [next state] (save 1 byte)
+	// The parameter count below should be 7, but we're out of bytes 
+	// to patch! A workaround has been added because of this
+	0x78,              // push1 (parameter count)
+	//0x39, 0x07,        // pushi 07 (parameter count)
+	0x39, 0x0b,        // push (FillBoxAny)
+	0x39, 0x1d,        // pushi 29d
+	0x39, 0x73,        // pushi 115d
+	0x39, 0x5e,        // pushi 94d
+	0x38, 0xd7, 0x00,  // pushi 215d
+	0x78,              // push1 (visual screen)
+	0x39, 0x17,        // pushi 17 (color)
+	0x43, 0x6c, 0x0e,  // call kGraph
+	// The parameter count below should be 5, but we're out of bytes 
+	// to patch! A workaround has been added because of this
+	0x78,              // push1 (parameter count)
+	//0x39, 0x05,        // pushi 05 (parameter count)
+	0x39, 0x0c,        // pushi 12d (UpdateBox)
+	0x39, 0x1d,        // pushi 29d
+	0x39, 0x73,        // pushi 115d
+	0x39, 0x5e,        // pushi 94d
+	0x38, 0xd7, 0x00,  // pushi 215d
+	0x43, 0x6c, 0x0a,  // call kGraph
+	// We are out of bytes to patch at this point,
+	// so we skip 494 (0x1EE) bytes to reuse this code:
+	// ldi 1e
+	// aTop 20
+	// jmp 030e (jump to end)
+	0x32, 0xee, 0x01,  // skip 494 (0x1EE) bytes
+	PATCH_END
+};
+
 //    script, description,                                      magic DWORD,                                 adjust
 const SciScriptSignature ecoquest2Signatures[] = {
 	{     50, "initial text not removed on ecorder",         1, PATCH_MAGICDWORD(0x39, 0x64, 0x39, 0x7d),    -8, ecoquest2SignatureEcorder, ecoquest2PatchEcorder },
+	{    333, "initial text not removed on ecorder tutorial",1, PATCH_MAGICDWORD(0x39, 0x64, 0x39, 0x7d),    -9, ecoquest2SignatureEcorderTutorial, ecoquest2PatchEcorderTutorial },
+	SCI_SIGNATUREENTRY_TERMINATOR
+};
+
+// ===========================================================================
+// EventHandler::handleEvent in Demo Quest has a bug, and it jumps to the
+// wrong address when an incorrect word is typed, therefore leading to an
+// infinite loop. This script bug was not apparent in SSCI, probably because
+// event handling was slightly different there, so it was never discovered.
+// Fixes bug #3038870.
+const byte fanmadeSignatureInfiniteLoop[] = {
+	13,
+	0x38, 0x4c, 0x00,  // pushi 004c
+	0x39, 0x00,        // pushi 00
+	0x87, 0x01,        // lap 01
+	0x4b, 0x04,        // send 04
+	0x18,              // not
+	0x30, 0x2f, 0x00,  // bnt 002f  [06a5]	--> jmp ffbc  [0664] --> BUG! infinite loop
+	0
+};
+
+const uint16 fanmadePatchInfiniteLoop[] = {
+	PATCH_ADDTOOFFSET | +10,
+	0x30, 0x32, 0x00,  // bnt 0032  [06a8] --> pushi 004c
+	PATCH_END
+};
+
+//    script, description,                                      magic DWORD,                                 adjust
+const SciScriptSignature fanmadeSignatures[] = {
+	{    999, "infinite loop on typo",                       1, PATCH_MAGICDWORD(0x18, 0x30, 0x2f, 0x00),    -9, fanmadeSignatureInfiniteLoop, fanmadePatchInfiniteLoop },
 	SCI_SIGNATUREENTRY_TERMINATOR
 };
 
@@ -402,69 +497,73 @@ const SciScriptSignature gk1Signatures[] = {
 	SCI_SIGNATUREENTRY_TERMINATOR
 };
 
+#if 0
+
 // ===========================================================================
 // this here gets called on entry and when going out of game windows
 //  uEvt::port will not get changed after kDisposeWindow but a bit later, so
 //  we would get an invalid port handle to a kSetPort call. We just patch in
 //  resetting of the port selector. We destroy the stop/fade code in there,
 //  it seems it isn't used at all in the game.
-//const byte hoyle4SignaturePortFix[] = {
-//	28,
-//	0x39, 0x09,        // pushi 09
-//	0x89, 0x0b,        // lsg 0b
-//	0x39, 0x64,        // pushi 64
-//	0x38, 0xc8, 0x00,  // pushi 00c8
-//	0x38, 0x2c, 0x01,  // pushi 012c
-//	0x38, 0x90, 0x01,  // pushi 0190
-//	0x38, 0xf4, 0x01,  // pushi 01f4
-//	0x38, 0x58, 0x02,  // pushi 0258
-//	0x38, 0xbc, 0x02,  // pushi 02bc
-//	0x38, 0x20, 0x03,  // pushi 0320
-//	0x46,              // calle [xxxx] [xxxx] [xx]
-//	+5, 43,            // [skip 5 bytes]
-//	0x30, 0x27, 0x00,  // bnt 0027 -> end of routine
-//	0x87, 0x00,        // lap 00
-//	0x30, 0x19, 0x00,  // bnt 0019 -> fade out
-//	0x87, 0x01,        // lap 01
-//	0x30, 0x14, 0x00,  // bnt 0014 -> fade out
-//	0x38, 0xa7, 0x00,  // pushi 00a7
-//	0x76,              // push0
-//	0x80, 0x29, 0x01,  // lag 0129
-//	0x4a, 0x04,        // send 04 - call song::stop
-//	0x39, 0x27,        // pushi 27
-//	0x78,              // push1
-//	0x8f, 0x01,        // lsp 01
-//	0x51, 0x54,        // class 54
-//	0x4a, 0x06,        // send 06 - call PlaySong::play
-//	0x33, 0x09,        // jmp 09 -> end of routine
-//	0x38, 0xaa, 0x00,  // pushi 00aa
-//	0x76,              // push0
-//	0x80, 0x29, 0x01,  // lag 0129
-//	0x4a, 0x04,        // send 04
-//	0x48,              // ret
-//	0
-//};
+const byte hoyle4SignaturePortFix[] = {
+	28,
+	0x39, 0x09,        // pushi 09
+	0x89, 0x0b,        // lsg 0b
+	0x39, 0x64,        // pushi 64
+	0x38, 0xc8, 0x00,  // pushi 00c8
+	0x38, 0x2c, 0x01,  // pushi 012c
+	0x38, 0x90, 0x01,  // pushi 0190
+	0x38, 0xf4, 0x01,  // pushi 01f4
+	0x38, 0x58, 0x02,  // pushi 0258
+	0x38, 0xbc, 0x02,  // pushi 02bc
+	0x38, 0x20, 0x03,  // pushi 0320
+	0x46,              // calle [xxxx] [xxxx] [xx]
+	+5, 43,            // [skip 5 bytes]
+	0x30, 0x27, 0x00,  // bnt 0027 -> end of routine
+	0x87, 0x00,        // lap 00
+	0x30, 0x19, 0x00,  // bnt 0019 -> fade out
+	0x87, 0x01,        // lap 01
+	0x30, 0x14, 0x00,  // bnt 0014 -> fade out
+	0x38, 0xa7, 0x00,  // pushi 00a7
+	0x76,              // push0
+	0x80, 0x29, 0x01,  // lag 0129
+	0x4a, 0x04,        // send 04 - call song::stop
+	0x39, 0x27,        // pushi 27
+	0x78,              // push1
+	0x8f, 0x01,        // lsp 01
+	0x51, 0x54,        // class 54
+	0x4a, 0x06,        // send 06 - call PlaySong::play
+	0x33, 0x09,        // jmp 09 -> end of routine
+	0x38, 0xaa, 0x00,  // pushi 00aa
+	0x76,              // push0
+	0x80, 0x29, 0x01,  // lag 0129
+	0x4a, 0x04,        // send 04
+	0x48,              // ret
+	0
+};
 
-//const uint16 hoyle4PatchPortFix[] = {
-//	PATCH_ADDTOOFFSET | +33,
-//	0x38, 0x31, 0x01,  // pushi 0131 (selector curEvent)
-//	0x76,              // push0
-//	0x80, 0x50, 0x00,  // lag 0050 (global var 80h, "User")
-//	0x4a, 0x04,        // send 04 - read User::curEvent
-//
-//	0x38, 0x93, 0x00,  // pushi 0093 (selector port)
-//	0x78,              // push1
-//	0x76,              // push0
-//	0x4a, 0x06,        // send 06 - write 0 to that object::port
-//	0x48,              // ret
-//	PATCH_END
-//};
+const uint16 hoyle4PatchPortFix[] = {
+	PATCH_ADDTOOFFSET | +33,
+	0x38, 0x31, 0x01,  // pushi 0131 (selector curEvent)
+	0x76,              // push0
+	0x80, 0x50, 0x00,  // lag 0050 (global var 80h, "User")
+	0x4a, 0x04,        // send 04 - read User::curEvent
+
+	0x38, 0x93, 0x00,  // pushi 0093 (selector port)
+	0x78,              // push1
+	0x76,              // push0
+	0x4a, 0x06,        // send 06 - write 0 to that object::port
+	0x48,              // ret
+	PATCH_END
+};
 
 //    script, description,                                   magic DWORD,                                 adjust
-//const SciScriptSignature hoyle4Signatures[] = {
-//    {      0, "port fix when disposing windows",             PATCH_MAGICDWORD(0x64, 0x38, 0xC8, 0x00),    -5, hoyle4SignaturePortFix,   hoyle4PatchPortFix },
-//    {      0, NULL,                                          0,                                            0, NULL,                     NULL }
-//};
+const SciScriptSignature hoyle4Signatures[] = {
+    {      0, "port fix when disposing windows",             PATCH_MAGICDWORD(0x64, 0x38, 0xC8, 0x00),    -5, hoyle4SignaturePortFix,   hoyle4PatchPortFix },
+    {      0, NULL,                                          0,                                            0, NULL,                     NULL }
+};
+
+#endif
 
 // ===========================================================================
 // at least during harpy scene export 29 of script 0 is called in kq5cd and
@@ -697,10 +796,142 @@ const uint16 qfg1vgaPatchFightEvents[] = {
 	PATCH_END
 };
 
+// When QFG1VGA and QFG3 dispose of a child window. For example, when choosing
+// a spell (parent window), if the spell can't be casted, a subsequent window
+// opens, notifying that it can't be casted. When showing the child window, the
+// scripts restore the area below the parent window, draw the child window, and
+// then attempt to redraw the parent window, which leads to the background
+// picture (which has just been restored) overwriting the child window. It
+// appers that kGraph(redrawBox) is different in QFG1VGA and QFG3. However, we
+// can just remove the window redraw and update calls when the window is
+// supposed to be disposed, and the window is disposed of correctly. Fixes bug
+// #3053093.
+const byte qfg1vgaWindowDispose[] = {
+	17,
+	0x39, 0x05,       // pushi 05
+	0x39, 0x0d,       // pushi 0d
+	0x67, 0x2e,       // pTos 2e
+	0x67, 0x30,       // pTos 30
+	0x67, 0x32,       // pTos 32
+	0x67, 0x34,       // pTos 34
+	0x43, 0x6c, 0x0a, // callk kGraph 10
+	0x39, 0x06,       // pushi 06
+	0
+};
+
+const uint16 qfg1vgaPatchWindowDispose[] = {
+	0x34, 0x00, 0x00, // ldi 0000 (dummy)
+	0x34, 0x00, 0x00, // ldi 0000 (dummy)
+	0x34, 0x00, 0x00, // ldi 0000 (dummy)
+	0x34, 0x00, 0x00, // ldi 0000 (dummy)
+	0x34, 0x00, 0x00, // ldi 0000 (dummy)
+	0x33, 0x3e,       // jmp 0x3e (skip 62 bytes - this skips the subsequent 2 kGraph(update) calls, before kDisposeWindow is invoked)
+	PATCH_END
+};
+
 //    script, description,                                      magic DWORD,                                  adjust
 const SciScriptSignature qfg1vgaSignatures[] = {
-	{    215, "fight event issue",                           1, PATCH_MAGICDWORD(0x6d, 0x76, 0x51, 0x07),    -1, qfg1vgaSignatureFightEvents, qfg1vgaPatchFightEvents },
-	{    216, "weapon master event issue",                   1, PATCH_MAGICDWORD(0x6d, 0x76, 0x51, 0x07),    -1, qfg1vgaSignatureFightEvents, qfg1vgaPatchFightEvents },
+	{    215, "fight event issue",                           1, PATCH_MAGICDWORD(0x6d, 0x76, 0x51, 0x07),    -1, qfg1vgaSignatureFightEvents,       qfg1vgaPatchFightEvents },
+	{    216, "weapon master event issue",                   1, PATCH_MAGICDWORD(0x6d, 0x76, 0x51, 0x07),    -1, qfg1vgaSignatureFightEvents,       qfg1vgaPatchFightEvents },
+	{    559, "window dispose",                              1, PATCH_MAGICDWORD(0x39, 0x05, 0x39, 0x0d),     0,        qfg1vgaWindowDispose,     qfg1vgaPatchWindowDispose },
+	SCI_SIGNATUREENTRY_TERMINATOR
+};
+
+// ===========================================================================
+// Script 944 in QFG2 contains the FileSelector system class, used in the
+// character import screen. This gets incorrectly called constantly, whenever
+// the user clicks on a button in order to refresh the file list. This was
+// probably done because it would be easier to refresh the list whenever the
+// user inserted a new floppy disk, or changed directory. The problem is that
+// the script has a bug, and it invalidates the text of the entries in the
+// list. This has a high probability of breaking, as the user could change the
+// list very quickly, or the garbage collector could kick in and remove the
+// deleted entries. We don't allow the user to change the directory, thus the
+// contents of the file list are constant, so we can avoid the constant file
+// and text entry refreshes whenever a button is pressed, and prevent possible
+// crashes because of these constant quick object reallocations. Fixes bug
+// #3037996.
+const byte qfg2SignatureImportDialog[] = {
+	16,
+	0x63, 0x20,       // pToa text
+	0x30, 0x0b, 0x00, // bnt [next state]
+	0x7a,             // push2
+	0x39, 0x03,       // pushi 03
+	0x36,             // push
+	0x43, 0x72, 0x04, // callk Memory 4
+	0x35, 0x00,       // ldi 00
+	0x65, 0x20,       // aTop text
+	0
+};
+
+const uint16 qfg2PatchImportDialog[] = {
+	PATCH_ADDTOOFFSET | +5,
+	0x48,             // ret
+	PATCH_END
+};
+
+//    script, description,                                      magic DWORD,                                  adjust
+const SciScriptSignature qfg2Signatures[] = {
+	{    944, "import dialog continuous calls",                 1, PATCH_MAGICDWORD(0x20, 0x30, 0x0b, 0x00),  -1, qfg2SignatureImportDialog, qfg2PatchImportDialog },
+	SCI_SIGNATUREENTRY_TERMINATOR
+};
+
+// ===========================================================================
+// Patch for the import screen in QFG3, same as the one for QFG2 above
+const byte qfg3SignatureImportDialog[] = {
+	15,
+	0x63, 0x2a,       // pToa text
+	0x31, 0x0b,       // bnt [next state]
+	0x7a,             // push2
+	0x39, 0x03,       // pushi 03
+	0x36,             // push
+	0x43, 0x72, 0x04, // callk Memory 4
+	0x35, 0x00,       // ldi 00
+	0x65, 0x2a,       // aTop text
+	0
+};
+
+const uint16 qfg3PatchImportDialog[] = {
+	PATCH_ADDTOOFFSET | +4,
+	0x48,             // ret
+	PATCH_END
+};
+
+// When QFG1VGA and QFG3 dispose of a child window. For example, when choosing
+// a spell (parent window), if the spell can't be casted, a subsequent window
+// opens, notifying that it can't be casted. When showing the child window, the
+// scripts restore the area below the parent window, draw the child window, and
+// then attempt to redraw the parent window, which leads to the background
+// picture (which has just been restored) overwriting the child window. It
+// appers that kGraph(redrawBox) is different in QFG1VGA and QFG3. However, we
+// can just remove the window redraw and update calls when the window is
+// supposed to be disposed, and the window is disposed of correctly. Fixes bug
+// #3053093.
+const byte qfg3WindowDispose[] = {
+	15,
+	0x39, 0x05,       // pushi 05
+	0x39, 0x0d,       // pushi 0d
+	0x67, 0x2e,       // pTos 2e
+	0x67, 0x30,       // pTos 30
+	0x67, 0x32,       // pTos 32
+	0x67, 0x34,       // pTos 34
+	0x43, 0x6c, 0x0a, // callk kGraph 10
+	0
+};
+
+const uint16 qfg3PatchWindowDispose[] = {
+	0x34, 0x00, 0x00, // ldi 0000 (dummy)
+	0x34, 0x00, 0x00, // ldi 0000 (dummy)
+	0x34, 0x00, 0x00, // ldi 0000 (dummy)
+	0x34, 0x00, 0x00, // ldi 0000 (dummy)
+	0x34, 0x00, 0x00, // ldi 0000 (dummy)
+	PATCH_END
+};
+
+//    script, description,                                      magic DWORD,                                  adjust
+const SciScriptSignature qfg3Signatures[] = {
+	{     22, "window dispose",                                 1, PATCH_MAGICDWORD(0x39, 0x05, 0x39, 0x0d),   0,         qfg3WindowDispose,        qfg3PatchWindowDispose },
+	{    944, "import dialog continuous calls",                 1, PATCH_MAGICDWORD(0x2a, 0x31, 0x0b, 0x7a),  -1, qfg3SignatureImportDialog,         qfg3PatchImportDialog },
 	SCI_SIGNATUREENTRY_TERMINATOR
 };
 
@@ -721,15 +952,99 @@ const byte sq4FloppySignatureEndlessFlight[] = {
 	0
 };
 
+// Similar to the above, for the German version (ffs. bug #3110215)
+const byte sq4FloppySignatureEndlessFlightGerman[] = {
+	8,
+	0x39, 0x04,       // pushi 04 (selector x)
+	0x78,             // push1
+	0x67, 0x08,       // pTos 08 (property x)
+	0x63, 0x4c,       // pToa 4c (invalid property)
+	0x02,             // add
+	0
+};
+
 const uint16 sq4FloppyPatchEndlessFlight[] = {
 	PATCH_ADDTOOFFSET | +5,
 	0x35, 0x03,       // ldi 03 (which would be the content of the property)
 	PATCH_END
 };
 
+// The scripts in SQ4CD support simultaneous playing of speech and subtitles,
+// but this was not available as an option. The following two patches enable
+// this functionality in the game's GUI options dialog.
+// Patch 1: iconTextSwitch::show, called when the text options button is shown.
+// This is patched to add the "Both" text resource (i.e. we end up with
+// "Speech", "Text" and "Both")
+const byte sq4CdSignatureTextOptionsButton[] = {
+	11,
+	0x35, 0x01,      // ldi 0x01
+	0xa1, 0x53,      // sag 0x53
+	0x39, 0x03,      // pushi 0x03
+	0x78,            // push1
+	0x39, 0x09,      // pushi 0x09
+	0x54, 0x06,      // self 0x06
+	0
+};
+
+const uint16 sq4CdPatchTextOptionsButton[] = {
+	PATCH_ADDTOOFFSET | +7,
+	0x39, 0x0b,      // pushi 0x0b
+	PATCH_END
+};
+
+// Patch 2: Add the ability to toggle among the three available options,
+// when the text options button is clicked: "Speech", "Text" and "Both".
+// Refer to the patch above for additional details.
+// iconTextSwitch::doit (called when the text options button is clicked)
+const byte sq4CdSignatureTextOptions[] = {
+	32,
+	0x89, 0x5a,       // lsg 0x5a (load global 90 to stack)
+	0x3c,             // dup
+	0x35, 0x01,       // ldi 0x01
+	0x1a,             // eq? (global 90 == 1)
+	0x31, 0x06,       // bnt 0x06 (0x0691)
+	0x35, 0x02,       // ldi 0x02
+	0xa1, 0x5a,       // sag 0x5a (save acc to global 90)
+	0x33, 0x0a,       // jmp 0x0a (0x69b)
+	0x3c,             // dup
+	0x35, 0x02,       // ldi 0x02
+	0x1a,             // eq? (global 90 == 2)
+	0x31, 0x04,       // bnt 0x04 (0x069b)
+	0x35, 0x01,       // ldi 0x01
+	0xa1, 0x5a,       // sag 0x5a (save acc to global 90)
+	0x3a,             // toss
+	0x38, 0xd9, 0x00, // pushi 0x00d9
+	0x76,             // push0
+	0x54, 0x04,       // self 0x04
+	0x48,             // ret
+	0
+};
+
+const uint16 sq4CdPatchTextOptions[] = {
+	0x89, 0x5a,       // lsg 0x5a (load global 90 to stack)
+	0x3c,             // dup
+	0x35, 0x03,       // ldi 0x03 (acc = 3)
+	0x1a,             // eq? (global 90 == 3)
+	0x2f, 0x07,       // bt 0x07
+	0x89, 0x5a,       // lsg 0x5a (load global 90 to stack again)
+	0x35, 0x01,       // ldi 0x01 (acc = 1)
+	0x02,             // add: acc = global 90 (on stack) + 1 (previous acc value)
+	0x33, 0x02,       // jmp 0x02
+	0x35, 0x01,       // ldi 0x01 (reset acc to 1)
+	0xa1, 0x5a,       // sag 0x5a (save acc to global 90)
+	0x33, 0x03,       // jmp 0x03 (jump over the wasted bytes below)
+	0x34, 0x00, 0x00, // ldi 0x0000 (waste 3 bytes)
+	0x3a,             // toss
+	// (the rest of the code is the same)
+	PATCH_END
+};
+
 //    script, description,                                      magic DWORD,                                  adjust
 const SciScriptSignature sq4Signatures[] = {
-	{    298, "Floppy: endless flight",                      1, PATCH_MAGICDWORD(0x67, 0x08, 0x63, 0x44),    -3, sq4FloppySignatureEndlessFlight, sq4FloppyPatchEndlessFlight },
+	{    298, "Floppy: endless flight",                      1, PATCH_MAGICDWORD(0x67, 0x08, 0x63, 0x44),    -3,       sq4FloppySignatureEndlessFlight, sq4FloppyPatchEndlessFlight },
+	{    298, "Floppy (German): endless flight",             1, PATCH_MAGICDWORD(0x67, 0x08, 0x63, 0x4c),    -3, sq4FloppySignatureEndlessFlightGerman, sq4FloppyPatchEndlessFlight },
+	{    818, "CD: Speech and subtitles option",             1, PATCH_MAGICDWORD(0x89, 0x5a, 0x3c, 0x35),     0,             sq4CdSignatureTextOptions,       sq4CdPatchTextOptions },
+	{    818, "CD: Speech and subtitles option button",      1, PATCH_MAGICDWORD(0x35, 0x01, 0xa1, 0x53),     0,       sq4CdSignatureTextOptionsButton, sq4CdPatchTextOptionsButton },
 	SCI_SIGNATUREENTRY_TERMINATOR
 };
 
@@ -874,14 +1189,20 @@ int32 Script::findSignature(const SciScriptSignature *signature, const byte *scr
 void Script::matchSignatureAndPatch(uint16 scriptNr, byte *scriptData, const uint32 scriptSize) {
 	const SciScriptSignature *signatureTable = NULL;
 	switch (g_sci->getGameId()) {
+	// Dr. Brain now works because we properly maintain the state of the string heap in savegames
+#if 0
 	case GID_CASTLEBRAIN:
 		signatureTable = castlebrainSignatures;
 		break;
+#endif
 	case GID_ECOQUEST:
 		signatureTable = ecoquest1Signatures;
 		break;
 	case GID_ECOQUEST2:
 		signatureTable = ecoquest2Signatures;
+		break;
+	case GID_FANMADE:
+		signatureTable = fanmadeSignatures;
 		break;
 	case GID_FREDDYPHARKAS:
 		signatureTable = freddypharkasSignatures;
@@ -890,9 +1211,11 @@ void Script::matchSignatureAndPatch(uint16 scriptNr, byte *scriptData, const uin
 		signatureTable = gk1Signatures;
 		break;
 	// hoyle4 now works due to workaround inside GfxPorts
-	//case GID_HOYLE4:
-	//	signatureTable = hoyle4Signatures;
-	//	break;
+#if 0
+	case GID_HOYLE4:
+		signatureTable = hoyle4Signatures;
+		break;
+#endif
 	case GID_KQ5:
 		signatureTable = kq5Signatures;
 		break;
@@ -907,6 +1230,12 @@ void Script::matchSignatureAndPatch(uint16 scriptNr, byte *scriptData, const uin
 		break;
 	case GID_QFG1VGA:
 		signatureTable = qfg1vgaSignatures;
+		break;
+	case GID_QFG2:
+		signatureTable = qfg2Signatures;
+		break;
+	case GID_QFG3:
+		signatureTable = qfg3Signatures;
 		break;
 	case GID_SQ4:
 		signatureTable = sq4Signatures;

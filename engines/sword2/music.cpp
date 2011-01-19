@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword2/music.cpp $
- * $Id: music.cpp 53467 2010-10-15 06:12:23Z eriktorbjorn $
+ * $Id: music.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  */
 
 // One feature still missing is the original's DipMusic() function which, as
@@ -33,6 +33,8 @@
 
 
 #include "common/file.h"
+#include "common/memstream.h"
+#include "common/substream.h"
 #include "common/system.h"
 
 #include "sound/decoders/mp3.h"

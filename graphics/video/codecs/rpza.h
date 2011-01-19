@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/codecs/rpza.h $
- * $Id: rpza.h 49165 2010-05-23 18:33:55Z mthreepwood $
+ * $Id: rpza.h 55095 2011-01-02 14:57:49Z fuzzie $
  *
  */
 
@@ -34,9 +34,9 @@ namespace Graphics {
 class RPZADecoder : public Codec {
 public:
 	RPZADecoder(uint16 width, uint16 height);
-	~RPZADecoder() { delete _surface; }
+	~RPZADecoder();
 
-	Surface *decodeImage(Common::SeekableReadStream *stream);
+	const Surface *decodeImage(Common::SeekableReadStream *stream);
 	PixelFormat getPixelFormat() const { return _pixelFormat; }
 
 private:

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/riven_saveload.cpp $
- * $Id: riven_saveload.cpp 52791 2010-09-18 10:55:16Z eriktorbjorn $
+ * $Id: riven_saveload.cpp 55207 2011-01-11 19:44:55Z mthreepwood $
  *
  */
 
@@ -102,10 +102,15 @@ bool RivenSaveLoad::loadGame(Common::String filename) {
 	debug(0, "Loading game from \'%s\'", filename.c_str());
 
 	MohawkArchive *mhk = new MohawkArchive();
-	mhk->open(loadFile);
+
+	if (!mhk->open(loadFile)) {
+		warning("Save file is not a Mohawk archive");
+		delete mhk;
+		return false;
+	}
 
 	// First, let's make sure we're using a saved game file from this version of Riven by checking the VERS resource
-	Common::SeekableReadStream *vers = mhk->getRawData(ID_VERS, 1);
+	Common::SeekableReadStream *vers = mhk->getResource(ID_VERS, 1);
 	uint32 saveGameVersion = vers->readUint32BE();
 	delete vers;
 	if ((saveGameVersion == kCDSaveGameVersion && (_vm->getFeatures() & GF_DVD))
@@ -116,7 +121,7 @@ bool RivenSaveLoad::loadGame(Common::String filename) {
 	}
 
 	// Now, we'll read in the variable values.
-	Common::SeekableReadStream *vars = mhk->getRawData(ID_VARS, 1);
+	Common::SeekableReadStream *vars = mhk->getResource(ID_VARS, 1);
 	Common::Array<uint32> rawVariables;
 
 	while (!vars->eos()) {
@@ -129,7 +134,7 @@ bool RivenSaveLoad::loadGame(Common::String filename) {
 
 	// Next, we set the variables based on the name found by the index in the VARS resource.
 	// TODO: Merge with code in mohawk.cpp for loading names?
-	Common::SeekableReadStream *names = mhk->getRawData(ID_NAME, 1);
+	Common::SeekableReadStream *names = mhk->getResource(ID_NAME, 1);
 
 	uint16 namesCount = names->readUint16BE();
 	uint16 *stringOffsets = new uint16[namesCount];
@@ -142,7 +147,7 @@ bool RivenSaveLoad::loadGame(Common::String filename) {
 	uint16 stackID = 0;
 	uint16 cardID = 0;
 
-	for (uint32 i = 0; i < rawVariables.size() && i < namesCount && !names->eos(); i++) {
+	for (uint32 i = 0; i < namesCount && !names->eos(); i++) {
 		names->seek(curNamesPos);
 		names->seek(stringOffsets[i], SEEK_CUR);
 
@@ -154,10 +159,9 @@ bool RivenSaveLoad::loadGame(Common::String filename) {
 			c = (char)names->readByte();
 		}
 
-		// TODO: Some versions have two extra variables. However, the saves are
-		// still compatible with other saves of the same version (they come from DVD v1.1).
-		// There are used in the whark number puzzle. I thought jleftpos and jrightpos were
-		// for this purpose.
+		// These are timing variables used with the DVD version of Riven for the whark
+		// puzzle and are not needed at all. See xjschool280_resetleft() and
+		// xjschool280_resetright.
 		if (name == "dropLeftStart" || name == "dropRightStart")
 			continue;
 
@@ -183,7 +187,7 @@ bool RivenSaveLoad::loadGame(Common::String filename) {
 	_vm->_zipModeData.clear();
 
 	// Finally, we load in zip mode data.
-	Common::SeekableReadStream *zips = mhk->getRawData(ID_ZIPS, 1);
+	Common::SeekableReadStream *zips = mhk->getResource(ID_ZIPS, 1);
 	uint16 zipsRecordCount = zips->readUint16BE();
 	for (uint16 i = 0; i < zipsRecordCount; i++) {
 		ZipMode zip;

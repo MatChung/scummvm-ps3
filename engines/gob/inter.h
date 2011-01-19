@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/inter.h $
- * $Id: inter.h 52945 2010-09-30 13:00:30Z drmccoy $
+ * $Id: inter.h 55296 2011-01-18 11:52:24Z drmccoy $
  *
  */
 
@@ -129,8 +129,7 @@ protected:
 	int16 _animPalHighIndex[8];
 	int16 _animPalDir[8];
 
-	byte _varStack[300];
-	int16 _varStackPos;
+	VariableStack _varStack;
 
 	// The busy-wait detection in o1_keyFunc breaks fast scrolling in Ween
 	bool _noBusyWait;
@@ -473,6 +472,19 @@ protected:
 	bool o3_copySprite(OpFuncParams &params);
 
 	void o3_wobble(OpGobParams &params);
+};
+
+class Inter_Inca2 : public Inter_v3 {
+public:
+	Inter_Inca2(GobEngine *vm);
+	virtual ~Inter_Inca2() {}
+
+protected:
+	virtual void setupOpcodesDraw();
+	virtual void setupOpcodesFunc();
+	virtual void setupOpcodesGob();
+
+	bool oInca2_spaceShooter(OpFuncParams &params);
 };
 
 class Inter_v4 : public Inter_v3 {

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/resources.h $
- * $Id: resources.h 42711 2009-07-24 21:34:43Z drmccoy $
+ * $Id: resources.h 54323 2010-11-18 16:38:03Z fingolfin $
  *
  */
 
@@ -29,7 +29,7 @@
 #include "common/str.h"
 
 namespace Common {
-	class MemoryReadStream;
+	class SeekableReadStream;
 }
 
 namespace Gob {
@@ -47,7 +47,7 @@ public:
 	int16 getWidth () const;
 	int16 getHeight() const;
 
-	Common::MemoryReadStream *stream() const;
+	Common::SeekableReadStream *stream() const;
 
 private:
 	byte *_data;
@@ -56,7 +56,7 @@ private:
 	int16 _height;
 	bool  _needFree;
 
-	Common::MemoryReadStream *_stream;
+	Common::SeekableReadStream *_stream;
 };
 
 class TextItem {
@@ -67,13 +67,13 @@ public:
 	byte *getData() const;
 	int32 getSize() const;
 
-	Common::MemoryReadStream *stream() const;
+	Common::SeekableReadStream *stream() const;
 
 private:
 	byte *_data;
 	int32 _size;
 
-	Common::MemoryReadStream *_stream;
+	Common::SeekableReadStream *_stream;
 };
 
 class Resources {

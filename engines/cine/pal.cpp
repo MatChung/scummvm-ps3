@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cine/pal.cpp $
- * $Id: pal.cpp 52608 2010-09-06 21:04:12Z lordhoto $
+ * $Id: pal.cpp 55195 2011-01-10 00:35:45Z tdhs $
  *
  */
 
@@ -141,9 +141,10 @@ int power(int base, int power) {
 
 // a.k.a. palRotate
 Palette &Palette::rotateRight(byte firstIndex, byte lastIndex, signed rotationAmount) {
-	assert(rotationAmount == 0 || rotationAmount == 1);
+	debug(1, "Palette::rotateRight(firstIndex: %d, lastIndex: %d, rotationAmount:%d)", firstIndex, lastIndex, rotationAmount);
+	assert(rotationAmount >= 0);
 
-	if (rotationAmount == 1) {
+	for (int j = 0; j < rotationAmount; j++) {
 		const Color lastColor = _colors[lastIndex];
 
 		for (int i = lastIndex; i > firstIndex; i--)

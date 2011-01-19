@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/dingux/main.cpp $
- * $Id: main.cpp 52309 2010-08-23 19:49:51Z djwillis $
+ * $Id: main.cpp 54584 2010-11-29 18:48:43Z lordhoto $
  *
  */
 
@@ -37,6 +37,8 @@ int main(int argc, char* argv[]) {
 	g_system = new OSystem_SDL_Dingux();
 	assert(g_system);
 
+	((OSystem_SDL_Dingux *)g_system)->init();
+
 #ifdef DYNAMIC_MODULES
 	PluginManager::instance().addPluginProvider(new SDLPluginProvider());
 //	PluginManager::instance().addPluginProvider(new POSIXPluginProvider());
@@ -44,10 +46,11 @@ int main(int argc, char* argv[]) {
 
 	// Invoke the actual ScummVM main entry point:
 	int res = scummvm_main(argc, argv);
-	((OSystem_SDL *)g_system)->deinit();
-	return res;
 
+	// Free OSystem
+	delete (OSystem_SDL_Dingux *)g_system;
+
+	return res;
 }
 
 #endif
-

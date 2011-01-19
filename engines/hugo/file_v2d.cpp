@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/file_v2d.cpp $
- * $Id: file_v2d.cpp 54018 2010-11-01 20:20:21Z strangerke $
+ * $Id: file_v2d.cpp 55114 2011-01-04 08:36:03Z strangerke $
  *
  */
 
@@ -40,7 +40,7 @@
 #include "hugo/util.h"
 
 namespace Hugo {
-FileManager_v2d::FileManager_v2d(HugoEngine *vm) : FileManager(vm) {
+FileManager_v2d::FileManager_v2d(HugoEngine *vm) : FileManager_v1d(vm) {
 }
 
 FileManager_v2d::~FileManager_v2d() {
@@ -53,11 +53,11 @@ void FileManager_v2d::openDatabaseFiles() {
 	debugC(1, kDebugFile, "openDatabaseFiles");
 
 	if (!_stringArchive.open(STRING_FILE))
-		Utils::Error(FILE_ERR, "%s", STRING_FILE);
+		error("File not found: %s", STRING_FILE);
 	if (!_sceneryArchive1.open("scenery.dat"))
-		Utils::Error(FILE_ERR, "%s", "scenery.dat");
+		error("File not found: scenery.dat");
 	if (!_objectsArchive.open(OBJECTS_FILE))
-		Utils::Error(FILE_ERR, "%s", OBJECTS_FILE);
+		error("File not found: %s", OBJECTS_FILE);
 }
 
 /**
@@ -92,8 +92,9 @@ void FileManager_v2d::readBackground(int screenIndex) {
 	_sceneryArchive1.seek(sceneBlock.scene_off, SEEK_SET);
 
 	// Read the image into dummy seq and static dib_a
-	seq_t dummySeq;                                 // Image sequence structure for Read_pcx
-	readPCX(_sceneryArchive1, &dummySeq, _vm->_screen->getFrontBuffer(), true, _vm->_screenNames[screenIndex]);
+	seq_t *dummySeq;                                // Image sequence structure for Read_pcx
+	dummySeq = readPCX(_sceneryArchive1, 0, _vm->_screen->getFrontBuffer(), true, _vm->_screenNames[screenIndex]);
+	free(dummySeq);
 }
 
 /**
@@ -130,7 +131,7 @@ void FileManager_v2d::readOverlay(int screenNum, image_pt image, ovl_t overlayTy
 		i = sceneBlock.ob_len;
 		break;
 	default:
-		Utils::Error(FILE_ERR, "%s", "Bad ovl_type");
+		error("Bad overlayType: %d", overlayType);
 		break;
 	}
 	if (i == 0) {
@@ -144,7 +145,7 @@ void FileManager_v2d::readOverlay(int screenNum, image_pt image, ovl_t overlayTy
 	do {
 		int8 data = _sceneryArchive1.readByte();    // Read a code byte
 		if ((byte)data == 0x80)                     // Noop
-			k = k;
+			;
 		else if (data >= 0) {                       // Copy next data+1 literally
 			for (i = 0; i <= (byte)data; i++, k++)
 				*tmpImage++ = _sceneryArchive1.readByte();
@@ -167,18 +168,18 @@ char *FileManager_v2d::fetchString(int index) {
 	_stringArchive.seek((uint32)index * sizeof(uint32), SEEK_SET);
 	uint32 off1, off2;
 	if (_stringArchive.read((char *)&off1, sizeof(uint32)) == 0)
-		Utils::Error(FILE_ERR, "%s", "String offset");
+		error("An error has occurred: bad String offset");
 	if (_stringArchive.read((char *)&off2, sizeof(uint32)) == 0)
-		Utils::Error(FILE_ERR, "%s", "String offset");
+		error("An error has occurred: bad String offset");
 
 	// Check size of string
 	if ((off2 - off1) >= MAX_BOX)
-		Utils::Error(FILE_ERR, "%s", "Fetched string too long!");
+		error("Fetched string too long!");
 
 	// Position to string and read it into gen purpose _textBoxBuffer
 	_stringArchive.seek(off1, SEEK_SET);
 	if (_stringArchive.read(_textBoxBuffer, (uint16)(off2 - off1)) == 0)
-		Utils::Error(FILE_ERR, "%s", "Fetch_string");
+		error("An error has occurred: fetchString");
 
 	// Null terminate, decode and return it
 	_textBoxBuffer[off2-off1] = '\0';

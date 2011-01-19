@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/m4.cpp $
- * $Id: m4.cpp 54047 2010-11-03 09:44:03Z dreammaster $
+ * $Id: m4.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -288,7 +288,7 @@ void MadsM4Engine::dumpFile(const char* filename, bool uncompress) {
 		}
 	} else {
 		MadsPack packData(fileS);
-		Common::MemoryReadStream *sourceUnc;
+		Common::SeekableReadStream *sourceUnc;
 		for (int i = 0; i < packData.getCount(); i++) {
 			sourceUnc = packData.getItemStream(i);
 			debugCN(kDebugCore, "Dumping compressed chunk %i of %i, size is %i\n", i + 1, packData.getCount(), sourceUnc->size());

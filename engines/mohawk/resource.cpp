@@ -19,12 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/resource.cpp $
- * $Id: resource.cpp 50333 2010-06-26 17:21:50Z mthreepwood $
+ * $Id: resource.cpp 54988 2010-12-21 18:16:20Z fuzzie $
  *
  */
 
 #include "mohawk/resource.h"
 
+#include "common/debug.h"
+#include "common/substream.h"
 #include "common/util.h"
 
 namespace Mohawk {
@@ -35,14 +37,22 @@ MohawkArchive::MohawkArchive() {
 	_fileTable = NULL;
 }
 
-void MohawkArchive::open(Common::String filename) {
+bool MohawkArchive::open(const Common::String &filename) {
 	Common::File *file = new Common::File();
-	if (!file->open(filename.c_str()))
-		error ("Could not open file \'%s\'", filename.c_str());
+
+	if (!file->open(filename)) {
+		delete file;
+		return false;
+	}
 
 	_curFile = filename;
 
-	open(file);
+	if (!open(file)) {
+		close();
+		return false;
+	}
+
+	return true;
 }
 
 void MohawkArchive::close() {
@@ -53,23 +63,29 @@ void MohawkArchive::close() {
 	_curFile.clear();
 }
 
-void MohawkArchive::open(Common::SeekableReadStream *stream) {
+bool MohawkArchive::open(Common::SeekableReadStream *stream) {
 	// Make sure no other file is open...
 	close();
 	_mhk = stream;
 
-	if (_mhk->readUint32BE() != ID_MHWK)
-		error ("Could not find tag \'MHWK\'");
+	if (_mhk->readUint32BE() != ID_MHWK) {
+		warning("Could not find tag 'MHWK'");
+		return false;
+	}
 
-	_fileSize = _mhk->readUint32BE();
+	/* uint32 fileSize = */ _mhk->readUint32BE();
 
-	if (_mhk->readUint32BE() != ID_RSRC)
-		error ("Could not find tag \'RSRC\'");
+	if (_mhk->readUint32BE() != ID_RSRC) {
+		warning("Could not find tag \'RSRC\'");
+		return false;
+	}
 
 	_rsrc.version = _mhk->readUint16BE();
 	
-	if (_rsrc.version != 0x100)
-		error("Unsupported Mohawk resource version %d.%d", (_rsrc.version >> 8) & 0xff, _rsrc.version & 0xff);
+	if (_rsrc.version != 0x100) {
+		warning("Unsupported Mohawk resource version %d.%d", (_rsrc.version >> 8) & 0xff, _rsrc.version & 0xff);
+		return false;
+	}
 	
 	_rsrc.compaction = _mhk->readUint16BE(); // Only used in creation, not in reading
 	_rsrc.filesize = _mhk->readUint32BE();
@@ -170,6 +186,55 @@ void MohawkArchive::open(Common::SeekableReadStream *stream) {
 
 		debug (4, "File[%02x]: Offset = %08x  DataSize = %07x  Flags = %02x  Unk = %04x", i, _fileTable[i].offset, _fileTable[i].dataSize, _fileTable[i].flags, _fileTable[i].unk);
 	}
+
+	return true;
+}
+
+int MohawkArchive::getTypeIndex(uint32 tag) {
+	for (uint16 i = 0; i < _typeTable.resource_types; i++)
+		if (_types[i].tag == tag)
+			return i;
+	return -1;	// not found
+}
+
+int MohawkArchive::getIDIndex(int typeIndex, uint16 id) {
+	for (uint16 i = 0; i < _types[typeIndex].resTable.resources; i++)
+		if (_types[typeIndex].resTable.entries[i].id == id)
+			return i;
+	return -1;	// not found
+}
+
+int MohawkArchive::getIDIndex(int typeIndex, const Common::String &resName) {
+	int index = -1;
+
+	for (uint16 i = 0; i < _types[typeIndex].nameTable.num; i++)
+		if (_types[typeIndex].nameTable.entries[i].name.matchString(resName)) {
+			index = _types[typeIndex].nameTable.entries[i].index;
+			break;
+		}
+
+	if (index < 0)
+		return -1; // Not found
+
+	for (uint16 i = 0; i < _types[typeIndex].resTable.resources; i++)
+		if (_types[typeIndex].resTable.entries[i].index == index)
+			return i;
+
+	return -1; // Not found
+}
+
+uint16 MohawkArchive::findResourceID(uint32 type, const Common::String &resName) {
+	int typeIndex = getTypeIndex(type);
+
+	if (typeIndex < 0)
+		return 0xFFFF;
+
+	int idIndex = getIDIndex(typeIndex, resName);
+
+	if (idIndex < 0)
+		return 0xFFFF;
+
+	return _types[typeIndex].resTable.entries[idIndex].id;
 }
 
 bool MohawkArchive::hasResource(uint32 tag, uint16 id) {
@@ -181,7 +246,45 @@ bool MohawkArchive::hasResource(uint32 tag, uint16 id) {
 	if (typeIndex < 0)
 		return false;
 
-	return (getIdIndex(typeIndex, id) >= 0);
+	return getIDIndex(typeIndex, id) >= 0;
+}
+
+bool MohawkArchive::hasResource(uint32 tag, const Common::String &resName) {
+	if (!_mhk)
+		return false;
+
+	int16 typeIndex = getTypeIndex(tag);
+
+	if (typeIndex < 0)
+		return false;
+
+	return getIDIndex(typeIndex, resName) >= 0;
+}
+
+Common::String MohawkArchive::getName(uint32 tag, uint16 id) {
+	if (!_mhk)
+		return 0;
+
+	int16 typeIndex = getTypeIndex(tag);
+
+	if (typeIndex < 0)
+		return 0;
+
+	int16 idIndex = -1;
+
+	for (uint16 i = 0; i < _types[typeIndex].resTable.resources; i++)
+		if (_types[typeIndex].resTable.entries[i].id == id) {
+			idIndex = _types[typeIndex].resTable.entries[i].index;
+			break;
+		}
+
+	assert(idIndex >= 0);
+
+	for (uint16 i = 0; i < _types[typeIndex].nameTable.num; i++)
+		if (_types[typeIndex].nameTable.entries[i].index == idIndex)
+			return _types[typeIndex].nameTable.entries[i].name;
+
+	return 0;	// not found
 }
 
 uint32 MohawkArchive::getOffset(uint32 tag, uint16 id) {
@@ -190,25 +293,25 @@ uint32 MohawkArchive::getOffset(uint32 tag, uint16 id) {
 	int16 typeIndex = getTypeIndex(tag);
 	assert(typeIndex >= 0);
 
-	int16 idIndex = getIdIndex(typeIndex, id);
+	int16 idIndex = getIDIndex(typeIndex, id);
 	assert(idIndex >= 0);
 
 	return _fileTable[_types[typeIndex].resTable.entries[idIndex].index - 1].offset;
 }
 
-Common::SeekableReadStream *MohawkArchive::getRawData(uint32 tag, uint16 id) {
+Common::SeekableReadStream *MohawkArchive::getResource(uint32 tag, uint16 id) {
 	if (!_mhk)
-		error ("MohawkArchive::getRawData - No File in Use");
+		error("MohawkArchive::getResource(): No File in Use");
 
 	int16 typeIndex = getTypeIndex(tag);
 
 	if (typeIndex < 0)
-		error ("Could not find a tag of \'%s\' in file \'%s\'", tag2str(tag), _curFile.c_str());
+		error("Could not find a tag of '%s' in file '%s'", tag2str(tag), _curFile.c_str());
 
-	int16 idIndex = getIdIndex(typeIndex, id);
+	int16 idIndex = getIDIndex(typeIndex, id);
 
 	if (idIndex < 0)
-		error ("Could not find \'%s\' %04x in file \'%s\'", tag2str(tag), id, _curFile.c_str());
+		error("Could not find '%s' %04x in file '%s'", tag2str(tag), id, _curFile.c_str());
 
 	// Note: the fileTableIndex is based off 1, not 0. So, subtract 1
 	uint16 fileTableIndex = _types[typeIndex].resTable.entries[idIndex].index - 1;
@@ -218,7 +321,7 @@ Common::SeekableReadStream *MohawkArchive::getRawData(uint32 tag, uint16 id) {
 	// We need to do this because of the way Mohawk is set up (this is much more "proper"
 	// than passing _mhk at the right offset). We may want to do that in the future, though.
 	if (_types[typeIndex].tag == ID_TMOV) {
-		if (fileTableIndex == _fileTableAmount)
+		if (fileTableIndex == _fileTableAmount - 1)
 			return new Common::SeekableSubReadStream(_mhk, _fileTable[fileTableIndex].offset, _mhk->size());
 		else
 			return new Common::SeekableSubReadStream(_mhk, _fileTable[fileTableIndex].offset, _fileTable[fileTableIndex + 1].offset);
@@ -227,7 +330,7 @@ Common::SeekableReadStream *MohawkArchive::getRawData(uint32 tag, uint16 id) {
 	return new Common::SeekableSubReadStream(_mhk, _fileTable[fileTableIndex].offset, _fileTable[fileTableIndex].offset + _fileTable[fileTableIndex].dataSize);
 }
 
-void LivingBooksArchive_v1::open(Common::SeekableReadStream *stream) {
+bool LivingBooksArchive_v1::open(Common::SeekableReadStream *stream) {
 	close();
 	_mhk = stream;
 
@@ -299,8 +402,8 @@ void LivingBooksArchive_v1::open(Common::SeekableReadStream *stream) {
 			for (uint16 j = 0; j < _types[i].resTable.resources; j++) {
 				_types[i].resTable.entries[j].id = _mhk->readUint16LE();
 				_types[i].resTable.entries[j].offset = _mhk->readUint32LE();
-				_types[i].resTable.entries[j].size = _mhk->readUint16LE();
-				_mhk->readUint32LE(); // Unknown (always 0?)
+				_types[i].resTable.entries[j].size = _mhk->readUint32LE();
+				_mhk->readUint16LE(); // Unknown (always 0?)
 
 				debug (4, "Entry[%02x]: ID = %04x (%d)\tOffset = %08x, Size = %08x", j, _types[i].resTable.entries[j].id, _types[i].resTable.entries[j].id, _types[i].resTable.entries[j].offset, _types[i].resTable.entries[j].size);
 			}
@@ -308,9 +411,12 @@ void LivingBooksArchive_v1::open(Common::SeekableReadStream *stream) {
 			_mhk->seek(oldPos);
 			debug (3, "\n");
 		}
-	} else
-		error("Could not determine type of Old Mohawk resource");
+	} else {
+		warning("Could not determine type of Old Mohawk resource");
+		return false;
+	}
 
+	return true;
 }
 
 uint32 LivingBooksArchive_v1::getOffset(uint32 tag, uint16 id) {
@@ -319,27 +425,102 @@ uint32 LivingBooksArchive_v1::getOffset(uint32 tag, uint16 id) {
 	int16 typeIndex = getTypeIndex(tag);
 	assert(typeIndex >= 0);
 
-	int16 idIndex = getIdIndex(typeIndex, id);
+	int16 idIndex = getIDIndex(typeIndex, id);
 	assert(idIndex >= 0);
 
 	return _types[typeIndex].resTable.entries[idIndex].offset;
 }
 
-Common::SeekableReadStream *LivingBooksArchive_v1::getRawData(uint32 tag, uint16 id) {
+Common::SeekableReadStream *LivingBooksArchive_v1::getResource(uint32 tag, uint16 id) {
 	if (!_mhk)
-		error ("LivingBooksArchive_v1::getRawData - No File in Use");
+		error("LivingBooksArchive_v1::getResource(): No File in Use");
 
 	int16 typeIndex = getTypeIndex(tag);
 
 	if (typeIndex < 0)
-		error ("Could not find a tag of \'%s\' in file \'%s\'", tag2str(tag), _curFile.c_str());
+		error("Could not find a tag of \'%s\' in file \'%s\'", tag2str(tag), _curFile.c_str());
 
-	int16 idIndex = getIdIndex(typeIndex, id);
+	int16 idIndex = getIDIndex(typeIndex, id);
 
 	if (idIndex < 0)
-		error ("Could not find \'%s\' %04x in file \'%s\'", tag2str(tag), id, _curFile.c_str());
+		error("Could not find \'%s\' %04x in file \'%s\'", tag2str(tag), id, _curFile.c_str());
 
 	return new Common::SeekableSubReadStream(_mhk, _types[typeIndex].resTable.entries[idIndex].offset, _types[typeIndex].resTable.entries[idIndex].offset + _types[typeIndex].resTable.entries[idIndex].size);
+}
+
+bool LivingBooksArchive_v1::hasResource(uint32 tag, uint16 id) {
+	if (!_mhk)
+		return false;
+
+	int16 typeIndex = getTypeIndex(tag);
+
+	if (typeIndex < 0)
+		return false;
+
+	return getIDIndex(typeIndex, id) >= 0;
+}
+
+int LivingBooksArchive_v1::getTypeIndex(uint32 tag) {
+	for (uint16 i = 0; i < _typeTable.resource_types; i++)
+		if (_types[i].tag == tag)
+			return i;
+	return -1;	// not found
+}
+
+int LivingBooksArchive_v1::getIDIndex(int typeIndex, uint16 id) {
+	for (uint16 i = 0; i < _types[typeIndex].resTable.resources; i++)
+		if (_types[typeIndex].resTable.entries[i].id == id)
+			return i;
+	return -1;	// not found
+}
+
+// Partially based on the Prince of Persia Format Specifications
+// See http://sdfg.com.ar/git/?p=fp-git.git;a=blob;f=FP/doc/FormatSpecifications
+// However, I'm keeping with the terminology we've been using with the
+// later archive formats.
+
+bool DOSArchive_v2::open(Common::SeekableReadStream *stream) {
+	close();
+
+	uint32 typeTableOffset = stream->readUint32LE();
+	uint16 typeTableSize = stream->readUint16LE();
+
+	if (typeTableOffset + typeTableSize != (uint32)stream->size())
+		return false;
+
+	stream->seek(typeTableOffset);
+
+	_typeTable.resource_types = stream->readUint16LE();
+	_types = new OldType[_typeTable.resource_types];
+
+	for (uint16 i = 0; i < _typeTable.resource_types; i++) {
+		_types[i].tag = stream->readUint32LE();
+		_types[i].resource_table_offset = stream->readUint16LE();
+
+		debug(3, "Type[%02d]: Tag = \'%s\'  ResTable Offset = %04x", i, tag2str(_types[i].tag), _types[i].resource_table_offset);
+
+		uint32 oldPos = stream->pos();
+
+		// Resource Table/File Table
+		stream->seek(_types[i].resource_table_offset + typeTableOffset);
+		_types[i].resTable.resources = stream->readUint16LE();
+		_types[i].resTable.entries = new OldType::ResourceTable::Entries[_types[i].resTable.resources];
+
+		for (uint16 j = 0; j < _types[i].resTable.resources; j++) {
+			_types[i].resTable.entries[j].id = stream->readUint16LE();
+			_types[i].resTable.entries[j].offset = stream->readUint32LE() + 1; // Need to add one to the offset to skip the checksum byte
+			_types[i].resTable.entries[j].size = stream->readUint16LE();
+			stream->skip(3); // Skip the useless flags
+
+			debug (4, "Entry[%02x]: ID = %04x (%d)\tOffset = %08x, Size = %08x", j, _types[i].resTable.entries[j].id, _types[i].resTable.entries[j].id, _types[i].resTable.entries[j].offset, _types[i].resTable.entries[j].size);
+		}
+
+		stream->seek(oldPos);
+		debug (3, "\n");
+	}
+
+	_mhk = stream;
+	return true;
 }
 
 }	// End of namespace Mohawk

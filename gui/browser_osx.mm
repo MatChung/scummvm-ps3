@@ -19,15 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/browser_osx.mm $
- * $Id: browser_osx.mm 53961 2010-10-30 21:27:42Z fingolfin $
+ * $Id: browser_osx.mm 54264 2010-11-16 10:11:57Z fingolfin $
  */
 
 // Disable symbol overrides so that we can use system headers
 #define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 #include "gui/browser.h"
-#include "gui/GuiManager.h"
-#include "gui/ListWidget.h"
 
 #include "common/config-manager.h"
 #include "common/system.h"

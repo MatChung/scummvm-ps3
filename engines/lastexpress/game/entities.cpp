@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/entities.cpp $
- * $Id: entities.cpp 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: entities.cpp 54367 2010-11-19 10:55:38Z littleboy $
  *
  */
 
@@ -185,10 +185,12 @@ Entities::Entities(LastExpressEngine *engine) : _engine(engine) {
 }
 
 Entities::~Entities() {
-	delete _header;
+	SAFE_DELETE(_header);
 
 	for (int i = 0; i < (int)_entities.size(); i++)
-		delete _entities[i];
+		SAFE_DELETE(_entities[i]);
+
+	_entities.clear();
 
 	// Zero passed pointers
 	_engine = NULL;
@@ -605,10 +607,8 @@ void Entities::resetSequences(EntityIndex entityIndex) const {
 		getData(entityIndex)->currentFrame = -1;
 	}
 
-	// FIXME: in the original engine, the sequence pointers might just be copies,
-	// make sure we free the associated memory at some point
-	getData(entityIndex)->frame = NULL;
-	getData(entityIndex)->frame1 = NULL;
+	SAFE_DELETE(getData(entityIndex)->frame);
+	SAFE_DELETE(getData(entityIndex)->frame1);
 
 	SAFE_DELETE(getData(entityIndex)->sequence);
 	SAFE_DELETE(getData(entityIndex)->sequence2);
@@ -621,7 +621,7 @@ void Entities::resetSequences(EntityIndex entityIndex) const {
 	strcpy((char*)&getData(entityIndex)->sequenceName, "");
 	strcpy((char*)&getData(entityIndex)->sequenceName2, "");
 
-	// Original engine resets flag to decompress data on the fly (we don't need to do that)
+	getScenes()->resetQueue();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1172,8 +1172,12 @@ void Entities::processFrame(EntityIndex entityIndex, bool keepPreviousFrame, boo
 	getScenes()->addToQueue(frame);
 
 	// Keep previous frame if needed and store the new frame
-	if (keepPreviousFrame)
+	if (keepPreviousFrame) {
+		SAFE_DELETE(data->frame1);
 		data->frame1 = data->frame;
+	} else {
+		SAFE_DELETE(data->frame);
+	}
 
 	data->frame = frame;
 

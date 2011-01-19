@@ -19,14 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/fs/psp/psp-fs-factory.cpp $
- * $Id: psp-fs-factory.cpp 48254 2010-03-13 21:55:49Z lordhoto $
+ * $Id: psp-fs-factory.cpp 54258 2010-11-16 08:23:13Z fingolfin $
  */
 
 #if defined(__PSP__)
 #include "backends/fs/psp/psp-fs-factory.h"
 #include "backends/fs/psp/psp-fs.cpp"
 
-DECLARE_SINGLETON(PSPFilesystemFactory)
+DECLARE_SINGLETON(PSPFilesystemFactory);
 
 AbstractFSNode *PSPFilesystemFactory::makeRootFileNode() const {
 	return new PSPFilesystemNode();

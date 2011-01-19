@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/savegame.cpp $
- * $Id: savegame.cpp 54017 2010-11-01 20:08:42Z m_kiewitz $
+ * $Id: savegame.cpp 55033 2010-12-24 14:56:04Z thebluegr $
  *
  */
 
@@ -43,6 +43,7 @@
 #include "sci/graphics/helpers.h"
 #include "sci/graphics/palette.h"
 #include "sci/graphics/ports.h"
+#include "sci/parser/vocabulary.h"
 #include "sci/sound/audio.h"
 #include "sci/sound/music.h"
 
@@ -117,6 +118,12 @@ void syncWithSerializer(Common::Serializer &s, reg_t &obj) {
 	s.syncAsUint16LE(obj.offset);
 }
 
+template <>
+void syncWithSerializer(Common::Serializer &s, synonym_t &obj) {
+	s.syncAsUint16LE(obj.replaceant);
+	s.syncAsUint16LE(obj.replacement);
+}
+
 void SegManager::saveLoadWithSerializer(Common::Serializer &s) {
 	if (s.isLoading())
 		resetSegMan();
@@ -148,6 +155,23 @@ void SegManager::saveLoadWithSerializer(Common::Serializer &s) {
 		if (type == SEG_TYPE_HUNK)
 			continue;
 
+		// Don't save or load the obsolete system string segments
+		if (type == 5) {
+			if (s.isSaving()) {
+				continue;
+			} else {
+				// Old saved game. Skip the data.
+				Common::String tmp;
+				for (int j = 0; j < 4; j++) {
+					s.syncString(tmp);	// OBSOLETE: name
+					s.skip(4);			// OBSOLETE: maxSize
+					s.syncString(tmp);	// OBSOLETE: value
+				}
+				_heap[i] = NULL;	// set as freed
+				continue;
+			}
+		}
+
 		if (s.isLoading())
 			mobj = SegmentObj::createSegmentObj(type);
 
@@ -156,9 +180,26 @@ void SegManager::saveLoadWithSerializer(Common::Serializer &s) {
 		// Let the object sync custom data
 		mobj->saveLoadWithSerializer(s);
 
-		// If we are loading a script, hook it up in the script->segment map.
-		if (s.isLoading() && type == SEG_TYPE_SCRIPT)
-			_scriptSegMap[((Script *)mobj)->getScriptNumber()] = i;
+		// If we are saving a script, save its string heap space too
+		if (s.isSaving() && type == SEG_TYPE_SCRIPT)
+			((Script *)mobj)->syncStringHeap(s);
+	
+		// If we are loading a script, perform some extra steps
+		if (s.isLoading() && type == SEG_TYPE_SCRIPT) {
+			Script *scr = (Script *)mobj;
+			// Hook the script up in the script->segment map
+			_scriptSegMap[scr->getScriptNumber()] = i;
+
+			// Now, load the script itself
+			scr->load(g_sci->getResMan());
+
+			for (ObjMap::iterator it = scr->_objects.begin(); it != scr->_objects.end(); ++it)
+				it->_value.syncBaseObject(scr->getBuf(it->_value.getPos().offset));
+
+			// Load the script's string heap
+			if (s.getVersion() >= 28)
+				scr->syncStringHeap(s);
+		}
 	}
 
 	s.syncAsSint32LE(_clonesSegId);
@@ -166,6 +207,29 @@ void SegManager::saveLoadWithSerializer(Common::Serializer &s) {
 	s.syncAsSint32LE(_nodesSegId);
 
 	syncArray<Class>(s, _classTable);
+
+	// Now that all scripts are loaded, init their objects
+	for (uint i = 0; i < _heap.size(); i++) {
+		if (!_heap[i] ||  _heap[i]->getType() != SEG_TYPE_SCRIPT)
+			continue;
+
+		Script *scr = (Script *)_heap[i];
+		scr->_localsBlock = (scr->_localsSegment == 0) ? NULL : (LocalVariables *)(_heap[scr->_localsSegment]);
+
+		for (ObjMap::iterator it = scr->_objects.begin(); it != scr->_objects.end(); ++it) {
+			reg_t addr = it->_value.getPos();
+			Object *obj = scr->scriptObjInit(addr, false);
+
+			if (getSciVersion() < SCI_VERSION_1_1) {
+				if (!obj->initBaseObject(this, addr, false)) {
+					// TODO/FIXME: This should not be happening at all. It might indicate a possible issue
+					// with the garbage collector. It happens for example in LSL5 (German, perhaps English too).
+					warning("Failed to locate base object for object at %04X:%04X; skipping", PRINT_REG(addr));
+					scr->_objects.erase(addr.toUint16());
+				}
+			}
+		}
+	}
 }
 
 
@@ -231,11 +295,14 @@ void EngineState::saveLoadWithSerializer(Common::Serializer &s) {
 	g_sci->_gfxPalette->saveLoadWithSerializer(s);
 }
 
+void Vocabulary::saveLoadWithSerializer(Common::Serializer &s) {
+	syncArray<synonym_t>(s, _synonyms);
+}
+
 void LocalVariables::saveLoadWithSerializer(Common::Serializer &s) {
 	s.syncAsSint32LE(script_id);
 	syncArray<reg_t>(s, _locals);
 }
-
 
 void Object::saveLoadWithSerializer(Common::Serializer &s) {
 	s.syncAsSint32LE(_flags);
@@ -360,6 +427,46 @@ void HunkTable::saveLoadWithSerializer(Common::Serializer &s) {
 	// Do nothing, hunk tables are not actually saved nor loaded.
 }
 
+void Script::syncStringHeap(Common::Serializer &s) {
+	if (getSciVersion() < SCI_VERSION_1_1) {
+		// Sync all of the SCI_OBJ_STRINGS blocks
+		byte *buf = _buf;
+		bool oldScriptHeader = (getSciVersion() == SCI_VERSION_0_EARLY);
+
+		if (oldScriptHeader)
+			buf += 2;
+
+		do {
+			int blockType = READ_LE_UINT16(buf);
+			int blockSize;
+			if (blockType == 0)
+				break;
+
+			blockSize = READ_LE_UINT16(buf + 2);
+			assert(blockSize > 0);
+
+			if (blockType == SCI_OBJ_STRINGS)
+				s.syncBytes(buf, blockSize);
+
+			buf += blockSize;
+
+			if (_buf - buf == 0)
+				break;
+		} while (1);
+
+ 	} else {
+		// Strings in SCI1.1 come after the object instances
+		byte *buf = _heapStart + 4 + READ_SCI11ENDIAN_UINT16(_heapStart + 2) * 2;
+
+		// Skip all of the objects
+		while (READ_SCI11ENDIAN_UINT16(buf) == SCRIPT_OBJECT_MAGIC_NUMBER)
+			buf += READ_SCI11ENDIAN_UINT16(buf + 2) * 2;
+
+		// Now, sync everything till the end of the buffer
+		s.syncBytes(buf, _heapSize - (buf - _heapStart));
+	}
+}
+
 void Script::saveLoadWithSerializer(Common::Serializer &s) {
 	s.syncAsSint32LE(_nr);
 
@@ -402,32 +509,6 @@ void Script::saveLoadWithSerializer(Common::Serializer &s) {
 	s.syncAsSint32LE(_localsSegment);
 
 	s.syncAsSint32LE(_markedAsDeleted);
-}
-
-static void sync_SystemString(Common::Serializer &s, SystemString &obj) {
-	s.syncString(obj._name);
-	s.syncAsSint32LE(obj._maxSize);
-
-	// Sync obj._value. We cannot use syncCStr as we must make sure that
-	// the allocated buffer has the correct size, i.e., obj._maxSize
-	Common::String tmp;
-	if (s.isSaving() && obj._value)
-		tmp = obj._value;
-	s.syncString(tmp);
-	if (s.isLoading()) {
-		if (!obj._maxSize) {
-			obj._value = NULL;
-		} else {
-			//free(*str);
-			obj._value = (char *)calloc(obj._maxSize, sizeof(char));
-			strncpy(obj._value, tmp.c_str(), obj._maxSize);
-		}
-	}
-}
-
-void SystemStrings::saveLoadWithSerializer(Common::Serializer &s) {
-	for (int i = 0; i < SYS_STRINGS_MAX; ++i)
-		sync_SystemString(s, _strings[i]);
 }
 
 void DynMem::saveLoadWithSerializer(Common::Serializer &s) {
@@ -477,7 +558,7 @@ void SciMusic::saveLoadWithSerializer(Common::Serializer &s) {
 
 		soundSetSoundOn(_soundOn);
 		soundSetMasterVolume(masterVolume);
-		setReverb(reverb);
+		setGlobalReverb(reverb);
 	}
 
 	if (s.isSaving())
@@ -521,6 +602,7 @@ void MusicEntry::saveLoadWithSerializer(Common::Serializer &s) {
 		soundRes = 0;
 		pMidiParser = 0;
 		pStreamAud = 0;
+		reverb = -1;	// invalid reverb, will be initialized in processInitSound()
 	}
 }
 
@@ -540,6 +622,14 @@ void SoundCommandParser::reconstructPlayList() {
 			(*i)->soundRes = 0;
 		}
 		if ((*i)->status == kSoundPlaying) {
+			// Sync the sound object's selectors related to playing with the stored
+			// ones in the playlist, as they may have been invalidated when loading.
+			// Refer to bug #3104624.
+			writeSelectorValue(_segMan, (*i)->soundObj, SELECTOR(loop), (*i)->loop);
+			writeSelectorValue(_segMan, (*i)->soundObj, SELECTOR(priority), (*i)->priority);
+			if (_soundVersion >= SCI_VERSION_1_EARLY)
+				writeSelectorValue(_segMan, (*i)->soundObj, SELECTOR(vol), (*i)->volume);
+
 			processPlaySound((*i)->soundObj);
 		}
 	}
@@ -667,44 +757,6 @@ void SegManager::reconstructStack(EngineState *s) {
 	s->stack_top = s->stack_base + stack->_capacity;
 }
 
-// TODO: Move this function to a more appropriate place, such as vm.cpp or script.cpp
-void SegManager::reconstructScripts(EngineState *s) {
-	uint i;
-
-	for (i = 0; i < _heap.size(); i++) {
-		if (!_heap[i] ||  _heap[i]->getType() != SEG_TYPE_SCRIPT)
-			continue;
-
-		Script *scr = (Script *)_heap[i];
-		scr->load(g_sci->getResMan());
-		scr->_localsBlock = (scr->_localsSegment == 0) ? NULL : (LocalVariables *)(_heap[scr->_localsSegment]);
-
-		for (ObjMap::iterator it = scr->_objects.begin(); it != scr->_objects.end(); ++it)
-			it->_value._baseObj = scr->getBuf(it->_value.getPos().offset);
-	}
-
-	for (i = 0; i < _heap.size(); i++) {
-		if (!_heap[i] ||  _heap[i]->getType() != SEG_TYPE_SCRIPT)
-			continue;
-
-		Script *scr = (Script *)_heap[i];
-
-		for (ObjMap::iterator it = scr->_objects.begin(); it != scr->_objects.end(); ++it) {
-			reg_t addr = it->_value.getPos();
-			Object *obj = scr->scriptObjInit(addr, false);
-
-			if (getSciVersion() < SCI_VERSION_1_1) {
-				if (!obj->initBaseObject(this, addr, false)) {
-					// TODO/FIXME: This should not be happening at all. It might indicate a possible issue
-					// with the garbage collector. It happens for example in LSL5 (German, perhaps English too).
-					warning("Failed to locate base object for object at %04X:%04X; skipping", PRINT_REG(addr));
-					scr->scriptObjRemove(addr);
-				}
-			}
-		}
-	}
-}
-
 void SegManager::reconstructClones() {
 	for (uint i = 0; i < _heap.size(); i++) {
 		SegmentObj *mobj = _heap[i];
@@ -769,6 +821,9 @@ bool gamestate_save(EngineState *s, Common::WriteStream *fh, const char* savenam
 	s->saveLoadWithSerializer(ser);		// FIXME: Error handling?
 	if (g_sci->_gfxPorts)
 		g_sci->_gfxPorts->saveLoadWithSerializer(ser);
+	Vocabulary *voc = g_sci->getVocabulary();
+	if (voc)
+		voc->saveLoadWithSerializer(ser);
 
 	return true;
 }
@@ -819,11 +874,9 @@ void gamestate_restore(EngineState *s, Common::SeekableReadStream *fh) {
 	s->reset(true);
 	s->saveLoadWithSerializer(ser);	// FIXME: Error handling?
 
-
 	// Now copy all current state information
 
 	s->_segMan->reconstructStack(s);
-	s->_segMan->reconstructScripts(s);
 	s->_segMan->reconstructClones();
 	s->initGlobals();
 	s->gcCountDown = GC_INTERVAL - 1;
@@ -835,11 +888,19 @@ void gamestate_restore(EngineState *s, Common::SeekableReadStream *fh) {
 
 	if (g_sci->_gfxPorts)
 		g_sci->_gfxPorts->saveLoadWithSerializer(ser);
+
+	Vocabulary *voc = g_sci->getVocabulary();
+	if (ser.getVersion() >= 30 && voc)
+		voc->saveLoadWithSerializer(ser);
+
 	g_sci->_soundCmd->reconstructPlayList();
 
 	// Message state:
 	delete s->_msgState;
 	s->_msgState = new MessageState(s->_segMan);
+
+	// System strings:
+	s->_segMan->initSysStrings();
 
 	s->abortScriptProcessing = kAbortLoadGame;
 

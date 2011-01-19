@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cine/saveload.cpp $
- * $Id: saveload.cpp 51937 2010-08-09 11:38:01Z sev $
+ * $Id: saveload.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -801,7 +801,7 @@ bool CineEngine::makeLoad(char *saveName) {
 		// Hopefully devices with more limited memory can also cope with this memory allocation.
 		saveSize = 256 * 1024;
 	}
-	Common::SharedPtr<Common::MemoryReadStream> in(saveFile->readStream(saveSize));
+	Common::SharedPtr<Common::SeekableReadStream> in(saveFile->readStream(saveSize));
 
 	// Try to detect the used savegame format
 	enum CineSaveGameFormat saveGameFormat = detectSaveGameFormat(*in);

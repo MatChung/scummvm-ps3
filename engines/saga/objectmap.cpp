@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/saga/objectmap.cpp $
- * $Id: objectmap.cpp 53781 2010-10-24 22:40:37Z h00ligan $
+ * $Id: objectmap.cpp 54323 2010-11-18 16:38:03Z fingolfin $
  *
  */
 
@@ -45,7 +45,7 @@
 
 namespace Saga {
 
-void HitZone::load(SagaEngine *vm, MemoryReadStreamEndian *readStream, int index, int sceneNumber) {
+void HitZone::load(SagaEngine *vm, Common::MemoryReadStreamEndian *readStream, int index, int sceneNumber) {
 	_index = index;
 	_flags = readStream->readByte();
 	_clickAreas.resize(readStream->readByte());

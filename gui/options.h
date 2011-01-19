@@ -19,14 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/options.h $
- * $Id: options.h 54090 2010-11-05 10:53:37Z thebluegr $
+ * $Id: options.h 54264 2010-11-16 10:11:57Z fingolfin $
  */
 
 #ifndef OPTIONS_DIALOG_H
 #define OPTIONS_DIALOG_H
 
 #include "gui/dialog.h"
-#include "gui/TabWidget.h"
 #include "common/str.h"
 #include "sound/musicplugin.h"
 
@@ -42,11 +41,13 @@ class PopUpWidget;
 class SliderWidget;
 class StaticTextWidget;
 class ListWidget;
+class TabWidget;
 
 class OptionsDialog : public Dialog {
 public:
 	OptionsDialog(const Common::String &domain, int x, int y, int w, int h);
 	OptionsDialog(const Common::String &domain, const Common::String &name);
+	~OptionsDialog();
 
 	void init();
 
@@ -115,8 +116,6 @@ private:
 	PopUpWidget *_mt32DevicePopUp;
 	StaticTextWidget *_gmDevicePopUpDesc;
 	PopUpWidget *_gmDevicePopUp;
-
-
 
 	//
 	// MIDI controls

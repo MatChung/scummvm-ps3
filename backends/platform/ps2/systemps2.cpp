@@ -19,12 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/ps2/systemps2.cpp $
- * $Id: systemps2.cpp 54052 2010-11-03 22:57:42Z wjpalenstijn $
+ * $Id: systemps2.cpp 54575 2010-11-29 16:35:29Z fingolfin $
  *
  */
-
-// Disable symbol overrides so that we can use system headers.
-#define FORBIDDEN_SYMBOL_ALLOW_ALL
 
 // Disable symbol overrides so that we can use system headers.
 #define FORBIDDEN_SYMBOL_ALLOW_ALL

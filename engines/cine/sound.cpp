@@ -19,13 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cine/sound.cpp $
- * $Id: sound.cpp 48637 2010-04-12 09:14:17Z fingolfin $
+ * $Id: sound.cpp 55070 2010-12-31 09:07:44Z tdhs $
  *
  */
 
 #include "common/endian.h"
 #include "common/file.h"
-#include "common/system.h"
+#include "common/memstream.h"
 
 #include "cine/cine.h"
 #include "cine/sound.h"
@@ -575,9 +575,7 @@ PCSoundFxPlayer::PCSoundFxPlayer(PCSoundDriver *driver)
 
 PCSoundFxPlayer::~PCSoundFxPlayer() {
 	_driver->setUpdateCallback(NULL, NULL);
-	if (_playing) {
-		stop();
-	}
+	stop();
 }
 
 bool PCSoundFxPlayer::load(const char *song) {
@@ -589,9 +587,7 @@ bool PCSoundFxPlayer::load(const char *song) {
 	}
 	_fadeOutCounter = 0;
 
-	if (_playing) {
-		stop();
-	}
+	stop();
 
 	_sfxData = readBundleSoundFile(song);
 	if (!_sfxData) {
@@ -645,8 +641,8 @@ void PCSoundFxPlayer::stop() {
 			_driver->stopChannel(i);
 		}
 		_driver->stopAll();
-		unload();
 	}
+	unload();
 }
 
 void PCSoundFxPlayer::fadeOut() {

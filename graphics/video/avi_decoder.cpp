@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/avi_decoder.cpp $
- * $Id: avi_decoder.cpp 53141 2010-10-10 22:25:52Z fingolfin $
+ * $Id: avi_decoder.cpp 54930 2010-12-16 02:02:53Z mthreepwood $
  *
  */
 
@@ -30,15 +30,19 @@
 
 #include "sound/audiostream.h"
 #include "sound/mixer.h"
-#include "sound/decoders/raw.h"
 
 #include "graphics/video/avi_decoder.h"
 
-// Codecs
+// Audio Codecs
+#include "sound/decoders/adpcm.h"
+#include "sound/decoders/raw.h"
+
+// Video Codecs
 #include "graphics/video/codecs/cinepak.h"
+#include "graphics/video/codecs/indeo3.h"
 #include "graphics/video/codecs/msvideo1.h"
 #include "graphics/video/codecs/msrle.h"
-#include "graphics/video/codecs/indeo3.h"
+#include "graphics/video/codecs/truemotion1.h"
 
 namespace Graphics {
 
@@ -174,7 +178,8 @@ void AviDecoder::handleStreamHeader() {
 
 	if (_fileStream->readUint32BE() != ID_STRF)
 		error("Could not find STRF tag");
-	/* uint32 strfSize = */ _fileStream->readUint32LE();
+	uint32 strfSize = _fileStream->readUint32LE();
+	uint32 startPos = _fileStream->pos();
 
 	if (sHeader.streamType == ID_VIDS) {
 		_vidsHeader = sHeader;
@@ -224,6 +229,9 @@ void AviDecoder::handleStreamHeader() {
 		if (_wvInfo.channels == 2)
 			_audsHeader.sampleSize /= 2;
 	}
+
+	// Ensure that we're at the end of the chunk
+	_fileStream->seek(startPos + strfSize);
 }
 
 bool AviDecoder::load(Common::SeekableReadStream *stream) {
@@ -262,8 +270,8 @@ bool AviDecoder::load(Common::SeekableReadStream *stream) {
 
 	debug (0, "Frames = %d, Dimensions = %d x %d", _header.totalFrames, _header.width, _header.height);
 	debug (0, "Frame Rate = %d", _vidsHeader.rate / _vidsHeader.scale);
-	if ((_audsHeader.scale != 0) && (_header.flags & AVIF_ISINTERLEAVED))
-		debug (0, "Sound Rate = %d", AUDIO_RATE);
+	if (_wvInfo.samplesPerSec != 0)
+		debug (0, "Sound Rate = %d", _wvInfo.samplesPerSec);
 	debug (0, "Video Codec = \'%s\'", tag2str(_vidsHeader.streamHandler));
 
 	if (!_videoCodec)
@@ -308,7 +316,7 @@ uint32 AviDecoder::getElapsedTime() const {
 	return VideoDecoder::getElapsedTime();
 }
 
-Surface *AviDecoder::decodeNextFrame() {
+const Surface *AviDecoder::decodeNextFrame() {
 	uint32 nextTag = _fileStream->readUint32BE();
 
 	if (_fileStream->eos())
@@ -326,9 +334,9 @@ Surface *AviDecoder::decodeNextFrame() {
 			error ("Expected 'rec ' LIST");
 
 		// Decode chunks in the list and see if we get a frame
-		Surface *frame = NULL;
+		const Surface *frame = NULL;
 		while (_fileStream->pos() < startPos + (int32)listSize) {
-			Surface *temp = decodeNextFrame();
+			const Surface *temp = decodeNextFrame();
 			if (temp)
 				frame = temp;
 		}
@@ -337,19 +345,7 @@ Surface *AviDecoder::decodeNextFrame() {
 	} else if (getStreamType(nextTag) == 'wb') {
 		// Audio Chunk
 		uint32 chunkSize = _fileStream->readUint32LE();
-		byte *data = (byte *)malloc(chunkSize);
-		_fileStream->read(data, chunkSize);
-
-		byte flags = 0;
-		if (_audsHeader.sampleSize == 2)
-			flags |= Audio::FLAG_16BITS | Audio::FLAG_LITTLE_ENDIAN;
-		else
-			flags |= Audio::FLAG_UNSIGNED;
-
-		if (_wvInfo.channels == 2)
-			flags |= Audio::FLAG_STEREO;
-
-		_audStream->queueBuffer(data, chunkSize, DisposeAfterUse::YES, flags);
+		queueAudioBuffer(chunkSize);
 		_fileStream->skip(chunkSize & 1); // Alignment
 	} else if (getStreamType(nextTag) == 'dc' || getStreamType(nextTag) == 'id' ||
 	           getStreamType(nextTag) == 'AM' || getStreamType(nextTag) == '32') {
@@ -361,7 +357,7 @@ Surface *AviDecoder::decodeNextFrame() {
 			return NULL;
 
 		Common::SeekableReadStream *frameData = _fileStream->readStream(chunkSize);
-		Graphics::Surface *surface = _videoCodec->decodeImage(frameData);
+		const Graphics::Surface *surface = _videoCodec->decodeImage(frameData);
 		delete frameData;
 		_fileStream->skip(chunkSize & 1); // Alignment
 		return surface;
@@ -405,10 +401,14 @@ Codec *AviDecoder::createCodec() {
 		case ID_RLE:
 			return new MSRLEDecoder(_bmInfo.width, _bmInfo.height, _bmInfo.bitCount);
 		case ID_CVID:
-			return new CinepakDecoder();
+			return new CinepakDecoder(_bmInfo.bitCount);
 #ifdef USE_INDEO3
 		case ID_IV32:
 			return new Indeo3Decoder(_bmInfo.width, _bmInfo.height);
+#endif
+#ifdef GRAPHICS_TRUEMOTION1_H
+		case ID_DUCK:
+			return new TrueMotion1Decoder(_bmInfo.width, _bmInfo.height);
 #endif
 		default:
 			warning ("Unknown/Unhandled compression format \'%s\'", tag2str(_vidsHeader.streamHandler));
@@ -423,13 +423,37 @@ PixelFormat AviDecoder::getPixelFormat() const {
 }
 
 Audio::QueuingAudioStream *AviDecoder::createAudioStream() {
-	if (_wvInfo.tag == AVI_WAVE_FORMAT_PCM)
-		return Audio::makeQueuingAudioStream(AUDIO_RATE, _wvInfo.channels == 2);
-
-	if (_wvInfo.tag != 0) // No sound
-		warning ("Unsupported AVI audio format %d", _wvInfo.tag);
+	if (_wvInfo.tag == kWaveFormatPCM || _wvInfo.tag == kWaveFormatDK3)
+		return Audio::makeQueuingAudioStream(_wvInfo.samplesPerSec, _wvInfo.channels == 2);
+	else if (_wvInfo.tag != kWaveFormatNone) // No sound
+		warning("Unsupported AVI audio format %d", _wvInfo.tag);
 
 	return NULL;
+}
+
+void AviDecoder::queueAudioBuffer(uint32 chunkSize) {
+	// Return if we haven't created the queue (unsupported audio format)
+	if (!_audStream) {
+		_fileStream->skip(chunkSize);
+		return;
+	}
+
+	Common::SeekableReadStream *stream = _fileStream->readStream(chunkSize);
+
+	if (_wvInfo.tag == kWaveFormatPCM) {
+		byte flags = 0;
+		if (_audsHeader.sampleSize == 2)
+			flags |= Audio::FLAG_16BITS | Audio::FLAG_LITTLE_ENDIAN;
+		else
+			flags |= Audio::FLAG_UNSIGNED;
+
+		if (_wvInfo.channels == 2)
+			flags |= Audio::FLAG_STEREO;
+
+		_audStream->queueAudioStream(Audio::makeRawStream(stream, _wvInfo.samplesPerSec, flags, DisposeAfterUse::YES), DisposeAfterUse::YES);
+	} else if (_wvInfo.tag == kWaveFormatDK3) {
+		_audStream->queueAudioStream(Audio::makeADPCMStream(stream, DisposeAfterUse::YES, chunkSize, Audio::kADPCMDK3, _wvInfo.samplesPerSec, _wvInfo.channels, _wvInfo.blockAlign), DisposeAfterUse::YES);
+	}
 }
 
 } // End of namespace Graphics

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/text16.h $
- * $Id: text16.h 52913 2010-09-26 18:23:53Z m_kiewitz $
+ * $Id: text16.h 55179 2011-01-09 00:32:26Z thebluegr $
  *
  */
 
@@ -62,9 +62,9 @@ public:
 	int16 Size(Common::Rect &rect, const char *text, GuiResourceId fontId, int16 maxWidth);
 	void Draw(const char *text, int16 from, int16 len, GuiResourceId orgFontId, int16 orgPenColor);
 	void Show(const char *text, int16 from, int16 len, GuiResourceId orgFontId, int16 orgPenColor);
-	void Box(const char *text, int16 bshow, const Common::Rect &rect, TextAlignment alignment, GuiResourceId fontId);
-	void Draw_String(const char *text);
-	void Draw_Status(const char *text);
+	void Box(const char *text, bool show, const Common::Rect &rect, TextAlignment alignment, GuiResourceId fontId);
+	void DrawString(const char *text);
+	void DrawStatus(const char *text);
 
 	GfxFont *_font;
 

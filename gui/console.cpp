@@ -19,12 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/console.cpp $
- * $Id: console.cpp 54006 2010-11-01 16:03:02Z fingolfin $
+ * $Id: console.cpp 54268 2010-11-16 11:07:48Z tdhs $
  */
 
 #include "gui/console.h"
-#include "gui/ScrollBarWidget.h"
+#include "gui/widgets/scrollbar.h"
 #include "gui/ThemeEval.h"
+#include "gui/gui-manager.h"
 
 #include "engines/engine.h"
 #include "base/version.h"

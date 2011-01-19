@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sky/debug.h $
- * $Id: debug.h 30238 2008-01-05 12:45:14Z dreammaster $
+ * $Id: debug.h 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -43,10 +43,11 @@ public:
 	virtual ~Debugger(); // we need this here for __SYMBIAN32__ archaic gcc/UIQ
 	bool showGrid()	{	return _showGrid; }
 
-protected:
+private:
 	virtual void preEnter();
 	virtual void postEnter();
 
+private:
 	bool Cmd_ShowGrid(int argc, const char **argv);
 	bool Cmd_ReloadGrid(int argc, const char **argv);
 	bool Cmd_ShowCompact(int argc, const char **argv);

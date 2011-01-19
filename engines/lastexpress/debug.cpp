@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/debug.cpp $
- * $Id: debug.cpp 54121 2010-11-07 17:16:59Z fingolfin $
+ * $Id: debug.cpp 54201 2010-11-11 14:19:44Z littleboy $
  *
  */
 
@@ -100,7 +100,7 @@ Debugger::Debugger(LastExpressEngine *engine) : _engine(engine), _command(NULL),
 Debugger::~Debugger() {
 	DebugMan.clearAllDebugChannels();
 
-	delete _soundStream;
+	SAFE_DELETE(_soundStream);
 	resetCommand();
 
 	_command = NULL;

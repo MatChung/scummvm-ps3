@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/parser.cpp $
- * $Id: parser.cpp 49127 2010-05-21 11:05:18Z peres001 $
+ * $Id: parser.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -257,5 +257,4 @@ void Parser::parseStatement() {
 	(*(*_currentOpcodes)[_lookup])();
 }
 
-
-} // namespace Parallaction
+} // End of namespace Parallaction

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/fight.cpp $
- * $Id: fight.cpp 53579 2010-10-18 19:17:38Z sev $
+ * $Id: fight.cpp 54201 2010-11-11 14:19:44Z littleboy $
  *
  */
 
@@ -325,11 +325,10 @@ void Fight::clearData() {
 	clearSequences(_data->player);
 	clearSequences(_data->opponent);
 
-	delete _data->player;
-	delete _data->opponent;
+	SAFE_DELETE(_data->player);
+	SAFE_DELETE(_data->opponent);
 
-	delete _data;
-	_data = NULL;
+	SAFE_DELETE(_data);
 
 	_engine->restoreEventHandlers();
 }
@@ -343,7 +342,7 @@ void Fight::clearSequences(Fighter *combatant) const {
 
 	// Free sequences
 	for (int i = 0; i < (int)combatant->sequences.size(); i++)
-		delete combatant->sequences[i];
+		SAFE_DELETE(combatant->sequences[i]);
 }
 
 //////////////////////////////////////////////////////////////////////////

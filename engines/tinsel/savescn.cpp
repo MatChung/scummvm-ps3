@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/savescn.cpp $
- * $Id: savescn.cpp 50924 2010-07-16 03:14:03Z eriktorbjorn $
+ * $Id: savescn.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * Save and restore scene and game.
  */
@@ -81,6 +81,8 @@ extern int	restoreCD;
 extern SRSTATE SRstate;
 
 //----------------- LOCAL GLOBAL DATA --------------------
+
+// FIXME: Avoid non-const global vars
 
 static bool ASceneIsSaved = false;
 

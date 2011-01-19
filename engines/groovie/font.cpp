@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/groovie/font.cpp $
- * $Id: font.cpp 53874 2010-10-27 14:31:20Z jvprat $
+ * $Id: font.cpp 55150 2011-01-07 17:44:20Z jvprat $
  *
  */
 
@@ -71,8 +71,10 @@ bool T7GFont::load(Common::SeekableReadStream &stream) {
 	for (int i = 0; (i < numGlyphs) && !stream.eos(); i++) {
 		// Verify we're at the expected stream position
 		if (stream.pos() != glyphOffsets[i]) {
+			uint16 offset = glyphOffsets[i];
+			delete[] glyphOffsets;
 			error("Groovie::T7GFont: Glyph %d starts at %d but the current "
-				"offset is %d", i, glyphOffsets[i], stream.pos());
+				"offset is %d", i, offset, stream.pos());
 			return false;
 		}
 

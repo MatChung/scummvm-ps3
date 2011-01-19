@@ -19,13 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/video/seq_decoder.cpp $
- * $Id: seq_decoder.cpp 51725 2010-08-04 08:25:05Z fingolfin $
+ * $Id: seq_decoder.cpp 54927 2010-12-16 01:35:13Z mthreepwood $
  *
  */
 
 #include "common/debug.h"
 #include "common/endian.h"
 #include "common/archive.h"
+#include "common/stream.h"
 #include "common/system.h"
 #include "common/util.h"
 
@@ -107,7 +108,7 @@ void SeqDecoder::close() {
 	reset();
 }
 
-Graphics::Surface *SeqDecoder::decodeNextFrame() {
+const Graphics::Surface *SeqDecoder::decodeNextFrame() {
 	int16 frameWidth = _fileStream->readUint16LE();
 	int16 frameHeight = _fileStream->readUint16LE();
 	int16 frameLeft = _fileStream->readUint16LE();

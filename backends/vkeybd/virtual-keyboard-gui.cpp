@@ -19,9 +19,11 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/vkeybd/virtual-keyboard-gui.cpp $
-* $Id: virtual-keyboard-gui.cpp 47118 2010-01-07 15:07:36Z marcus_c $
+* $Id: virtual-keyboard-gui.cpp 54573 2010-11-29 16:18:43Z fingolfin $
 *
 */
+
+#include "common/scummsys.h"
 
 #ifdef ENABLE_VKEYBD
 
@@ -29,7 +31,7 @@
 
 #include "graphics/cursorman.h"
 #include "graphics/fontman.h"
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 
 namespace Common {
 

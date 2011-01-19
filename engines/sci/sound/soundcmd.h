@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/sound/soundcmd.h $
- * $Id: soundcmd.h 53986 2010-10-31 20:57:50Z thebluegr $
+ * $Id: soundcmd.h 54457 2010-11-24 14:21:31Z thebluegr $
  *
  */
 
@@ -94,7 +94,7 @@ public:
 	reg_t kDoSoundUpdate(int argc, reg_t *argv, reg_t acc);
 	reg_t kDoSoundUpdateCues(int argc, reg_t *argv, reg_t acc);
 	reg_t kDoSoundSendMidi(int argc, reg_t *argv, reg_t acc);
-	reg_t kDoSoundReverb(int argc, reg_t *argv, reg_t acc);
+	reg_t kDoSoundGlobalReverb(int argc, reg_t *argv, reg_t acc);
 	reg_t kDoSoundSetHold(int argc, reg_t *argv, reg_t acc);
 	reg_t kDoSoundDummy(int argc, reg_t *argv, reg_t acc);
 	reg_t kDoSoundGetAudioCapability(int argc, reg_t *argv, reg_t acc);

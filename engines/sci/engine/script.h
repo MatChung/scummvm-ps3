@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/script.h $
- * $Id: script.h 54077 2010-11-04 23:19:23Z thebluegr $
+ * $Id: script.h 54510 2010-11-27 18:08:47Z thebluegr $
  *
  */
 
@@ -137,12 +137,6 @@ public:
 	Object *scriptObjInit(reg_t obj_pos, bool fullObjectInit = true);
 
 	/**
-	 * Removes a script object
-	 * @param obj_pos	Location (segment, offset) of the object.
-	 */
-	void scriptObjRemove(reg_t obj_pos);
-
-	/**
 	 * Initializes the script's local variables
 	 * @param segMan	A reference to the segment manager
 	 */
@@ -206,10 +200,11 @@ public:
 	 * Validate whether the specified public function is exported by
 	 * the script in the specified segment.
 	 * @param pubfunct		Index of the function to validate
+	 * @param relocate              Decide whether to relocate this public function or not
 	 * @return				NULL if the public function is invalid, its
 	 * 						offset into the script's segment otherwise
 	 */
-	uint16 validateExportFunc(int pubfunct);
+	uint16 validateExportFunc(int pubfunct, bool relocate);
 
 	/**
 	 * Marks the script as deleted.
@@ -243,17 +238,45 @@ public:
 	 */
 	byte *findBlockSCI0(int type, int startBlockIndex = -1);
 
+	/**
+	 * Syncs the string heap of a script. Used when saving/loading.
+	 */
+	void syncStringHeap(Common::Serializer &ser);
+
+	/**
+	 * Resolve a relocation in an SCI3 script
+	 * @param offset        The offset to relocate from
+	 */
+	int relocateOffsetSci3(uint32 offset);
+
+	/**
+	 * Gets an offset to the beginning of the code block in a SCI3 script
+	 */
+	int getCodeBlockOffset() { return READ_SCI11ENDIAN_UINT32(_buf); }
+
 private:
 	/**
-	 * Processes a relocation block witin a script
+	 * Processes a relocation block within a SCI0-SCI2.1 script
 	 *  This function is idempotent, but it must only be called after all
 	 *  objects have been instantiated, or a run-time error will occur.
 	 * @param obj_pos	Location (segment, offset) of the block
-	 * @return			Location of the relocation block
 	 */
-	void relocate(reg_t block);
+	void relocateSci0Sci21(reg_t block);
+
+	/**
+	 * Processes a relocation block within a SCI3 script
+	 *  This function is idempotent, but it must only be called after all
+	 *  objects have been instantiated, or a run-time error will occur.
+	 * @param obj_pos	Location (segment, offset) of the block
+	 */
+	void relocateSci3(reg_t block);
 
 	bool relocateLocal(SegmentId segment, int location);
+
+	/**
+	 * Gets a pointer to the beginning of the objects in a SCI3 script
+	 */
+	const byte *getSci3ObjectsPointer();
 
 	/**
 	 * Initializes the script's objects (SCI0)
@@ -263,13 +286,18 @@ private:
 	void initialiseObjectsSci0(SegManager *segMan, SegmentId segmentId);
 
 	/**
-	 * Initializes the script's objects (SCI1.1+)
+	 * Initializes the script's objects (SCI1.1 - SCI2.1)
 	 * @param segMan	A reference to the segment manager
 	 * @param segmentId	The script's segment id
 	 */
 	void initialiseObjectsSci11(SegManager *segMan, SegmentId segmentId);
 
-	void syncHeap(Common::Serializer &ser);
+	/**
+	 * Initializes the script's objects (SCI3)
+	 * @param segMan	A reference to the segment manager
+	 * @param segmentId	The script's segment id
+	 */
+	void initialiseObjectsSci3(SegManager *segMan, SegmentId segmentId);
 };
 
 } // End of namespace Sci

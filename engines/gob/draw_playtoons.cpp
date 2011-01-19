@@ -19,12 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/draw_playtoons.cpp $
- * $Id: draw_playtoons.cpp 53464 2010-10-15 04:37:44Z drmccoy $
+ * $Id: draw_playtoons.cpp 54718 2010-12-01 20:17:31Z strangerke $
  *
  */
 
 #include "common/endian.h"
-#include "graphics/cursorman.h"
 
 #include "gob/draw.h"
 #include "gob/game.h"

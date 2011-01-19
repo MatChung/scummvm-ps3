@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/assets.cpp $
- * $Id: assets.cpp 54047 2010-11-03 09:44:03Z dreammaster $
+ * $Id: assets.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -27,6 +27,8 @@
 #include "m4/globals.h"
 #include "m4/compression.h"
 #include "m4/graphics.h"
+
+#include "common/memstream.h"
 
 namespace M4 {
 
@@ -382,7 +384,7 @@ void SpriteAsset::loadStreamingFrame(M4Sprite *frame, int frameIndex, int destX,
 	loadFrameHeader(frameHeader);
 
 	if (frameHeader.w > 0 && frameHeader.h > 0) {
-		Common::MemoryReadStream *frameData = _stream->readStream(getFrameSize(frameIndex));
+		Common::SeekableReadStream *frameData = _stream->readStream(getFrameSize(frameIndex));
 		if (frameHeader.stream) {
 			frame->loadDeltaRle(frameData, destX - frameHeader.x, destY - frameHeader.y);
 		} else {

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/util.h $
- * $Id: util.h 53931 2010-10-30 00:32:45Z fingolfin $
+ * $Id: util.h 54517 2010-11-28 02:12:53Z lordhoto $
  */
 
 #ifndef COMMON_UTIL_H
@@ -133,6 +133,7 @@ enum Language {
 
 struct LanguageDescription {
 	const char *code;
+	//const char *unixLocale;
 	const char *description;
 	Common::Language id;
 };
@@ -144,6 +145,10 @@ extern const LanguageDescription g_languages[];
 extern Language parseLanguage(const String &str);
 extern const char *getLanguageCode(Language id);
 extern const char *getLanguageDescription(Language id);
+
+// locale <-> Language conversion is disabled, since it is not used currently
+/*extern const char *getLanguageLocale(Language id);
+extern Language parseLanguageFromLocale(const char *locale);*/
 
 /**
  * List of game platforms. Specifying a platform for a target can be used to

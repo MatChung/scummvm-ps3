@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/imuse_digi/dimuse_bndmgr.h $
- * $Id: dimuse_bndmgr.h 27041 2007-06-01 12:18:33Z aquadran $
+ * $Id: dimuse_bndmgr.h 54434 2010-11-23 22:25:10Z fingolfin $
  */
 
 #ifndef SCUMM_IMUSE_DIGI_BUNDLE_MGR_H
@@ -101,7 +101,7 @@ public:
 
 	bool open(const char *filename, bool &compressed, bool errorFlag = false);
 	void close();
-	Common::File *getFile(const char *filename, int32 &offset, int32 &size);
+	Common::SeekableReadStream *getFile(const char *filename, int32 &offset, int32 &size);
 	int32 decompressSampleByName(const char *name, int32 offset, int32 size, byte **compFinal, bool headerOutside);
 	int32 decompressSampleByIndex(int32 index, int32 offset, int32 size, byte **compFinal, int header_size, bool headerOutside);
 	int32 decompressSampleByCurIndex(int32 offset, int32 size, byte **compFinal, int headerSize, bool headerOutside);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/draw.h $
- * $Id: draw.h 52947 2010-09-30 13:02:16Z drmccoy $
+ * $Id: draw.h 55271 2011-01-16 22:28:49Z drmccoy $
  *
  */
 
@@ -172,6 +172,8 @@ public:
 	void blitInvalidated();
 	void setPalette();
 	void clearPalette();
+
+	uint32 getColor(uint8 index) const;
 
 	void dirtiedRect(int16 surface, int16 left, int16 top, int16 right, int16 bottom);
 	void dirtiedRect(SurfacePtr surface, int16 left, int16 top, int16 right, int16 bottom);

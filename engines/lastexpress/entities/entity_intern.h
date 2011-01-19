@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/entities/entity_intern.h $
- * $Id: entity_intern.h 53880 2010-10-27 19:19:22Z littleboy $
+ * $Id: entity_intern.h 54196 2010-11-11 06:18:23Z littleboy $
  *
  */
 
@@ -83,7 +83,7 @@ void class::setup_##name() { \
 }
 
 #define BEGIN_SETUP(class, name, index, type) \
-	_engine->getGameLogic()->getGameState()->getGameSavePoints()->setCallback(_entityIndex, new ENTITY_CALLBACK(class, name, this)); \
+	_engine->getGameLogic()->getGameState()->getGameSavePoints()->setCallback(_entityIndex, _callbacks[index]); \
 	_data->setCurrentCallback(index); \
 	_data->resetCurrentParameters<type>();
 

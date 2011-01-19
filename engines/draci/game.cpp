@@ -19,13 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/draci/game.cpp $
- * $Id: game.cpp 53738 2010-10-23 15:46:50Z fingolfin $
+ * $Id: game.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "common/keyboard.h"
 #include "common/serializer.h"
-#include "common/stream.h"
+#include "common/memstream.h"
 #include "common/system.h"
 #include "common/util.h"
 

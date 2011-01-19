@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/console.cpp $
- * $Id: console.cpp 54123 2010-11-07 17:18:59Z tdhs $
+ * $Id: console.cpp 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -32,12 +32,6 @@ ToonConsole::ToonConsole(ToonEngine *vm) : GUI::Debugger(), _vm(vm) {
 }
 
 ToonConsole::~ToonConsole() {
-}
-
-void ToonConsole::preEnter() {
-}
-
-void ToonConsole::postEnter() {
 }
 
 } // End of namespace Toon

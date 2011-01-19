@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/riven.cpp $
- * $Id: riven.cpp 52692 2010-09-12 21:35:49Z criezy $
+ * $Id: riven.cpp 55312 2011-01-18 20:30:16Z mthreepwood $
  *
  */
 
@@ -29,13 +29,16 @@
 #include "common/keyboard.h"
 #include "common/translation.h"
 
+#include "mohawk/cursors.h"
 #include "mohawk/graphics.h"
 #include "mohawk/resource.h"
 #include "mohawk/riven.h"
 #include "mohawk/riven_external.h"
 #include "mohawk/riven_saveload.h"
 #include "mohawk/dialogs.h"
+#include "mohawk/sound.h"
 #include "mohawk/video.h"
+#include "mohawk/console.h"
 
 namespace Mohawk {
 
@@ -111,6 +114,7 @@ Common::Error MohawkEngine_Riven::run() {
 	_externalScriptHandler = new RivenExternal(this);
 	_optionsDialog = new RivenOptionsDialog(this);
 	_scriptMan = new RivenScriptManager(this);
+	_cursor = new RivenCursorManager();
 
 	_rnd = new Common::RandomSource();
 	g_eventRec.registerRandomSource(*_rnd, "riven");
@@ -119,10 +123,12 @@ Common::Error MohawkEngine_Riven::run() {
 
 	// Open extras.mhk for common images
 	_extrasFile = new MohawkArchive();
-	_extrasFile->open("extras.mhk");
+
+	if (!_extrasFile->open("extras.mhk"))
+		error("Could not open extras.mhk");
 
 	// Start at main cursor
-	_gfx->changeCursor(kRivenMainCursor);
+	_cursor->setCursor(kRivenMainCursor);
 
 	// Let's begin, shall we?
 	if (getFeatures() & GF_DEMO) {
@@ -154,7 +160,7 @@ void MohawkEngine_Riven::handleEvents() {
 
 	// Update background videos and the water effect
 	bool needsUpdate = _gfx->runScheduledWaterEffects();
-	needsUpdate |= _video->updateBackgroundMovies();
+	needsUpdate |= _video->updateMovies();
 
 	while (_eventMan->pollEvent(event)) {
 		switch (event.type) {
@@ -264,6 +270,9 @@ void MohawkEngine_Riven::changeToStack(uint16 n) {
 	_video->stopVideos();
 	_video->clearMLST();
 
+	// Clear the graphics cache; images aren't used across stack boundaries
+	_gfx->clearCache();
+
 	// Clear the old stack files out
 	for (uint32 i = 0; i < _mhk.size(); i++)
 		delete _mhk[i];
@@ -275,11 +284,12 @@ void MohawkEngine_Riven::changeToStack(uint16 n) {
 	// Load any file that fits the patterns
 	for (int i = 0; i < ARRAYSIZE(endings); i++) {
 		Common::String filename = Common::String(prefix) + endings[i];
-		if (Common::File::exists(filename)) {
-			MohawkArchive *mhk = new MohawkArchive();
-			mhk->open(filename);
+
+		MohawkArchive *mhk = new MohawkArchive();
+		if (mhk->open(filename))
 			_mhk.push_back(mhk);
-		}
+		else
+			delete mhk;
 	}
 
 	// Make sure we have loaded files
@@ -316,6 +326,10 @@ struct RivenSpecialChange {
 void MohawkEngine_Riven::changeToCard(uint16 dest) {
 	_curCard = dest;
 	debug (1, "Changing to card %d", _curCard);
+
+	// Clear the graphics cache (images typically aren't used
+	// on different cards).
+	_gfx->clearCache();
 
 	if (!(getFeatures() & GF_DEMO)) {
 		for (byte i = 0; i < 13; i++)
@@ -363,7 +377,7 @@ void MohawkEngine_Riven::refreshCard() {
 void MohawkEngine_Riven::loadCard(uint16 id) {
 	// NOTE: The card scripts are cleared by the RivenScriptManager automatically.
 
-	Common::SeekableReadStream* inStream = getRawData(ID_CARD, id);
+	Common::SeekableReadStream* inStream = getResource(ID_CARD, id);
 
 	_cardData.name = inStream->readSint16BE();
 	_cardData.zipModePlace = inStream->readUint16BE();
@@ -390,7 +404,7 @@ void MohawkEngine_Riven::loadHotspots(uint16 id) {
 	
 	// NOTE: The hotspot scripts are cleared by the RivenScriptManager automatically.
 
-	Common::SeekableReadStream *inStream = getRawData(ID_HSPT, id);
+	Common::SeekableReadStream *inStream = getResource(ID_HSPT, id);
 
 	_hotspotCount = inStream->readUint16BE();
 	_hotspots = new RivenHotspot[_hotspotCount];
@@ -468,11 +482,11 @@ void MohawkEngine_Riven::checkHotspotChange() {
 	if (foundHotspot) {
 		if (_curHotspot != hotspotIndex) {
 			_curHotspot = hotspotIndex;
-			_gfx->changeCursor(_hotspots[_curHotspot].mouse_cursor);
+			_cursor->setCursor(_hotspots[_curHotspot].mouse_cursor);
 		}
 	} else {
 		_curHotspot = -1;
-		_gfx->changeCursor(kRivenMainCursor);
+		_cursor->setCursor(kRivenMainCursor);
 	}
 }
 
@@ -559,11 +573,11 @@ void MohawkEngine_Riven::checkInventoryClick() {
 }
 
 Common::SeekableReadStream *MohawkEngine_Riven::getExtrasResource(uint32 tag, uint16 id) {
-	return _extrasFile->getRawData(tag, id);
+	return _extrasFile->getResource(tag, id);
 }
 
 Common::String MohawkEngine_Riven::getName(uint16 nameResource, uint16 nameID) {
-	Common::SeekableReadStream* nameStream = getRawData(ID_NAME, nameResource);
+	Common::SeekableReadStream* nameStream = getResource(ID_NAME, nameResource);
 	uint16 fieldCount = nameStream->readUint16BE();
 	uint16* stringOffsets = new uint16[fieldCount];
 	Common::String name;
@@ -591,7 +605,7 @@ Common::String MohawkEngine_Riven::getName(uint16 nameResource, uint16 nameID) {
 
 uint16 MohawkEngine_Riven::matchRMAPToCard(uint32 rmapCode) {
 	uint16 index = 0;
-	Common::SeekableReadStream *rmapStream = getRawData(ID_RMAP, 1);
+	Common::SeekableReadStream *rmapStream = getResource(ID_RMAP, 1);
 
 	for (uint16 i = 1; rmapStream->pos() < rmapStream->size(); i++) {
 		uint32 code = rmapStream->readUint32BE();
@@ -608,7 +622,7 @@ uint16 MohawkEngine_Riven::matchRMAPToCard(uint32 rmapCode) {
 }
 
 uint32 MohawkEngine_Riven::getCurCardRMAP() {
-	Common::SeekableReadStream *rmapStream = getRawData(ID_RMAP, 1);
+	Common::SeekableReadStream *rmapStream = getResource(ID_RMAP, 1);
 	rmapStream->seek(_curCard * 4);
 	uint32 rmapCode = rmapStream->readUint32BE();
 	delete rmapStream;
@@ -638,7 +652,7 @@ void MohawkEngine_Riven::delayAndUpdate(uint32 ms) {
 
 	while (_system->getMillis() < startTime + ms && !shouldQuit()) {
 		bool needsUpdate = _gfx->runScheduledWaterEffects();
-		needsUpdate |= _video->updateBackgroundMovies();
+		needsUpdate |= _video->updateMovies();
 
 		Common::Event event;
 		while (_system->getEventManager()->pollEvent(event))

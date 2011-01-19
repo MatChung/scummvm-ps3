@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/sysvar.cpp $
- * $Id: sysvar.cpp 45617 2009-11-02 21:56:29Z fingolfin $
+ * $Id: sysvar.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * System variable handling.
  */
@@ -41,6 +41,8 @@ typedef enum { DOS_PC, WIN_PC, APPLE_MAC, SONY_PSX, SEGA_SATURN } platform;
 extern int NewestSavedGame();
 
 //----------------- LOCAL GLOBAL DATA --------------------
+
+// FIXME: Avoid non-const global vars
 
 static int systemVars[SV_TOPVALID] = {
 
@@ -104,7 +106,7 @@ static int systemVars[SV_TOPVALID] = {
 		0		// ISV_GHOST_COLOUR
 };
 
-static SCNHANDLE systemStrings[SS_MAX_VALID];
+static SCNHANDLE systemStrings[SS_MAX_VALID];	// FIXME: Avoid non-const global vars
 
 //static bool bFlagNoBlocking = false;
 

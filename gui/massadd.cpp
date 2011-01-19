@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/massadd.cpp $
- * $Id: massadd.cpp 49896 2010-06-15 23:45:13Z lordhoto $
+ * $Id: massadd.cpp 54265 2010-11-16 10:19:01Z fingolfin $
  */
 
 #include "engines/metaengine.h"
@@ -31,9 +31,9 @@
 
 #include "gui/launcher.h"	// For addGameToConf()
 #include "gui/massadd.h"
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 #include "gui/widget.h"
-#include "gui/ListWidget.h"
+#include "gui/widgets/list.h"
 
 
 namespace GUI {

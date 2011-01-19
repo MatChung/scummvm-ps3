@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/codecs/qtrle.cpp $
- * $Id: qtrle.cpp 49165 2010-05-23 18:33:55Z mthreepwood $
+ * $Id: qtrle.cpp 55095 2011-01-02 14:57:49Z fuzzie $
  *
  */
 
@@ -354,7 +354,7 @@ void QTRLEDecoder::decode32(Common::SeekableReadStream *stream, uint32 rowPtr, u
 	}
 }
 
-Surface *QTRLEDecoder::decodeImage(Common::SeekableReadStream *stream) {
+const Surface *QTRLEDecoder::decodeImage(Common::SeekableReadStream *stream) {
 	uint16 start_line = 0;
 	uint16 height = _surface->h;
 
@@ -415,6 +415,7 @@ Surface *QTRLEDecoder::decodeImage(Common::SeekableReadStream *stream) {
 
 QTRLEDecoder::~QTRLEDecoder() {
 	_surface->free();
+	delete _surface;
 }
 
 } // End of namespace Graphics

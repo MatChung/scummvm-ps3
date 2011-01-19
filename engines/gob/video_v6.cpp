@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/video_v6.cpp $
- * $Id: video_v6.cpp 52949 2010-09-30 13:03:22Z drmccoy $
+ * $Id: video_v6.cpp 55283 2011-01-18 00:56:48Z sylvaintv $
  *
  */
 
@@ -63,86 +63,6 @@ char Video_v6::spriteUncompressor(byte *sprBuf, int16 srcWidth, int16 srcHeight,
 	warning("Urban Stub: spriteUncompressor(), sprBuf[0,1,2] = %d,%d,%d",
 			sprBuf[0], sprBuf[1], sprBuf[2]);
 	return 1;
-}
-
-/*
-void Video_v6::fillRect(Surface &dest,
-		int16 left, int16 top, int16 right, int16 bottom, int16 color) {
-
-	if (!(color & 0xFF00)) {
-		Video::fillRect(dest, left, top, right, bottom, color);
-		return;
-	}
-
-	if (!(color & 0x0100)) {
-		Video::fillRect(dest, left, top, right, bottom, color);
-		return;
-	}
-
-	if (_doRangeClamp) {
-		if (left > right)
-			SWAP(left, right);
-		if (top > bottom)
-			SWAP(top, bottom);
-
-		if ((left >= dest.getWidth()) || (right < 0) ||
-		    (top >= dest.getHeight()) || (bottom < 0))
-			return;
-
-		left = CLIP(left, (int16)0, (int16)(dest.getWidth() - 1));
-		top = CLIP(top, (int16)0, (int16)(dest.getHeight() - 1));
-		right = CLIP(right, (int16)0, (int16)(dest.getWidth() - 1));
-		bottom = CLIP(bottom, (int16)0, (int16)(dest.getHeight() - 1));
-	}
-
-	byte strength = 16 - (((uint16) color) >> 12);
-	shadeRect(dest, left, top, right, bottom, color, strength);
-}
-*/
-
-void Video_v6::shadeRect(Surface &dest,
-		int16 left, int16 top, int16 right, int16 bottom, byte color, byte strength) {
-
-	warning("TODO: Video_v6::shadeRect()");
-
-	/*
-	int width  = right  - left + 1;
-	int height = bottom - top  + 1;
-	int dWidth = dest.getWidth();
-	byte *vidMem = dest.getVidMem() + dWidth * top + left;
-
-	byte sY, sU, sV;
-	//_palLUT->getEntry(color, sY, sU, sV);
-
-	int shadeY = sY * (16 - strength);
-	int shadeU = sU * (16 - strength);
-	int shadeV = sV * (16 - strength);
-
-	Graphics::SierraLight *dither =
-		new Graphics::SierraLight(width, _palLUT);
-
-	for (int i = 0; i < height; i++) {
-		byte *d = vidMem;
-
-		for (int j = 0; j < width; j++) {
-			byte dY, dU, dV;
-			byte dC = *d;
-
-			_palLUT->getEntry(dC, dY, dU, dV);
-
-			dY = CLIP<int>((shadeY + strength * dY) >> 4, 0, 255);
-			dU = CLIP<int>((shadeU + strength * dU) >> 4, 0, 255);
-			dV = CLIP<int>((shadeV + strength * dV) >> 4, 0, 255);
-
-			*d++ = dither->dither(dY, dU, dV, j);
-		}
-
-		dither->nextLine();
-		vidMem += dWidth;
-	}
-
-	delete dither;
-	*/
 }
 
 void Video_v6::drawPacked(const byte *sprBuf, int16 x, int16 y, Surface &surfDesc) {
@@ -206,28 +126,65 @@ void Video_v6::drawYUV(Surface &destDesc, int16 x, int16 y,
 	for (int i = 0; i < height; i++) {
 		Pixel dstRow = dst;
 
-		const byte *srcY = dataY +  i       *  dataWidth;
-		const byte *srcU = dataU + (i >> 2) * (dataWidth >> 2);
-		const byte *srcV = dataV + (i >> 2) * (dataWidth >> 2);
+		int nextChromaLine = (i < ((height - 1) & ~3) ) ? dataWidth : 0;
+	
+		for (int j = 0; j < width; j++, dstRow++) {
 
-		for (int j = 0; j < (width >> 2); j++, srcU++, srcV++) {
-			for (int n = 0; n < 4; n++, dstRow++, srcY++) {
-				byte dY = *srcY << 1, dU = *srcU << 1, dV = *srcV << 1;
+			int nextChromaColumn = (j < ((width - 1) & ~3)) ? 1 : 0;
 
-				byte r, g, b;
-				Graphics::YUV2RGB(dY, dU, dV, r, g, b);
+			// Get (7bit) Y data. It is at full res, does not need to be interpolated
+			byte dY = dataY[j] << 1;
 
-				if (dY != 0) {
-					uint32 c = pixelFormat.RGBToColor(r, g, b);
+			// do linear interpolation on chroma values (7bits)
+			// to avoid blockiness
+			byte dU0 = dataU[j >> 2];
+			byte dV0 = dataV[j >> 2];
 
-					dstRow.set((c == 0) ? 1 : c);
-				} else
-					dstRow.set(0);
+			byte dU1 = dataU[(j >> 2) + nextChromaColumn];
+			byte dV1 = dataV[(j >> 2) + nextChromaColumn];
 
-			}
+			byte dU2 = dataU[(j + nextChromaLine) >> 2];
+			byte dV2 = dataV[(j + nextChromaLine) >> 2];
+
+			byte dU3 = dataU[((j + nextChromaLine) >> 2) + nextChromaColumn];
+			byte dV3 = dataV[((j + nextChromaLine) >> 2) + nextChromaColumn];
+
+			byte tX = j & 3;
+			byte tY = i & 3;
+			byte invtX = 4 - tX;
+			byte invtY = 4 - tY;
+
+			int16 dUX1 = dU0 * invtX + dU1 * tX;
+			int16 dUX2 = dU2 * invtX + dU3 * tX;
+			byte dU = (dUX1 * invtY + dUX2 * tY) >> 3;
+
+			int16 dVY1 = dV0 * invtX + dV1 * tX;
+			int16 dVY2 = dV2 * invtX + dV3 * tX;
+			byte dV = (dVY1 * invtY + dVY2 * tY) >> 3;
+
+			byte r, g, b;
+			Graphics::YUV2RGB(dY, dU, dV, r, g, b);
+
+			if (dY != 0) {
+				// Solid pixel
+				uint32 c = pixelFormat.RGBToColor(r, g, b);
+
+				// If the solid pixel's value is 0, we'll fudge it to 1
+				dstRow.set((c == 0) ? 1 : c);
+			} else
+				// Transparent pixel, we'll use pixel value 0
+				dstRow.set(0);
+
 		}
 
-		dst += destDesc.getWidth();
+		dst   += destDesc.getWidth();
+		dataY += dataWidth;
+
+		if ((i & 3) == 3) {
+			// Next line of chroma data
+			dataU += dataWidth >> 2;
+			dataV += dataWidth >> 2;
+		}
 	}
 
 }

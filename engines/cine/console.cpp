@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cine/console.cpp $
- * $Id: console.cpp 54115 2010-11-07 15:02:41Z tdhs $
+ * $Id: console.cpp 55189 2011-01-09 18:12:30Z tdhs $
  *
  */
 
@@ -28,16 +28,22 @@
 
 namespace Cine {
 
+bool labyrinthCheat;
+
 CineConsole::CineConsole(CineEngine *vm) : GUI::Debugger(), _vm(vm) {
+	DCmd_Register("labyrinthCheat",	WRAP_METHOD(CineConsole, Cmd_LabyrinthCheat));
+
+	labyrinthCheat = false;
 }
 
 CineConsole::~CineConsole() {
 }
 
-void CineConsole::preEnter() {
-}
-
-void CineConsole::postEnter() {
+// Activate Cheat during Scene 6 Labyrinth chased by Guards in Otto's Mansion
+// This puzzle is hard, especially without save/load so this will aid playtesting.
+bool CineConsole::Cmd_LabyrinthCheat(int argc, const char **argv) {
+	labyrinthCheat = true;
+	return true;
 }
 
 } // End of namespace Cine

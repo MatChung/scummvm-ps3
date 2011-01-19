@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/sci.h $
- * $Id: sci.h 53920 2010-10-29 10:58:54Z thebluegr $
+ * $Id: sci.h 55005 2010-12-22 13:58:28Z thebluegr $
  *
  */
 
@@ -166,7 +166,7 @@ enum SciGameId {
 	GID_QFG4,
 	GID_RAMA,
 	GID_SHIVERS,
-	GID_SHIVERS2,
+	//GID_SHIVERS2,	// Not SCI
 	GID_SLATER,
 	GID_SQ1,
 	GID_SQ3,
@@ -206,7 +206,6 @@ enum kLanguage {
 	K_LANG_PORTUGUESE = 351
 };
 
-
 class SciEngine : public Engine {
 	friend class Console;
 public:
@@ -224,6 +223,7 @@ public:
 	bool canLoadGameStateCurrently();
 	bool canSaveGameStateCurrently();
 	void syncSoundSettings();
+	void syncIngameAudioOptions();
 
 	const SciGameId &getGameId() const { return _gameId; }
 	const char *getGameIdStr() const;
@@ -231,6 +231,7 @@ public:
 	Common::Language getLanguage() const;
 	Common::Platform getPlatform() const;
 	bool isDemo() const;
+	bool isCD() const;
 	bool hasMacIconBar() const;
 
 	inline ResourceManager *getResMan() const { return _resMan; }

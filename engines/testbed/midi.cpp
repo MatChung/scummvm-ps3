@@ -19,11 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/testbed/midi.cpp $
- * $Id: midi.cpp 52973 2010-10-02 01:05:16Z sud03r $
+ * $Id: midi.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  */
 
 #include "common/archive.h"
 #include "common/events.h"
+#include "common/memstream.h"
 
 #include "graphics/cursorman.h"
 
@@ -34,7 +35,7 @@
 
 namespace Testbed {
 
-bool MidiTests::loadMusicInMemory(Common::MemoryWriteStreamDynamic *ws) {
+bool MidiTests::loadMusicInMemory(Common::WriteStream *ws) {
 	Common::SeekableReadStream *midiFile = SearchMan.createReadStreamForMember("music.mid");
 	if (!midiFile) {
 		Testsuite::logPrintf("Error! Can't open Midi music file, check game data directory for file music.mid\n");

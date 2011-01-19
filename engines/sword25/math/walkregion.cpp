@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/math/walkregion.cpp $
- * $Id: walkregion.cpp 53626 2010-10-19 21:03:33Z sev $
+ * $Id: walkregion.cpp 54551 2010-11-28 21:33:27Z fingolfin $
  *
  */
 
@@ -95,7 +95,7 @@ struct DijkstraNode {
 	typedef Container::iterator Iter;
 	typedef Container::const_iterator ConstIter;
 
-	DijkstraNode() : cost(Infinity), chosen(false) {}
+	DijkstraNode() : parentIter(), cost(Infinity), chosen(false) {}
 	ConstIter   parentIter;
 	int         cost;
 	bool        chosen;

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/gob.h $
- * $Id: gob.h 53484 2010-10-15 12:48:19Z fingolfin $
+ * $Id: gob.h 55261 2011-01-16 16:28:47Z drmccoy $
  *
  */
 
@@ -230,6 +230,8 @@ public:
 	bool is800x600() const;
 	bool isTrueColor() const;
 	bool isDemo() const;
+
+	void setTrueColor(bool trueColor);
 
 	GUI::Debugger *getDebugger() { return _console; }
 

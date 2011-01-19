@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/drew.h $
-* $Id: drew.h 53089 2010-10-08 22:45:28Z sev $
+* $Id: drew.h 54221 2010-11-13 01:15:37Z sylvaintv $
 *
 */
 
@@ -36,9 +36,8 @@ class ToonEngine;
 class CharacterDrew : public Character {
 public:
 	CharacterDrew(ToonEngine *vm);
-	virtual ~CharacterDrew(void);
+	virtual ~CharacterDrew();
 	bool setupPalette();
-	void setFacing(int32 facing);
 	void playStandingAnim();
 	void setPosition(int32 x, int32 y);
 	void update(int32 timeIncrement);

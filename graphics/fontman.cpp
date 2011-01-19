@@ -19,20 +19,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/fontman.cpp $
- * $Id: fontman.cpp 50448 2010-06-28 15:17:10Z sev $
+ * $Id: fontman.cpp 54258 2010-11-16 08:23:13Z fingolfin $
  */
 
 #include "graphics/fontman.h"
-//#include "gui/consolefont.h"
 
-DECLARE_SINGLETON(Graphics::FontManager)
+DECLARE_SINGLETON(Graphics::FontManager);
 
 namespace Graphics {
 
 const ScummFont *g_scummfont = 0;
-FORWARD_DECLARE_FONT(g_sysfont)
-FORWARD_DECLARE_FONT(g_sysfont_big)
-FORWARD_DECLARE_FONT(g_consolefont)
+FORWARD_DECLARE_FONT(g_sysfont);
+FORWARD_DECLARE_FONT(g_sysfont_big);
+FORWARD_DECLARE_FONT(g_consolefont);
 
 FontManager::FontManager() {
 	// This assert should *never* trigger, because
@@ -41,9 +40,9 @@ FontManager::FontManager() {
 	// reset to 0 in the desctructor of this class).
 	assert(g_scummfont == 0);
 	g_scummfont = new ScummFont;
-	INIT_FONT(g_sysfont)
-	INIT_FONT(g_sysfont_big)
-	INIT_FONT(g_consolefont)
+	INIT_FONT(g_sysfont);
+	INIT_FONT(g_sysfont_big);
+	INIT_FONT(g_consolefont);
 }
 
 FontManager::~FontManager() {

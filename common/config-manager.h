@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/config-manager.h $
- * $Id: config-manager.h 48417 2010-03-29 20:31:23Z fingolfin $
+ * $Id: config-manager.h 55060 2010-12-29 15:16:31Z Bluddy $
  *
  */
 
@@ -137,19 +137,32 @@ public:
 	void				addGameDomain(const String &domName);
 	void				removeGameDomain(const String &domName);
 	void				renameGameDomain(const String &oldName, const String &newName);
+
+	void				addMiscDomain(const String &domName);
+	void				removeMiscDomain(const String &domName);
+	void				renameMiscDomain(const String &oldName, const String &newName);
+
 	bool				hasGameDomain(const String &domName) const;
+	bool				hasMiscDomain(const String &domName) const;
+
 	const DomainMap &	getGameDomains() const { return _gameDomains; }
 	DomainMap &			getGameDomains() { return _gameDomains; }
 
+	static void			defragment();	// move in memory to reduce fragmentation
+	void 				copyFrom(ConfigManager &source);
+	
 private:
 	friend class Singleton<SingletonBaseType>;
 	ConfigManager();
 
 	void			loadFromStream(SeekableReadStream &stream);
+	void			addDomain(const Common::String &domainName, const Domain &domain);
 	void			writeDomain(WriteStream &stream, const String &name, const Domain &domain);
+	void			renameDomain(const String &oldName, const String &newName, DomainMap &map);
 
 	Domain			_transientDomain;
 	DomainMap		_gameDomains;
+	DomainMap		_miscDomains;		// Any other domains
 	Domain			_appDomain;
 	Domain			_defaultsDomain;
 

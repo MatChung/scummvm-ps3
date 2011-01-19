@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/text.cpp $
-* $Id: text.cpp 53089 2010-10-08 22:45:28Z sev $
+* $Id: text.cpp 54185 2010-11-10 06:22:18Z tdhs $
 *
 */
 
@@ -27,14 +27,13 @@
 
 namespace Toon {
 
-
 TextResource::TextResource(ToonEngine *vm) : _vm(vm) {
 	_numTexts = 0;
-	_textData = 0;
+	_textData = NULL;
 }
 
 TextResource::~TextResource(void) {
-
+	delete[] _textData;
 }
 
 bool TextResource::loadTextResource(Common::String fileName) {
@@ -45,6 +44,7 @@ bool TextResource::loadTextResource(Common::String fileName) {
 	if (!data)
 		return false;
 
+	delete[] _textData;
 	_textData = new uint8[fileSize];
 	memcpy(_textData, data, fileSize);
 	_numTexts = READ_LE_UINT16(data);

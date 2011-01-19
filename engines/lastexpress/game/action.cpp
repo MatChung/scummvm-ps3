@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/action.cpp $
- * $Id: action.cpp 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: action.cpp 54201 2010-11-11 14:19:44Z littleboy $
  *
  */
 
@@ -383,7 +383,9 @@ Action::Action(LastExpressEngine *engine) : _engine(engine) {
 
 Action::~Action() {
 	for (int i = 0; i < (int)_actions.size(); i++)
-		delete _actions[i];
+		SAFE_DELETE(_actions[i]);
+
+	_actions.clear();
 
 	// Zero-out passed pointers
 	_engine = NULL;

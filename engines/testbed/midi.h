@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/testbed/midi.h $
- * $Id: midi.h 52973 2010-10-02 01:05:16Z sud03r $
+ * $Id: midi.h 54385 2010-11-19 17:03:07Z fingolfin $
  */
 
 #ifndef TESTBED_MIDI_H
@@ -36,7 +36,7 @@ namespace Testbed {
 namespace MidiTests {
 
 // Helper functions for MIDI tests
-bool loadMusicInMemory(Common::MemoryWriteStreamDynamic *ws);
+bool loadMusicInMemory(Common::WriteStream *ws);
 void waitForMusicToPlay(MidiParser *parser);
 
 // will contain function declarations for MIDI tests

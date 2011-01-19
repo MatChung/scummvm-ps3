@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/riven_vars.cpp $
- * $Id: riven_vars.cpp 52538 2010-09-05 00:48:38Z mthreepwood $
+ * $Id: riven_vars.cpp 55240 2011-01-14 15:40:46Z mthreepwood $
  *
  */
 
@@ -318,6 +318,7 @@ void MohawkEngine_Riven::initVars() {
 	*getVar("ogehnpage") = 1;
 	*getVar("bblrsw") = 1;
 	*getVar("ocage") = 1;
+	*getVar("jbeetle") = 1;
 
 	// Randomize the telescope combination
 	uint32 *teleCombo = getVar("tcorrectorder");

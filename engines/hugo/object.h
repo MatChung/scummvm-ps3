@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/object.h $
- * $Id: object.h 53945 2010-10-30 16:04:43Z strangerke $
+ * $Id: object.h 55318 2011-01-19 00:49:49Z strangerke $
  *
  */
 
@@ -36,7 +36,7 @@
 #include "common/file.h"
 
 #define MAXOBJECTS      128                         // Used in Update_images()
-#define BOUND(X, Y)      ((_vm->getBoundaryOverlay()[Y * XBYTES + X / 8] & (0x80 >> X % 8)) != 0)  // Boundary bit set
+#define BOUND(X, Y)     ((_vm->getBoundaryOverlay()[Y * XBYTES + X / 8] & (0x80 >> X % 8)) != 0)  // Boundary bit set
 
 namespace Hugo {
 
@@ -46,21 +46,29 @@ public:
 	virtual ~ObjectHandler();
 
 	object_t  *_objects;
+	uint16    _numObj;
 
+	virtual void homeIn(int objIndex1, int objIndex2, int8 objDx, int8 objDy) = 0;
 	virtual void moveObjects() = 0;
 	virtual void updateImages() = 0;
-	virtual void swapImages(int objNumb1, int objNumb2) = 0;
+	virtual void swapImages(int objIndex1, int objIndex2) = 0;
 
 	bool isCarrying(uint16 wordIndex);
 	bool findObjectSpace(object_t *obj, int16 *destx, int16 *desty);
 
+	int   calcMaxScore();
 	int16 findObject(uint16 x, uint16 y);
 	void freeObjects();
 	void loadObjectArr(Common::File &in);
 	void freeObjectArr();
+	void loadNumObj(Common::File &in);
 	void lookObject(object_t *obj);
-	void restoreSeq(object_t *obj);
+	void readObjectImages();
+	void restoreAllSeq();
+	void restoreObjects(Common::SeekableReadStream *in);
+	void saveObjects(Common::WriteStream *out);
 	void saveSeq(object_t *obj);
+	void setCarriedScreen(int screenNum);
 	void showTakeables();
 	void useObject(int16 objId);
 
@@ -87,6 +95,8 @@ public:
 protected:
 	HugoEngine *_vm;
 	uint16     _objCount;
+
+	void restoreSeq(object_t *obj);
 };
 
 class ObjectHandler_v1d : public ObjectHandler {
@@ -94,19 +104,10 @@ public:
 	ObjectHandler_v1d(HugoEngine *vm);
 	virtual ~ObjectHandler_v1d();
 
-	void moveObjects();
-	void updateImages();
-	void swapImages(int objNumb1, int objNumb2);
-};
-
-class ObjectHandler_v1w : public ObjectHandler {
-public:
-	ObjectHandler_v1w(HugoEngine *vm);
-	~ObjectHandler_v1w();
-
-	void moveObjects();
-	void updateImages();
-	void swapImages(int objNumb1, int objNumb2);
+	virtual void homeIn(int objIndex1, int objIndex2, int8 objDx, int8 objDy);
+	virtual void moveObjects();
+	virtual void updateImages();
+	virtual void swapImages(int objIndex1, int objIndex2);
 };
 
 class ObjectHandler_v2d : public ObjectHandler_v1d {
@@ -114,8 +115,10 @@ public:
 	ObjectHandler_v2d(HugoEngine *vm);
 	virtual ~ObjectHandler_v2d();
 
-	void moveObjects();
-	void updateImages();
+	virtual void moveObjects();
+	virtual void updateImages();
+
+	void homeIn(int objIndex1, int objIndex2, int8 objDx, int8 objDy);
 };
 
 class ObjectHandler_v3d : public ObjectHandler_v2d {
@@ -123,8 +126,18 @@ public:
 	ObjectHandler_v3d(HugoEngine *vm);
 	~ObjectHandler_v3d();
 
+	virtual void moveObjects();
+	virtual void swapImages(int objIndex1, int objIndex2);
+};
+
+class ObjectHandler_v1w : public ObjectHandler_v3d {
+public:
+	ObjectHandler_v1w(HugoEngine *vm);
+	~ObjectHandler_v1w();
+
 	void moveObjects();
-	void swapImages(int objNumb1, int objNumb2);
+	void updateImages();
+	void swapImages(int objIndex1, int objIndex2);
 };
 
 } // End of namespace Hugo

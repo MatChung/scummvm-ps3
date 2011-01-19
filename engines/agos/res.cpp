@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/res.cpp $
- * $Id: res.cpp 54001 2010-11-01 16:00:17Z fingolfin $
+ * $Id: res.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -27,6 +27,7 @@
 
 
 #include "common/file.h"
+#include "common/memstream.h"
 #include "common/util.h"
 
 #include "agos/agos.h"

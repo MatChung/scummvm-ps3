@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/intro_v3d.cpp $
- * $Id: intro_v3d.cpp 54018 2010-11-01 20:20:21Z strangerke $
+ * $Id: intro_v3d.cpp 55291 2011-01-18 08:32:10Z strangerke $
  *
  */
 
@@ -37,6 +37,7 @@
 #include "hugo/file.h"
 #include "hugo/display.h"
 #include "hugo/util.h"
+#include "hugo/sound.h"
 
 
 namespace Hugo {
@@ -50,8 +51,12 @@ void intro_v3d::preNewGame() {
 }
 
 void intro_v3d::introInit() {
-	_vm->_screen->loadFont(0);
 	_vm->_file->readBackground(_vm->_numScreens - 1); // display splash screen
+	surf.w = 320;
+	surf.h = 200;
+	surf.pixels = _vm->_screen->getFrontBuffer();
+	surf.pitch = 320;
+	surf.bytesPerPixel = 1;
 
 	char buffer[128];
 	if (_boot.registered)
@@ -59,11 +64,15 @@ void intro_v3d::introInit() {
 	else
 		sprintf(buffer,"%s  Shareware Version", COPYRIGHT);
 
-	_vm->_screen->writeStr(CENTER, 190, buffer, _TBROWN);
+	// TROMAN, size 10-5
+	if (!font.loadFromFON("TMSRB.FON", Graphics::WinFontDirEntry("Tms Rmn", 8)))
+		error("Unable to load font TMSRB.FON, face 'Tms Rmn', size 8");
+
+	font.drawString(&surf, buffer, 0, 190, 320, _TBROWN, Graphics::kTextAlignCenter);
 
 	if (scumm_stricmp(_boot.distrib, "David P. Gray")) {
 		sprintf(buffer, "Distributed by %s.", _boot.distrib);
-		_vm->_screen->writeStr(CENTER, 0, buffer, _TBROWN);
+		font.drawString(&surf, buffer, 0, 0, 320, _TBROWN, Graphics::kTextAlignCenter);
 	}
 
 	_vm->_screen->displayBackground();
@@ -73,6 +82,7 @@ void intro_v3d::introInit() {
 	_vm->_file->readBackground(22); // display screen MAP_3d
 	_vm->_screen->displayBackground();
 	introTicks = 0;
+	_vm->_sound->DOSSongPtr = _vm->_sound->DOSIntroSong;
 }
 
 /**
@@ -80,12 +90,11 @@ void intro_v3d::introInit() {
 * Called every tick.  Returns TRUE when complete
 */
 bool intro_v3d::introPlay() {
-	byte introSize = _vm->getIntroSize();
+	if (_vm->getGameStatus().skipIntroFl)
+		return true;
 
-//TODO : Add proper check of story mode
-//#if STORY
-	if (introTicks < introSize) {
-		_vm->_screen->writeStr(_vm->_introX[introTicks], _vm->_introY[introTicks] - DIBOFF_Y, "x", _TBRIGHTWHITE);
+	if (introTicks < _vm->getIntroSize()) {
+		font.drawString(&surf, ".", _vm->_introX[introTicks], _vm->_introY[introTicks] - DIBOFF_Y, 320, _TBRIGHTWHITE);
 		_vm->_screen->displayBackground();
 
 		// Text boxes at various times
@@ -102,10 +111,7 @@ bool intro_v3d::introPlay() {
 		}
 	}
 
-	return (++introTicks >= introSize);
-//#else //STORY
-//	return true;
-//#endif //STORY
+	return (++introTicks >= _vm->getIntroSize());
 }
 
 } // End of namespace Hugo

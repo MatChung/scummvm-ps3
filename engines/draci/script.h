@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/draci/script.h $
- * $Id: script.h 48359 2010-03-22 20:28:08Z fingolfin $
+ * $Id: script.h 54323 2010-11-18 16:38:03Z fingolfin $
  *
  */
 
@@ -30,7 +30,7 @@
 #include "common/stream.h"
 
 namespace Common {
-	class MemoryReadStream;
+	class ReadStream;
 }
 
 namespace Draci {
@@ -193,7 +193,7 @@ private:
 
 	void setupCommandList();
 	const GPL2Command *findCommand(byte num, byte subnum) const;
-	int handleMathExpression(Common::MemoryReadStream *reader) const;
+	int handleMathExpression(Common::ReadStream *reader) const;
 
 	DraciEngine *_vm;
 };

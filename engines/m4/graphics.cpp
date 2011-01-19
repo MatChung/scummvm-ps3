@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/graphics.cpp $
- * $Id: graphics.cpp 54047 2010-11-03 09:44:03Z dreammaster $
+ * $Id: graphics.cpp 55098 2011-01-03 11:36:39Z dreammaster $
  *
  */
 
@@ -740,7 +740,7 @@ void M4Surface::madsLoadBackground(int roomNumber, RGBList **palData) {
 
 void M4Surface::rexLoadBackground(Common::SeekableReadStream *source, RGBList **palData) {
 	MadsPack packData(source);
-	Common::MemoryReadStream *sourceUnc = packData.getItemStream(0);
+	Common::SeekableReadStream *sourceUnc = packData.getItemStream(0);
 
 	int sceneWidth = sourceUnc->readUint16LE();
 	int sceneHeight = sourceUnc->readUint16LE();
@@ -1042,7 +1042,6 @@ void Palette::setPalette(const RGB8 *colors, uint start, uint num) {
 
 void Palette::grabPalette(byte *colors, uint start, uint num) {
 	g_system->grabPalette(colors, start, num);
-	reset();
 }
 
 void Palette::setEntry(uint index, uint8 r, uint8 g, uint8 b) {

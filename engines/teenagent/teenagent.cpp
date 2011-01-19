@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/teenagent/teenagent.cpp $
- * $Id: teenagent.cpp 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: teenagent.cpp 54148 2010-11-08 23:07:42Z fingolfin $
  */
 
 #include "common/config-manager.h"
@@ -28,10 +28,11 @@
 #include "common/savefile.h"
 #include "common/system.h"
 
+#include "backends/audiocd/audiocd.h"
+
 #include "engines/advancedDetector.h"
 #include "engines/util.h"
 
-#include "sound/audiocd.h"
 #include "sound/mixer.h"
 #include "sound/decoders/raw.h"
 
@@ -983,7 +984,7 @@ void TeenAgentEngine::setMusic(byte id) {
 		}
 		byte track = track2cd[id - 1];
 		debug(0, "playing cd track %u", track);
-		Audio::AudioCDManager::instance().play(track, -1, 0, 0);
+		_system->getAudioCDManager()->play(track, -1, 0, 0);
 	} else if (music->load(id))
 		music->start();
 }

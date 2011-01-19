@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/sound/midiparser_sci.h $
- * $Id: midiparser_sci.h 52484 2010-09-01 19:20:17Z m_kiewitz $
+ * $Id: midiparser_sci.h 54478 2010-11-25 16:09:45Z thebluegr $
  *
  */
 
@@ -80,6 +80,7 @@ public:
 	void allNotesOff();
 
 	const byte *getMixedData() const { return _mixedData; }
+	byte getSongReverb();
 
 	void tryToOwnChannels();
 	void lostChannels();

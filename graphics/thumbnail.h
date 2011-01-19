@@ -19,16 +19,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/thumbnail.h $
- * $Id: thumbnail.h 51692 2010-08-03 13:15:34Z jvprat $
+ * $Id: thumbnail.h 54358 2010-11-19 01:37:04Z fingolfin $
  */
 
 #ifndef GRAPHICS_THUMBNAIL_H
 #define GRAPHICS_THUMBNAIL_H
 
-#include "common/stream.h"
-#include "graphics/surface.h"
+#include "common/scummsys.h"
+
+namespace Common{
+class SeekableReadStream;
+class WriteStream;
+}
 
 namespace Graphics {
+
+struct Surface;
 
 /**
  * Checks for presence of the thumbnail save header.

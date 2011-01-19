@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/fmv/theora_decoder.cpp $
- * $Id: theora_decoder.cpp 54045 2010-11-03 00:19:28Z fingolfin $
+ * $Id: theora_decoder.cpp 55077 2010-12-31 15:19:42Z eriktorbjorn $
  *
  */
 
@@ -225,7 +225,7 @@ bool TheoraDecoder::load(Common::SeekableReadStream *stream) {
 		switch (_theoraInfo.colorspace){
 		case TH_CS_UNSPECIFIED:
 			/* nothing to report */
-			break;;
+			break;
 		case TH_CS_ITU_REC_470M:
 			debug(1, "  encoder specified ITU Rec 470M (NTSC) color.");
 			break;
@@ -329,7 +329,7 @@ void TheoraDecoder::close() {
 	reset();
 }
 
-Graphics::Surface *TheoraDecoder::decodeNextFrame() {
+const Graphics::Surface *TheoraDecoder::decodeNextFrame() {
 	int i, j;
 
 //	_stateFlag = false; // playback has not begun

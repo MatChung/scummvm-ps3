@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/data/snd.h $
- * $Id: snd.h 53579 2010-10-18 19:17:38Z sev $
+ * $Id: snd.h 54358 2010-11-19 01:37:04Z fingolfin $
  *
  */
 
@@ -39,12 +39,15 @@
 	    byte {x}     - IMA ADPCM sample codes
 */
 
-#include "common/stream.h"
 #include "sound/mixer.h"
 
 namespace Audio {
 	class AudioStream;
 	class QueuingAudioStream;
+}
+
+namespace Common {
+class SeekableReadStream;
 }
 
 namespace LastExpress {

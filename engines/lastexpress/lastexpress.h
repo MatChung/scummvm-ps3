@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/lastexpress.h $
- * $Id: lastexpress.h 53716 2010-10-22 22:06:59Z littleboy $
+ * $Id: lastexpress.h 54201 2010-11-11 14:19:44Z littleboy $
  *
  */
 
@@ -141,11 +141,11 @@ private:
 	SoundManager    *_soundMan;
 
 	// Event handlers
-	EventHandler::EventFunction *eventMouse;
-	EventHandler::EventFunction *eventTick;
+	EventHandler::EventFunction *_eventMouse;
+	EventHandler::EventFunction *_eventTick;
 
-	EventHandler::EventFunction *eventMouseBackup;
-	EventHandler::EventFunction *eventTickBackup;
+	EventHandler::EventFunction *_eventMouseBackup;
+	EventHandler::EventFunction *_eventTickBackup;
 };
 
 } // End of namespace LastExpress

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cruise/cell.cpp $
- * $Id: cell.cpp 44862 2009-10-10 04:47:18Z dreammaster $
+ * $Id: cell.cpp 54409 2010-11-21 12:51:49Z lordhoto $
  *
  */
 
@@ -65,9 +65,7 @@ cellStruct *addCell(cellStruct *pHead, int16 overlayIdx, int16 objIdx, int16 typ
 		if (currentHead2->type != 5) {
 			int16 lvar2;
 
-			getSingleObjectParam(currentHead2->overlay, currentHead2->idx, 2, &lvar2);
-
-			if (lvar2 >= var)
+			if (getSingleObjectParam(currentHead2->overlay, currentHead2->idx, 2, &lvar2) >= 0 && lvar2 >= var)
 				break;
 		}
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/predictive.cpp $
- * $Id: predictive.cpp 54031 2010-11-01 21:37:47Z fingolfin $
+ * $Id: predictive.cpp 55135 2011-01-06 21:11:24Z fingolfin $
  *
  */
 
@@ -35,11 +35,16 @@
 
 namespace Agi {
 
-#define kModePre 0
-#define kModeNum 1
-#define kModeAbc 2
+enum {
+	kModePre = 0,
+	kModeNum = 1,
+	kModeAbc = 2
+};
 
-#define MAXLINELEN 80
+enum {
+	MAXLINELEN = 80,
+	MAXWORDLEN = 24
+};
 
 uint8 countWordsInString(char *str) {
   // Count the number of (space separated) words in the given string.
@@ -98,7 +103,7 @@ bool AgiEngine::predictiveDialog() {
 	uint8 x;
 	int y;
 	int bx[17], by[17];
-	String prefix;
+	Common::String prefix;
 	char temp[MAXWORDLEN + 1], repeatcount[MAXWORDLEN];
 	AgiBlock tmpwindow;
 	bool navigationwithkeys = false;
@@ -137,7 +142,7 @@ bool AgiEngine::predictiveDialog() {
 	_predictiveDialogRunning = true;
 	_system->setFeatureState(OSystem::kFeatureDisableKeyFiltering, true);
 
-	memset(repeatcount, 0, MAXWORDLEN);
+	memset(repeatcount, 0, sizeof(repeatcount));
 
 	// show the predictive dialog.
 	// if another window is already in display, save its state into tmpwindow
@@ -373,7 +378,7 @@ bool AgiEngine::predictiveDialog() {
 					_currentCode.clear();
 					_currentWord.clear();
 					numMatchingWords = 0;
-					memset(repeatcount, 0, MAXWORDLEN);
+					memset(repeatcount, 0, sizeof(repeatcount));
 				} else if (active < 9 || active == 11 || active == 15) { // number or backspace
 					if (active == 11) { // backspace
 						if (_currentCode.size()) {
@@ -419,7 +424,7 @@ bool AgiEngine::predictiveDialog() {
 							char *tok = strtok(tmp, " ");
 							for (uint8 i = 0; i <= _wordNumber; i++)
 								tok = strtok(NULL, " ");
-							_currentWord = String(tok, _currentCode.size());
+							_currentWord = Common::String(tok, _currentCode.size());
 						}
 					} else if (mode == kModeAbc){
 						x = _currentCode.size();
@@ -451,7 +456,7 @@ bool AgiEngine::predictiveDialog() {
 					prefix += temp;
 					_currentCode.clear();
 					_currentWord.clear();
-					memset(repeatcount, 0, MAXWORDLEN);
+					memset(repeatcount, 0, sizeof(repeatcount));
 				} else {
 					goto press;
 				}
@@ -550,50 +555,40 @@ void AgiEngine::loadDict() {
 }
 
 bool AgiEngine::matchWord() {
-	if (_currentCode.empty()) {
+	// If no text has been entered, then there is no match.
+	if (_currentCode.empty())
 		return false;
-	}
-	// Lookup word in the dictionary
-	int line = 0, cmpRes = 0, len = 0;
-	char target[MAXWORDLEN];
 
-	strncpy(target, _currentCode.c_str(), MAXWORDLEN);
-	strcat(target, " ");
+	// If the currently entered text is too long, it cannot match anything.
+	if (_currentCode.size() > MAXWORDLEN)
+		return false;
 
-	// do the search at most two times:
-	// first try to match the exact code, by matching also the space after the code
-	// if there is not an exact match, do it once more for the best matching prefix (drop the space)
-	len = _currentCode.size() + 1;
-	for (int i = 0; i < 2; ++i) {
-		// Perform a binary search.
-		int hi = _predictiveDictLineCount - 1;
-		int lo = 0;
-		while (lo <= hi) {
-			line = (lo + hi) / 2;
-			cmpRes = strncmp(_predictiveDictLine[line], target, len);
-			if (cmpRes > 0)
-				hi = line - 1;
-			else if (cmpRes < 0)
-				lo = line + 1;
-			else
-				break;
-		}
-
-		if (cmpRes == 0)  // Exact match found? -> stop now
-			break;
-		len--;  // Remove the trailing space
+	// Perform a binary search on the dictionary to find the first
+	// entry that has _currentCode as a prefix.
+	int hi = _predictiveDictLineCount - 1;
+	int lo = 0;
+	int line = 0;
+	while (lo < hi) {
+		line = (lo + hi) / 2;
+		int cmpVal = strncmp(_predictiveDictLine[line], _currentCode.c_str(), _currentCode.size());
+		if (cmpVal > 0)
+			hi = line - 1;
+		else if (cmpVal < 0)
+			lo = line + 1;
+		else
+			hi = line;
 	}
 
 	_currentWord.clear();
 	_wordNumber = 0;
-	if (!strncmp(_predictiveDictLine[line], target, len)) {
+	if (0 == strncmp(_predictiveDictLine[line], _currentCode.c_str(), _currentCode.size())) {
 		_predictiveDictActLine = _predictiveDictLine[line];
 		char tmp[MAXLINELEN];
 		strncpy(tmp, _predictiveDictActLine, MAXLINELEN);
 		tmp[MAXLINELEN - 1] = 0;
 		char *tok = strtok(tmp, " ");
 		tok = strtok(NULL, " ");
-		_currentWord = String(tok, _currentCode.size());
+		_currentWord = Common::String(tok, _currentCode.size());
 		return true;
 	} else {
 		_predictiveDictActLine = NULL;

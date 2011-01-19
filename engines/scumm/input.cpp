@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/input.cpp $
- * $Id: input.cpp 49249 2010-05-26 19:54:50Z fingolfin $
+ * $Id: input.cpp 54265 2010-11-16 10:19:01Z fingolfin $
  *
  */
 
@@ -28,7 +28,7 @@
 #include "common/system.h"
 
 #include "gui/message.h"
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 
 #include "scumm/debugger.h"
 #include "scumm/dialogs.h"

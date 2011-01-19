@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/riven_saveload.h $
- * $Id: riven_saveload.h 50333 2010-06-26 17:21:50Z mthreepwood $
+ * $Id: riven_saveload.h 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -28,6 +28,7 @@
 
 #include "common/savefile.h"
 #include "common/str.h"
+#include "common/memstream.h"
 
 namespace Mohawk {
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/strres.cpp $
- * $Id: strres.cpp 50924 2010-07-16 03:14:03Z eriktorbjorn $
+ * $Id: strres.cpp 54392 2010-11-20 03:14:03Z dreammaster $
  *
  * String resource managment routines
  */
@@ -35,6 +35,8 @@
 #include "gui/message.h"
 
 namespace Tinsel {
+
+// FIXME: Avoid non-const global vars
 
 #ifdef DEBUG
 // Diagnostic number
@@ -109,7 +111,7 @@ void ChangeLanguage(LANGUAGE newLang) {
 	// Check whether the file is compressed or not -  for compressed files the
 	// first long is the filelength and for uncompressed files it is the chunk
 	// identifier
-	textLen = f.readUint32LE();
+	textLen = f.readUint32();
 	if (f.eos() || f.err())
 		error(FILE_IS_CORRUPT, _vm->getTextFile(newLang));
 

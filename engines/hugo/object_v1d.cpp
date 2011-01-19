@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/object_v1d.cpp $
- * $Id: object_v1d.cpp 54018 2010-11-01 20:20:21Z strangerke $
+ * $Id: object_v1d.cpp 55318 2011-01-19 00:49:49Z strangerke $
  *
  */
 
@@ -65,7 +65,7 @@ void ObjectHandler_v1d::updateImages() {
 	int  num_objs = 0;
 	byte objindex[MAXOBJECTS];                      // Array of indeces to objects
 
-	for (int i = 0; i < _vm->_numObj; i++) {
+	for (int i = 0; i < _numObj; i++) {
 		object_t *obj = &_objects[i];
 		if ((obj->screenIndex == *_vm->_screen_p) && (obj->cycling >= ALMOST_INVISIBLE))
 			objindex[num_objs++] = i;
@@ -178,7 +178,7 @@ void ObjectHandler_v1d::updateImages() {
 void ObjectHandler_v1d::moveObjects() {
 	debugC(4, kDebugObject, "moveObjects");
 
-	static int dxOld, dyOld;                        // previous directions for CHASEing
+	static int dxOld;                               // previous direction for CHASEing
 
 	// Added to DOS version in order to handle mouse properly
 	// If route mode enabled, do special route processing
@@ -188,7 +188,7 @@ void ObjectHandler_v1d::moveObjects() {
 	// Perform any adjustments to velocity based on special path types
 	// and store all (visible) object baselines into the boundary file.
 	// Don't store foreground or background objects
-	for (int i = 0; i < _vm->_numObj; i++) {
+	for (int i = 0; i < _numObj; i++) {
 		object_t *obj = &_objects[i];               // Get pointer to object
 		seq_t *currImage = obj->currImagePtr;       // Get ptr to current image
 		if (obj->screenIndex == *_vm->_screen_p) {
@@ -209,7 +209,7 @@ void ObjectHandler_v1d::moveObjects() {
 				// Set first image in sequence (if multi-seq object)
 				if (obj->seqNumb == 4) {
 					if (!obj->vx) {                 // Got 4 directions
-						if (obj->vx != dxOld)  {    // vx just stopped
+						if (obj->vx != dxOld) {     // vx just stopped
 							if (dy > 0)
 								obj->currImagePtr = obj->seqList[DOWN].seqPtr;
 							else
@@ -228,22 +228,21 @@ void ObjectHandler_v1d::moveObjects() {
 						obj->cycling = CYCLE_FORWARD;
 				} else {
 					obj->cycling = NOT_CYCLING;
-					_vm->boundaryCollision(obj);     // Must have got hero!
+					_vm->boundaryCollision(obj);    // Must have got hero!
 				}
 				dxOld = obj->vx;
-				dyOld = obj->vy;
 				currImage = obj->currImagePtr;      // Get (new) ptr to current image
 				break;
 				}
 			case WANDER:
-				if (!_vm->_rnd->getRandomNumber(3 * NORMAL_TPS)) {       // Kick on random interval
+				if (!_vm->_rnd->getRandomNumber(3 * _vm->_normalTPS)) {       // Kick on random interval
 					obj->vx = _vm->_rnd->getRandomNumber(obj->vxPath << 1) - obj->vxPath;
 					obj->vy = _vm->_rnd->getRandomNumber(obj->vyPath << 1) - obj->vyPath;
 
 					// Set first image in sequence (if multi-seq object)
 					if (obj->seqNumb > 1) {
 						if (!obj->vx && (obj->seqNumb > 2)) {
-							if (obj->vx != dxOld)  { // vx just stopped
+							if (obj->vx != dxOld) {  // vx just stopped
 								if (obj->vy > 0)
 									obj->currImagePtr = obj->seqList[DOWN].seqPtr;
 								else
@@ -262,7 +261,6 @@ void ObjectHandler_v1d::moveObjects() {
 							obj->cycling = NOT_CYCLING;
 					}
 					dxOld = obj->vx;
-					dyOld = obj->vy;
 					currImage = obj->currImagePtr;  // Get (new) ptr to current image
 				}
 				break;
@@ -276,8 +274,8 @@ void ObjectHandler_v1d::moveObjects() {
 	}
 
 	// Move objects, allowing for boundaries
-	for (int i = 0; i < _vm->_numObj; i++) {
-		object_t *obj = &_objects[i];                         // Get pointer to object
+	for (int i = 0; i < _numObj; i++) {
+		object_t *obj = &_objects[i];               // Get pointer to object
 		if ((obj->screenIndex == *_vm->_screen_p) && (obj->vx || obj->vy)) {
 			// Only process if it's moving
 
@@ -291,7 +289,7 @@ void ObjectHandler_v1d::moveObjects() {
 			int y2 = obj->y + currImage->y2;        // Bottom edge
 
 			if ((obj->cycling > ALMOST_INVISIBLE) && (obj->priority == FLOATING))
-				_vm->clearBoundary(x1, x2, y2);          // Clear our own boundary
+				_vm->clearBoundary(x1, x2, y2);     // Clear our own boundary
 
 			// Allowable motion wrt boundary
 			int dx = _vm->deltaX(x1, x2, obj->vx, y2);
@@ -309,7 +307,7 @@ void ObjectHandler_v1d::moveObjects() {
 			}
 
 			if ((obj->cycling > ALMOST_INVISIBLE) && (obj->priority == FLOATING))
-				_vm->storeBoundary(x1, x2, y2);          // Re-store our own boundary
+				_vm->storeBoundary(x1, x2, y2);     // Re-store our own boundary
 
 			obj->x += dx;                           // Update object position
 			obj->y += dy;
@@ -330,7 +328,7 @@ void ObjectHandler_v1d::moveObjects() {
 	}
 
 	// Clear all object baselines from the boundary file.
-	for (int i = 0; i < _vm->_numObj; i++) {
+	for (int i = 0; i < _numObj; i++) {
 		object_t *obj = &_objects[i];               // Get pointer to object
 		seq_t *currImage = obj->currImagePtr;       // Get ptr to current image
 		if ((obj->screenIndex == *_vm->_screen_p) && (obj->cycling > ALMOST_INVISIBLE) && (obj->priority == FLOATING))
@@ -339,12 +337,12 @@ void ObjectHandler_v1d::moveObjects() {
 
 	// If maze mode is enabled, do special maze processing
 	if (_maze.enabledFl) {
-		seq_t *currImage = _vm->_hero->currImagePtr;    // Get ptr to current image
+		seq_t *currImage = _vm->_hero->currImagePtr;// Get ptr to current image
 		// hero coordinates
-		int x1 = _vm->_hero->x + currImage->x1;         // Left edge of object
-		int x2 = _vm->_hero->x + currImage->x2;         // Right edge
-		int y1 = _vm->_hero->y + currImage->y1;         // Top edge
-		int y2 = _vm->_hero->y + currImage->y2;         // Bottom edge
+		int x1 = _vm->_hero->x + currImage->x1;     // Left edge of object
+		int x2 = _vm->_hero->x + currImage->x2;     // Right edge
+		int y1 = _vm->_hero->y + currImage->y1;     // Top edge
+		int y2 = _vm->_hero->y + currImage->y2;     // Bottom edge
 
 		_vm->_scheduler->processMaze(x1, x2, y1, y2);
 	}
@@ -355,18 +353,39 @@ void ObjectHandler_v1d::moveObjects() {
 * the assumption for now that the first obj is always the HERO) to the object
 * number of the swapped image
 */
-void ObjectHandler_v1d::swapImages(int objNumb1, int objNumb2) {
-	debugC(1, kDebugObject, "swapImages(%d, %d)", objNumb1, objNumb2);
+void ObjectHandler_v1d::swapImages(int objIndex1, int objIndex2) {
+	debugC(1, kDebugObject, "swapImages(%d, %d)", objIndex1, objIndex2);
 
 	seqList_t tmpSeqList[MAX_SEQUENCES];
 	int seqListSize = sizeof(seqList_t) * MAX_SEQUENCES;
 
-	memcpy(tmpSeqList, _objects[objNumb1].seqList, seqListSize);
-	memcpy(_objects[objNumb1].seqList, _objects[objNumb2].seqList, seqListSize);
-	memcpy(_objects[objNumb2].seqList, tmpSeqList, seqListSize);
-	_objects[objNumb1].currImagePtr = _objects[objNumb1].seqList[0].seqPtr;
-	_objects[objNumb2].currImagePtr = _objects[objNumb2].seqList[0].seqPtr;
-	_vm->_heroImage = (_vm->_heroImage == HERO) ? objNumb2 : HERO;
+	memmove(tmpSeqList, _objects[objIndex1].seqList, seqListSize);
+	memmove(_objects[objIndex1].seqList, _objects[objIndex2].seqList, seqListSize);
+	memmove(_objects[objIndex2].seqList, tmpSeqList, seqListSize);
+	_objects[objIndex1].currImagePtr = _objects[objIndex1].seqList[0].seqPtr;
+	_objects[objIndex2].currImagePtr = _objects[objIndex2].seqList[0].seqPtr;
+	_vm->_heroImage = (_vm->_heroImage == HERO) ? objIndex2 : HERO;
 }
 
+void ObjectHandler_v1d::homeIn(int objIndex1, int objIndex2, int8 objDx, int8 objDy) {
+	// object obj1 will home in on object obj2
+	object_t *obj1 = &_objects[objIndex1];
+	object_t *obj2 = &_objects[objIndex2];
+	obj1->pathType = AUTO;
+	int dx = obj1->x + obj1->currImagePtr->x1 - obj2->x - obj2->currImagePtr->x1;
+	int dy = obj1->y + obj1->currImagePtr->y1 - obj2->y - obj2->currImagePtr->y1;
+
+	if (dx == 0)                                    // Don't EVER divide by zero!
+		dx = 1;
+	if (dy == 0)
+		dy = 1;
+
+	if (abs(dx) > abs(dy)) {
+		obj1->vx = objDx * -SIGN(dx);
+		obj1->vy = abs((objDy * dy) / dx) * -SIGN(dy);
+	} else {
+		obj1->vy = objDy * SIGN(dy);
+		obj1->vx = abs((objDx * dx) / dy) * SIGN(dx);
+	}
+}
 } // End of namespace Hugo

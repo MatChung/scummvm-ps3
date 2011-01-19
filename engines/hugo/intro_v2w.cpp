@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/intro_v2w.cpp $
- * $Id: intro_v2w.cpp 53674 2010-10-21 17:09:57Z strangerke $
+ * $Id: intro_v2w.cpp 54902 2010-12-13 21:08:52Z strangerke $
  *
  */
 
@@ -34,6 +34,7 @@
 
 #include "hugo/hugo.h"
 #include "hugo/intro.h"
+#include "hugo/display.h"
 
 
 namespace Hugo {
@@ -48,6 +49,11 @@ void intro_v2w::preNewGame() {
 }
 
 void intro_v2w::introInit() {
+	_vm->_file->readBackground(_vm->_numScreens - 1); // display splash screen
+
+	_vm->_screen->displayBackground();
+	g_system->updateScreen();
+	g_system->delayMillis(3000);
 }
 
 bool intro_v2w::introPlay() {

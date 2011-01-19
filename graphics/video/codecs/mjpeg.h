@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/codecs/mjpeg.h $
- * $Id: mjpeg.h 49165 2010-05-23 18:33:55Z mthreepwood $
+ * $Id: mjpeg.h 54930 2010-12-16 02:02:53Z mthreepwood $
  *
  */
 
@@ -27,7 +27,6 @@
 #define GRAPHICS_MJPEG_H
 
 #include "common/scummsys.h"
-#include "common/stream.h"
 
 #include "graphics/video/codecs/codec.h"
 #include "graphics/jpeg.h"
@@ -44,7 +43,7 @@ public:
 	JPEGDecoder();
 	~JPEGDecoder();
 
-	Surface *decodeImage(Common::SeekableReadStream *stream);
+	const Surface *decodeImage(Common::SeekableReadStream *stream);
 	PixelFormat getPixelFormat() const { return _pixelFormat; }
 
 private:

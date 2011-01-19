@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/pdisplay.cpp $
- * $Id: pdisplay.cpp 53935 2010-10-30 00:34:21Z fingolfin $
+ * $Id: pdisplay.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * CursorPositionProcess()
  * TagProcess()
@@ -71,6 +71,8 @@ enum HotSpotTag {
 };
 
 //----------------- LOCAL GLOBAL DATA --------------------
+
+// FIXME: Avoid non-const global vars
 
 static bool DispPath = false;
 static bool bShowString = false;
@@ -375,6 +377,7 @@ static bool InHotSpot(int ano, int aniX, int aniY, int *pxtext, int *pytext) {
  * the screen.
  */
 static bool ActorTag(int curX, int curY, HotSpotTag *pTag, OBJECT **ppText) {
+	// FIXME: Avoid non-const global vars
 	static int tagX = 0, tagY = 0;	// Values when tag was displayed
 	int	newX, newY;		// new values, to keep tag in place
 	int	ano;
@@ -486,6 +489,7 @@ static bool ActorTag(int curX, int curY, HotSpotTag *pTag, OBJECT **ppText) {
  * code contains a printtag() call, its tagState flag gets set to TAG_ON.
  */
 static bool PolyTag(HotSpotTag *pTag, OBJECT **ppText) {
+	// FIXME: Avoid non-const global vars
 	static int	Loffset = 0, Toffset = 0;	// Values when tag was displayed
 	static int curX = 0, curY = 0;
 	int		nLoff, nToff;		// new values, to keep tag in place

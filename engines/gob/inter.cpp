@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/inter.cpp $
- * $Id: inter.cpp 53774 2010-10-24 20:36:47Z strangerke $
+ * $Id: inter.cpp 55277 2011-01-17 13:37:14Z drmccoy $
  *
  */
 
@@ -39,7 +39,7 @@
 
 namespace Gob {
 
-Inter::Inter(GobEngine *vm) : _vm(vm) {
+Inter::Inter(GobEngine *vm) : _vm(vm), _varStack(600) {
 	_terminate = 0;
 	_break = false;
 
@@ -54,9 +54,6 @@ Inter::Inter(GobEngine *vm) : _vm(vm) {
 
 	_soundEndTimeKey = 0;
 	_soundStopVal = 0;
-
-	memset(_varStack, 0, 300);
-	_varStackPos = 0;
 
 	_noBusyWait = false;
 

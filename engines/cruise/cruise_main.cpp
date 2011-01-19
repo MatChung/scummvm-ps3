@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cruise/cruise_main.cpp $
- * $Id: cruise_main.cpp 54108 2010-11-07 01:03:58Z fingolfin $
+ * $Id: cruise_main.cpp 54405 2010-11-21 05:31:13Z dreammaster $
  *
  */
 
@@ -1886,11 +1886,27 @@ void CruiseEngine::mainLoop() {
 			currentMouseButton = 0;
 		}
 
-		manageScripts(&relHead);
-		manageScripts(&procHead);
+		// FIXME: I suspect that the original game does multiple script executions between game frames; the bug with
+		// Raoul appearing when looking at the book is being there are 3 script iterations separation between the
+		// scene being changed to the book, and the Raoul actor being frozen/disabled. This loop is a hack to ensure
+		// that when a background changes, a few extra script executions are done
+		bool bgChanged;
+		int numIterations = 1;
 
-		removeFinishedScripts(&relHead);
-		removeFinishedScripts(&procHead);
+		while (numIterations-- > 0) {
+			bgChanged = backgroundChanged[masterScreen];
+		
+			manageScripts(&relHead);
+			manageScripts(&procHead);
+
+			removeFinishedScripts(&relHead);
+			removeFinishedScripts(&procHead);
+
+			if (!bgChanged && backgroundChanged[masterScreen]) {
+				bgChanged = true;
+				numIterations += 2;
+			}
+		}
 
 		processAnimation();
 

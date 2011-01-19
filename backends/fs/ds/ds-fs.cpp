@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/fs/ds/ds-fs.cpp $
- * $Id: ds-fs.cpp 52533 2010-09-04 22:19:20Z dhewg $
+ * $Id: ds-fs.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
+
+// Disable symbol overrides for FILE as that is used in FLAC headers
+#define FORBIDDEN_SYMBOL_EXCEPTION_FILE
 
 #include "common/str.h"
 #include "common/util.h"
@@ -30,8 +33,7 @@
 #include "backends/fs/stdiostream.h"
 #include "dsmain.h"
 #include "fat/gba_nds_fat.h"
-
-
+#include "common/bufferedstream.h"
 
 namespace DS {
 
@@ -39,9 +41,13 @@ namespace DS {
 // DSFileSystemNode - Flash ROM file system using Zip files //
 //////////////////////////////////////////////////////////////
 
-ZipFile*	DSFileSystemNode::_zipFile = NULL;
-char		currentDir[128];
-bool		readPastEndOfFile = false;
+ZipFile*	DSFileSystemNode::_zipFile = NULL;	// FIXME: Avoid non-const global vars
+char		currentDir[128];	// FIXME: Avoid non-const global vars
+bool		readPastEndOfFile = false;	// FIXME: Avoid non-const global vars
+
+enum {
+	WRITE_BUFFER_SIZE = 512
+};
 
 DSFileSystemNode::DSFileSystemNode() {
 	_displayName = "ds:/";
@@ -200,11 +206,12 @@ AbstractFSNode *DSFileSystemNode::getParent() const {
 }
 
 Common::SeekableReadStream *DSFileSystemNode::createReadStream() {
-	return DSFileStream::makeFromPath(getPath().c_str(), false);
+	return DSFileStream::makeFromPath(getPath(), false);
 }
 
 Common::WriteStream *DSFileSystemNode::createWriteStream() {
-	return DSFileStream::makeFromPath(getPath().c_str(), true);
+	Common::WriteStream *stream = DSFileStream::makeFromPath(getPath(), true);
+	return Common::wrapBufferedWriteStream(stream, WRITE_BUFFER_SIZE);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -380,26 +387,22 @@ Common::SeekableReadStream *GBAMPFileSystemNode::createReadStream() {
 	if (!strncmp(getPath().c_str(), "mp:/", 4)) {
 		return DSFileStream::makeFromPath(getPath().c_str() + 3, false);
 	} else {
-		return DSFileStream::makeFromPath(getPath().c_str(), false);
+		return DSFileStream::makeFromPath(getPath(), false);
 	}
 }
 
 Common::WriteStream *GBAMPFileSystemNode::createWriteStream() {
-	return DSFileStream::makeFromPath(getPath().c_str(), true);
+	Common::WriteStream *stream = DSFileStream::makeFromPath(getPath(), true);
+	return Common::wrapBufferedWriteStream(stream, WRITE_BUFFER_SIZE);
 }
-
 
 
 
 DSFileStream::DSFileStream(void *handle) : _handle(handle) {
 	assert(handle);
-	_writeBufferPos = 0;
 }
 
 DSFileStream::~DSFileStream() {
-	if (_writeBufferPos > 0) {
-		flush();
-	}
 	std_fclose((FILE *)_handle);
 }
 
@@ -416,12 +419,10 @@ bool DSFileStream::eos() const {
 }
 
 int32 DSFileStream::pos() const {
-	assert(_writeBufferPos == 0);	// This method may only be called when reading!
 	return std_ftell((FILE *)_handle);
 }
 
 int32 DSFileStream::size() const {
-	assert(_writeBufferPos == 0);	// This method may only be called when reading!
 	int32 oldPos = std_ftell((FILE *)_handle);
 	std_fseek((FILE *)_handle, 0, SEEK_END);
 	int32 length = std_ftell((FILE *)_handle);
@@ -431,39 +432,18 @@ int32 DSFileStream::size() const {
 }
 
 bool DSFileStream::seek(int32 offs, int whence) {
-	if (_writeBufferPos > 0) {
-		flush();
-	}
 	return std_fseek((FILE *)_handle, offs, whence) == 0;
 }
 
 uint32 DSFileStream::read(void *ptr, uint32 len) {
-	if (_writeBufferPos > 0) {
-		flush();
-	}
 	return std_fread(ptr, 1, len, (FILE *)_handle);
 }
 
 uint32 DSFileStream::write(const void *ptr, uint32 len) {
-	if (_writeBufferPos + len < WRITE_BUFFER_SIZE) {
-		memcpy(_writeBuffer + _writeBufferPos, ptr, len);
-		_writeBufferPos += len;
-		return len;
-	} else {
-		if (_writeBufferPos > 0) {
-			flush();
-		}
-		return std_fwrite(ptr, 1, len, (FILE *)_handle);
-	}
+	return std_fwrite(ptr, 1, len, (FILE *)_handle);
 }
 
 bool DSFileStream::flush() {
-
-	if (_writeBufferPos > 0) {
-		std_fwrite(_writeBuffer, 1, _writeBufferPos, (FILE *) _handle);
-		_writeBufferPos = 0;
-	}
-
 	return std_fflush((FILE *)_handle) == 0;
 }
 
@@ -476,15 +456,13 @@ DSFileStream *DSFileStream::makeFromPath(const Common::String &path, bool writeM
 }
 
 
-
-
 // Stdio replacements
 enum {
 	MAX_FILE_HANDLES = 32
 };
 
-static bool inited = false;
-static DS::fileHandle s_handle[MAX_FILE_HANDLES];
+static bool inited = false;	// FIXME: Avoid non-const global vars
+static DS::fileHandle s_handle[MAX_FILE_HANDLES];	// FIXME: Avoid non-const global vars
 
 FILE *std_fopen(const char *name, const char *mode) {
 	if (!inited) {
@@ -694,18 +672,18 @@ int std_fseek(FILE *handle, long int offset, int whence) {
 	}
 
 	switch (whence) {
-		case SEEK_CUR:
-			handle->pos += offset;
-			break;
-		case SEEK_SET:
-			handle->pos = offset;
-			break;
-		case SEEK_END:
-			handle->pos = handle->size + offset;
-			break;
-		default:
-			handle->pos = offset;
-			break;
+	case SEEK_CUR:
+		handle->pos += offset;
+		break;
+	case SEEK_SET:
+		handle->pos = offset;
+		break;
+	case SEEK_END:
+		handle->pos = handle->size + offset;
+		break;
+	default:
+		handle->pos = offset;
+		break;
 	}
 
 	return 0;

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/imuse/imuse.cpp $
- * $Id: imuse.cpp 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: imuse.cpp 54727 2010-12-01 23:55:10Z lordhoto $
  *
  */
 
@@ -1483,12 +1483,11 @@ void IMuseInternal::initGM(MidiDriver *midi) {
 	// General MIDI System On message
 	// Resets all GM devices to default settings
 	memcpy(&buffer[0], "\x7E\x7F\x09\x01", 4);
-	midi->sysEx(buffer, 6);
+	midi->sysEx(buffer, 4);
 	debug(2, "GM SysEx: GM System On");
 	_system->delayMillis(200);
 
 	if (_enable_gs) {
-
 		// All GS devices recognize the GS Reset command,
 		// even with Roland's ID. It is impractical to
 		// support other manufacturers' devices for

@@ -19,12 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/browser.cpp $
- * $Id: browser.cpp 52683 2010-09-12 11:43:51Z criezy $
+ * $Id: browser.cpp 54265 2010-11-16 10:19:01Z fingolfin $
  */
 
 #include "gui/browser.h"
-#include "gui/GuiManager.h"
-#include "gui/ListWidget.h"
+#include "gui/gui-manager.h"
+#include "gui/widgets/list.h"
 
 #include "common/config-manager.h"
 #include "common/system.h"

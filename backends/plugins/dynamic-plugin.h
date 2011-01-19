@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/plugins/dynamic-plugin.h $
- * $Id: dynamic-plugin.h 32627 2008-06-09 03:59:16Z jvprat $
+ * $Id: dynamic-plugin.h 55061 2010-12-29 15:25:21Z Bluddy $
  *
  */
 
@@ -37,7 +37,12 @@ protected:
 
 	virtual VoidFunc findSymbol(const char *symbol) = 0;
 
+	const Common::String _filename;
+
 public:
+	DynamicPlugin(const Common::String &filename) :
+		_filename(filename) {}
+
 	virtual bool loadPlugin() {
 		// Validate the plugin API version
 		IntFunc verFunc = (IntFunc)findSymbol("PLUGIN_getVersion");
@@ -96,6 +101,10 @@ public:
 
 	virtual void unloadPlugin() {
 		delete _pluginObject;
+	}
+
+	virtual const char *getFileName() const {
+		return _filename.c_str();
 	}
 };
 

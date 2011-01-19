@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/ThemeEngine.h $
- * $Id: ThemeEngine.h 54090 2010-11-05 10:53:37Z thebluegr $
+ * $Id: ThemeEngine.h 54255 2010-11-15 23:51:46Z fingolfin $
  *
  */
 
@@ -531,8 +531,8 @@ protected:
 	const Graphics::Font *loadFont(const Common::String &filename);
 	const Graphics::Font *loadFontFromArchive(const Common::String &filename);
 	const Graphics::Font *loadCachedFontFromArchive(const Common::String &filename);
-	Common::String genCacheFilename(const char *filename);
-	Common::String genLocalizedFontFilename(const char *filename);
+	Common::String genCacheFilename(const Common::String &filename) const;
+	Common::String genLocalizedFontFilename(const Common::String &filename) const;
 
 	/**
 	 *	Actual Dirty Screen handling function.

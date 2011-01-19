@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/data/sequence.cpp $
- * $Id: sequence.cpp 53595 2010-10-18 23:06:52Z littleboy $
+ * $Id: sequence.cpp 54358 2010-11-19 01:37:04Z fingolfin $
  *
  */
 
@@ -28,6 +28,8 @@
 #include "lastexpress/data/sequence.h"
 
 #include "lastexpress/debug.h"
+
+#include "common/stream.h"
 
 namespace LastExpress {
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/midi/dmedia.cpp $
- * $Id: dmedia.cpp$
+ * $Id: dmedia.cpp 54584 2010-11-29 18:48:43Z lordhoto $
  */
 
 /*
@@ -27,10 +27,12 @@
  *    some code liberated from seq.cpp and coremidi.cpp
  */
 
-#if defined(IRIX)
-
 // Disable symbol overrides so that we can use system headers.
 #define FORBIDDEN_SYMBOL_ALLOW_ALL
+
+#include "common/scummsys.h"
+
+#if defined(IRIX)
 
 #include "common/scummsys.h"
 #include "common/util.h"

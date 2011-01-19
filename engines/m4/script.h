@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/script.h $
- * $Id: script.h 54047 2010-11-03 09:44:03Z dreammaster $
+ * $Id: script.h 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -223,7 +223,7 @@ public:
 	uint32 readUint32();
 protected:
 	ScriptInterpreter *_inter;
-	Common::MemoryReadStream *_code;
+	Common::SeekableReadStream *_code;
 };
 
 struct ScriptFunctionEntry {

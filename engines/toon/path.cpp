@@ -19,7 +19,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/path.cpp $
-* $Id: path.cpp 53401 2010-10-13 07:14:38Z anotherguest $
+* $Id: path.cpp 55051 2010-12-27 21:56:52Z sylvaintv $
 *
 */
 
@@ -27,9 +27,20 @@
 
 namespace Toon {
 
+PathFindingHeap::PathFindingHeap() {
+	_count = 0;
+	_alloc = 0;
+	_data = NULL;
+}
+
+PathFindingHeap::~PathFindingHeap() {
+	delete[] _data;
+}
+
 int32 PathFindingHeap::init(int32 size) {
 	debugC(1, kDebugPath, "init(%d)", size);
 
+	delete[] _data;
 	_data = new HeapDataGrid[size * 2];
 	memset(_data, 0, sizeof(HeapDataGrid) * size * 2);
 	_count = 0;
@@ -38,8 +49,8 @@ int32 PathFindingHeap::init(int32 size) {
 }
 
 int32 PathFindingHeap::unload() {
-	if (_data)
-		delete[] _data;
+	delete[] _data;
+	_data = NULL;
 	return 0;
 }
 
@@ -126,21 +137,18 @@ PathFinding::PathFinding(ToonEngine *vm) : _vm(vm) {
 	_width = 0;
 	_height = 0;
 	_heap = new PathFindingHeap();
-	_gridTemp = 0;
+	_gridTemp = NULL;
 	_numBlockingRects = 0;
 }
 
 PathFinding::~PathFinding(void) {
-	if (_heap) {
+	if (_heap)
 		_heap->unload();
-		delete _heap;
-	}
+	delete _heap;
+	delete[] _gridTemp;
 }
 
-bool PathFinding::isWalkable(int32 x, int32 y) {
-	//debugC(6, kDebugPath, "isWalkable(%d, %d)", x, y);
-
-	bool maskWalk = (_currentMask->getData(x, y) & 0x1f) > 0;
+bool PathFinding::isLikelyWalkable(int32 x, int32 y) {
 	for (int32 i = 0; i < _numBlockingRects; i++) {
 		if (_blockingRects[i][4] == 0) {
 			if (x >= _blockingRects[i][0] && x <= _blockingRects[i][2] && y >= _blockingRects[i][1] && y < _blockingRects[i][3])
@@ -153,6 +161,14 @@ bool PathFinding::isWalkable(int32 x, int32 y) {
 			}
 		}
 	}
+	return true;
+}
+
+bool PathFinding::isWalkable(int32 x, int32 y) {
+	//debugC(6, kDebugPath, "isWalkable(%d, %d)", x, y);
+
+	bool maskWalk = (_currentMask->getData(x, y) & 0x1f) > 0;
+
 	return maskWalk;
 }
 
@@ -170,7 +186,7 @@ int32 PathFinding::findClosestWalkingPoint(int32 xx, int32 yy, int32 *fxx, int32
 
 	for (int y = 0; y < _height; y++) {
 		for (int x = 0; x < _width; x++) {
-			if (isWalkable(x, y)) {
+			if (isWalkable(x, y) && isLikelyWalkable(x,y)) {
 				int32 ndist = (x - xx) * (x - xx) + (y - yy) * (y - yy);
 				int32 ndist2 = (x - origX) * (x - origX) + (y - origY) * (y - origY);
 				if (currentFound < 0 || ndist < dist || (ndist == dist && ndist2 < dist2)) {
@@ -193,6 +209,33 @@ int32 PathFinding::findClosestWalkingPoint(int32 xx, int32 yy, int32 *fxx, int32
 	}
 }
 
+bool PathFinding::lineIsWalkable(int32 x, int32 y, int32 x2, int32 y2) {
+
+	uint32 bx = x << 16;
+	int32 dx = x2 - x;
+	uint32 by = y << 16;
+	int32 dy = y2 - y;
+	uint32 adx = abs(dx);
+	uint32 ady = abs(dy);
+	int32 t = 0;
+	if (adx <= ady)
+		t = ady;
+	else
+		t = adx;
+
+	int32 cdx = (dx << 16) / t;
+	int32 cdy = (dy << 16) / t;
+
+	int32 i = t;
+	while (i) {
+		if(!isWalkable(bx >> 16, by >> 16))
+			return false;
+		bx += cdx;
+		by += cdy;
+		i--;
+	}
+	return true;
+}
 int32 PathFinding::findPath(int32 x, int32 y, int32 destx, int32 desty) {
 	debugC(1, kDebugPath, "findPath(%d, %d, %d, %d)", x, y, destx, desty);
 
@@ -200,6 +243,15 @@ int32 PathFinding::findPath(int32 x, int32 y, int32 destx, int32 desty) {
 		_gridPathCount = 0;
 		return true;
 	}
+
+	// ignore path finding if the character is outside the screen
+	if (x < 0 || x > 1280 || y < 0 || y > 400 || destx < 0 || destx > 1280 || desty < 0 || desty > 400) {
+		_gridPathCount = 0;
+		return true;
+	}
+
+	// first test direct line
+	//if(lineIsWalkable(x,y,destx,desty))
 
 	memset(_gridTemp , 0, _width * _height * sizeof(int32));
 	_heap->clear();
@@ -211,9 +263,6 @@ int32 PathFinding::findPath(int32 x, int32 y, int32 destx, int32 desty) {
 	sq[curX + curY *_width] = 1;
 	_heap->push(curX, curY, abs(destx - x) + abs(desty - y));
 	int wei = 0;
-
-// Strangerke - Commented (not used)
-//	byte *mask = _currentMask->getDataPtr();
 
 	while (_heap->_count) {
 		wei = 0;
@@ -232,7 +281,7 @@ int32 PathFinding::findPath(int32 x, int32 y, int32 destx, int32 desty) {
 
 					int32 curPNode = px + py * _width;
 					if (isWalkable(px, py)) { // walkable ?
-						int sum = sq[curNode] + wei;
+						int sum = sq[curNode] + wei * (1 + (isLikelyWalkable(px,py) ? 5 : 0));
 						if (sq[curPNode] > sum || !sq[curPNode]) {
 							int newWeight = abs(destx - px) + abs(desty - py);
 							sq[curPNode] = sum;
@@ -323,8 +372,7 @@ void PathFinding::init(Picture *mask) {
 	_currentMask = mask;
 	_heap->unload();
 	_heap->init(_width * _height);
-	if (_gridTemp)
-		delete[] _gridTemp;
+	delete[] _gridTemp;
 	_gridTemp = new int32[_width*_height];
 }
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/detection.cpp $
- * $Id: detection.cpp 54121 2010-11-07 17:16:59Z fingolfin $
+ * $Id: detection.cpp 54434 2010-11-23 22:25:10Z fingolfin $
  *
  */
 
@@ -466,7 +466,7 @@ static void detectGames(const Common::FSList &fslist, Common::List<DetectorResul
 		//
 		DetectorDesc &d = fileMD5Map[file];
 		if (d.md5.empty()) {
-			Common::File *tmp = 0;
+			Common::SeekableReadStream *tmp = 0;
 			bool isDiskImg = (file.hasSuffix(".d64") || file.hasSuffix(".dsk") || file.hasSuffix(".prg"));
 			
 			if (isDiskImg) {
@@ -474,12 +474,11 @@ static void detectGames(const Common::FSList &fslist, Common::List<DetectorResul
 
 				debug(2, "Falling back to disk-based detection");
 			} else {
-				tmp = new Common::File;
-				tmp->open(d.node);
+				tmp = d.node.createReadStream();
 			}
 
 			Common::String md5str;
-			if (tmp && tmp->isOpen())
+			if (tmp)
 				md5str = computeStreamMD5AsString(*tmp, kMD5FileSizeLimit);
 			if (!md5str.empty()) {
 

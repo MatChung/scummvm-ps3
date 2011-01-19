@@ -19,11 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/audio.cpp $
- * $Id: audio.cpp 54076 2010-11-04 22:12:16Z sylvaintv $
+ * $Id: audio.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "toon/audio.h"
+#include "common/memstream.h"
+#include "common/substream.h"
 
 namespace Toon {
 
@@ -44,10 +46,10 @@ static int ADPCM_table[89] = {
 
 AudioManager::AudioManager(ToonEngine *vm, Audio::Mixer *mixer) : _vm(vm), _mixer(mixer) {
 	for (int32 i = 0; i < 16; i++)
-		_channels[i] = 0;
+		_channels[i] = NULL;
 
 	for (int32 i = 0; i < 4; i++) 
-		_audioPacks[i] = 0;
+		_audioPacks[i] = NULL;
 
 	for (int32 i = 0; i < 4; i++) {
 		_ambientSFXs[i]._delay = 0;
@@ -64,6 +66,7 @@ AudioManager::AudioManager(ToonEngine *vm, Audio::Mixer *mixer) : _vm(vm), _mixe
 }
 
 AudioManager::~AudioManager(void) {
+	_mixer->stopAll();
 	for (int32 i = 0; i < 4; i++) {
 		closeAudioPack(i);
 	}
@@ -90,7 +93,7 @@ void AudioManager::removeInstance(AudioStreamInstance *inst) {
 
 	for (int32 i = 0; i < 16; i++) {
 		if (inst == _channels[i])
-			_channels[i] = 0;
+			_channels[i] = NULL;
 	}
 }
 
@@ -130,10 +133,8 @@ void AudioManager::playMusic(Common::String dir, Common::String music) {
 		_currentMusicChannel = 0;
 	}
 
-	
-	//if (!_channels[_currentMusicChannel])
-	//	delete _channels[_currentMusicChannel];
-	_channels[_currentMusicChannel] = new AudioStreamInstance(this, _mixer, srs, true);
+	// no need to delete instance here it will automatically deleted by the mixer is done with it
+	_channels[_currentMusicChannel] = new AudioStreamInstance(this, _mixer, srs, true, true);
 	_channels[_currentMusicChannel]->setVolume(_musicMuted ? 0 : 255);
 	_channels[_currentMusicChannel]->play(true, Audio::Mixer::kMusicSoundType);
 }
@@ -159,7 +160,8 @@ void AudioManager::playVoice(int32 id, bool genericVoice) {
 	else
 		stream = _audioPacks[1]->getStream(id);
 
-	_channels[2] = new AudioStreamInstance(this, _mixer, stream);
+	// no need to delete channel 2, it will be deleted by the mixer when the stream is finished
+	_channels[2] = new AudioStreamInstance(this, _mixer, stream, false, true);
 	_channels[2]->play(false, Audio::Mixer::kSpeechSoundType);
 	_channels[2]->setVolume(_voiceMuted ? 0 : 255);
 
@@ -181,7 +183,7 @@ int32 AudioManager::playSFX(int32 id, int volume , bool genericSFX) {
 
 	for (int32 i = 3; i < 16; i++) {
 		if (!_channels[i]) {
-			_channels[i] = new AudioStreamInstance(this, _mixer, stream);
+			_channels[i] = new AudioStreamInstance(this, _mixer, stream, false, true);
 			_channels[i]->play(false, Audio::Mixer::kSFXSoundType);
 			_channels[i]->setVolume(_sfxMuted ? 0 : volume);
 			return i;
@@ -208,10 +210,8 @@ void AudioManager::stopCurrentVoice() {
 
 
 void AudioManager::closeAudioPack(int32 id) {
-	if(_audioPacks[id]) {
-		delete _audioPacks[id];
-		_audioPacks[id] = 0;
-	}
+	delete _audioPacks[id];
+	_audioPacks[id] = NULL;
 }
 
 bool AudioManager::loadAudioPack(int32 id, Common::String indexFile, Common::String packFile) {
@@ -239,17 +239,13 @@ void AudioManager::stopMusic() {
 	if (_channels[1])
 		_channels[1]->stop(true);
 }
-AudioStreamInstance::~AudioStreamInstance() {
-	if (_man)
-		_man->removeInstance(this);
-}
 
-AudioStreamInstance::AudioStreamInstance(AudioManager *man, Audio::Mixer *mixer, Common::SeekableReadStream *stream , bool looping) {
+AudioStreamInstance::AudioStreamInstance(AudioManager *man, Audio::Mixer *mixer, Common::SeekableReadStream *stream , bool looping, bool deleteFileStreamAtEnd) {
 	_compBufferSize = 0;
-	_buffer = 0;
+	_buffer = NULL;
 	_bufferMaxSize = 0;
 	_mixer = mixer;
-	_compBuffer = 0;
+	_compBuffer = NULL;
 	_bufferOffset = 0;
 	_lastADPCMval1 = 0;
 	_lastADPCMval2 = 0;
@@ -264,6 +260,7 @@ AudioStreamInstance::AudioStreamInstance(AudioManager *man, Audio::Mixer *mixer,
 	_man = man;
 	_looping = looping;
 	_musicAttenuation = 1000;
+	_deleteFileStream = deleteFileStreamAtEnd;
 
 	// preload one packet
 	if (_totalSize > 0) {
@@ -274,8 +271,23 @@ AudioStreamInstance::AudioStreamInstance(AudioManager *man, Audio::Mixer *mixer,
 	}
 }
 
+AudioStreamInstance::~AudioStreamInstance() {
+	delete[] _buffer;
+	delete[] _compBuffer;
+
+	if (_man)
+		_man->removeInstance(this);
+
+	if (_deleteFileStream) {
+		delete _file;
+	}
+}
+
 int AudioStreamInstance::readBuffer(int16 *buffer, const int numSamples) {
 	debugC(5, kDebugAudio, "readBuffer(buffer, %d)", numSamples);
+
+	if(_stopped) 
+		return 0;
 
 	handleFade(numSamples);
 	int32 leftSamples = numSamples;
@@ -320,15 +332,13 @@ bool AudioStreamInstance::readPacket() {
 	_file->readSint32LE();
 
 	if (numCompressedBytes > _compBufferSize) {
-		if (_compBuffer)
-			delete[] _compBuffer;
+		delete[] _compBuffer;
 		_compBufferSize = numCompressedBytes;
 		_compBuffer = new uint8[_compBufferSize];
 	}
 
 	if (numDecompressedBytes > _bufferMaxSize) {
-		if (_buffer)
-			delete [] _buffer;
+		delete [] _buffer;
 		_bufferMaxSize = numDecompressedBytes;
 		_buffer = new int16[numDecompressedBytes];
 	}
@@ -451,9 +461,7 @@ void AudioStreamInstance::handleFade(int32 numSamples) {
 			_musicAttenuation = 1000;
 	}
 
-
 	_mixer->setChannelVolume(_handle, finalVolume * _musicAttenuation / 1000);
-
 }
 
 void AudioStreamInstance::stop(bool fade /*= false*/) {
@@ -482,16 +490,13 @@ void AudioStreamInstance::setVolume(int32 volume) {
 }
 
 AudioStreamPackage::AudioStreamPackage(ToonEngine *vm) : _vm(vm) {
-	_indexBuffer = 0;
-	_file = 0;
+	_indexBuffer = NULL;
+	_file = NULL;
 }
 
 AudioStreamPackage::~AudioStreamPackage() {
 	delete[] _indexBuffer;
-	if (_file) {
-		delete _file;
-		_file = 0;
-	}
+	delete _file;
 }
 
 bool AudioStreamPackage::loadAudioPackage(Common::String indexFile, Common::String streamFile) {
@@ -503,7 +508,6 @@ bool AudioStreamPackage::loadAudioPackage(Common::String indexFile, Common::Stri
 		return false;
 
 	delete[] _indexBuffer;
-
 	_indexBuffer = new uint32[size / 4];
 	memcpy(_indexBuffer, fileData, size);
 
@@ -528,7 +532,7 @@ Common::SeekableReadStream *AudioStreamPackage::getStream(int32 id, bool ownMemo
 	int32 size = 0;
 	getInfo(id, &offset, &size);
 	if (ownMemory) {
-		byte *memory = new byte[size];
+		byte *memory = (byte*)malloc(size);
 		_file->seek(offset);
 		_file->read(memory, size);
 		return new Common::MemoryReadStream(memory, size, DisposeAfterUse::YES);

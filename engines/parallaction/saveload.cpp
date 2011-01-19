@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/saveload.cpp $
- * $Id: saveload.cpp 48415 2010-03-29 18:47:40Z peres001 $
+ * $Id: saveload.cpp 54264 2010-11-16 10:11:57Z fingolfin $
  *
  */
 
@@ -29,7 +29,7 @@
 #include "gui/dialog.h"
 #include "gui/saveload.h"
 #include "gui/widget.h"
-#include "gui/ListWidget.h"
+#include "gui/widgets/list.h"
 #include "gui/message.h"
 
 #include "parallaction/parallaction.h"

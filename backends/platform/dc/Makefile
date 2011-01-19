@@ -1,5 +1,5 @@
 # $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/dc/Makefile $
-# $Id: Makefile 51465 2010-07-29 13:02:14Z fingolfin $
+# $Id: Makefile 55173 2011-01-08 20:51:25Z marcus_c $
 
 ronindir = /usr/local/ronin
 
@@ -21,8 +21,8 @@ DEPDIR = .deps
 CXX_UPDATE_DEP_FLAG = -Wp,-MMD,"$(*D)/$(DEPDIR)/$(*F).d",-MQ,"$@",-MP
 PLUGIN_PREFIX =
 PLUGIN_SUFFIX = .plg
-PLUGIN_EXTRA_DEPS = plugin.x plugin.syms scummvm.elf
-PLUGIN_LDFLAGS = -nostartfiles -Wl,-q,-Tplugin.x,--just-symbols,scummvm.elf,--retain-symbols-file,plugin.syms -L$(ronindir)/lib
+PLUGIN_EXTRA_DEPS = plugin.x plugin.syms scummvm.elf plugin_head.o
+PLUGIN_LDFLAGS = -nostartfiles -Wl,-q,-Tplugin.x,--just-symbols,scummvm.elf,--retain-symbols-file,plugin.syms -L$(ronindir)/lib plugin_head.o
 MKDIR = mkdir -p
 RM = rm -f
 RM_REC = rm -rf
@@ -81,7 +81,9 @@ SCUMMVM.BIN : scummvm.bin
 
 plugin_dist : plugins
 	for p in $(PLUGINS); do \
-	  sh-elf-strip -g -o "`basename \"$$p\" | LC_CTYPE=C tr '[:lower:]' '[:upper:]'`" "$$p"; \
+	  t="`basename \"$$p\" | LC_CTYPE=C tr '[:lower:]' '[:upper:]'`"; \
+	  sh-elf-strip -g -o "$$t" "$$p"; \
+	  ./check_plugin_symbols "$$t"; \
 	done
 
 dist : SCUMMVM.BIN plugin_dist

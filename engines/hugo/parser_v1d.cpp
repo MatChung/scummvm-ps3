@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/parser_v1d.cpp $
- * $Id: parser_v1d.cpp 54018 2010-11-01 20:20:21Z strangerke $
+ * $Id: parser_v1d.cpp 55114 2011-01-04 08:36:03Z strangerke $
  *
  */
 
@@ -39,6 +39,7 @@
 #include "hugo/file.h"
 #include "hugo/schedule.h"
 #include "hugo/util.h"
+#include "hugo/sound.h"
 #include "hugo/object.h"
 
 namespace Hugo {
@@ -195,11 +196,11 @@ bool Parser_v1d::isObjectVerb(char *word, object_t *obj) {
 			break;
 	}
 
-	if (_vm->_cmdList[cmdIndex][i].verbIndex == 0)   // No
+	if (_vm->_cmdList[cmdIndex][i].verbIndex == 0)  // No
 		return false;
 
 	// Verb match found, check all required objects are being carried
-	cmd *cmnd = &_vm->_cmdList[cmdIndex][i];         // ptr to struct cmd
+	cmd *cmnd = &_vm->_cmdList[cmdIndex][i];        // ptr to struct cmd
 	if (cmnd->reqIndex) {                           // At least 1 thing in list
 		uint16 *reqs = _vm->_arrayReqs[cmnd->reqIndex]; // ptr to list of required objects
 		for (i = 0; reqs[i]; i++) {                 // for each obj
@@ -302,12 +303,61 @@ bool Parser_v1d::isCatchallVerb(bool testNounFl, char *noun, char *verb, objectL
 void Parser_v1d::lineHandler() {
 	debugC(1, kDebugParser, "lineHandler()");
 
-	object_t    *obj;
 	status_t &gameStatus = _vm->getGameStatus();
-	char        farComment[XBYTES * 5] = "";        // hold 5 line comment if object not nearby
 
-//	Reset_prompt_line ();
+	// Toggle God Mode
+	if (!strncmp(_line, "PPG", 3)) {
+		_vm->_sound->playSound(!_vm->_soundTest, BOTH_CHANNELS, HIGH_PRI);
+		gameStatus.godModeFl = !gameStatus.godModeFl;
+		return;
+	}
+
 	Utils::strlwr(_line);                           // Convert to lower case
+
+	// God Mode cheat commands:
+	// goto <screen>                                Takes hero to named screen
+	// fetch <object name>                          Hero carries named object
+	// fetch all                                    Hero carries all possible objects
+	// find <object name>                           Takes hero to screen containing named object
+	if (gameStatus.godModeFl) {
+		// Special code to allow me to go straight to any screen
+		if (strstr(_line, "goto")) {
+			for (int i = 0; i < _vm->_numScreens; i++) {
+				if (!scumm_stricmp(&_line[strlen("goto") + 1], _vm->_screenNames[i])) {
+					_vm->_scheduler->newScreen(i);
+					return;
+				}
+			}
+		}
+
+		// Special code to allow me to get objects from anywhere
+		if (strstr(_line, "fetch all")) {
+			for (int i = 0; i < _vm->_object->_numObj; i++) {
+				if (_vm->_object->_objects[i].genericCmd & TAKE)
+					takeObject(&_vm->_object->_objects[i]);
+			}
+			return;
+		}
+
+		if (strstr(_line, "fetch")) {
+			for (int i = 0; i < _vm->_object->_numObj; i++) {
+				if (!scumm_stricmp(&_line[strlen("fetch") + 1], _vm->_arrayNouns[_vm->_object->_objects[i].nounIndex][0])) {
+					takeObject(&_vm->_object->_objects[i]);
+					return;
+				}
+			}
+		}
+
+		// Special code to allow me to goto objects
+		if (strstr(_line, "find")) {
+			for (int i = 0; i < _vm->_object->_numObj; i++) {
+				if (!scumm_stricmp(&_line[strlen("find") + 1], _vm->_arrayNouns[_vm->_object->_objects[i].nounIndex][0])) {
+					_vm->_scheduler->newScreen(_vm->_object->_objects[i].screenIndex);
+					return;
+				}
+			}
+		}
+	}
 
 	if (!strcmp("exit", _line) || strstr(_line, "quit")) {
 		if (Utils::Box(BOX_YESNO, "%s", _vm->_textParser[kTBExit_1d]) != 0)
@@ -320,14 +370,14 @@ void Parser_v1d::lineHandler() {
 		if (gameStatus.gameOverFl)
 			Utils::gameOverMsg();
 		else
-//			_vm->_file->saveOrRestore(true);
-			warning("STUB: saveOrRestore()");
+			_vm->_file->saveGame(-1, Common::String());
 		return;
 	}
 
 	if (!strcmp("restore", _line)) {
-//		_vm->_file->saveOrRestore(false);
-		warning("STUB: saveOrRestore()");
+		_vm->_file->restoreGame(-1);
+		_vm->_scheduler->restoreScreen(*_vm->_screen_p);
+		gameStatus.viewState = V_PLAY;
 		return;
 	}
 
@@ -345,13 +395,14 @@ void Parser_v1d::lineHandler() {
 	// Find the first verb in the line
 	char *verb = findVerb();
 	char *noun = 0;                                 // Noun not found yet
+	char farComment[XBYTES * 5] = "";               // hold 5 line comment if object not nearby
 
 	if (verb) {                                     // OK, verb found.  Try to match with object
 		do {
 			noun = findNextNoun(noun);              // Find a noun in the line
 			// Must try at least once for objects allowing verb-context
-			for (int i = 0; i < _vm->_numObj; i++) {
-				obj = &_vm->_object->_objects[i];
+			for (int i = 0; i < _vm->_object->_numObj; i++) {
+				object_t *obj = &_vm->_object->_objects[i];
 				if (isNear(verb, noun, obj, farComment)) {
 					if (isObjectVerb(verb, obj)     // Foreground object
 					 || isGenericVerb(verb, obj))   // Common action type
@@ -371,4 +422,13 @@ void Parser_v1d::lineHandler() {
 		Utils::Box(BOX_ANY, "%s", _vm->_textParser[kTBEh_1d]);
 }
 
+void Parser_v1d::showInventory() {
+	status_t &gameStatus = _vm->getGameStatus();
+	if (gameStatus.viewState == V_PLAY) {
+		if (gameStatus.gameOverFl)
+			Utils::gameOverMsg();
+		else
+			showDosInventory();
+	}
+}
 } // End of namespace Hugo

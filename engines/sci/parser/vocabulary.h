@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/parser/vocabulary.h $
- * $Id: vocabulary.h 54037 2010-11-02 09:49:47Z fingolfin $
+ * $Id: vocabulary.h 55043 2010-12-26 14:56:51Z mthreepwood $
  *
  */
 
@@ -33,6 +33,12 @@
 
 #include "sci/sci.h"
 #include "sci/engine/vm_types.h"
+
+namespace Common {
+
+class Serializer;
+
+}
 
 namespace Sci {
 
@@ -143,11 +149,11 @@ typedef Common::List<suffix_t> SuffixList;
 
 
 struct synonym_t {
-	int replaceant; /**< The word group to replace */
-	int replacement; /**< The replacement word group for this one */
+	uint16 replaceant; /**< The word group to replace */
+	uint16 replacement; /**< The replacement word group for this one */
 };
 
-typedef Common::List<synonym_t> SynonymList;
+typedef Common::Array<synonym_t> SynonymList;
 
 
 struct AltInput {
@@ -292,6 +298,11 @@ public:
 	 */
 	bool checkAltInput(Common::String& text, uint16& cursorPos);
 
+	/**
+	 * Save/load vocabulary data
+	 */
+	void saveLoadWithSerializer(Common::Serializer &ser);
+
 private:
 	/**
 	 * Loads all words from the main vocabulary.
@@ -336,8 +347,6 @@ private:
 	 */
 	void freeAltInputs();
 
-
-
 	ResourceManager *_resMan;
 	VocabularyVersions _vocabVersion;
 
@@ -359,7 +368,6 @@ public:
 	ParseTreeNode _parserNodes[VOCAB_TREE_NODES]; /**< The parse tree */
 
 	// Parser data:
-	reg_t parser_base; /**< Base address for the parser error reporting mechanism */
 	reg_t parser_event; /**< The event passed to Parse() and later used by Said() */
 	bool parserIsValid; /**< If something has been correctly parsed */
 };

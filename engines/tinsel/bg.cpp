@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/bg.cpp $
- * $Id: bg.cpp 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: bg.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * Plays the background film of a scene.
  */
@@ -48,6 +48,7 @@ namespace Tinsel {
 
 #define MAX_BG	10
 
+// FIXME: Avoid non-const global vars
 static SCNHANDLE hBgPal = 0;	// Background's palette
 static POBJECT pBG[MAX_BG];
 static ANIM	thisAnim[MAX_BG];	// used by BGmainProcess()

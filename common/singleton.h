@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/singleton.h $
- * $Id: singleton.h 51094 2010-07-21 18:17:51Z lordhoto $
+ * $Id: singleton.h 54259 2010-11-16 08:24:11Z fingolfin $
  *
  */
 
@@ -38,8 +38,6 @@ class Singleton : NonCopyable {
 private:
 	Singleton<T>(const Singleton<T> &);
 	Singleton<T> &operator=(const Singleton<T> &);
-
-	static T *_singleton;
 
 	/**
 	 * The default object factory used by the template class Singleton.
@@ -89,6 +87,8 @@ protected:
 #endif
 
 	typedef T	SingletonBaseType;
+
+	static T *_singleton;
 };
 
 /**
@@ -100,9 +100,7 @@ protected:
  * namespace Common is referenced.
  */
 #define DECLARE_SINGLETON(T) \
-	namespace Common { \
-	template<> T *Singleton<T>::_singleton = 0; \
-	} // End of namespace Common
+	template<> T *Common::Singleton<T>::_singleton = 0
 
 }	// End of namespace Common
 

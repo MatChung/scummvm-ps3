@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/video.h $
- * $Id: video.h 52948 2010-09-30 13:02:50Z drmccoy $
+ * $Id: video.h 55274 2011-01-16 22:30:19Z drmccoy $
  *
  */
 
@@ -188,13 +188,6 @@ public:
 	virtual ~Video_v6() {}
 
 private:
-	static const byte _ditherPalette[768];
-
-	void buildPalLUT();
-
-	void shadeRect(Surface &dest,
-			int16 left, int16 top, int16 right, int16 bottom, byte color, byte strength);
-
 	void drawPacked(const byte *sprBuf, int16 x, int16 y, Surface &surfDesc);
 	void drawYUVData(const byte *srcData, Surface &destDesc,
 			int16 width, int16 height, int16 x, int16 y);

@@ -1,13 +1,13 @@
 
  ScummVM - ScummVM ported to EPOC/SymbianOS
 
- Copyright (C) 2008-2010 ScummVM Team
+ Copyright (C) 2008-2011 ScummVM Team
  Copyright (C) 2003-2008 Lars 'AnotherGuest' Persson
  Copyright (C) 2002-2008 Jurgen 'SumthinWicked' Braam
 
  Copyright (C) 2003-2005 Andreas 'Sprawl' Karlsson
  $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/symbian/README $
- $Id: README 53160 2010-10-12 02:18:11Z jvprat $
+ $Id: README 55243 2011-01-14 19:47:25Z jvprat $
 
 Using parts of snprintf.c by
 Mark Martinec <mark.martinec@ijs.si>, April 1999, June 2000
@@ -26,6 +26,23 @@ About ScummVM
 	Jurgen and Lars have successfully transfered all needed changes into CVS/SVN, with additional helpful tools for Symbian OS
 
 Release History:
+	Release version: 1.2.1
+	* Symbian port now split in two parts, ScummVM 1 and ScummVM 2 to keep the exe size down.
+	  ScummVM 1 contains the following engines:
+	    scumm queen groovie saga drascula
+	    touche parallaction cine
+	    cruise made tucker
+
+	  ScummVM 2 contains the following engines:
+	    agos sky gob
+	    kyra lure agi tinsel
+	    sword1 sword2 draci sci teenagent
+
+	* See main readme for general ScummVM improvements, minor update
+	Release version: 1.2.0
+	* Nothing significant in the Symbian port, except SDL improvements (new SDL version used)
+	* See main readme for general ScummVM improvements, major update
+
 	Release version: 1.1.0
 	* Nothing significant in the Symbian port, except SDL improvements.
 	* See main readme for general ScummVM improvements, minor update

@@ -19,16 +19,31 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/toon/resource.cpp $
-* $Id: resource.cpp 53161 2010-10-12 04:19:58Z eriktorbjorn $
+* $Id: resource.cpp 54385 2010-11-19 17:03:07Z fingolfin $
 *
 */
 
 #include "toon/resource.h"
 #include "common/file.h"
+#include "common/memstream.h"
+#include "common/substream.h"
 #include "toon/toon.h"
 
 
 namespace Toon {
+
+Resources::Resources(ToonEngine *vm) : _vm(vm) {
+}
+
+Resources::~Resources() {
+	while(!_pakFiles.empty()) {
+		PakFile *temp = _pakFiles.back();
+		_pakFiles.pop_back();
+		delete temp;
+	}
+
+	purgeFileData();
+}
 
 void Resources::openPackage(Common::String fileName, bool preloadEntirePackage) {
 	debugC(1, kDebugResource, "openPackage(%s, %d)", fileName.c_str(), (preloadEntirePackage) ? 1 : 0);
@@ -38,7 +53,6 @@ void Resources::openPackage(Common::String fileName, bool preloadEntirePackage) 
 
 	if (!opened)
 		return;
-
 
 	PakFile *pakFile = new PakFile();
 	pakFile->open(&file, fileName, preloadEntirePackage);
@@ -59,10 +73,6 @@ void Resources::closePackage(Common::String fileName) {
 	}
 }
 
-Resources::Resources(ToonEngine *vm) : _vm(vm) {
-
-}
-
 uint8 *Resources::getFileData(Common::String fileName, uint32 *fileSize) {
 	debugC(4, kDebugResource, "getFileData(%s, fileSize)", fileName.c_str());
 
@@ -78,6 +88,7 @@ uint8 *Resources::getFileData(Common::String fileName, uint32 *fileSize) {
 		uint8 *memory = (uint8 *)new uint8[*fileSize];
 		file.read(memory, *fileSize);
 		file.close();
+		_allocatedFileData.push_back(memory);
 		return memory;
 	} else {
 		for (uint32 i = 0; i < _pakFiles.size(); i++) {
@@ -117,6 +128,13 @@ Common::SeekableReadStream *Resources::openFile(Common::String fileName) {
 
 		return 0;
 	}
+}
+
+void Resources::purgeFileData() {
+	for (uint32 i = 0; i < _allocatedFileData.size(); i++) {
+		delete[] _allocatedFileData[i];
+	}
+	_allocatedFileData.clear();
 }
 Common::SeekableReadStream *PakFile::createReadStream(Common::String fileName) {
 	debugC(1, kDebugResource, "createReadStream(%s)", fileName.c_str());
@@ -184,6 +202,7 @@ void PakFile::open(Common::SeekableReadStream *rs, Common::String packName, bool
 
 	if (preloadEntirePackage) {
 		_bufferSize = rs->size();
+		delete[] _buffer;
 		_buffer = new uint8[_bufferSize];
 		rs->seek(0);
 		rs->read(_buffer, _bufferSize);
@@ -191,9 +210,7 @@ void PakFile::open(Common::SeekableReadStream *rs, Common::String packName, bool
 }
 
 void PakFile::close() {
-	if (_buffer) {
-		delete[] _buffer;
-	}
+	delete[] _buffer;
 
 	if (_fileHandle) {
 		_fileHandle->close();
@@ -201,15 +218,15 @@ void PakFile::close() {
 	}
 }
 
-PakFile::~PakFile() {
-	close();
+PakFile::PakFile() {
+	_bufferSize = 0;
+	_buffer = NULL;
+
+	_fileHandle = NULL;
 }
 
-
-PakFile::PakFile() {
-	_fileHandle = 0;
-	_buffer = 0;
-	_bufferSize = 0;
+PakFile::~PakFile() {
+	close();
 }
 
 } // End of namespace Toon

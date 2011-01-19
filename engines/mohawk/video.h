@@ -19,18 +19,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/video.h $
- * $Id: video.h 52482 2010-09-01 13:28:12Z mthreepwood $
+ * $Id: video.h 55312 2011-01-18 20:30:16Z mthreepwood $
  *
  */
 
 #ifndef MOHAWK_VIDEO_H
 #define MOHAWK_VIDEO_H
 
+#include "common/array.h"
 #include "graphics/pixelformat.h"
-
-namespace Graphics {
-	class QuickTimeDecoder;
-}
+#include "graphics/video/video_decoder.h"
 
 namespace Mohawk {
 
@@ -49,15 +47,22 @@ struct MLSTRecord {
 };
 
 struct VideoEntry {
-	Graphics::QuickTimeDecoder *video;
+	// Playback variables
+	Graphics::SeekableVideoDecoder *video;
 	uint16 x;
 	uint16 y;
 	bool loop;
-	Common::String filename;
-	uint16 id; // Riven only
 	bool enabled;
+	Graphics::VideoTimestamp start, end;
 
-	Graphics::QuickTimeDecoder *operator->() const { assert(video); return video; }
+	// Identification
+	Common::String filename; // External video files
+	uint16 id;               // Internal Mohawk files
+
+	// Helper functions
+	Graphics::SeekableVideoDecoder *operator->() const { assert(video); return video; } // TODO: Remove this eventually
+	void clear();
+	bool endOfVideo();
 };
 
 typedef int32 VideoHandle;
@@ -72,30 +77,40 @@ public:
 	~VideoManager();
 
 	// Generic movie functions
-	void playMovie(Common::String filename, uint16 x = 0, uint16 y = 0, bool clearScreen = false);
-	void playMovieCentered(Common::String filename, bool clearScreen = true);
-	void playBackgroundMovie(Common::String filename, int16 x = -1, int16 y = -1, bool loop = false);
-	bool updateBackgroundMovies();
+	void playMovieBlocking(const Common::String &filename, uint16 x = 0, uint16 y = 0, bool clearScreen = false);
+	void playMovieBlockingCentered(const Common::String &filename, bool clearScreen = true);
+	VideoHandle playMovie(const Common::String &filename, int16 x = -1, int16 y = -1, bool loop = false);
+	VideoHandle playMovie(uint16 id, int16 x = -1, int16 y = -1, bool loop = false);
+	bool updateMovies();
 	void pauseVideos();
 	void resumeVideos();
 	void stopVideos();
+	bool isVideoPlaying();
 
 	// Riven-related functions
 	void activateMLST(uint16 mlstId, uint16 card);
 	void clearMLST();
-	void enableMovie(uint16 id);
-	void disableMovie(uint16 id);
+	void enableMovieRiven(uint16 id);
+	void disableMovieRiven(uint16 id);
 	void disableAllMovies();
-	void playMovie(uint16 id);
-	void stopMovie(uint16 id);
-	void playMovieBlocking(uint16 id);
+	VideoHandle playMovieRiven(uint16 id);
+	void stopMovieRiven(uint16 id);
+	void playMovieBlockingRiven(uint16 id);
+	VideoHandle findVideoHandleRiven(uint16 id);
 
 	// Handle functions
 	VideoHandle findVideoHandle(uint16 id);
-	int32 getCurFrame(const VideoHandle &handle);
-	uint32 getFrameCount(const VideoHandle &handle);
-	uint32 getElapsedTime(const VideoHandle &handle);
-	bool endOfVideo(const VideoHandle &handle);
+	VideoHandle findVideoHandle(const Common::String &filename);
+	int32 getCurFrame(VideoHandle handle);
+	uint32 getFrameCount(VideoHandle handle);
+	uint32 getElapsedTime(VideoHandle handle);
+	bool endOfVideo(VideoHandle handle);
+	void setVideoBounds(VideoHandle handle, Graphics::VideoTimestamp start, Graphics::VideoTimestamp end);
+	void seekToTime(VideoHandle handle, Graphics::VideoTimestamp time);
+	void seekToFrame(VideoHandle handle, uint32 frame);
+	void setVideoLooping(VideoHandle handle, bool loop);
+	void waitUntilMovieEnds(VideoHandle videoHandle);
+	void delayUntilMovieEnds(VideoHandle videoHandle);
 
 private:
 	MohawkEngine *_vm;
@@ -107,8 +122,7 @@ private:
 	Common::Array<VideoEntry> _videoStreams;
 
 	VideoHandle createVideoHandle(uint16 id, uint16 x, uint16 y, bool loop);
-	VideoHandle createVideoHandle(Common::String filename, uint16 x, uint16 y, bool loop);
-	void waitUntilMovieEnds(VideoHandle videoHandle);
+	VideoHandle createVideoHandle(const Common::String &filename, uint16 x, uint16 y, bool loop);
 };
 
 } // End of namespace Mohawk

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/dc/dcmain.cpp $
- * $Id: dcmain.cpp 51478 2010-07-29 19:11:49Z marcus_c $
+ * $Id: dcmain.cpp 55172 2011-01-08 20:34:54Z marcus_c $
  *
  */
 
@@ -31,7 +31,7 @@
 #include "icon.h"
 #include "DCLauncherDialog.h"
 #include <common/config-manager.h>
-#include <common/stream.h>
+#include <common/memstream.h>
 
 #include "backends/plugins/dc/dc-provider.h"
 #include "sound/mixer_intern.h"
@@ -61,6 +61,8 @@ void OSystem_Dreamcast::initBackend()
   uint sampleRate = initSound();
   _mixer = new Audio::MixerImpl(this, sampleRate);
   _mixer->setReady(true);
+
+  _cdManager = new DCCDManager();
 }
 
 
@@ -86,7 +88,7 @@ static bool find_track(int track, int &first_sec, int &last_sec)
   return false;
 }
 
-void OSystem_Dreamcast::playCD(int track, int num_loops, int start_frame, int duration)
+void DCCDManager::playCD(int track, int num_loops, int start_frame, int duration)
 {
   int first_sec, last_sec;
 #if 1
@@ -103,23 +105,23 @@ void OSystem_Dreamcast::playCD(int track, int num_loops, int start_frame, int du
   play_cdda_sectors(first_sec, last_sec, num_loops);
 }
 
-void OSystem_Dreamcast::stopCD()
+void DCCDManager::stopCD()
 {
   stop_cdda();
 }
 
-bool OSystem_Dreamcast::pollCD()
+bool DCCDManager::pollCD()
 {
   extern int getCdState();
   return getCdState() == 3;
 }
 
-void OSystem_Dreamcast::updateCD()
+void DCCDManager::updateCD()
 {
   // Dummy.  The CD drive takes care of itself.
 }
 
-bool OSystem_Dreamcast::openCD(int drive)
+bool DCCDManager::openCD(int drive)
 {
   // Dummy.
   return true;
@@ -216,6 +218,99 @@ Common::SeekableReadStream *OSystem_Dreamcast::createConfigReadStream() {
 Common::WriteStream *OSystem_Dreamcast::createConfigWriteStream() {
   return 0;
 }
+
+void OSystem_Dreamcast::logMessage(LogMessageType::Type type, const char *message) {
+#ifndef NOSERIAL
+  report(message);
+#endif
+}
+
+namespace DC_Flash {
+  static int syscall_info_flash(int sect, int *info)
+  {
+    return (*(int (**)(int, void*, int, int))0x8c0000b8)(sect,info,0,0);  
+  }
+
+  static int syscall_read_flash(int offs, void *buf, int cnt)
+  {
+    return (*(int (**)(int, void*, int, int))0x8c0000b8)(offs,buf,cnt,1);
+  }
+
+  static int flash_crc(const char *buf, int size)
+  {
+    int i, c, n = -1;
+    for(i=0; i<size; i++) {
+      n ^= (buf[i]<<8);
+      for(c=0; c<8; c++)
+	if(n & 0x8000)
+	  n = (n << 1) ^ 4129;
+	else
+	  n <<= 1;
+    }
+    return (unsigned short)~n;
+  }
+  
+  static int flash_read_sector(int partition, int sec, unsigned char *dst)
+  {
+    int s, r, n, b, bmb, got=0;
+    int info[2];
+    char buf[64];
+    char bm[64];
+    
+    if((r = syscall_info_flash(partition, info))<0)
+      return r;
+    
+    if((r = syscall_read_flash(info[0], buf, 64))<0)
+      return r;
+    
+    if(memcmp(buf, "KATANA_FLASH", 12) ||
+       buf[16] != partition || buf[17] != 0)
+      return -2;
+    
+    n = (info[1]>>6)-1-((info[1] + 0x7fff)>>15);
+    bmb = n+1;
+    for(b = 0; b < n; b++) {
+      if(!(b&511)) {
+	if((r = syscall_read_flash(info[0] + (bmb++ << 6), bm, 64))<0)
+	  return r;
+      }
+      if(!(bm[(b>>3)&63] & (0x80>>(b&7))))
+	if((r = syscall_read_flash(info[0] + ((b+1) << 6), buf, 64))<0)
+	  return r;
+	else if((s=*(unsigned short *)(buf+0)) == sec &&
+		flash_crc(buf, 62) == *(unsigned short *)(buf+62)) {
+	  memcpy(dst+(s-sec)*60, buf+2, 60);
+	  got=1;
+	}
+    }
+    return got;
+  }
+
+  static int get_locale_setting()
+  {
+    unsigned char data[60];
+    if (flash_read_sector(2,5,data) == 1)
+      return data[5];
+    else
+      return -1;
+  }
+} // End of namespace DC_Flash
+
+Common::String OSystem_Dreamcast::getSystemLanguage() const {
+  static const char *languages[] = {
+    "ja_JP",
+    "en_US",
+    "de_DE",
+    "fr_FR",
+    "es_ES",
+    "it_IT"
+  };
+  int l = DC_Flash::get_locale_setting();
+  if (l<0 || ((unsigned)l)>=sizeof(languages)/sizeof(languages[0]))
+    l = 1;
+  return Common::String(languages[l]);
+}
+
 
 void DCHardware::dc_init_hardware()
 {

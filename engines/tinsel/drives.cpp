@@ -19,11 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/drives.cpp $
- * $Id: drives.cpp 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: drives.cpp 54446 2010-11-23 22:33:26Z fingolfin $
  *
  * CD/drive handling functions
  */
 
+#include "common/config-manager.h"
+#include "common/substream.h"
 #include "gui/message.h"
 #include "tinsel/drives.h"
 #include "tinsel/scene.h"
@@ -33,11 +35,16 @@
 
 namespace Tinsel {
 
+// FIXME: Avoid non-const global vars
+
 char currentCD = '1';
 static uint32 cdFlags[] = { fCd1, fCd2, fCd3, fCd4, fCd5, fCd6, fCd7, fCd8 };
 
 static bool bChangingCD = false;
 static char nextCD = '\0';
+
+static uint32 lastTime = 0;
+extern LANGUAGE sampleLanguage;
 
 
 void CdCD(CORO_PARAM) {
@@ -94,9 +101,6 @@ int GetCD(int flags) {
 	return cd;
 }
 
-static uint32 lastTime = 0;
-extern LANGUAGE sampleLanguage;
-
 void DoCdChange() {
 	if (bChangingCD && (g_system->getMillis() > (lastTime + 1000))) {
 		lastTime = g_system->getMillis();
@@ -149,13 +153,24 @@ bool GotoCD() {
 
 bool TinselFile::_warningShown = false;
 
+TinselFile::TinselFile() : ReadStreamEndian((_vm->getFeatures() & GF_BIG_ENDIAN) != 0) {
+	_stream = NULL;
+}
+
+TinselFile::~TinselFile() {
+	delete _stream;
+}
+
+bool TinselFile::openInternal(const Common::String &filename) {
+	_stream = SearchMan.createReadStreamForMember(filename);
+	if (!_stream)
+		_stream = SearchMan.createReadStreamForMember(filename + ".");
+	return _stream != 0;
+}
+
 bool TinselFile::open(const Common::String &filename) {
-	if (Common::File::open(filename)) {
-		// If it's the sample file, strip off the CD number from the filename
-
-
+	if (openInternal(filename))
 		return true;
-	}
 
 	if (!TinselV2)
 		return false;
@@ -173,7 +188,50 @@ bool TinselFile::open(const Common::String &filename) {
 	strncpy(newFilename, fname, p - fname);
 	strcpy(newFilename + (p - fname), p + 1);
 
-	return Common::File::open(newFilename);
+	return openInternal(newFilename);
 }
+
+void TinselFile::close() {
+	delete _stream;
+	_stream = NULL;
+}
+
+int32 TinselFile::pos() const {
+	assert(_stream);
+	return _stream->pos();
+}
+
+int32 TinselFile::size() const {
+	assert(_stream);
+	return _stream->size();
+}
+
+bool TinselFile::seek(int32 offset, int whence) {
+	assert(_stream);
+	return _stream->seek(offset, whence);
+}
+
+bool TinselFile::eos() const {
+	assert(_stream);
+	return _stream->eos();
+}
+
+bool TinselFile::err() const {
+	assert(_stream);
+	return _stream->err();
+}
+
+void TinselFile::clearErr() {
+	assert(_stream);
+	_stream->clearErr();
+}
+
+uint32 TinselFile::read(void *dataPtr, uint32 dataSize) {
+	assert(_stream);
+	return _stream->read(dataPtr, dataSize);
+}
+
+
+
 
 } // End of namespace Tinsel

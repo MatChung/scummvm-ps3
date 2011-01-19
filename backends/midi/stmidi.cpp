@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/midi/stmidi.cpp $
- * $Id: stmidi.cpp 53961 2010-10-30 21:27:42Z fingolfin $
+ * $Id: stmidi.cpp 54573 2010-11-29 16:18:43Z fingolfin $
  */
 
 /*
@@ -34,10 +34,12 @@
  * cycles.  I might change so sysex messages are sent the other way later.
  */
 
-#if defined __MINT__
-
 // Disable symbol overrides so that we can use system headers.
 #define FORBIDDEN_SYMBOL_ALLOW_ALL
+
+#include "common/scummsys.h"
+
+#if defined __MINT__
 
 #include <osbind.h>
 #include "sound/mpu401.h"

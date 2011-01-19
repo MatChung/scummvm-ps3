@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/font.h $
- * $Id: font.h 50955 2010-07-17 00:05:27Z lordhoto $
+ * $Id: font.h 55182 2011-01-09 13:21:19Z thebluegr $
  *
  */
 
@@ -40,6 +40,7 @@ public:
 	virtual bool isDoubleByte(uint16 chr) { return false; }
 	virtual byte getCharWidth(uint16 chr) { return 0; }
 	virtual void draw(uint16 chr, int16 top, int16 left, byte color, bool greyedOutput) {}
+	virtual void drawToBuffer(uint16 chr, int16 top, int16 left, byte color, bool greyedOutput, byte *buffer, int16 width, int16 height) {}
 };
 
 
@@ -56,6 +57,10 @@ public:
 	byte getHeight();
 	byte getCharWidth(uint16 chr);
 	void draw(uint16 chr, int16 top, int16 left, byte color, bool greyedOutput);
+#ifdef ENABLE_SCI32
+	// SCI2/2.1 equivalent
+	void drawToBuffer(uint16 chr, int16 top, int16 left, byte color, bool greyedOutput, byte *buffer, int16 width, int16 height);
+#endif
 
 private:
 	byte getCharHeight(uint16 chr);

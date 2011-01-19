@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/dialogs.h $
- * $Id: dialogs.h 48571 2010-04-06 16:33:15Z mthreepwood $
+ * $Id: dialogs.h 54443 2010-11-23 22:32:39Z fingolfin $
  *
  */
 
@@ -33,7 +33,7 @@
 #include "gui/dialog.h"
 #include "gui/options.h"
 #include "gui/widget.h"
-#include "gui/ListWidget.h"
+#include "gui/widgets/list.h"
 
 namespace Mohawk {
 
@@ -48,9 +48,9 @@ protected:
 	GUI::StaticTextWidget *_text;
 
 public:
-	InfoDialog(MohawkEngine *vm, Common::String message);
+	InfoDialog(MohawkEngine *vm, const Common::String &message);
 
-	void setInfoText(Common::String message);
+	void setInfoText(const Common::String &message);
 
 	virtual void handleMouseDown(int x, int y, int button, int clickCount) {
 		setResult(0);
@@ -67,7 +67,7 @@ public:
 
 class PauseDialog : public InfoDialog {
 public:
-	PauseDialog(MohawkEngine* vm, Common::String message);
+	PauseDialog(MohawkEngine* vm, const Common::String &message);
 	virtual void handleKeyDown(Common::KeyState state);
 };
 

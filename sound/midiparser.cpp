@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/sound/midiparser.cpp $
- * $Id: midiparser.cpp 50926 2010-07-16 03:31:45Z eriktorbjorn $
+ * $Id: midiparser.cpp 55256 2011-01-16 11:02:49Z thebluegr $
  *
  */
 
@@ -281,6 +281,7 @@ void MidiParser::allNotesOff() {
 
 	for (i = 0; i < 16; ++i) {
 		sendToDriver(0xB0 | i, 0x7b, 0); // All notes off
+		sendToDriver(0xB0 | i, 0x40, 0); // Also send a sustain off event (bug #3116608)
 	}
 
 	memset(_active_notes, 0, sizeof(_active_notes));
@@ -361,7 +362,7 @@ void MidiParser::hangAllActiveNotes() {
 	}
 }
 
-bool MidiParser::jumpToTick(uint32 tick, bool fireEvents, bool stopNotes) {
+bool MidiParser::jumpToTick(uint32 tick, bool fireEvents, bool stopNotes, bool dontSendNoteOn) {
 	if (_active_track >= _num_tracks)
 		return false;
 
@@ -402,8 +403,17 @@ bool MidiParser::jumpToTick(uint32 tick, bool fireEvents, bool stopNotes) {
 						_driver->sysEx(info.ext.data, (uint16)info.length-1);
 					else
 						_driver->sysEx(info.ext.data, (uint16)info.length);
-				} else
-					sendToDriver(info.event, info.basic.param1, info.basic.param2);
+				} else {
+					// The note on sending code is used by the SCUMM engine. Other engine using this code
+					// (such as SCI) have issues with this, as all the notes sent can be heard when a song
+					// is fast-forwarded.	Thus, if the engine requests it, don't send note on events.
+					if (info.command() == 0x9 && dontSendNoteOn) {
+						// Don't send note on; doing so creates a "warble" with some instruments on the MT-32.
+						// Refer to patch #3117577
+					} else {
+						sendToDriver(info.event, info.basic.param1, info.basic.param2);
+					}
+				}
 			}
 
 			parseNextEvent(_next_event);

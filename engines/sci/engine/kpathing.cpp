@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/kpathing.cpp $
- * $Id: kpathing.cpp 53504 2010-10-15 15:40:36Z thebluegr $
+ * $Id: kpathing.cpp 55086 2011-01-01 12:48:12Z thebluegr $
  *
  */
 
@@ -938,7 +938,7 @@ static Common::Point *fixup_start_point(PathfindingState *s, const Common::Point
 			// Fall through
 		case POLY_BARRED_ACCESS:
 		case POLY_NEAREST_ACCESS:
-			if (cont == CONT_INSIDE) {
+			if (cont != CONT_OUTSIDE) {
 				if (s->_prependPoint != NULL) {
 					// We shouldn't get here twice.
 					// We need to break in this case, otherwise we'll end in an infinite
@@ -953,12 +953,13 @@ static Common::Point *fixup_start_point(PathfindingState *s, const Common::Point
 				}
 
 				if ((type == POLY_BARRED_ACCESS) || (type == POLY_CONTAINED_ACCESS))
-					debugC(2, kDebugLevelAvoidPath, "AvoidPath: start position at unreachable location");
+					debugC(kDebugLevelAvoidPath, "AvoidPath: start position at unreachable location");
 
 				// The original start position is in an invalid location, so we
 				// use the moved point and add the original one to the final path
 				// later on.
-				s->_prependPoint = new Common::Point(start);
+				if (start != *new_start)
+					s->_prependPoint = new Common::Point(start);
 			}
 		}
 
@@ -1014,7 +1015,7 @@ static Common::Point *fixup_end_point(PathfindingState *s, const Common::Point &
 
 				// For near-point access polygons we need to add the original end point
 				// to the path after pathfinding.
-				if (type == POLY_NEAREST_ACCESS)
+				if ((type == POLY_NEAREST_ACCESS) && (end != *new_end))
 					s->_appendPoint = new Common::Point(end);
 			}
 		}
@@ -1330,15 +1331,21 @@ static void AStar(PathfindingState *s) {
 			if (closedSet.contains(vertex))
 				continue;
 
-			// Avoid plotting path along screen edge
-			if ((vertex_min != s->vertex_start) || (vertex != s->vertex_end))
-				if (s->pointOnScreenBorder(vertex_min->v) && s->pointOnScreenBorder(vertex->v))
-					continue;
-
 			if (!openSet.contains(vertex))
 				openSet.push_front(vertex);
 
 			new_dist = vertex_min->costG + (uint32)sqrt((float)vertex_min->v.sqrDist(vertex->v));
+
+			// When travelling to a vertex on the screen edge, we
+			// add a penalty score to make this path less appealing.
+			// NOTE: If an obstacle has only one vertex on a screen edge,
+			// later SSCI pathfinders will treat that vertex like any
+			// other, while we apply a penalty to paths traversing it.
+			// This difference might lead to problems, but none are
+			// known at the time of writing.
+			if (s->pointOnScreenBorder(vertex->v))
+				new_dist += 10000;
+
 			if (new_dist < vertex->costG) {
 				vertex->costG = new_dist;
 				vertex->costF = vertex->costG + (uint32)sqrt((float)vertex->v.sqrDist(s->vertex_end->v));
@@ -1350,7 +1357,7 @@ static void AStar(PathfindingState *s) {
 	}
 
 	if (openSet.empty())
-		debugC(2, kDebugLevelAvoidPath, "AvoidPath: End point (%i, %i) is unreachable", s->vertex_end->v.x, s->vertex_end->v.y);
+		debugC(kDebugLevelAvoidPath, "AvoidPath: End point (%i, %i) is unreachable", s->vertex_end->v.x, s->vertex_end->v.y);
 }
 
 static reg_t allocateOutputArray(SegManager *segMan, int size) {

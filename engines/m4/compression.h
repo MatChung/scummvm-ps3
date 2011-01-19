@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/m4/compression.h $
- * $Id: compression.h 49352 2010-05-31 12:38:15Z wjpalenstijn $
+ * $Id: compression.h 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -58,9 +58,7 @@ public:
 	int getCount() const { return _count; }
 	MadsPackEntry &getItem(int index) const { return _items[index]; }
 	MadsPackEntry &operator[](int index) const { return _items[index]; }
-	Common::MemoryReadStream *getItemStream(int index) {
-		return new Common::MemoryReadStream(_items[index].data, _items[index].size, DisposeAfterUse::NO);
-	}
+	Common::SeekableReadStream *getItemStream(int index);
 	int getDataOffset() const { return _dataOffset; }
 };
 

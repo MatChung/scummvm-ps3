@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/translation.cpp $
- * $Id: translation.cpp 53160 2010-10-12 02:18:11Z jvprat $
+ * $Id: translation.cpp 54715 2010-12-01 20:00:40Z jvprat $
  */
 
 #ifdef WIN32
@@ -31,17 +31,16 @@
 
 #define TRANSLATIONS_DAT_VER 2
 
-#include "translation.h"
+#include "common/translation.h"
 #include "common/archive.h"
 #include "common/config-manager.h"
+#include "common/file.h"
+#include "common/fs.h"
+#include "common/system.h"
 
-DECLARE_SINGLETON(Common::TranslationManager)
+#ifdef USE_TRANSLATION
 
-#ifdef USE_DETECTLANG
-#ifndef WIN32
-#include <locale.h>
-#endif // !WIN32
-#endif
+DECLARE_SINGLETON(Common::TranslationManager);
 
 namespace Common {
 
@@ -49,73 +48,8 @@ bool operator<(const TLanguage &l, const TLanguage &r) {
 	return strcmp(l.name, r.name) < 0;
 }
 
-#ifdef USE_TRANSLATION
-
-// Translation enabled
-
 TranslationManager::TranslationManager() : _currentLang(-1) {
 	loadTranslationsInfoDat();
-
-#ifdef USE_DETECTLANG
-#ifdef WIN32
-	// We can not use "setlocale" (at least not for MSVC builds), since it
-	// will return locales like: "English_USA.1252", thus we need a special
-	// way to determine the locale string for Win32.
-	char langName[9];
-	char ctryName[9];
-
-	const LCID languageIdentifier = GetThreadLocale();
-
-	// GetLocalInfo is only supported starting from Windows 2000, according to this:
-	// http://msdn.microsoft.com/en-us/library/dd318101%28VS.85%29.aspx
-	// On the other hand the locale constants used, seem to exist on Windows 98 too,
-	// check this for that: http://msdn.microsoft.com/en-us/library/dd464799%28v=VS.85%29.aspx
-	//
-	// I am not exactly sure what is the truth now, it might be very well that this breaks
-	// support for systems older than Windows 2000....
-	//
-	// TODO: Check whether this (or ScummVM at all ;-) works on a system with Windows 98 for
-	// example and if it does not and we still want Windows 9x support, we should definitly
-	// think of another solution.
-	if (GetLocaleInfo(languageIdentifier, LOCALE_SISO639LANGNAME, langName, sizeof(langName)) != 0 &&
-		GetLocaleInfo(languageIdentifier, LOCALE_SISO3166CTRYNAME, ctryName, sizeof(ctryName)) != 0) {
-		_syslang = langName;
-		_syslang += "_";
-		_syslang += ctryName;
-	} else {
-		_syslang = "C";
-	}
-#else // WIN32
-	// Activating current locale settings
-	const char *locale = setlocale(LC_ALL, "");
-
-	// Detect the language from the locale
-	if (!locale) {
-		_syslang = "C";
-	} else {
-		int length = 0;
-
-		// Strip out additional information, like
-		// ".UTF-8" or the like. We do this, since
-		// our translation languages are usually
-		// specified without any charset information.
-		for (int i = 0; locale[i]; ++i) {
-			// TODO: Check whether "@" should really be checked
-			// here.
-			if (locale[i] == '.' || locale[i] == ' ' || locale[i] == '@') {
-				length = i;
-				break;
-			}
-
-			length = i;
-		}
-
-		_syslang = String(locale, length);
-	}
-#endif // WIN32
-#else // USE_DETECTLANG
-	_syslang = "C";
-#endif // USE_DETECTLANG
 
 	// Set the default language
 	setLanguage("");
@@ -124,43 +58,68 @@ TranslationManager::TranslationManager() : _currentLang(-1) {
 TranslationManager::~TranslationManager() {
 }
 
-void TranslationManager::setLanguage(const char *lang) {
-	// Get lang index
+int32 TranslationManager::findMatchingLanguage(const String &lang) {
+	uint langLength = lang.size();
+	uint numLangs = _langs.size();
+
+	// Try to match languages of the same length or longer ones
+	// that can be cut at the length of the given one.
+	for (uint i = 0; i < numLangs; ++i) {
+		uint iLength = _langs[i].size();
+		if (iLength >= langLength) {
+			// Found a candidate; compare the full string by default.
+			String cmpLang = _langs[i];
+
+			if ((iLength > langLength) && (_langs[i][langLength] == '_')) {
+				// It has a separation mark at the length of the
+				// requested language, so we can cut it.
+				cmpLang = String(_langs[i].c_str(), langLength);
+			}
+			if (lang.equalsIgnoreCase(cmpLang))
+				return i;
+		}
+	}
+
+	// Couldn't find a matching language.
+	return -1;
+}
+
+void TranslationManager::setLanguage(const String &lang) {
+	// Get lang index.
 	int langIndex = -1;
 	String langStr(lang);
 	if (langStr.empty())
-		langStr = _syslang;
+		langStr = g_system->getSystemLanguage();
 
-	// Searching for a valid language
-	for (unsigned int i = 0; i < _langs.size() && langIndex == -1; ++i) {
-		if (langStr == _langs[i])
-			langIndex = i;
+	// Search for the given language or a variant of it.
+	langIndex = findMatchingLanguage(langStr);
+
+	// Try to find a partial match taking away parts of the original language.
+	const char *lastSep;
+	String langCut(langStr);
+	while ((langIndex == -1) && (lastSep = strrchr(langCut.c_str(), '_'))) {
+		langCut = String(langCut.c_str(), lastSep);
+		langIndex = findMatchingLanguage(langCut);
 	}
 
-	// Try partial match
-	for (unsigned int i = 0; i < _langs.size() && langIndex == -1; ++i) {
-		if (strncmp(langStr.c_str(), _langs[i].c_str(), 2) == 0)
-			langIndex = i;
-	}
-
-	// Load messages for that lang
-	// Call it even if the index is -1 to unload previously loaded translations
+	// Load messages for that language.
+	// Call it even if the index is -1 to unload previously loaded translations.
 	if (langIndex != _currentLang) {
 		loadLanguageDat(langIndex);
 		_currentLang = langIndex;
 	}
 }
 
-const char *TranslationManager::getTranslation(const char *message) {
+const char *TranslationManager::getTranslation(const char *message) const {
 	return getTranslation(message, NULL);
 }
 
-const char *TranslationManager::getTranslation(const char *message, const char *context) {
-	// if no language is set or message is empty, return msgid as is
+const char *TranslationManager::getTranslation(const char *message, const char *context) const {
+	// If no language is set or message is empty, return msgid as is
 	if (_currentTranslationMessages.empty() || *message == '\0')
 		return message;
 
-	// binary-search for the msgid
+	// Binary-search for the msgid
 	int leftIndex = 0;
 	int rightIndex = _currentTranslationMessages.size() - 1;
 
@@ -207,23 +166,23 @@ const char *TranslationManager::getTranslation(const char *message, const char *
 	return message;
 }
 
-const char *TranslationManager::getCurrentCharset() {
+String TranslationManager::getCurrentCharset() const {
 	if (_currentCharset.empty())
 		return "ASCII";
-	return _currentCharset.c_str();
+	return _currentCharset;
 }
 
-const char *TranslationManager::getCurrentLanguage() {
+String TranslationManager::getCurrentLanguage() const {
 	if (_currentLang == -1)
 		return "C";
-	return _langs[_currentLang].c_str();
+	return _langs[_currentLang];
 }
 
-String TranslationManager::getTranslation(const String &message) {
+String TranslationManager::getTranslation(const String &message) const {
 	return getTranslation(message.c_str());
 }
 
-String TranslationManager::getTranslation(const String &message, const String &context) {
+String TranslationManager::getTranslation(const String &message, const String &context) const {
 	return getTranslation(message.c_str(), context.c_str());
 }
 
@@ -240,7 +199,7 @@ const TLangArray TranslationManager::getSupportedLanguageNames() const {
 	return languages;
 }
 
-int TranslationManager::parseLanguage(const String lang) {
+int TranslationManager::parseLanguage(const String &lang) const {
 	for (unsigned int i = 0; i < _langs.size(); i++) {
 		if (lang == _langs[i])
 			return i + 1;
@@ -249,7 +208,7 @@ int TranslationManager::parseLanguage(const String lang) {
 	return kTranslationBuiltinId;
 }
 
-const char *TranslationManager::getLangById(int id) {
+String TranslationManager::getLangById(int id) const {
 	switch (id) {
 	case kTranslationAutodetectId:
 		return "";
@@ -257,7 +216,7 @@ const char *TranslationManager::getLangById(int id) {
 		return "C";
 	default:
 		if (id >= 0 && id - 1 < (int)_langs.size())
-			return _langs[id - 1].c_str();
+			return _langs[id - 1];
 	}
 
 	// In case an invalid ID was specified, we will output a warning
@@ -335,10 +294,10 @@ void TranslationManager::loadTranslationsInfoDat() {
 	for (int i = 0; i < nbTranslations; ++i) {
 		len = in.readUint16BE();
 		in.read(buf, len);
-		_langs[i] = String(buf, len);
+		_langs[i] = String(buf, len - 1);
 		len = in.readUint16BE();
 		in.read(buf, len);
-		_langNames[i] = String(buf, len);
+		_langNames[i] = String(buf, len - 1);
 	}
 
 	// Read messages
@@ -347,7 +306,7 @@ void TranslationManager::loadTranslationsInfoDat() {
 	for (int i = 0; i < numMessages; ++i) {
 		len = in.readUint16BE();
 		in.read(buf, len);
-		_messageIds[i] = String(buf, len);
+		_messageIds[i] = String(buf, len - 1);
 	}
 }
 
@@ -395,18 +354,18 @@ void TranslationManager::loadLanguageDat(int index) {
 	// Read charset
 	len = in.readUint16BE();
 	in.read(buf, len);
-	_currentCharset = String(buf, len);
+	_currentCharset = String(buf, len - 1);
 
 	// Read messages
 	for (int i = 0; i < nbMessages; ++i) {
 		_currentTranslationMessages[i].msgid = in.readUint16BE();
 		len = in.readUint16BE();
 		in.read(buf, len);
-		_currentTranslationMessages[i].msgstr = String(buf, len);
+		_currentTranslationMessages[i].msgstr = String(buf, len - 1);
 		len = in.readUint16BE();
 		if (len > 0) {
 			in.read(buf, len);
-			_currentTranslationMessages[i].msgctxt = String(buf, len);
+			_currentTranslationMessages[i].msgctxt = String(buf, len - 1);
 		}
 	}
 }
@@ -435,53 +394,6 @@ bool TranslationManager::checkHeader(File &in) {
 	return true;
 }
 
-#else // USE_TRANSLATION
-
-// Translation disabled
-
-
-TranslationManager::TranslationManager() {}
-
-TranslationManager::~TranslationManager() {}
-
-void TranslationManager::setLanguage(const char *lang) {}
-
-const char *TranslationManager::getLangById(int id) {
-	return "";
-}
-
-int TranslationManager::parseLanguage(const String lang) {
-	return kTranslationBuiltinId;
-}
-
-const char *TranslationManager::getTranslation(const char *message) {
-	return message;
-}
-
-String TranslationManager::getTranslation(const String &message) {
-	return message;
-}
-
-const char *TranslationManager::getTranslation(const char *message, const char *) {
-	return message;
-}
-
-String TranslationManager::getTranslation(const String &message, const String &) {
-	return message;
-}
-
-const TLangArray TranslationManager::getSupportedLanguageNames() const {
-	return TLangArray();
-}
-
-const char *TranslationManager::getCurrentCharset() {
-	return "ASCII";
-}
-
-const char *TranslationManager::getCurrentLanguage() {
-	return "C";
-}
+} // End of namespace Common
 
 #endif // USE_TRANSLATION
-
-} // End of namespace Common

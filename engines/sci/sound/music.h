@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/sound/music.h $
- * $Id: music.h 52662 2010-09-09 18:26:16Z waltervn $
+ * $Id: music.h 54478 2010-11-25 16:09:45Z thebluegr $
  *
  */
 
@@ -76,6 +76,7 @@ public:
 	uint16 loop;
 	int16 volume;
 	int16 hold;
+	int8 reverb;
 
 	int16 pauseCounter;
 	uint sampleLoopCounter;
@@ -187,7 +188,10 @@ public:
 	void sendMidiCommand(uint32 cmd);
 	void sendMidiCommand(MusicEntry *pSnd, uint32 cmd);
 
-	void setReverb(byte reverb);
+	void setGlobalReverb(int8 reverb);
+	int8 getGlobalReverb() { return _globalReverb; }
+
+	byte getCurrentReverb();
 
 	virtual void saveLoadWithSerializer(Common::Serializer &ser);
 
@@ -218,6 +222,7 @@ private:
 	bool _soundOn;
 	byte _masterVolume;
 	MusicEntry *_usedChannel[16];
+	int8 _globalReverb;
 
 	MidiCommandQueue _queuedCommands;
 	MusicType _musicType;

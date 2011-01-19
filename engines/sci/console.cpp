@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/console.cpp $
- * $Id: console.cpp 54037 2010-11-02 09:49:47Z fingolfin $
+ * $Id: console.cpp 55249 2011-01-15 11:54:20Z thebluegr $
  *
  */
 
@@ -57,6 +57,8 @@
 
 #include "common/file.h"
 #include "common/savefile.h"
+
+#include "engines/util.h"
 
 namespace Sci {
 
@@ -224,11 +226,15 @@ void Console::preEnter() {
 	_engine->pauseEngine(true);
 }
 
+extern void playVideo(Graphics::VideoDecoder *videoDecoder, VideoState videoState);
+
 void Console::postEnter() {
 	if (!_videoFile.empty()) {
-		_engine->_gfxCursor->kernelHide();
-
 		Graphics::VideoDecoder *videoDecoder = 0;
+
+#ifdef ENABLE_SCI32
+		bool duckMode = false;
+#endif
 
 		if (_videoFile.hasSuffix(".seq")) {
 			SeqDecoder *seqDecoder = new SeqDecoder();
@@ -238,45 +244,49 @@ void Console::postEnter() {
 		} else if (_videoFile.hasSuffix(".vmd")) {
 			videoDecoder = new Graphics::VMDDecoder(g_system->getMixer());
 #endif
+		} else if (_videoFile.hasSuffix(".duk")) {
+#ifdef ENABLE_SCI32
+			duckMode = true;
+			videoDecoder = new Graphics::AviDecoder(g_system->getMixer());
+#else
+			warning("Duck videos require SCI32 support compiled in");
+#endif
 		} else if (_videoFile.hasSuffix(".avi")) {
 			videoDecoder = new Graphics::AviDecoder(g_system->getMixer());
 		}
 
 		if (videoDecoder && videoDecoder->loadFile(_videoFile)) {
-			uint16 x = (g_system->getWidth() - videoDecoder->getWidth()) / 2;
-			uint16 y = (g_system->getHeight() - videoDecoder->getHeight()) / 2;
-			bool skipVideo = false;
+			_engine->_gfxCursor->kernelHide();
 
-			if (videoDecoder->hasDirtyPalette())
-				videoDecoder->setSystemPalette();
+#ifdef ENABLE_SCI32
+			// Duck videos are 16bpp, so we need to change pixel formats
+			int oldWidth = g_system->getWidth();
+			int oldHeight = g_system->getHeight();
+			if (duckMode) {
+				Common::List<Graphics::PixelFormat> formats;
+				formats.push_back(videoDecoder->getPixelFormat());
+				initGraphics(640, 480, true, formats);
 
-			while (!g_engine->shouldQuit() && !videoDecoder->endOfVideo() && !skipVideo) {
-				if (videoDecoder->needsUpdate()) {
-					Graphics::Surface *frame = videoDecoder->decodeNextFrame();
-					if (frame) {
-						g_system->copyRectToScreen((byte *)frame->pixels, frame->pitch, x, y, frame->w, frame->h);
-
-						if (videoDecoder->hasDirtyPalette())
-							videoDecoder->setSystemPalette();
-
-						g_system->updateScreen();
-					}
-				}
-
-				Common::Event event;
-				while (g_system->getEventManager()->pollEvent(event)) {
-					if ((event.type == Common::EVENT_KEYDOWN && event.kbd.keycode == Common::KEYCODE_ESCAPE) || event.type == Common::EVENT_LBUTTONUP)
-						skipVideo = true;
-				}
-
-				g_system->delayMillis(10);
+				if (g_system->getScreenFormat().bytesPerPixel != videoDecoder->getPixelFormat().bytesPerPixel)
+					error("Could not switch screen format for the duck video");
 			}
-		
-			delete videoDecoder;
+#endif
+
+			VideoState emptyState;
+			emptyState.fileName = _videoFile;
+			emptyState.flags = kDoubled;	// always allow the videos to be double sized
+			playVideo(videoDecoder, emptyState);
+
+#ifdef ENABLE_SCI32
+			// Switch back to 8bpp if we played a duck video
+			if (duckMode)
+				initGraphics(oldWidth, oldHeight, oldWidth > 320);
+#endif
+
+			_engine->_gfxCursor->kernelShow();
 		} else
 			warning("Could not play video %s\n", _videoFile.c_str());
 
-		_engine->_gfxCursor->kernelShow();
 		_videoFile.clear();
 		_videoFrameDelay = 0;
 	}
@@ -445,6 +455,12 @@ bool Console::cmdGetVersion(int argc, const char **argv) {
 	DebugPrintf("Lofs type: %s\n", getSciVersionDesc(_engine->_features->detectLofsType()));
 	DebugPrintf("Move count type: %s\n", (_engine->_features->handleMoveCount()) ? "increment" : "ignore");
 	DebugPrintf("SetCursor type: %s\n", getSciVersionDesc(_engine->_features->detectSetCursorType()));
+#ifdef ENABLE_SCI32
+	if (getSciVersion() >= SCI_VERSION_2)
+		DebugPrintf("kString type: %s\n", (_engine->_features->detectSci2StringFunctionType() == kSci2StringFunctionOld) ? "SCI2 (old)" : "SCI2.1 (new)");
+	if (getSciVersion() == SCI_VERSION_2_1)
+		DebugPrintf("SCI2.1 kernel table: %s\n", (_engine->_features->detectSci21KernelType() == SCI_VERSION_2) ? "modified SCI2 (old)" : "SCI2.1 (new)");
+#endif
 	DebugPrintf("View type: %s\n", viewTypeDesc[g_sci->getResMan()->getViewType()]);
 	DebugPrintf("Uses palette merging: %s\n", g_sci->_gfxPalette->isMerging() ? "yes" : "no");
 	DebugPrintf("Resource volume version: %s\n", g_sci->getResMan()->getVolVersionDesc());
@@ -828,7 +844,7 @@ bool Console::cmdHexgrep(int argc, const char **argv) {
 
 bool Console::cmdVerifyScripts(int argc, const char **argv) {
 	if (getSciVersion() < SCI_VERSION_1_1) {
-		DebugPrintf("This script check is only meant for SCI1.1-SCI2.1 games\n");
+		DebugPrintf("This script check is only meant for SCI1.1-SCI3 games\n");
 		return true;
 	}
 
@@ -836,7 +852,7 @@ bool Console::cmdVerifyScripts(int argc, const char **argv) {
 	Common::sort(resources->begin(), resources->end());
 	Common::List<ResourceId>::iterator itr = resources->begin();
 
-	DebugPrintf("%d SCI1.1-SCI2.1 scripts found, performing sanity checks...\n", resources->size());
+	DebugPrintf("%d SCI1.1-SCI3 scripts found, performing sanity checks...\n", resources->size());
 
 	Resource *script, *heap;
 	while (itr != resources->end()) {
@@ -844,13 +860,19 @@ bool Console::cmdVerifyScripts(int argc, const char **argv) {
 		if (!script)
 			DebugPrintf("Error: script %d couldn't be loaded\n", itr->getNumber());
 
-		heap = _engine->getResMan()->findResource(ResourceId(kResourceTypeHeap, itr->getNumber()), false);
-		if (!heap)
-			DebugPrintf("Error: script %d doesn't have a corresponding heap\n", itr->getNumber());
+		if (getSciVersion() <= SCI_VERSION_2_1) {
+			heap = _engine->getResMan()->findResource(ResourceId(kResourceTypeHeap, itr->getNumber()), false);
+			if (!heap)
+				DebugPrintf("Error: script %d doesn't have a corresponding heap\n", itr->getNumber());
 
-		if (script && heap && (script->size + heap->size > 65535))
-			DebugPrintf("Error: script and heap %d together are larger than 64KB (%d bytes)\n",
-			itr->getNumber(), script->size + heap->size);
+			if (script && heap && (script->size + heap->size > 65535))
+				DebugPrintf("Error: script and heap %d together are larger than 64KB (%d bytes)\n",
+				itr->getNumber(), script->size + heap->size);
+		} else {	// SCI3
+			if (script && script->size > 65535)
+				DebugPrintf("Error: script %d is larger than 64KB (%d bytes)\n",
+				itr->getNumber(), script->size);
+		}
 
 		++itr;
 	}
@@ -957,15 +979,14 @@ bool Console::cmdShowInstruments(int argc, const char **argv) {
 					DebugPrintf(" %d", instrument);
 					instruments[instrument]++;
 					instrumentsSongs[instrument][itr->getNumber()] = true;
+				} else {
+					channelData++;
 				}
 				break;
 			case 0xD:
 				channelData++;	// param1
 				break;
 			case 0xB:
-				channelData++;	// param1
-				channelData++;	// param2
-				break;
 			case 0x8:
 			case 0x9:
 			case 0xA:
@@ -1093,7 +1114,7 @@ bool Console::cmdList(int argc, const char **argv) {
 
 		if ((res == kResourceTypeAudio36) || (res == kResourceTypeSync36)) {
 			if (argc != 3) {
-				DebugPrintf("Please specify map number\n");
+				DebugPrintf("Please specify map number (-1: all maps)\n");
 				return true;
 			}
 			number = atoi(argv[2]);
@@ -1203,7 +1224,7 @@ bool Console::cmdClassTable(int argc, const char **argv) {
 						className,
 						PRINT_REG(temp.reg),
 						temp.script);
-			}
+			} else DebugPrintf(" Class 0x%x (not loaded; can't get name) (script %d)\n", i, temp.script);
 		}
 	}
 
@@ -1547,7 +1568,7 @@ bool Console::cmdPicVisualize(int argc, const char **argv) {
 
 bool Console::cmdPlayVideo(int argc, const char **argv) {
 	if (argc < 2) {
-		DebugPrintf("Plays a SEQ, AVI or VMD video.\n");
+		DebugPrintf("Plays a SEQ, AVI, DUK or VMD video.\n");
 		DebugPrintf("Usage: %s <video file name> <delay>\n", argv[0]);
 		DebugPrintf("The video file name should include the extension\n");
 		DebugPrintf("Delay is only used in SEQ videos and is measured in ticks (default: 10)\n");
@@ -1557,7 +1578,7 @@ bool Console::cmdPlayVideo(int argc, const char **argv) {
 	Common::String filename = argv[1];
 	filename.toLowercase();
 
-	if (filename.hasSuffix(".seq") || filename.hasSuffix(".avi") || filename.hasSuffix(".vmd")) {
+	if (filename.hasSuffix(".seq") || filename.hasSuffix(".avi") || filename.hasSuffix(".vmd") || filename.hasSuffix(".duk")) {
 		_videoFile = filename;
 		_videoFrameDelay = (argc == 2) ? 10 : atoi(argv[2]);
 		return Cmd_Exit(0, 0);
@@ -1598,10 +1619,6 @@ bool Console::cmdPrintSegmentTable(int argc, const char **argv) {
 
 			case SEG_TYPE_STACK:
 				DebugPrintf("D  data stack (%d)", (*(DataStack *)mobj)._capacity);
-				break;
-
-			case SEG_TYPE_SYS_STRINGS:
-				DebugPrintf("Y  system string table");
 				break;
 
 			case SEG_TYPE_LISTS:
@@ -1695,18 +1712,6 @@ bool Console::segmentInfo(int nr) {
 		DataStack *stack = (DataStack *)mobj;
 		DebugPrintf("stack\n");
 		DebugPrintf("  %d (0x%x) entries\n", stack->_capacity, stack->_capacity);
-	}
-	break;
-
-	case SEG_TYPE_SYS_STRINGS: {
-		DebugPrintf("system string table - viewing currently disabled\n");
-#if 0
-		SystemStrings *strings = &(mobj->data.sys_strings);
-
-		for (int i = 0; i < SYS_STRINGS_MAX; i++)
-			if (strings->strings[i].name)
-				DebugPrintf("  %s[%d]=\"%s\"\n", strings->strings[i].name, strings->strings[i].max_size, strings->strings[i].value);
-#endif
 	}
 	break;
 
@@ -2602,13 +2607,18 @@ bool Console::cmdStepCallk(int argc, const char **argv) {
 }
 
 bool Console::cmdDisassemble(int argc, const char **argv) {
-	if (argc != 3) {
+	if (argc < 3) {
 		DebugPrintf("Disassembles a method by name.\n");
-		DebugPrintf("Usage: %s <object> <method>\n", argv[0]);
+		DebugPrintf("Usage: %s <object> <method> <options>\n", argv[0]);
+		DebugPrintf("Valid options are:\n");
+		DebugPrintf(" bwt  : Print byte/word tag\n");
+		DebugPrintf(" bc   : Print bytecode\n");
 		return true;
 	}
 
 	reg_t objAddr = NULL_REG;
+	bool printBytecode = false;
+	bool printBWTag = false;
 
 	if (parse_reg_t(_engine->_gamestate, argv[1], &objAddr, false)) {
 		DebugPrintf("Invalid address passed.\n");
@@ -2635,8 +2645,15 @@ bool Console::cmdDisassemble(int argc, const char **argv) {
 		return true;
 	}
 
+	for (int i = 3; i < argc; i++) {
+		if (!scumm_stricmp(argv[i], "bwt"))
+			printBytecode = true;
+		else if (!scumm_stricmp(argv[i], "bc"))
+			printBWTag = true;
+	}
+
 	do {
-		addr = disassemble(_engine->_gamestate, addr, 0, 0);
+		addr = disassemble(_engine->_gamestate, addr, printBWTag, printBytecode);
 	} while (addr.offset > 0);
 
 	return true;
@@ -2654,9 +2671,9 @@ bool Console::cmdDisassembleAddress(int argc, const char **argv) {
 	}
 
 	reg_t vpc = NULL_REG;
-	int op_count = 1;
-	int do_bwc = 0;
-	int do_bytes = 0;
+	int opCount = 1;
+	bool printBWTag = false;
+	bool printBytes = false;
 	int size;
 
 	if (parse_reg_t(_engine->_gamestate, argv[1], &vpc, false)) {
@@ -2670,56 +2687,49 @@ bool Console::cmdDisassembleAddress(int argc, const char **argv) {
 
 	for (int i = 2; i < argc; i++) {
 		if (!scumm_stricmp(argv[i], "bwt"))
-			do_bwc = 1;
+			printBWTag = true;
 		else if (!scumm_stricmp(argv[i], "bc"))
-			do_bytes = 1;
+			printBytes = true;
 		else if (toupper(argv[i][0]) == 'C')
-			op_count = atoi(argv[i] + 1);
+			opCount = atoi(argv[i] + 1);
 		else {
 			DebugPrintf("Invalid option '%s'\n", argv[i]);
 			return true;
 		}
 	}
 
-	if (op_count < 0) {
+	if (opCount < 0) {
 		DebugPrintf("Invalid op_count\n");
 		return true;
 	}
 
 	do {
-		vpc = disassemble(_engine->_gamestate, vpc, do_bwc, do_bytes);
-	} while ((vpc.offset > 0) && (vpc.offset + 6 < size) && (--op_count));
+		vpc = disassemble(_engine->_gamestate, vpc, printBWTag, printBytes);
+	} while ((vpc.offset > 0) && (vpc.offset + 6 < size) && (--opCount));
 
 	return true;
 }
 
-bool Console::cmdFindKernelFunctionCall(int argc, const char **argv) {
-	if (argc < 2) {
-		DebugPrintf("Finds the scripts and methods that call a specific kernel function.\n");
-		DebugPrintf("Usage: %s <kernel function>\n", argv[0]);
-		DebugPrintf("Example: %s Display\n", argv[0]);
-		return true;
-	}
-
-	// Find the number of the kernel function call
-	int kernelFuncNum = _engine->getKernel()->findKernelFuncPos(argv[1]);
-
-	if (kernelFuncNum < 0) {
-		DebugPrintf("Invalid kernel function requested");
-		return true;
-	}
-
+void Console::printKernelCallsFound(int kernelFuncNum, bool showFoundScripts) {
 	Common::List<ResourceId> *resources = _engine->getResMan()->listResources(kResourceTypeScript);
 	Common::sort(resources->begin(), resources->end());
 	Common::List<ResourceId>::iterator itr = resources->begin();
 
-	DebugPrintf("%d scripts found, dissassembling...\n", resources->size());
+	if (showFoundScripts)
+		DebugPrintf("%d scripts found, dissassembling...\n", resources->size());
 
 	int scriptSegment;
 	Script *script;
 	SegManager *segMan = _engine->getEngineState()->_segMan;
 
 	while (itr != resources->end()) {
+		if (_engine->getGameId() == GID_KQ5 && itr->getNumber() == 980) {
+			// Ignore script 980 in KQ5. Seems to be a leftover, as it
+			// uses a superclass from script 988, which doesn't exist
+			itr++;
+			continue;
+		}
+
 		// Load script
 		scriptSegment = segMan->instantiateScript(itr->getNumber());
 		script = segMan->getScript(scriptSegment);
@@ -2738,6 +2748,7 @@ bool Console::cmdFindKernelFunctionCall(int argc, const char **argv) {
 				int16 opparams[4];
 				byte extOpcode;
 				byte opcode;
+				uint16 maxJmpOffset = 0;
 
 				while (true) {
 					offset += readPMachineInstruction(script->getBuf(offset), extOpcode, opparams);
@@ -2754,8 +2765,18 @@ bool Console::cmdFindKernelFunctionCall(int argc, const char **argv) {
 						}
 					}
 
+					// Monitor all jump opcodes (bt, bnt and jmp), so that if
+					// there is a jump after a ret, we don't stop processing
+					if (opcode == op_bt || opcode == op_bnt || opcode == op_jmp) {
+						uint16 curJmpOffset = offset + (uint16)opparams[0];
+						if (curJmpOffset > maxJmpOffset)
+							maxJmpOffset = curJmpOffset;
+					}
+
 					// Check for end of function/script
-					if (opcode == op_ret || offset >= script->getBufSize())
+					if (offset >= script->getBufSize())
+						break;
+					if (opcode == op_ret)// && offset >= maxJmpOffset)
 						break;
 				}	// while (true)
 			}	// for (uint16 i = 0; i < obj->getMethodCount(); i++)
@@ -2766,6 +2787,69 @@ bool Console::cmdFindKernelFunctionCall(int argc, const char **argv) {
 	}
 
 	delete resources;
+}
+
+bool Console::cmdFindKernelFunctionCall(int argc, const char **argv) {
+	if (argc < 2) {
+		DebugPrintf("Finds the scripts and methods that call a specific kernel function.\n");
+		DebugPrintf("Usage: %s <kernel function>\n", argv[0]);
+		DebugPrintf("Example: %s Display\n", argv[0]);
+		DebugPrintf("Special usage:\n");
+		DebugPrintf("%s Dummy - find all calls to actual dummy functions "
+					"(mapped to kDummy, and dummy in the kernel table). "
+					"There shouldn't be calls to these (apart from a known "
+					"one in Shivers)\n", argv[0]);
+		DebugPrintf("%s Unused - find all calls to unused functions (mapped to "
+					"kDummy - i.e. mapped in SSCI but dummy in ScummVM, thus "
+					"they'll error out when called). Only debug scripts should "
+					"be calling these\n", argv[0]);
+		DebugPrintf("%s Unmapped - find all calls to currently unmapped or "
+					"unimplemented functions (mapped to kStub/kStubNull)\n", argv[0]);
+		return true;
+	}
+
+	Kernel *kernel = _engine->getKernel();
+	Common::String funcName(argv[1]);
+
+	if (funcName != "Dummy" && funcName != "Unused" && funcName != "Unmapped") {
+		// Find the number of the kernel function call
+		int kernelFuncNum = kernel->findKernelFuncPos(argv[1]);
+
+		if (kernelFuncNum < 0) {
+			DebugPrintf("Invalid kernel function requested\n");
+			return true;
+		}
+
+		printKernelCallsFound(kernelFuncNum, true);
+	} else if (funcName == "Dummy") {
+		// Find all actual dummy kernel functions (mapped to kDummy, and dummy
+		// in the kernel table)
+		for (uint i = 0; i < kernel->_kernelFuncs.size(); i++) {
+			if (kernel->_kernelFuncs[i].function == &kDummy && kernel->getKernelName(i) == "Dummy") {
+				DebugPrintf("Searching for kernel function %d (%s)...\n", i, kernel->getKernelName(i).c_str());
+				printKernelCallsFound(i, false);
+			}
+		}
+	} else if (funcName == "Unused") {
+		// Find all actual dummy kernel functions (mapped to kDummy - i.e.
+		// mapped in SSCI but dummy in ScummVM, thus they'll error out when
+		// called)
+		for (uint i = 0; i < kernel->_kernelFuncs.size(); i++) {
+			if (kernel->_kernelFuncs[i].function == &kDummy && kernel->getKernelName(i) != "Dummy") {
+				DebugPrintf("Searching for kernel function %d (%s)...\n", i, kernel->getKernelName(i).c_str());
+				printKernelCallsFound(i, false);
+			}
+		}
+	} else if (funcName == "Unmapped") {
+		// Find all unmapped kernel functions (mapped to kStub/kStubNull)
+		for (uint i = 0; i < kernel->_kernelFuncs.size(); i++) {
+			if (kernel->_kernelFuncs[i].function == &kStub ||
+				kernel->_kernelFuncs[i].function == &kStubNull) {
+				DebugPrintf("Searching for kernel function %d (%s)...\n", i, kernel->getKernelName(i).c_str());
+				printKernelCallsFound(i, false);
+			}
+		}
+	}
 
 	return true;
 }
@@ -2863,7 +2947,7 @@ bool Console::cmdGo(int argc, const char **argv) {
 bool Console::cmdLogKernel(int argc, const char **argv) {
 	if (argc < 3) {
 		DebugPrintf("Logs calls to specified kernel function.\n");
-		DebugPrintf("Usage: %s <kernel-function/*> <on/off>\n", argv[0]);
+		DebugPrintf("Usage: %s <kernel function/*> <on/off>\n", argv[0]);
 		DebugPrintf("Example: %s StrCpy on\n", argv[0]);
 		return true;
 	}
@@ -3019,15 +3103,25 @@ bool Console::cmdBreakpointWrite(int argc, const char **argv) {
 }
 
 bool Console::cmdBreakpointKernel(int argc, const char **argv) {
-	if (argc != 2) {
+	if (argc < 3) {
 		DebugPrintf("Sets a breakpoint on execution of a kernel function.\n");
-		DebugPrintf("Usage: %s <name>\n", argv[0]);
-		DebugPrintf("Example: %s DrawPic\n", argv[0]);
+		DebugPrintf("Usage: %s <name> <on/off>\n", argv[0]);
+		DebugPrintf("Example: %s DrawPic on\n", argv[0]);
 		return true;
 	}
 
-	if (g_sci->getKernel()->debugSetFunction(argv[1], -1, true))
-		DebugPrintf("Breakpoint enabled for k%s\n", argv[1]);
+	bool breakpoint;
+	if (strcmp(argv[2], "on") == 0)
+		breakpoint = true;
+	else if (strcmp(argv[2], "off") == 0)
+		breakpoint = false;
+	else {
+		DebugPrintf("2nd parameter must be either on or off\n");
+		return true;
+	}
+
+	if (g_sci->getKernel()->debugSetFunction(argv[1], -1, breakpoint))
+		DebugPrintf("Breakpoint %s for k%s\n", (breakpoint ? "enabled" : "disabled"), argv[1]);
 	else
 		DebugPrintf("Unknown kernel function %s\n", argv[1]);
 
@@ -3651,7 +3745,7 @@ int Console::printObject(reg_t pos) {
 	DebugPrintf("[%04x:%04x] %s : %3d vars, %3d methods\n", PRINT_REG(pos), s->_segMan->getObjectName(pos),
 				obj->getVarCount(), obj->getMethodCount());
 
-	if (!obj->isClass())
+	if (!obj->isClass() && getSciVersion() != SCI_VERSION_3)
 		var_container = s->_segMan->getObject(obj->getSuperClassSelector());
 	DebugPrintf("  -- member variables:\n");
 	for (i = 0; (uint)i < obj->getVarCount(); i++) {

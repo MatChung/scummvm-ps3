@@ -19,12 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cruise/dataLoader.cpp $
- * $Id: dataLoader.cpp 53762 2010-10-24 13:04:33Z fingolfin $
+ * $Id: dataLoader.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
 #include "cruise/cruise_main.h"
 #include "common/endian.h"
+#include "common/memstream.h"
 
 namespace Cruise {
 

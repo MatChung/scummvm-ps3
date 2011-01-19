@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/engine/kernel_tables.h $
- * $Id: kernel_tables.h 53993 2010-10-31 23:34:36Z thebluegr $
+ * $Id: kernel_tables.h 55217 2011-01-12 23:33:30Z thebluegr $
  *
  */
 
@@ -59,7 +59,7 @@ struct SciKernelMapSubEntry {
 #define SIG_SCI1           SCI_VERSION_1_EGA, SCI_VERSION_1_LATE
 #define SIG_SCI11          SCI_VERSION_1_1, SCI_VERSION_1_1
 #define SIG_SINCE_SCI11    SCI_VERSION_1_1, SCI_VERSION_NONE
-#define SIG_SCI21          SCI_VERSION_2_1, SCI_VERSION_2_1
+#define SIG_SCI21          SCI_VERSION_2_1, SCI_VERSION_3
 
 #define SIG_SCI16          SCI_VERSION_NONE, SCI_VERSION_1_1
 #define SIG_SCI32          SCI_VERSION_2, SCI_VERSION_NONE
@@ -68,7 +68,7 @@ struct SciKernelMapSubEntry {
 #define SIG_SOUNDSCI0      SCI_VERSION_0_EARLY, SCI_VERSION_0_LATE
 #define SIG_SOUNDSCI1EARLY SCI_VERSION_1_EARLY, SCI_VERSION_1_EARLY
 #define SIG_SOUNDSCI1LATE  SCI_VERSION_1_LATE, SCI_VERSION_1_LATE
-#define SIG_SOUNDSCI21     SCI_VERSION_2_1, SCI_VERSION_2_1
+#define SIG_SOUNDSCI21     SCI_VERSION_2_1, SCI_VERSION_3
 
 #define SIGFOR_ALL   0x3f
 #define SIGFOR_DOS   1 << 0
@@ -117,7 +117,7 @@ static const SciKernelMapSubEntry kDoSound_subops[] = {
 	{ SIG_SOUNDSCI1EARLY, 10, MAP_CALL(DoSoundFade),               "oiiii",                kDoSoundFade_workarounds },
 	{ SIG_SOUNDSCI1EARLY, 11, MAP_CALL(DoSoundUpdateCues),         "o",                    NULL },
 	{ SIG_SOUNDSCI1EARLY, 12, MAP_CALL(DoSoundSendMidi),           "oiii",                 NULL },
-	{ SIG_SOUNDSCI1EARLY, 13, MAP_CALL(DoSoundReverb),             "i",                    NULL },
+	{ SIG_SOUNDSCI1EARLY, 13, MAP_CALL(DoSoundGlobalReverb),       "(i)",                  NULL },
 	{ SIG_SOUNDSCI1EARLY, 14, MAP_CALL(DoSoundSetHold),            "oi",                   NULL },
 	{ SIG_SOUNDSCI1EARLY, 15, MAP_CALL(DoSoundDummy),              "",                     NULL },
 	//  ^^ Longbow demo
@@ -140,12 +140,12 @@ static const SciKernelMapSubEntry kDoSound_subops[] = {
 	{ SIG_SOUNDSCI1LATE,  16, MAP_CALL(DoSoundSetLoop),            "oi",                   NULL },
 	{ SIG_SOUNDSCI1LATE,  17, MAP_CALL(DoSoundUpdateCues),         NULL,                   NULL },
 	{ SIG_SOUNDSCI1LATE,  18, MAP_CALL(DoSoundSendMidi),           "oiii(i)",              NULL },
-	{ SIG_SOUNDSCI1LATE,  19, MAP_CALL(DoSoundReverb),             NULL,                   NULL },
+	{ SIG_SOUNDSCI1LATE,  19, MAP_CALL(DoSoundGlobalReverb),       NULL,                   NULL },
 	{ SIG_SOUNDSCI1LATE,  20, MAP_CALL(DoSoundUpdate),             NULL,                   NULL },
 #ifdef ENABLE_SCI32
 	{ SIG_SOUNDSCI21,      0, MAP_CALL(DoSoundMasterVolume),       NULL,                   NULL },
 	{ SIG_SOUNDSCI21,      1, MAP_CALL(DoSoundMute),               NULL,                   NULL },
-	{ SIG_SOUNDSCI21,      2, MAP_CALL(DoSoundRestore),           NULL,                   NULL },
+	{ SIG_SOUNDSCI21,      2, MAP_CALL(DoSoundRestore),            NULL,                   NULL },
 	{ SIG_SOUNDSCI21,      3, MAP_CALL(DoSoundGetPolyphony),       NULL,                   NULL },
 	{ SIG_SOUNDSCI21,      4, MAP_CALL(DoSoundGetAudioCapability), NULL,                   NULL },
 	{ SIG_SOUNDSCI21,      5, MAP_CALL(DoSoundSuspend),            NULL,                   NULL },
@@ -167,7 +167,7 @@ static const SciKernelMapSubEntry kDoSound_subops[] = {
 	{ SIG_SOUNDSCI21,     16, MAP_CALL(DoSoundSetLoop),            NULL,                   NULL },
 	{ SIG_SOUNDSCI21,     17, MAP_CALL(DoSoundUpdateCues),         NULL,                   NULL },
 	{ SIG_SOUNDSCI21,     18, MAP_CALL(DoSoundSendMidi),           NULL,                   NULL },
-	{ SIG_SOUNDSCI21,     19, MAP_CALL(DoSoundReverb),             NULL,                   NULL },
+	{ SIG_SOUNDSCI21,     19, MAP_CALL(DoSoundGlobalReverb),       NULL,                   NULL },
 	{ SIG_SOUNDSCI21,     20, MAP_CALL(DoSoundUpdate),             NULL,                   NULL },
 #endif
 	SCI_SUBOPENTRY_TERMINATOR
@@ -241,6 +241,7 @@ static const SciKernelMapSubEntry kFileIO_subops[] = {
 	{ SIG_SCI32,          14, MAP_CALL(FileIOWriteByte),           "ii",                   NULL },
 	{ SIG_SCI32,          15, MAP_CALL(FileIOReadWord),            "i",                    NULL },
 	{ SIG_SCI32,          16, MAP_CALL(FileIOWriteWord),           "ii",                   NULL },
+	{ SIG_SCI32,          17, MAP_CALL(FileIOCreateSaveSlot),      "ir",                   NULL },
 	{ SIG_SCI32,          19, MAP_CALL(Stub),                      "r",                    NULL }, // for Torin / Torin demo
 #endif
 	SCI_SUBOPENTRY_TERMINATOR
@@ -384,7 +385,7 @@ static SciKernelMapEntry s_kernelMap[] = {
 	{ MAP_CALL(MenuSelect),        SIG_EVERYWHERE,           "o(i)",                  NULL,            NULL },
 	{ MAP_CALL(MergePoly),         SIG_EVERYWHERE,           "rli",                   NULL,            NULL },
 	{ MAP_CALL(Message),           SIG_EVERYWHERE,           "i(.*)",                 NULL,            NULL }, // subop
-	{ MAP_CALL(MoveCursor),        SIG_EVERYWHERE,           "ii",                    NULL,            NULL },
+	{ MAP_CALL(MoveCursor),        SIG_EVERYWHERE,           "ii",                    NULL,            kMoveCursor_workarounds },
 	{ MAP_CALL(NewList),           SIG_EVERYWHERE,           "",                      NULL,            NULL },
 	{ MAP_CALL(NewNode),           SIG_EVERYWHERE,           "..",                    NULL,            NULL },
 	{ MAP_CALL(NewWindow),         SIG_SCIALL, SIGFOR_MAC,   ".*",                    NULL,            NULL },
@@ -462,6 +463,7 @@ static SciKernelMapEntry s_kernelMap[] = {
 	{ MAP_DUMMY(Profiler),        SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
 	{ MAP_DUMMY(ShiftScreen),     SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
 	{ MAP_DUMMY(ListOps),         SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
+	// Used by the sysLogger class (e.g. script 952 in GK1CD), a class used to report bugs by Sierra's testers
 	{ MAP_DUMMY(ATan),            SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
 	{ MAP_DUMMY(Record),          SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
 	{ MAP_DUMMY(PlayBack),        SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
@@ -503,6 +505,8 @@ static SciKernelMapEntry s_kernelMap[] = {
 	// VibrateMouse - used in QFG4 floppy
 	// PalCycle
 	// ObjectIntersect - used in QFG4 floppy
+	// MakeSaveCatName - used in the Save/Load dialog of GK1CD (SRDialog, script 64990)
+	// MakeSaveFileName - used in the Save/Load dialog of GK1CD (SRDialog, script 64990)
 
 	// SCI2 empty functions
 
@@ -510,7 +514,7 @@ static SciKernelMapEntry s_kernelMap[] = {
 	// memory") are available. We have our own memory manager and garbage collector, thus we ignore this call.
 	{ MAP_EMPTY(Purge),            SIG_EVERYWHERE,           "i",                     NULL,            NULL },
 
-	// Unused SCI2 unused functions, always mapped to kDummy
+	// Unused / debug SCI2 unused functions, always mapped to kDummy
 	{ MAP_DUMMY(InspectObject),    SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
 	// Profiler (same as SCI0-SCI1.1)
 	// Record (same as SCI0-SCI1.1)
@@ -524,8 +528,6 @@ static SciKernelMapEntry s_kernelMap[] = {
 	{ MAP_DUMMY(ShowStylePercent), SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
 	{ MAP_DUMMY(InvertRect),       SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
 	{ MAP_DUMMY(InputText),        SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
-	{ MAP_DUMMY(MakeSaveCatName),  SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
-	{ MAP_DUMMY(MakeSaveFileName), SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
 	{ MAP_DUMMY(TextWidth),        SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
 	{ MAP_DUMMY(PointSize),        SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
 
@@ -541,46 +543,61 @@ static SciKernelMapEntry s_kernelMap[] = {
 	{ MAP_CALL(AddPicAt),          SIG_EVERYWHERE,           "oiii",                  NULL,            NULL },
 	{ MAP_CALL(GetWindowsOption),  SIG_EVERYWHERE,           "i",                     NULL,            NULL },
 	{ MAP_CALL(WinHelp),           SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
-	{ MAP_CALL(WinDLL),            SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
-	{ MAP_CALL(PrintDebug),        SIG_EVERYWHERE,           "ri",                    NULL,            NULL },
+	{ MAP_CALL(GetConfig),         SIG_EVERYWHERE,           "ro",                    NULL,            NULL },
+	{ MAP_CALL(CelInfo),           SIG_EVERYWHERE,           "iiiiii",                NULL,            NULL },
+	{ MAP_CALL(SetLanguage),       SIG_EVERYWHERE,           "r",                     NULL,            NULL },
+	{ MAP_CALL(ScrollWindow),      SIG_EVERYWHERE,           "(.*)",                  NULL,            NULL },
 
-	// SCI2.1 unmapped functions - TODO!
-	// SetLanguage
-	// FindSelector
-	// FindClass
-	// CelRect
-	// BaseLineSpan
-	// CelInfo
-	// Bitmap
-	// CelLink
-	// MovePlaneItems
-	// Font
-	// ScrollWindow
-	// AddLine
-	// DeleteLine
-	// UpdateLine
-	// AddPolygon
-	// DeletePolygon
-	// UpdatePolygon
-	// GetConfig
-	// Table
-	// LoadChunk
-	// SetPalStyleRange
-	// NewRoom
-	// Priority
-	// MorphOn
-	// SetHotRectangles
-	// DeletePic
+	// SCI2.1 Empty Functions
 
-	// SCI2.1 empty functions
+	// Debug function, used in of Shivers (demo and full). It's marked as a
+	// stub in the original interpreters, but it gets called by the game scripts.
+	// Usually, it gets called with a string (which is the output format) and a
+	// variable number of parameters
+	{ MAP_EMPTY(PrintDebug),        SIG_EVERYWHERE,          "(.*)",                  NULL,            NULL },
 
 	// SetWindowsOption is used to set Windows specific options, like for example the title bar visibility of
 	// the game window in Phantasmagoria 2. We ignore these settings completely.
-	{ MAP_EMPTY(SetWindowsOption), SIG_EVERYWHERE,           "ii",                    NULL,            NULL },
+	{ MAP_EMPTY(SetWindowsOption), SIG_EVERYWHERE,             "ii",                  NULL,            NULL },
+	
+	// Used by the Windows version of Phantasmagoria 1 to get the video speed setting. This is called after
+	// kGetConfig and overrides the setting obtained by it. It is a dummy function in the DOS Version. We can 
+	// just use GetConfig and mark this one as empty, like the DOS version does.
+	{ MAP_EMPTY(GetSierraProfileInt), SIG_EVERYWHERE,        "(.*)",                  NULL,            NULL },
 
-	// Unused SCI2.1 unused functions, always mapped to kDummy
-	{ MAP_DUMMY(GetSierraProfileInt),    SIG_EVERYWHERE,     "(.*)",                  NULL,            NULL },
-	{ MAP_DUMMY(GetSierraProfileString), SIG_EVERYWHERE,     "(.*)",                  NULL,            NULL },
+	// Unused / debug SCI2.1 unused functions, always mapped to kDummy
+
+	// The debug functions are called from the inbuilt debugger or polygon
+	// editor in SCI2.1 games. Related objects are: PEditor, EditablePolygon, 
+	// aeDisplayClass and scalerCode
+	{ MAP_DUMMY(FindSelector),      SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
+	{ MAP_DUMMY(FindClass),         SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
+	{ MAP_DUMMY(CelRect),           SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
+	{ MAP_DUMMY(BaseLineSpan),      SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
+	{ MAP_DUMMY(CelLink),           SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
+	{ MAP_DUMMY(AddPolygon),        SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
+	{ MAP_DUMMY(DeletePolygon),     SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
+	{ MAP_DUMMY(UpdatePolygon),     SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
+	{ MAP_DUMMY(Table),             SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
+	{ MAP_DUMMY(LoadChunk),         SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
+	{ MAP_DUMMY(Priority),          SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
+	{ MAP_DUMMY(WinDLL),            SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
+	{ MAP_DUMMY(DeletePic),         SIG_EVERYWHERE,           "(.*)",                 NULL,            NULL },
+	{ MAP_DUMMY(GetSierraProfileString), SIG_EVERYWHERE,      "(.*)",                 NULL,            NULL },
+
+	// SCI2.1 unmapped functions - TODO!
+
+	// Bitmap
+	// MovePlaneItems - used by SQ6 to scroll through the inventory via the up/down buttons
+	// Font
+	// AddLine - used by Torin's Passage to highlight the chapter buttons
+	// DeleteLine - used by Torin's Passage to delete the highlight from the chapter buttons
+	// UpdateLine - used by LSL6
+	// SetPalStyleRange - 2 integer parameters, start and end. All styles from start-end
+	//   (inclusive) are set to 0
+	// NewRoom - 1 integer parameter, the current room number
+	// MorphOn - used by SQ6, script 900, the datacorder reprogramming puzzle (from room 270)
+	// SetHotRectangles - used by Phantasmagoria 1
 #endif
 
 	{ NULL, NULL,                  SIG_EVERYWHERE,           NULL,                    NULL,            NULL }
@@ -795,8 +812,8 @@ static const char *sci2_default_knames[] = {
 	/*0x37*/ "RestoreGame",
 	/*0x38*/ "RestartGame",
 	/*0x39*/ "GameIsRestarting",
-	/*0x3a*/ "MakeSaveCatName",		// only in SCI2, not used in any SCI2 game
-	/*0x3b*/ "MakeSaveFileName",	// only in SCI2, not used in any SCI2 game
+	/*0x3a*/ "MakeSaveCatName",
+	/*0x3b*/ "MakeSaveFileName",
 	/*0x3c*/ "GetSaveFiles",
 	/*0x3d*/ "GetSaveDir",
 	/*0x3e*/ "CheckSaveGame",
@@ -978,7 +995,7 @@ static const char *sci21_default_knames[] = {
 	/*0x49*/ "Font",
 	/*0x4a*/ "EditText",
 	/*0x4b*/ "InputText",
-	/*0x4c*/ "ScrollWindow",
+	/*0x4c*/ "ScrollWindow",	// Dummy in SCI3
 	/*0x4d*/ "Dummy",
 	/*0x4e*/ "Dummy",
 	/*0x4f*/ "Dummy",
@@ -988,7 +1005,7 @@ static const char *sci21_default_knames[] = {
 	/*0x53*/ "MapKeyToDir",
 	/*0x54*/ "HaveMouse",
 	/*0x55*/ "SetCursor",
-	/*0x56*/ "VibrateMouse",
+	/*0x56*/ "VibrateMouse",	// Dummy in SCI3
 	/*0x57*/ "Dummy",
 	/*0x58*/ "Dummy",
 	/*0x59*/ "Dummy",
@@ -1029,11 +1046,11 @@ static const char *sci21_default_knames[] = {
 	/*0x7c*/ "SetQuitStr",
 	/*0x7d*/ "GetConfig",
 	/*0x7e*/ "Table",
-	/*0x7f*/ "WinHelp",     // Windows only
+	/*0x7f*/ "WinHelp",		// Windows only
 	/*0x80*/ "Dummy",
-	/*0x81*/ "Dummy",
+	/*0x81*/ "Dummy",		// called when changing rooms in most SCI2.1 games (e.g. KQ7, GK2, MUMG deluxe, Phant1)
 	/*0x82*/ "Dummy",
-	/*0x83*/ "PrintDebug",	// used by Shivers 2 (demo and full)
+	/*0x83*/ "PrintDebug",	// debug function, used by Shivers 2 (demo and full)
 	/*0x84*/ "Dummy",
 	/*0x85*/ "Dummy",
 	/*0x86*/ "Dummy",
@@ -1043,7 +1060,7 @@ static const char *sci21_default_knames[] = {
 	/*0x8a*/ "LoadChunk",
 	/*0x8b*/ "SetPalStyleRange",
 	/*0x8c*/ "AddPicAt",
-	/*0x8d*/ "Dummy",
+	/*0x8d*/ "MessageBox",	// SCI3, was Dummy in SCI2.1
 	/*0x8e*/ "NewRoom",
 	/*0x8f*/ "Dummy",
 	/*0x90*/ "Priority",
@@ -1057,13 +1074,16 @@ static const char *sci21_default_knames[] = {
 	/*0x98*/ "GetWindowsOption", // Windows only
 	/*0x99*/ "WinDLL", // Windows only
 	/*0x9a*/ "Dummy",
-	/*0x9b*/ "Dummy",
-	/*0x9c*/ "DeletePic"
+	/*0x9b*/ "Minimize",	// SCI3, was Dummy in SCI2.1
+	/*0x9c*/ "DeletePic",
+	// == SCI3 only ===============
+	/*0x9d*/ "Dummy",
+	/*0x9e*/ "WebConnect",
+	/*0x9f*/ "Dummy",
+	/*0xa0*/ "PlayDuck"
 };
 
 #endif
-
-#define END Script_None
 
 opcode_format g_opcode_formats[128][4] = {
 	/*00*/
@@ -1077,47 +1097,47 @@ opcode_format g_opcode_formats[128][4] = {
 	/*10*/
 	{Script_None}, {Script_None}, {Script_None}, {Script_None},
 	/*14*/
-	{Script_None}, {Script_None}, {Script_None}, {Script_SRelative, END},
+	{Script_None}, {Script_None}, {Script_None}, {Script_SRelative},
 	/*18*/
-	{Script_SRelative, END}, {Script_SRelative, END}, {Script_SVariable, END}, {Script_None},
+	{Script_SRelative}, {Script_SRelative}, {Script_SVariable}, {Script_None},
 	/*1C*/
-	{Script_SVariable, END}, {Script_None}, {Script_None}, {Script_Variable, END},
+	{Script_SVariable}, {Script_None}, {Script_None}, {Script_Variable},
 	/*20*/
-	{Script_SRelative, Script_Byte, END}, {Script_Variable, Script_Byte, END}, {Script_Variable, Script_Byte, END}, {Script_Variable, Script_SVariable, Script_Byte, END},
+	{Script_SRelative, Script_Byte}, {Script_Variable, Script_Byte}, {Script_Variable, Script_Byte}, {Script_Variable, Script_SVariable, Script_Byte},
 	/*24 (24=ret)*/
-	{Script_End}, {Script_Byte, END}, {Script_Invalid}, {Script_Invalid},
+	{Script_End}, {Script_Byte}, {Script_Invalid}, {Script_Invalid},
 	/*28*/
-	{Script_Variable, END}, {Script_Invalid}, {Script_Byte, END}, {Script_Variable, Script_Byte, END},
+	{Script_Variable}, {Script_Invalid}, {Script_Byte}, {Script_Variable, Script_Byte},
 	/*2C*/
-	{Script_SVariable, END}, {Script_SVariable, Script_Variable, END}, {Script_None}, {Script_Invalid},
+	{Script_SVariable}, {Script_SVariable, Script_Variable}, {Script_None}, {Script_Invalid},
 	/*30*/
-	{Script_None}, {Script_Property, END}, {Script_Property, END}, {Script_Property, END},
+	{Script_None}, {Script_Property}, {Script_Property}, {Script_Property},
 	/*34*/
-	{Script_Property, END}, {Script_Property, END}, {Script_Property, END}, {Script_Property, END},
+	{Script_Property}, {Script_Property}, {Script_Property}, {Script_Property},
 	/*38*/
-	{Script_Property, END}, {Script_SRelative, END}, {Script_SRelative, END}, {Script_None},
+	{Script_Property}, {Script_SRelative}, {Script_SRelative}, {Script_None},
 	/*3C*/
 	{Script_None}, {Script_None}, {Script_None}, {Script_Word},
 	/*40-4F*/
-	{Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
-	{Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
-	{Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
-	{Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
+	{Script_Global}, {Script_Local}, {Script_Temp}, {Script_Param},
+	{Script_Global}, {Script_Local}, {Script_Temp}, {Script_Param},
+	{Script_Global}, {Script_Local}, {Script_Temp}, {Script_Param},
+	{Script_Global}, {Script_Local}, {Script_Temp}, {Script_Param},
 	/*50-5F*/
-	{Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
-	{Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
-	{Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
-	{Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
+	{Script_Global}, {Script_Local}, {Script_Temp}, {Script_Param},
+	{Script_Global}, {Script_Local}, {Script_Temp}, {Script_Param},
+	{Script_Global}, {Script_Local}, {Script_Temp}, {Script_Param},
+	{Script_Global}, {Script_Local}, {Script_Temp}, {Script_Param},
 	/*60-6F*/
-	{Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
-	{Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
-	{Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
-	{Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
+	{Script_Global}, {Script_Local}, {Script_Temp}, {Script_Param},
+	{Script_Global}, {Script_Local}, {Script_Temp}, {Script_Param},
+	{Script_Global}, {Script_Local}, {Script_Temp}, {Script_Param},
+	{Script_Global}, {Script_Local}, {Script_Temp}, {Script_Param},
 	/*70-7F*/
-	{Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
-	{Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
-	{Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END},
-	{Script_Global, END}, {Script_Local, END}, {Script_Temp, END}, {Script_Param, END}
+	{Script_Global}, {Script_Local}, {Script_Temp}, {Script_Param},
+	{Script_Global}, {Script_Local}, {Script_Temp}, {Script_Param},
+	{Script_Global}, {Script_Local}, {Script_Temp}, {Script_Param},
+	{Script_Global}, {Script_Local}, {Script_Temp}, {Script_Param}
 };
 #undef END
 

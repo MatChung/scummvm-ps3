@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/draw.cpp $
- * $Id: draw.cpp 53984 2010-10-31 20:07:14Z drmccoy $
+ * $Id: draw.cpp 55271 2011-01-16 22:28:49Z drmccoy $
  *
  */
 
@@ -293,6 +293,15 @@ void Draw::clearPalette() {
 		_vm->_util->clearPalette();
 		_paletteCleared = true;
 	}
+}
+
+uint32 Draw::getColor(uint8 index) const {
+	if (!_vm->isTrueColor())
+		return index;
+
+	return _vm->getPixelFormat().RGBToColor(_vgaPalette[index].red   << 2,
+	                                        _vgaPalette[index].green << 2,
+	                                        _vgaPalette[index].blue  << 2);
 }
 
 void Draw::dirtiedRect(int16 surface,

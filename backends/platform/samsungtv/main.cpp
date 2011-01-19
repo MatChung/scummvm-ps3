@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/platform/samsungtv/main.cpp $
- * $Id: main.cpp 49134 2010-05-21 18:33:24Z aquadran $
+ * $Id: main.cpp 54518 2010-11-28 14:56:31Z fingolfin $
  *
  */
 
@@ -34,8 +34,12 @@
 extern "C" int Game_Main(char *path, char *) {
 	chdir(path);
 
+	// Create OSystem instance
 	g_system = new OSystem_SDL_SamsungTV();
 	assert(g_system);
+
+	// Pre initialize the backend
+	((OSystem_SDL_SamsungTV *)g_system)->init();
 
 #ifdef DYNAMIC_MODULES
 	PluginManager::instance().addPluginProvider(new SDLPluginProvider());
@@ -43,7 +47,10 @@ extern "C" int Game_Main(char *path, char *) {
 
 	// Invoke the actual ScummVM main entry point:
 	int res = scummvm_main(0, 0);
-	((OSystem_SDL *)g_system)->deinit();
+
+	// Free OSystem
+	delete g_system;
+
 	return res;
 }
 

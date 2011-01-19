@@ -19,9 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/sjis.cpp $
- * $Id: sjis.cpp 54099 2010-11-05 20:36:13Z athrxx $
+ * $Id: sjis.cpp 55156 2011-01-08 03:27:13Z wjpalenstijn $
  */
 
+#include "common/scummsys.h"
 #include "graphics/sjis.h"
 
 #ifdef GRAPHICS_SJIS_H
@@ -29,6 +30,9 @@
 #include "common/debug.h"
 #include "common/archive.h"
 #include "common/endian.h"
+#include "common/stream.h"
+
+#include "graphics/surface.h"
 
 namespace Graphics {
 
@@ -50,6 +54,10 @@ FontSJIS *FontSJIS::createFont(const Common::Platform platform) {
 	delete ret;
 
 	return 0;
+}
+
+void FontSJIS::drawChar(Graphics::Surface &dst, uint16 ch, int x, int y, uint32 c1, uint32 c2) const {
+	drawChar(dst.getBasePtr(x, y), ch, dst.pitch, dst.bytesPerPixel, c1, c2, dst.w - x, dst.h - y);
 }
 
 template<typename Color>

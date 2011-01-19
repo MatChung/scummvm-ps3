@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/game/beetle.h $
- * $Id: beetle.h 53629 2010-10-19 22:34:26Z jvprat $
+ * $Id: beetle.h 54201 2010-11-11 14:19:44Z littleboy $
  *
  */
 
@@ -27,6 +27,8 @@
 #define LASTEXPRESS_BEETLE_H
 
 #include "lastexpress/data/sequence.h"
+
+#include "lastexpress/helpers.h"
 
 #include "common/array.h"
 #include "common/system.h"
@@ -98,8 +100,9 @@ private:
 
 		~BeetleData() {
 			for (int i = 0; i < (int)sequences.size(); i++)
-				if (sequences[i])
-					delete sequences[i];
+				SAFE_DELETE(sequences[i]);
+
+			sequences.clear();
 		}
 	};
 

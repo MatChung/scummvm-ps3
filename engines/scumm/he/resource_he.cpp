@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/he/resource_he.cpp $
- * $Id: resource_he.cpp 54031 2010-11-01 21:37:47Z fingolfin $
+ * $Id: resource_he.cpp 54435 2010-11-23 22:25:36Z fingolfin $
  *
  */
 
@@ -34,7 +34,7 @@
 #include "graphics/cursorman.h"
 
 #include "common/archive.h"
-#include "common/stream.h"
+#include "common/memstream.h"
 #include "common/system.h"
 
 namespace Scumm {
@@ -832,7 +832,7 @@ int Win32ResExtractor::convertIcons(byte *data, int datasize, byte **cursor, int
 	uint32 c, d;
 	int completed;
 	int matched = 0;
-	MemoryReadStream *in = new MemoryReadStream(data, datasize);
+	Common::MemoryReadStream *in = new Common::MemoryReadStream(data, datasize);
 
 	if (!in->read(&dir, sizeof(Win32CursorIconFileDir)- sizeof(Win32CursorIconFileDirEntry)))
 		goto cleanup;

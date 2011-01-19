@@ -19,9 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/plugins/dc/dc-provider.cpp $
- * $Id: dc-provider.cpp 48301 2010-03-19 13:46:59Z fingolfin $
+ * $Id: dc-provider.cpp 55061 2010-12-29 15:25:21Z Bluddy $
  *
  */
+
+#include "common/scummsys.h"
 
 #if defined(DYNAMIC_MODULES) && defined(__DC__)
 
@@ -35,7 +37,6 @@
 class DCPlugin : public DynamicPlugin {
 protected:
 	void *_dlHandle;
-	Common::String _filename;
 
 	virtual VoidFunc findSymbol(const char *symbol) {
 		void *func = dlsym(_dlHandle, symbol);
@@ -54,7 +55,7 @@ protected:
 
 public:
 	DCPlugin(const Common::String &filename)
-		: _dlHandle(0), _filename(filename) {}
+		: DynamicPlugin(filename), _dlHandle(0) {}
 
 	bool loadPlugin() {
 		assert(!_dlHandle);

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/dialogs.cpp $
- * $Id: dialogs.cpp 54001 2010-11-01 16:00:17Z fingolfin $
+ * $Id: dialogs.cpp 54265 2010-11-16 10:19:01Z fingolfin $
  */
 
 #include "common/config-manager.h"
@@ -36,8 +36,8 @@
 
 #include "gui/about.h"
 
-#include "gui/GuiManager.h"
-#include "gui/ListWidget.h"
+#include "gui/gui-manager.h"
+#include "gui/widgets/list.h"
 #include "gui/ThemeEval.h"
 
 #include "scumm/dialogs.h"

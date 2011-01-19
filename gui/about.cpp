@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/gui/about.cpp $
- * $Id: about.cpp 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: about.cpp 55082 2010-12-31 23:04:49Z strangerke $
  */
 
 #include "engines/metaengine.h"
@@ -30,7 +30,7 @@
 #include "common/translation.h"
 #include "common/util.h"
 #include "gui/about.h"
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 #include "gui/widget.h"
 
 #include "gui/ThemeEval.h"
@@ -59,7 +59,7 @@ enum {
 
 static const char *copyright_text[] = {
 "",
-"C0""Copyright (C) 2001-2010 The ScummVM project",
+"C0""Copyright (C) 2001-2011 The ScummVM project",
 "C0""http://www.scummvm.org",
 "",
 "C0""ScummVM is the legal property of its developers, whose names are too numerous to list here. Please refer to the COPYRIGHT file distributed with this binary.",

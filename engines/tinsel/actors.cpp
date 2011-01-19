@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/actors.cpp $
- * $Id: actors.cpp 54030 2010-11-01 21:36:39Z fingolfin $
+ * $Id: actors.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * Handles things to do with actors, delegates much moving actor stuff.
  */
@@ -78,6 +78,8 @@ struct T2_ACTOR_STRUC {
 //----------------- LOCAL GLOBAL DATA --------------------
 
 #define MAX_REELS 6
+
+// FIXME: Avoid non-const global vars
 
 static int LeadActorId = 0;		// The lead actor
 

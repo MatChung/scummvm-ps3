@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/testbed/config-params.cpp $
- * $Id: config-params.cpp 52973 2010-10-02 01:05:16Z sud03r $
+ * $Id: config-params.cpp 54258 2010-11-16 08:23:13Z fingolfin $
  */
 
 #include "common/config-manager.h"
@@ -27,7 +27,7 @@
 
 #include "testbed/config-params.h"
 
-DECLARE_SINGLETON(Testbed::ConfigParams)
+DECLARE_SINGLETON(Testbed::ConfigParams);
 
 namespace Testbed {
 

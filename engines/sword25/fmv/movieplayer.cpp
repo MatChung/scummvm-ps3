@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/fmv/movieplayer.cpp $
- * $Id: movieplayer.cpp 53835 2010-10-25 22:41:25Z fingolfin $
+ * $Id: movieplayer.cpp 54927 2010-12-16 01:35:13Z mthreepwood $
  *
  */
 
@@ -124,7 +124,7 @@ bool MoviePlayer::pause() {
 
 void MoviePlayer::update() {
 	if (_decoder.isVideoLoaded()) {
-		Graphics::Surface *s = _decoder.decodeNextFrame();
+		const Graphics::Surface *s = _decoder.decodeNextFrame();
 		if (s) {
 			// Transfer the next frame
 			assert(s->bytesPerPixel == 4);

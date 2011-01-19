@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/faders.cpp $
- * $Id: faders.cpp 45616 2009-11-02 21:54:57Z fingolfin $
+ * $Id: faders.cpp 54286 2010-11-17 12:13:23Z fingolfin $
  *
  * Palette Fader and Flasher processes.
  */
@@ -236,8 +236,8 @@ void FadeInFast(SCNHANDLE noFadeTable[]) {
 
 void PokeInTagColour() {
 	if (SysVar(SV_TAGCOLOUR)) {
-		static COLORREF c = GetActorRGB(-1);
-		UpdateDACqueue(SysVar(SV_TAGCOLOUR), 1, &c);
+		const COLORREF c = GetActorRGB(-1);
+		UpdateDACqueue(SysVar(SV_TAGCOLOUR), c);
 	}
 }
 

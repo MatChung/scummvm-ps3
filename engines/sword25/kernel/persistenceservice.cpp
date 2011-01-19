@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword25/kernel/persistenceservice.cpp $
- * $Id: persistenceservice.cpp 53909 2010-10-28 22:45:15Z lordhoto $
+ * $Id: persistenceservice.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -316,7 +316,7 @@ bool PersistenceService::saveGame(uint slotID, const Common::String &screenshotF
 	}
 
 	// Get the screenshot
-	Common::MemoryReadStream *thumbnail = Kernel::getInstance()->getGfx()->getThumbnail();
+	Common::SeekableReadStream *thumbnail = Kernel::getInstance()->getGfx()->getThumbnail();
 
 	if (thumbnail) {
 		byte *buffer = new Byte[FILE_COPY_BUFFER_SIZE];

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/mohawk.h $
- * $Id: mohawk.h 53484 2010-10-15 12:48:19Z fingolfin $
+ * $Id: mohawk.h 55112 2011-01-03 22:53:12Z fuzzie $
  *
  */
 
@@ -53,14 +53,15 @@ enum MohawkGameType {
 	GType_MAKINGOF,
 	GType_RIVEN,
 	GType_ZOOMBINI,
+	GType_CSTIME,
 	GType_CSWORLD,
 	GType_CSAMTRAK,
-	GType_MAGGIESS,
 	GType_JAMESMATH,
 	GType_TREEHOUSE,
 	GType_1STDEGREE,
 	GType_CSUSA,
 	GType_LIVINGBOOKSV1,
+	GType_LIVINGBOOKSV2,
 	GType_LIVINGBOOKSV3
 };
 
@@ -68,7 +69,8 @@ enum MohawkGameFeatures {
 	GF_ME =      (1 << 0),	// Myst Masterpiece Edition
 	GF_DVD =     (1 << 1),
 	GF_DEMO =    (1 << 2),
-	GF_HASMIDI = (1 << 3)
+	GF_HASMIDI = (1 << 3),
+	GF_LB_10   = (1 << 4)   // very early Living Books 1.0 games
 };
 
 struct MohawkGameDescription;
@@ -76,6 +78,7 @@ class Sound;
 class PauseDialog;
 class MohawkArchive;
 class VideoManager;
+class CursorManager;
 
 class MohawkEngine : public ::Engine {
 protected:
@@ -87,8 +90,9 @@ public:
 
 	// Detection related functions
 	const MohawkGameDescription *_gameDescription;
-	const char* getGameId() const;
+	const char *getGameId() const;
 	uint32 getFeatures() const;
+	const char *getAppName() const;
 	uint16 getVersion() const;
 	Common::Platform getPlatform() const;
 	uint8 getGameType() const;
@@ -98,10 +102,14 @@ public:
 
 	Sound *_sound;
 	VideoManager *_video;
+	CursorManager *_cursor;
 
-	virtual Common::SeekableReadStream *getRawData(uint32 tag, uint16 id);
+	virtual Common::SeekableReadStream *getResource(uint32 tag, uint16 id);
 	bool hasResource(uint32 tag, uint16 id);
+	bool hasResource(uint32 tag, const Common::String &resName);
 	uint32 getResourceOffset(uint32 tag, uint16 id);
+	uint16 findResourceID(uint32 type, const Common::String &resName);
+	Common::String getResourceName(uint32 tag, uint16 id);
 
 	void pauseGame();
 

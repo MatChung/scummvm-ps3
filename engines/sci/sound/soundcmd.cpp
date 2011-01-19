@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/sound/soundcmd.cpp $
- * $Id: soundcmd.cpp 52606 2010-09-06 19:03:55Z m_kiewitz $
+ * $Id: soundcmd.cpp 55086 2011-01-01 12:48:12Z thebluegr $
  *
  */
 
@@ -28,7 +28,9 @@
 #include "sci/sound/music.h"
 #include "sci/sound/soundcmd.h"
 
+#include "sci/engine/features.h"
 #include "sci/engine/kernel.h"
+#include "sci/engine/object.h"
 #include "sci/engine/selector.h"
 
 namespace Sci {
@@ -45,13 +47,16 @@ SoundCommandParser::~SoundCommandParser() {
 }
 
 reg_t SoundCommandParser::kDoSoundInit(int argc, reg_t *argv, reg_t acc) {
-	debugC(2, kDebugLevelSound, "kDoSound(init): %04x:%04x", PRINT_REG(argv[0]));
+	debugC(kDebugLevelSound, "kDoSound(init): %04x:%04x", PRINT_REG(argv[0]));
 	processInitSound(argv[0]);
 	return acc;
 }
 
 void SoundCommandParser::processInitSound(reg_t obj) {
 	int resourceId = readSelectorValue(_segMan, obj, SELECTOR(number));
+	// Modify the resourceId for the Windows versions that have an alternate MIDI soundtrack, like SSCI did.
+	if (g_sci && g_sci->_features->useAltWinGMSound())
+		resourceId += 1000;
 
 	// Check if a track with the same sound object is already playing
 	MusicEntry *oldSound = _music->getSlot(obj);
@@ -70,8 +75,9 @@ void SoundCommandParser::processInitSound(reg_t obj) {
 	newSound->priority = readSelectorValue(_segMan, obj, SELECTOR(pri)) & 0xFF;
 	if (_soundVersion >= SCI_VERSION_1_EARLY)
 		newSound->volume = CLIP<int>(readSelectorValue(_segMan, obj, SELECTOR(vol)), 0, MUSIC_VOLUME_MAX);
+	newSound->reverb = -1;	// initialize to SCI invalid, it'll be set correctly in soundInitSnd() below
 
-	debugC(2, kDebugLevelSound, "kDoSound(init): %04x:%04x number %d, loop %d, prio %d, vol %d", PRINT_REG(obj),
+	debugC(kDebugLevelSound, "kDoSound(init): %04x:%04x number %d, loop %d, prio %d, vol %d", PRINT_REG(obj),
 			resourceId,	newSound->loop, newSound->priority, newSound->volume);
 
 	// In SCI1.1 games, sound effects are started from here. If we can find
@@ -108,7 +114,7 @@ void SoundCommandParser::processInitSound(reg_t obj) {
 }
 
 reg_t SoundCommandParser::kDoSoundPlay(int argc, reg_t *argv, reg_t acc) {
-	debugC(2, kDebugLevelSound, "kDoSound(play): %04x:%04x", PRINT_REG(argv[0]));
+	debugC(kDebugLevelSound, "kDoSound(play): %04x:%04x", PRINT_REG(argv[0]));
 	processPlaySound(argv[0]);
 	return acc;
 }
@@ -121,6 +127,9 @@ void SoundCommandParser::processPlaySound(reg_t obj) {
 	}
 
 	int resourceId = obj.segment ? readSelectorValue(_segMan, obj, SELECTOR(number)) : -1;
+	// Modify the resourceId for the Windows versions that have an alternate MIDI soundtrack, like SSCI did.
+	if (g_sci && g_sci->_features->useAltWinGMSound())
+		resourceId += 1000;
 
 	if (musicSlot->resourceId != resourceId) { // another sound loaded into struct
 		processDisposeSound(obj);
@@ -146,7 +155,7 @@ void SoundCommandParser::processPlaySound(reg_t obj) {
 	if (_soundVersion >= SCI_VERSION_1_EARLY)
 		musicSlot->volume = readSelectorValue(_segMan, obj, SELECTOR(vol));
 
-	debugC(2, kDebugLevelSound, "kDoSound(play): %04x:%04x number %d, loop %d, prio %d, vol %d", PRINT_REG(obj),
+	debugC(kDebugLevelSound, "kDoSound(play): %04x:%04x number %d, loop %d, prio %d, vol %d", PRINT_REG(obj),
 			resourceId, musicSlot->loop, musicSlot->priority, musicSlot->volume);
 
 	_music->soundPlay(musicSlot);
@@ -164,7 +173,7 @@ reg_t SoundCommandParser::kDoSoundDummy(int argc, reg_t *argv, reg_t acc) {
 }
 
 reg_t SoundCommandParser::kDoSoundDispose(int argc, reg_t *argv, reg_t acc) {
-	debugC(2, kDebugLevelSound, "kDoSound(dispose): %04x:%04x", PRINT_REG(argv[0]));
+	debugC(kDebugLevelSound, "kDoSound(dispose): %04x:%04x", PRINT_REG(argv[0]));
 	processDisposeSound(argv[0]);
 	return acc;
 }
@@ -187,7 +196,7 @@ void SoundCommandParser::processDisposeSound(reg_t obj) {
 }
 
 reg_t SoundCommandParser::kDoSoundStop(int argc, reg_t *argv, reg_t acc) {
-	debugC(2, kDebugLevelSound, "kDoSound(stop): %04x:%04x", PRINT_REG(argv[0]));
+	debugC(kDebugLevelSound, "kDoSound(stop): %04x:%04x", PRINT_REG(argv[0]));
 	processStopSound(argv[0], false);
 	return acc;
 }
@@ -222,9 +231,9 @@ void SoundCommandParser::processStopSound(reg_t obj, bool sampleFinishedPlaying)
 
 reg_t SoundCommandParser::kDoSoundPause(int argc, reg_t *argv, reg_t acc) {
 	if (argc == 1)
-		debugC(2, kDebugLevelSound, "kDoSound(pause): %04x:%04x", PRINT_REG(argv[0]));
+		debugC(kDebugLevelSound, "kDoSound(pause): %04x:%04x", PRINT_REG(argv[0]));
 	else
-		debugC(2, kDebugLevelSound, "kDoSound(pause): %04x:%04x, %04x:%04x", PRINT_REG(argv[0]), PRINT_REG(argv[1]));
+		debugC(kDebugLevelSound, "kDoSound(pause): %04x:%04x, %04x:%04x", PRINT_REG(argv[0]), PRINT_REG(argv[1]));
 
 	if (_soundVersion <= SCI_VERSION_0_LATE) {
 		// SCI0 games give us 0/1 for either resuming or pausing the current music
@@ -258,7 +267,7 @@ reg_t SoundCommandParser::kDoSoundPause(int argc, reg_t *argv, reg_t acc) {
 		MusicEntry *musicSlot = _music->getSlot(obj);
 		if (!musicSlot) {
 			// This happens quite frequently
-			debugC(2, kDebugLevelSound, "kDoSound(pause): Slot not found (%04x:%04x)", PRINT_REG(obj));
+			debugC(kDebugLevelSound, "kDoSound(pause): Slot not found (%04x:%04x)", PRINT_REG(obj));
 			return acc;
 		}
 
@@ -277,7 +286,7 @@ reg_t SoundCommandParser::kDoSoundResumeAfterRestore(int argc, reg_t *argv, reg_
 reg_t SoundCommandParser::kDoSoundMute(int argc, reg_t *argv, reg_t acc) {
 	uint16 previousState = _music->soundGetSoundOn();
 	if (argc > 0) {
-		debugC(2, kDebugLevelSound, "kDoSound(mute): %d", argv[0].toUint16());
+		debugC(kDebugLevelSound, "kDoSound(mute): %d", argv[0].toUint16());
 		_music->soundSetSoundOn(argv[0].toUint16());
 	}
 
@@ -288,7 +297,7 @@ reg_t SoundCommandParser::kDoSoundMasterVolume(int argc, reg_t *argv, reg_t acc)
 	acc = make_reg(0, _music->soundGetMasterVolume());
 
 	if (argc > 0) {
-		debugC(2, kDebugLevelSound, "kDoSound(masterVolume): %d", argv[0].toSint16());
+		debugC(kDebugLevelSound, "kDoSound(masterVolume): %d", argv[0].toSint16());
 		int vol = CLIP<int16>(argv[0].toSint16(), 0, MUSIC_MASTERVOLUME_MAX);
 		vol = vol * Audio::Mixer::kMaxMixerVolume / MUSIC_MASTERVOLUME_MAX;
 		ConfMan.setInt("music_volume", vol);
@@ -303,7 +312,7 @@ reg_t SoundCommandParser::kDoSoundFade(int argc, reg_t *argv, reg_t acc) {
 
 	MusicEntry *musicSlot = _music->getSlot(obj);
 	if (!musicSlot) {
-		debugC(2, kDebugLevelSound, "kDoSound(fade): Slot not found (%04x:%04x)", PRINT_REG(obj));
+		debugC(kDebugLevelSound, "kDoSound(fade): Slot not found (%04x:%04x)", PRINT_REG(obj));
 		return acc;
 	}
 
@@ -311,7 +320,7 @@ reg_t SoundCommandParser::kDoSoundFade(int argc, reg_t *argv, reg_t acc) {
 
 	// If sound is not playing currently, set signal directly
 	if (musicSlot->status != kSoundPlaying) {
-		debugC(2, kDebugLevelSound, "kDoSound(fade): %04x:%04x fading requested, but sound is currently not playing", PRINT_REG(obj));
+		debugC(kDebugLevelSound, "kDoSound(fade): %04x:%04x fading requested, but sound is currently not playing", PRINT_REG(obj));
 		writeSelectorValue(_segMan, obj, SELECTOR(signal), SIGNAL_OFFSET);
 		return acc;
 	}
@@ -343,7 +352,7 @@ reg_t SoundCommandParser::kDoSoundFade(int argc, reg_t *argv, reg_t acc) {
 		error("kDoSound(fade): unsupported argc %d", argc);
 	}
 
-	debugC(2, kDebugLevelSound, "kDoSound(fade): %04x:%04x to %d, step %d, ticker %d", PRINT_REG(obj), musicSlot->fadeTo, musicSlot->fadeStep, musicSlot->fadeTickerStep);
+	debugC(kDebugLevelSound, "kDoSound(fade): %04x:%04x to %d, step %d, ticker %d", PRINT_REG(obj), musicSlot->fadeTo, musicSlot->fadeStep, musicSlot->fadeTickerStep);
 	return acc;
 }
 
@@ -354,7 +363,7 @@ reg_t SoundCommandParser::kDoSoundGetPolyphony(int argc, reg_t *argv, reg_t acc)
 reg_t SoundCommandParser::kDoSoundUpdate(int argc, reg_t *argv, reg_t acc) {
 	reg_t obj = argv[0];
 
-	debugC(2, kDebugLevelSound, "kDoSound(update): %04x:%04x", PRINT_REG(argv[0]));
+	debugC(kDebugLevelSound, "kDoSound(update): %04x:%04x", PRINT_REG(argv[0]));
 
 	MusicEntry *musicSlot = _music->getSlot(obj);
 	if (!musicSlot) {
@@ -472,7 +481,7 @@ reg_t SoundCommandParser::kDoSoundSendMidi(int argc, reg_t *argv, reg_t acc) {
 	uint16 controller = argv[3].toUint16();
 	uint16 param = argv[4].toUint16();
 
-	debugC(2, kDebugLevelSound, "kDoSound(sendMidi): %04x:%04x, %d, %d, %d, %d", PRINT_REG(obj), channel, midiCmd, controller, param);
+	debugC(kDebugLevelSound, "kDoSound(sendMidi): %04x:%04x, %d, %d, %d, %d", PRINT_REG(obj), channel, midiCmd, controller, param);
 	if (channel)
 		channel--; // channel is given 1-based, we are using 0-based
 
@@ -490,16 +499,23 @@ reg_t SoundCommandParser::kDoSoundSendMidi(int argc, reg_t *argv, reg_t acc) {
 	return acc;
 }
 
-reg_t SoundCommandParser::kDoSoundReverb(int argc, reg_t *argv, reg_t acc) {
-	debugC(2, kDebugLevelSound, "doSoundReverb: %d", argv[0].toUint16() & 0xF);
-	_music->setReverb(argv[0].toUint16() & 0xF);
-	return acc;
+reg_t SoundCommandParser::kDoSoundGlobalReverb(int argc, reg_t *argv, reg_t acc) {
+	byte prevReverb = _music->getCurrentReverb();
+	byte reverb = argv[0].toUint16() & 0xF;
+
+	if (argc == 1) {
+		debugC(kDebugLevelSound, "doSoundGlobalReverb: %d", argv[0].toUint16() & 0xF);
+		if (reverb <= 10)
+			_music->setGlobalReverb(reverb);
+	}
+
+	return make_reg(0, prevReverb);
 }
 
 reg_t SoundCommandParser::kDoSoundSetHold(int argc, reg_t *argv, reg_t acc) {
 	reg_t obj = argv[0];
 
-	debugC(2, kDebugLevelSound, "doSoundSetHold: %04x:%04x, %d", PRINT_REG(argv[0]), argv[1].toUint16());
+	debugC(kDebugLevelSound, "doSoundSetHold: %04x:%04x, %d", PRINT_REG(argv[0]), argv[1].toUint16());
 
 	MusicEntry *musicSlot = _music->getSlot(obj);
 	if (!musicSlot) {
@@ -554,7 +570,7 @@ reg_t SoundCommandParser::kDoSoundSetVolume(int argc, reg_t *argv, reg_t acc) {
 		return acc;
 	}
 
-	debugC(2, kDebugLevelSound, "kDoSound(setVolume): %d", value);
+	debugC(kDebugLevelSound, "kDoSound(setVolume): %d", value);
 
 	value = CLIP<int>(value, 0, MUSIC_VOLUME_MAX);
 
@@ -570,17 +586,22 @@ reg_t SoundCommandParser::kDoSoundSetPriority(int argc, reg_t *argv, reg_t acc) 
 	reg_t obj = argv[0];
 	int16 value = argv[1].toSint16();
 
-	debugC(2, kDebugLevelSound, "kDoSound(setPriority): %04x:%04x, %d", PRINT_REG(obj), value);
+	debugC(kDebugLevelSound, "kDoSound(setPriority): %04x:%04x, %d", PRINT_REG(obj), value);
 
 	MusicEntry *musicSlot = _music->getSlot(obj);
 	if (!musicSlot) {
-		debugC(2, kDebugLevelSound, "kDoSound(setPriority): Slot not found (%04x:%04x)", PRINT_REG(obj));
+		debugC(kDebugLevelSound, "kDoSound(setPriority): Slot not found (%04x:%04x)", PRINT_REG(obj));
 		return acc;
 	}
 
 	if (value == -1) {
+		uint16 resourceNr = musicSlot->resourceId;
+		// Modify the resourceId for the Windows versions that have an alternate MIDI soundtrack, like SSCI did.
+		if (g_sci && g_sci->_features->useAltWinGMSound())
+			resourceNr += 1000;
+
 		// Set priority from the song data
-		Resource *song = _resMan->findResource(ResourceId(kResourceTypeSound, musicSlot->resourceId), 0);
+		Resource *song = _resMan->findResource(ResourceId(kResourceTypeSound, resourceNr), 0);
 		if (song->data[0] == 0xf0)
 			_music->soundSetPriority(musicSlot, song->data[1]);
 		else
@@ -602,7 +623,7 @@ reg_t SoundCommandParser::kDoSoundSetLoop(int argc, reg_t *argv, reg_t acc) {
 	reg_t obj = argv[0];
 	int16 value = argv[1].toSint16();
 
-	debugC(2, kDebugLevelSound, "kDoSound(setLoop): %04x:%04x, %d", PRINT_REG(obj), value);
+	debugC(kDebugLevelSound, "kDoSound(setLoop): %04x:%04x, %d", PRINT_REG(obj), value);
 
 	MusicEntry *musicSlot = _music->getSlot(obj);
 	if (!musicSlot) {

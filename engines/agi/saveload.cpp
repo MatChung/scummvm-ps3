@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agi/saveload.cpp $
- * $Id: saveload.cpp 52997 2010-10-03 18:38:38Z eriktorbjorn $
+ * $Id: saveload.cpp 54358 2010-11-19 01:37:04Z fingolfin $
  *
  */
 
@@ -29,9 +29,10 @@
 //
 
 #include "common/file.h"
-#include "graphics/thumbnail.h"
 #include "common/config-manager.h"
 #include "common/savefile.h"
+#include "graphics/thumbnail.h"
+#include "graphics/surface.h"
 
 #include "agi/agi.h"
 #include "agi/graphics.h"

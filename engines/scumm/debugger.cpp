@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/scumm/debugger.cpp $
- * $Id: debugger.cpp 53829 2010-10-25 16:41:39Z fingolfin $
+ * $Id: debugger.cpp 54815 2010-12-07 18:54:21Z fingolfin $
  *
  */
 
@@ -105,17 +105,6 @@ ScummDebugger::ScummDebugger(ScummEngine *s)
 
 ScummDebugger::~ScummDebugger() {
 	 // we need this destructor, even if it is empty, for __SYMBIAN32__
-}
-
-void ScummDebugger::preEnter() {
-	// Pause sound output
-	_old_soundsPaused = _vm->_sound->_soundsPaused;
-	_vm->_sound->pauseSounds(true);
-}
-
-void ScummDebugger::postEnter() {
-	// Resume previous sound state
-	_vm->_sound->pauseSounds(_old_soundsPaused);
 }
 
 ///////////////////////////////////////////////////

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/common/str.h $
- * $Id: str.h 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: str.h 54716 2010-12-01 20:03:05Z jvprat $
  */
 
 #ifndef COMMON_STRING_H
@@ -288,7 +288,7 @@ extern char *trim(char *t);
 Common::String lastPathComponent(const Common::String &path, const char sep);
 
 /**
- * Normalize a gien path to a canonical form. In particular:
+ * Normalize a given path to a canonical form. In particular:
  * - trailing separators are removed:  /foo/bar/ -> /foo/bar
  * - double separators (= empty components) are removed:   /foo//bar -> /foo/bar
  * - dot components are removed:  /foo/./bar -> /foo/bar

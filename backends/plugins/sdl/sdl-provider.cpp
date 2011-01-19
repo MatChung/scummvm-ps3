@@ -19,27 +19,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/plugins/sdl/sdl-provider.cpp $
- * $Id: sdl-provider.cpp 53968 2010-10-30 23:53:30Z fingolfin $
+ * $Id: sdl-provider.cpp 55061 2010-12-29 15:25:21Z Bluddy $
  *
  */
 
-#if defined(DYNAMIC_MODULES) && defined(SDL_BACKEND)
+#include "common/scummsys.h"
 
-// Disable symbol overrides so that we can use system headers.
-#define FORBIDDEN_SYMBOL_ALLOW_ALL
+#if defined(DYNAMIC_MODULES) && defined(SDL_BACKEND)
 
 #include "backends/plugins/sdl/sdl-provider.h"
 #include "backends/plugins/dynamic-plugin.h"
 #include "common/fs.h"
 
-#include "SDL.h"
-#include "SDL_loadso.h"
-
+#include "backends/platform/sdl/sdl-sys.h"
 
 class SDLPlugin : public DynamicPlugin {
 protected:
 	void *_dlHandle;
-	Common::String _filename;
 
 	virtual VoidFunc findSymbol(const char *symbol) {
 		void *func = SDL_LoadFunction(_dlHandle, symbol);
@@ -58,7 +54,7 @@ protected:
 
 public:
 	SDLPlugin(const Common::String &filename)
-		: _dlHandle(0), _filename(filename) {}
+		: DynamicPlugin(filename), _dlHandle(0) {}
 
 	bool loadPlugin() {
 		assert(!_dlHandle);

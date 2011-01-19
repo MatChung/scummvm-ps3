@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/avi_decoder.h $
- * $Id: avi_decoder.h 53141 2010-10-10 22:25:52Z fingolfin $
+ * $Id: avi_decoder.h 54928 2010-12-16 01:41:11Z mthreepwood $
  *
  */
 
@@ -34,7 +34,6 @@
 namespace Graphics {
 
 #define UNKNOWN_HEADER(a) error("Unknown header found -- \'%s\'", tag2str(a))
-#define AUDIO_RATE (_audsHeader.rate / _audsHeader.scale)
 
 // IDs used throughout the AVI files
 // that will be handled by this player
@@ -66,6 +65,7 @@ namespace Graphics {
 #define ID_WHAM MKID_BE('WHAM')
 #define ID_CVID MKID_BE('cvid')
 #define ID_IV32 MKID_BE('iv32')
+#define ID_DUCK MKID_BE('DUCK')
 
 struct BITMAPINFOHEADER {
 	uint32 size;
@@ -113,21 +113,11 @@ enum IndexFlags {
 	AVIIF_INDEX = 0x10
 };
 
-enum WaveFormats {
-	AVI_WAVE_INVALIDFORMAT = 0,
-	AVI_WAVE_FORMAT_PCM = 1,
-	AVI_WAVE_FORMAT_1M08 = 1,
-	AVI_WAVE_FORMAT_1S08 = 2,
-	AVI_WAVE_FORMAT_1M16 = 4,
-	AVI_WAVE_FORMAT_1S16 = 8,
-	AVI_WAVE_FORMAT_2M08 = 16,
-	AVI_WAVE_FORMAT_2S08 = 32,
-	AVI_WAVE_FORMAT_2M16 = 64,
-	AVI_WAVE_FORMAT_2S16 = 128,
-	AVI_WAVE_FORMAT_4M08 = 256,
-	AVI_WAVE_FORMAT_4S08 = 512,
-	AVI_WAVE_FORMAT_4M16 = 1024,
-	AVI_WAVE_FORMAT_4S16 = 2048
+// Audio Codecs
+enum {
+	kWaveFormatNone = 0,
+	kWaveFormatPCM = 1,
+	kWaveFormatDK3 = 98
 };
 
 struct AVIHeader {
@@ -186,9 +176,9 @@ public:
 	uint16 getHeight() const { return _header.height; }
 	uint32 getFrameCount() const { return _header.totalFrames; }
 	uint32 getElapsedTime() const;
-	Surface *decodeNextFrame();
+	const Surface *decodeNextFrame();
 	PixelFormat getPixelFormat() const;
-	byte *getPalette() { _dirtyPalette = false; return _palette; }
+	const byte *getPalette() { _dirtyPalette = false; return _palette; }
 	bool hasDirtyPalette() const { return _dirtyPalette; }
 
 protected:
@@ -221,6 +211,7 @@ private:
 	Audio::SoundHandle *_audHandle;
 	Audio::QueuingAudioStream *_audStream;
 	Audio::QueuingAudioStream *createAudioStream();
+	void queueAudioBuffer(uint32 chunkSize);
 };
 
 } // End of namespace Graphics

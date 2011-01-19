@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sword1/sword1.cpp $
- * $Id: sword1.cpp 53924 2010-10-29 16:53:46Z lordhoto $
+ * $Id: sword1.cpp 54265 2010-11-16 10:19:01Z fingolfin $
  *
  */
 
@@ -41,7 +41,7 @@
 #include "engines/util.h"
 
 #include "gui/message.h"
-#include "gui/GuiManager.h"
+#include "gui/gui-manager.h"
 
 namespace Sword1 {
 
@@ -66,6 +66,8 @@ SwordEngine::SwordEngine(OSystem *syst)
 	SearchMan.addSubDirectoryMatching(gameDataDir, "smackshi");
 	SearchMan.addSubDirectoryMatching(gameDataDir, "english");//PSX Demo
 	SearchMan.addSubDirectoryMatching(gameDataDir, "italian");//PSX Demo
+
+	_console = new SwordConsole(this);
 }
 
 SwordEngine::~SwordEngine() {
@@ -78,6 +80,7 @@ SwordEngine::~SwordEngine() {
 	delete _mouse;
 	delete _objectMan;
 	delete _resMan;
+	delete _console;
 }
 
 Common::Error SwordEngine::init() {
@@ -678,6 +681,13 @@ uint8 SwordEngine::mainLoop() {
 				if (retCode == CONTROL_NOTHING_DONE)
 					_screen->fullRefresh();
 			}
+
+			// Check for Debugger Activation
+			if (_keyPressed.hasFlags(Common::KBD_CTRL) && _keyPressed.keycode == Common::KEYCODE_d) {
+				this->getDebugger()->attach();
+				this->getDebugger()->onFrame();
+			}
+
 			_mouseState = 0;
 			_keyPressed.reset();
 		} while ((Logic::_scriptVars[SCREEN] == Logic::_scriptVars[NEW_SCREEN]) && (retCode == 0) && (!shouldQuit()));

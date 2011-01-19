@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/mohawk.cpp $
- * $Id: mohawk.cpp 49165 2010-05-23 18:33:55Z mthreepwood $
+ * $Id: mohawk.cpp 54593 2010-11-29 20:49:42Z bgk $
  *
  */
 
@@ -33,6 +33,7 @@
 #include "base/version.h"
 
 #include "mohawk/mohawk.h"
+#include "mohawk/cursors.h"
 #include "mohawk/dialogs.h"
 #include "mohawk/sound.h"
 #include "mohawk/video.h"
@@ -47,12 +48,18 @@ MohawkEngine::MohawkEngine(OSystem *syst, const MohawkGameDescription *gamedesc)
 
 	_mixer->setVolumeForSoundType(Audio::Mixer::kSFXSoundType, ConfMan.getInt("sfx_volume"));
 	_mixer->setVolumeForSoundType(Audio::Mixer::kMusicSoundType, ConfMan.getInt("music_volume"));
+
+	_sound = 0;
+	_video = 0;
+	_pauseDialog = 0;
+	_cursor = 0;
 }
 
 MohawkEngine::~MohawkEngine() {
 	delete _sound;
 	delete _video;
 	delete _pauseDialog;
+	delete _cursor;
 
 	for (uint32 i = 0; i < _mhk.size(); i++)
 		delete _mhk[i];
@@ -84,12 +91,12 @@ void MohawkEngine::pauseGame() {
 	runDialog(*_pauseDialog);
 }
 
-Common::SeekableReadStream *MohawkEngine::getRawData(uint32 tag, uint16 id) {
+Common::SeekableReadStream *MohawkEngine::getResource(uint32 tag, uint16 id) {
 	for (uint32 i = 0; i < _mhk.size(); i++)
 		if (_mhk[i]->hasResource(tag, id))
-			return _mhk[i]->getRawData(tag, id);
+			return _mhk[i]->getResource(tag, id);
 
-	error ("Could not find a \'%s\' resource with ID %04x", tag2str(tag), id);
+	error("Could not find a '%s' resource with ID %04x", tag2str(tag), id);
 	return NULL;
 }
 
@@ -101,12 +108,39 @@ bool MohawkEngine::hasResource(uint32 tag, uint16 id) {
 	return false;
 }
 
+bool MohawkEngine::hasResource(uint32 tag, const Common::String &resName) {
+	for (uint32 i = 0; i < _mhk.size(); i++)
+		if (_mhk[i]->hasResource(tag, resName))
+			return true;
+
+	return false;
+}
+
 uint32 MohawkEngine::getResourceOffset(uint32 tag, uint16 id) {
 	for (uint32 i = 0; i < _mhk.size(); i++)
 		if (_mhk[i]->hasResource(tag, id))
 			return _mhk[i]->getOffset(tag, id);
 
-	error ("Could not find a \'%s\' resource with ID %04x", tag2str(tag), id);
+	error("Could not find a '%s' resource with ID %04x", tag2str(tag), id);
+	return 0;
+}
+
+uint16 MohawkEngine::findResourceID(uint32 tag, const Common::String &resName) {
+	for (uint32 i = 0; i < _mhk.size(); i++)
+		if (_mhk[i]->hasResource(tag, resName))
+			return _mhk[i]->findResourceID(tag, resName);
+
+	error("Could not find a '%s' resource matching name '%s'", tag2str(tag), resName.c_str());
+	return 0xFFFF;
+}
+
+Common::String MohawkEngine::getResourceName(uint32 tag, uint16 id) {
+	for (uint32 i = 0; i < _mhk.size(); i++)
+		if (_mhk[i]->hasResource(tag, id)) {
+			return _mhk[i]->getName(tag, id);
+		}
+
+	error("Could not find a \'%s\' resource with ID %04x", tag2str(tag), id);
 	return 0;
 }
 

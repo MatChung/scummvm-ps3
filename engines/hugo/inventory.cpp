@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/hugo/inventory.cpp $
- * $Id: inventory.cpp 54018 2010-11-01 20:20:21Z strangerke $
+ * $Id: inventory.cpp 54920 2010-12-15 07:35:20Z strangerke $
  *
  */
 
@@ -73,7 +73,7 @@ void InventoryHandler::constructInventory(int16 imageTotNumb, int displayNumb, b
 	// Copy inventory icons to remaining positions
 	int16 displayed = 0;
 	int16 carried = 0;
-	for (int16 i = 0; i < imageTotNumb; i++) {
+	for (int16 i = 0; (i < imageTotNumb) && (displayed < displayNumb); i++) {
 		if (_vm->_object->isCarried(_vm->_invent[i])) {
 			// Check still room to display and past first scroll index
 			if (displayed < displayNumb && carried >= firstObjId) {
@@ -153,7 +153,7 @@ int16 InventoryHandler::processInventory(invact_t action, ...) {
 			if (objId == -1 && i < displayNumb) {
 				// Find objid by counting # carried objects == i+1
 				int16 j;
-				for (j = 0, i++; i > 0 && j < _vm->_numObj; j++) {
+				for (j = 0, i++; i > 0 && j < _vm->_object->_numObj; j++) {
 					if (_vm->_object->isCarried(j)) {
 						if (--i == 0)
 							objId = j;
@@ -207,7 +207,7 @@ void InventoryHandler::runInventory() {
 		}
 
 		gameStatus.inventoryHeight += STEP_DY;      // Move the icon bar down
-		if (gameStatus.inventoryHeight >= INV_DY)   // Limit travel
+		if (gameStatus.inventoryHeight > INV_DY)    // Limit travel
 			gameStatus.inventoryHeight = INV_DY;
 
 		// Move visible portion to _frontBuffer, display results

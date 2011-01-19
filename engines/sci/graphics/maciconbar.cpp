@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/graphics/maciconbar.cpp $
- * $Id: maciconbar.cpp 50183 2010-06-23 15:23:37Z thebluegr $
+ * $Id: maciconbar.cpp 54385 2010-11-19 17:03:07Z fingolfin $
  *
  */
 
@@ -30,7 +30,7 @@
 #include "sci/graphics/maciconbar.h"
 #include "sci/graphics/palette.h"
 
-#include "common/stream.h"
+#include "common/memstream.h"
 #include "common/system.h"
 #include "graphics/pict.h"
 #include "graphics/surface.h"
@@ -54,7 +54,7 @@ void GfxMacIconBar::drawIcons() {
 		if (!res)
 			continue;
 
-		Common::MemoryReadStream *stream = new Common::MemoryReadStream(res->data, res->size);
+		Common::SeekableReadStream *stream = new Common::MemoryReadStream(res->data, res->size);
 		Graphics::Surface *surf = pict->decodeImage(stream, pal);
 		remapColors(surf, pal);
 

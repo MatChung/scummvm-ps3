@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/data/subtitle.h $
- * $Id: subtitle.h 53579 2010-10-18 19:17:38Z sev $
+ * $Id: subtitle.h 54358 2010-11-19 01:37:04Z fingolfin $
  *
  */
 
@@ -45,7 +45,10 @@
 #include "lastexpress/drawable.h"
 
 #include "common/array.h"
-#include "common/stream.h"
+
+namespace Common {
+class SeekableReadStream;
+}
 
 namespace LastExpress {
 

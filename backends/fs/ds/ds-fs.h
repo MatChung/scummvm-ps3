@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/fs/ds/ds-fs.h $
- * $Id: ds-fs.h 50741 2010-07-07 23:22:53Z fingolfin $
+ * $Id: ds-fs.h 54331 2010-11-18 17:30:00Z fingolfin $
  *
  */
 
@@ -171,15 +171,9 @@ struct fileHandle {
 
 class DSFileStream : public Common::SeekableReadStream, public Common::WriteStream, public Common::NonCopyable {
 protected:
-	enum {
-		WRITE_BUFFER_SIZE = 512
-	};
 
 	/** File handle to the actual file. */
 	void 	*_handle;
-
-	char	_writeBuffer[WRITE_BUFFER_SIZE];
-	int	_writeBufferPos;
 
 public:
 	/**
@@ -205,6 +199,14 @@ public:
 };
 
 
+// FIXME/TODO: Get rid of the following hacks. Top priority: Get rid of
+// the 'FILE' (re)definition. Simply calling it STD_FILE or so wold already
+// suffice (need to adjust affected code, of course).
+// Once the OSystem::logMessage() patch is in SVN, we should also be
+// able to get rid of stderr, stdout, stdin.
+// Moreover, the std_FOO() functions could then be moved to a private
+// header, or even completely merged into DSFileStream, and all other
+// DS code switch to use that.
 #undef stderr
 #undef stdout
 #undef stdin

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/tinsel/bmv.cpp $
- * $Id: bmv.cpp 53935 2010-10-30 00:34:21Z fingolfin $
+ * $Id: bmv.cpp 54262 2010-11-16 09:53:55Z fingolfin $
  *
  * The movie player.
  */
@@ -1050,7 +1050,8 @@ void BMVPlayer::CopyMovieToScreen() {
  */
 void BMVPlayer::LookAtBuffers() {
 	// FIXME: What's the point of this function???
-	static int junk;
+	// Maybe to ensure the relevant data is loaded into cache by the CPU?
+	static int junk;	// FIXME: Avoid non-const global vars
 	int i;
 
 	if (bigBuffer) {

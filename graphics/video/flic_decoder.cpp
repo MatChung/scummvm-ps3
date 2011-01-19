@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/graphics/video/flic_decoder.cpp $
- * $Id: flic_decoder.cpp 53762 2010-10-24 13:04:33Z fingolfin $
+ * $Id: flic_decoder.cpp 54927 2010-12-16 01:35:13Z mthreepwood $
  *
  */
 
@@ -194,7 +194,7 @@ void FlicDecoder::decodeDeltaFLC(uint8 *data) {
 #define PSTAMP     18
 #define FRAME_TYPE 0xF1FA
 
-Surface *FlicDecoder::decodeNextFrame() {
+const Surface *FlicDecoder::decodeNextFrame() {
 	// Read chunk
 	uint32 frameSize = _fileStream->readUint32LE();
 	uint16 frameType = _fileStream->readUint16LE();

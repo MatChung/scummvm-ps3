@@ -19,16 +19,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/keymapper/remap-dialog.cpp $
- * $Id: remap-dialog.cpp 49796 2010-06-15 11:02:42Z sev $
+ * $Id: remap-dialog.cpp 54265 2010-11-16 10:19:01Z fingolfin $
  */
 
 #include "backends/keymapper/remap-dialog.h"
 
 #ifdef ENABLE_KEYMAPPER
 
-#include "gui/GuiManager.h"
-#include "gui/PopUpWidget.h"
-#include "gui/ScrollBarWidget.h"
+#include "gui/gui-manager.h"
+#include "gui/widgets/popup.h"
+#include "gui/widgets/scrollbar.h"
 #include "gui/ThemeEval.h"
 
 #include "common/translation.h"

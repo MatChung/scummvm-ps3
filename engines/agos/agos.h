@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/agos/agos.h $
- * $Id: agos.h 54084 2010-11-05 03:30:45Z Kirben $
+ * $Id: agos.h 54288 2010-11-17 12:22:08Z fingolfin $
  *
  */
 
@@ -1927,7 +1927,7 @@ public:
 	void off_setPathValues();
 	void off_stopClock();
 	void off_restartClock();
-	void off_setColour();
+	void off_setColor();
 	void off_b3Set();
 	void off_b3Clear();
 	void off_b3Zero();

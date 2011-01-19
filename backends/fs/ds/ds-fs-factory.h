@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/backends/fs/ds/ds-fs-factory.h $
- * $Id: ds-fs-factory.h 34716 2008-10-02 16:58:59Z fingolfin $
+ * $Id: ds-fs-factory.h 54556 2010-11-28 22:25:00Z fingolfin $
  */
 
 #ifndef DS_FILESYSTEM_FACTORY_H
@@ -38,9 +38,6 @@ public:
 	virtual AbstractFSNode *makeRootFileNode() const;
 	virtual AbstractFSNode *makeCurrentDirectoryFileNode() const;
 	virtual AbstractFSNode *makeFileNodePath(const Common::String &path) const;
-
-protected:
-	DSFilesystemFactory() {};
 
 private:
 	friend class Common::Singleton<SingletonBaseType>;

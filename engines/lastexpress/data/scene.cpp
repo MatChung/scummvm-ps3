@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/lastexpress/data/scene.cpp $
- * $Id: scene.cpp 54004 2010-11-01 16:02:28Z fingolfin $
+ * $Id: scene.cpp 54358 2010-11-19 01:37:04Z fingolfin $
  *
  */
 
@@ -27,10 +27,20 @@
 
 #include "lastexpress/data/background.h"
 
+#include "lastexpress/helpers.h"
 #include "lastexpress/lastexpress.h"
 #include "lastexpress/resource.h"
 
+#include "common/stream.h"
+
 namespace LastExpress {
+
+SceneHotspot::~SceneHotspot() {
+	for (uint i = 0; i < _coords.size(); i++)
+		SAFE_DELETE(_coords[i]);
+
+	_coords.clear();
+}
 
 SceneHotspot *SceneHotspot::load(Common::SeekableReadStream *stream) {
 	SceneHotspot *hs = new SceneHotspot();

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/mohawk/detection.cpp $
- * $Id: detection.cpp 50776 2010-07-09 22:10:22Z mthreepwood $
+ * $Id: detection.cpp 55252 2011-01-15 18:39:29Z fuzzie $
  *
  */
 
@@ -34,9 +34,6 @@
 #include "mohawk/riven.h"
 #include "mohawk/livingbooks.h"
 
-// Define this to enable detection of other Broderbund titles which use Mohawk (besides Myst/Riven)
-#define DETECT_BRODERBUND_TITLES
-
 namespace Mohawk {
 
 struct MohawkGameDescription {
@@ -44,7 +41,7 @@ struct MohawkGameDescription {
 
 	uint8 gameType;
 	uint32 features;
-	uint16 version;
+	const char *appName;
 };
 
 const char* MohawkEngine::getGameId() const {
@@ -59,8 +56,8 @@ Common::Platform MohawkEngine::getPlatform() const {
 	return _gameDescription->desc.platform;
 }
 
-uint16 MohawkEngine::getVersion() const {
-	return _gameDescription->version;
+const char *MohawkEngine::getAppName() const {
+	return _gameDescription->appName;
 }
 
 uint8 MohawkEngine::getGameType() const {
@@ -101,14 +98,15 @@ static const PlainGameDescriptor mohawkGames[] = {
 	{"myst", "Myst"},
 	{"MakingOfMyst", "The Making of Myst"},
 	{"riven", "Riven: The Sequel to Myst"},
-#ifdef DETECT_BRODERBUND_TITLES
-	{"zoombini", "Logical Journey of the Zoombinis Deluxe"},
+	{"zoombini", "Logical Journey of the Zoombinis"},
+	{"cstime", "Where in Time is Carmen Sandiego?"},
 	{"csworld", "Where in the World is Carmen Sandiego?"},
 	{"csamtrak", "Where in America is Carmen Sandiego? (The Great Amtrak Train Adventure)"},
-	{"maggiess", "Maggie's Farmyard Adventure"},
+	{"maggiesfa", "Maggie's Farmyard Adventure"},
 	{"jamesmath", "James Discovers/Explores Math"},
 	{"treehouse", "The Treehouse"},
 	{"greeneggs", "Green Eggs and Ham"},
+	{"seussabc", "Dr Seuss ABC"},
 	{"1stdegree", "In the 1st Degree"},
 	{"csusa", "Where in the USA is Carmen Sandiego?"},
 	{"tortoise", "Aesop's Fables: The Tortoise and the Hare"},
@@ -119,7 +117,7 @@ static const PlainGameDescriptor mohawkGames[] = {
 	{"arthurrace", "Arthur's Reading Race"},
 	{"arthurbday", "Arthur's Birthday"},
 	{"lilmonster", "Little Monster at School"},
-#endif
+	{"rugrats", "Rugrats Adventure Game"},
 	{0, 0}
 };
 
@@ -129,6 +127,8 @@ static const char *directoryGlobs[] = {
 	"all",
 	"assets1",
 	"data",
+	"program",
+	"Rugrats Adventure Game",
 	0
 };
 
@@ -227,13 +227,14 @@ bool MohawkMetaEngine::createInstance(OSystem *syst, Engine **engine, const ADGa
 			*engine = new Mohawk::MohawkEngine_Riven(syst, gd);
 			break;
 		case Mohawk::GType_LIVINGBOOKSV1:
+		case Mohawk::GType_LIVINGBOOKSV2:
 		case Mohawk::GType_LIVINGBOOKSV3:
 			*engine = new Mohawk::MohawkEngine_LivingBooks(syst, gd);
 			break;
 		case Mohawk::GType_ZOOMBINI:
+		case Mohawk::GType_CSTIME:
 		case Mohawk::GType_CSWORLD:
 		case Mohawk::GType_CSAMTRAK:
-		case Mohawk::GType_MAGGIESS:
 		case Mohawk::GType_JAMESMATH:
 		case Mohawk::GType_TREEHOUSE:
 		case Mohawk::GType_1STDEGREE:

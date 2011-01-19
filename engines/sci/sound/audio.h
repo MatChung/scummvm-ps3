@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/sci/sound/audio.h $
- * $Id: audio.h 49583 2010-06-10 20:26:59Z mthreepwood $
+ * $Id: audio.h 55197 2011-01-10 22:20:51Z lordhoto $
  *
  */
 
@@ -29,6 +29,10 @@
 
 #include "sci/engine/vm_types.h"
 #include "sound/mixer.h"
+
+namespace Audio {
+class RewindableAudioStream;
+} // End of namespace Audio
 
 namespace Sci {
 
@@ -65,6 +69,7 @@ public:
 
 	void setAudioRate(uint16 rate) { _audioRate = rate; }
 	Audio::SoundHandle *getAudioHandle() { return &_audioHandle; }
+	Audio::RewindableAudioStream *getRobotAudioStream(byte *buffer);
 	Audio::RewindableAudioStream *getAudioStream(uint32 number, uint32 volume, int *sampleLen);
 	int getAudioPosition();
 	int startAudio(uint16 module, uint32 tuple);

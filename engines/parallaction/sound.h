@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/parallaction/sound.h $
- * $Id: sound.h 47579 2010-01-26 22:48:45Z fingolfin $
+ * $Id: sound.h 55147 2011-01-07 16:00:08Z peres001 $
  *
  */
 
@@ -133,10 +133,12 @@ public:
 class DosSoundMan_ns : public SoundMan_ns {
 
 	MidiPlayer	*_midiPlayer;
-	int			_musicData1;
-
+	bool		_playing;
+	
 	bool isLocationSilent(const char *locationName);
+	bool locationHasOwnSoftMusic(const char *locationName);
 
+	
 public:
 	DosSoundMan_ns(Parallaction_ns *vm, MidiDriver *midiDriver);
 	~DosSoundMan_ns();

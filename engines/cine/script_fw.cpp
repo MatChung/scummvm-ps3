@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cine/script_fw.cpp $
- * $Id: script_fw.cpp 53738 2010-10-23 15:46:50Z fingolfin $
+ * $Id: script_fw.cpp 55198 2011-01-11 01:35:38Z tdhs $
  *
  */
 
@@ -35,6 +35,7 @@
 #include "cine/sound.h"
 #include "cine/various.h"
 #include "cine/script.h"
+#include "cine/console.h"
 
 namespace Cine {
 
@@ -249,7 +250,7 @@ ScriptVars::ScriptVars(Common::SeekableReadStream &fHandle, unsigned int len)
 }
 
 void ScriptVars::reinit(unsigned int len) {
-	delete _vars;
+	delete[] _vars;
 
 	_size = len;
 	_vars = new int16[len];
@@ -1333,6 +1334,18 @@ int FWScript::o1_startGlobalScript() {
 	assert(param < NUM_MAX_SCRIPT);
 
 	debugC(5, kCineDebugScript, "Line: %d: startScript(%d)", _line, param);
+
+	// Cheat for Scene 6 Guards Labyrinth Arcade Game to disable John's Death (to aid playtesting)
+	if (g_cine->getGameType() == Cine::GType_OS && labyrinthCheat && scumm_stricmp(currentPrcName, "LABY.PRC") == 0 && param == 46) {
+		warning("LABY.PRC startScript(46) Disabled. CHEAT!");
+		return 0;
+	}
+	// Cheat for Scene 8 Rats Labyrinth Arcade Game to disable John's Death (to aid playtesting)
+	if (g_cine->getGameType() == Cine::GType_OS && labyrinthCheat && scumm_stricmp(currentPrcName, "EGOU.PRC") == 0 && param == 46) {
+		warning("EGOU.PRC startScript(46) Disabled. CHEAT!");
+		return 0;
+	}
+
 	addScriptToGlobalScripts(param);
 	return 0;
 }
@@ -1915,6 +1928,7 @@ int16 getZoneFromPositionRaw(byte *page, int16 x, int16 y, int16 width) {
 }
 
 int16 checkCollision(int16 objIdx, int16 x, int16 y, int16 numZones, int16 zoneIdx) {
+	debugC(1, kCineDebugCollision, "checkCollision(objIdx: %d x: %d y:%d numZones:%d zoneIdx: %d)", objIdx, x, y, numZones, zoneIdx);
 	int16 lx = g_cine->_objectTable[objIdx].x + x;
 	int16 ly = g_cine->_objectTable[objIdx].y + y;
 	int16 idx;
@@ -1970,6 +1984,7 @@ uint16 compareVars(int16 a, int16 b) {
 void executeObjectScripts() {
 	ScriptList::iterator it = g_cine->_objectScripts.begin();
 	for (; it != g_cine->_objectScripts.end();) {
+		debugC(5, kCineDebugScript, "executeObjectScripts() Executing Object Index: %d", (*it)->_index);
 		if ((*it)->_index < 0 || (*it)->execute() < 0) {
 			it = g_cine->_objectScripts.erase(it);
 		} else {
@@ -1981,6 +1996,7 @@ void executeObjectScripts() {
 void executeGlobalScripts() {
 	ScriptList::iterator it = g_cine->_globalScripts.begin();
 	for (; it != g_cine->_globalScripts.end();) {
+		debugC(5, kCineDebugScript, "executeGlobalScripts() Executing Object Index: %d", (*it)->_index);
 		if ((*it)->_index < 0 || (*it)->execute() < 0) {
 			it = g_cine->_globalScripts.erase(it);
 		} else {

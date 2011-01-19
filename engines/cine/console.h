@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/cine/console.h $
- * $Id: console.h 54115 2010-11-07 15:02:41Z tdhs $
+ * $Id: console.h 55189 2011-01-09 18:12:30Z tdhs $
  *
  */
 
@@ -30,6 +30,8 @@
 
 namespace Cine {
 
+extern bool labyrinthCheat;
+
 class CineEngine;
 
 class CineConsole : public GUI::Debugger {
@@ -37,12 +39,10 @@ public:
 	CineConsole(CineEngine *vm);
 	virtual ~CineConsole(void);
 
-protected:
-	virtual void preEnter();
-	virtual void postEnter();
-
 private:
 	CineEngine *_vm;
+
+	bool Cmd_LabyrinthCheat(int argc, const char **argv);
 };
 
 } // End of namespace Cine

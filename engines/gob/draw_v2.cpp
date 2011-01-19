@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/scummvm/trunk/engines/gob/draw_v2.cpp $
- * $Id: draw_v2.cpp 53491 2010-10-15 13:55:18Z drmccoy $
+ * $Id: draw_v2.cpp 55273 2011-01-16 22:29:49Z drmccoy $
  *
  */
 
@@ -735,9 +735,17 @@ void Draw_v2::spriteOperation(int16 operation) {
 		break;
 
 	case DRAW_FILLRECT:
-		_spritesArray[_destSurface]->fillRect(destSpriteX,
-				_destSpriteY, _destSpriteX + _spriteRight - 1,
-				_destSpriteY + _spriteBottom - 1, _backColor);
+		if (!(_backColor & 0xFF00) || !(_backColor & 0x0100)) {
+			_spritesArray[_destSurface]->fillRect(destSpriteX,
+					_destSpriteY, _destSpriteX + _spriteRight - 1,
+					_destSpriteY + _spriteBottom - 1, getColor(_backColor));
+		} else {
+			uint8 strength = 16 - (((uint16) _backColor) >> 12);
+
+			_spritesArray[_destSurface]->shadeRect(destSpriteX,
+					_destSpriteY, _destSpriteX + _spriteRight - 1,
+					_destSpriteY + _spriteBottom - 1, getColor(_backColor), strength);
+		}
 
 		dirtiedRect(_destSurface, _destSpriteX, _destSpriteY,
 				_destSpriteX + _spriteRight - 1, _destSpriteY + _spriteBottom - 1);
@@ -794,17 +802,19 @@ void Draw_v2::spriteOperation(int16 operation) {
 					len = *dataBuf++;
 					for (int i = 0; i < len; i++, dataBuf += 2) {
 						font->drawLetter(*_spritesArray[_destSurface], READ_LE_UINT16(dataBuf),
-								_destSpriteX, _destSpriteY, _frontColor, _backColor, _transparency);
+								_destSpriteX, _destSpriteY, getColor(_frontColor),
+								getColor(_backColor), _transparency);
 					}
 				} else {
-					drawString(_textToPrint, _destSpriteX, _destSpriteY, _frontColor,
-							_backColor, _transparency, *_spritesArray[_destSurface], *font);
+					drawString(_textToPrint, _destSpriteX, _destSpriteY, getColor(_frontColor),
+							getColor(_backColor), _transparency, *_spritesArray[_destSurface], *font);
 					_destSpriteX += len * font->getCharWidth();
 				}
 			} else {
 				for (int i = 0; i < len; i++) {
 					font->drawLetter(*_spritesArray[_destSurface], _textToPrint[i],
-								_destSpriteX, _destSpriteY, _frontColor, _backColor, _transparency);
+								_destSpriteX, _destSpriteY, getColor(_frontColor),
+								getColor(_backColor), _transparency);
 					_destSpriteX += font->getCharWidth(_textToPrint[i]);
 				}
 			}
@@ -865,7 +875,7 @@ void Draw_v2::spriteOperation(int16 operation) {
 		if ((_backColor != 16) && (_backColor != 144)) {
 			_spritesArray[_destSurface]->fillRect(_destSpriteX, _destSpriteY,
 			    _spriteRight, _spriteBottom,
-			    _backColor);
+			    getColor(_backColor));
 		}
 
 		dirtiedRect(_destSurface, _destSpriteX, _destSpriteY, _spriteRight, _spriteBottom);
@@ -873,7 +883,7 @@ void Draw_v2::spriteOperation(int16 operation) {
 
 	case DRAW_FILLRECTABS:
 		_spritesArray[_destSurface]->fillRect(_destSpriteX, _destSpriteY,
-		    _spriteRight, _spriteBottom, _backColor);
+		    _spriteRight, _spriteBottom, getColor(_backColor));
 
 		dirtiedRect(_destSurface, _destSpriteX, _destSpriteY, _spriteRight, _spriteBottom);
 		break;

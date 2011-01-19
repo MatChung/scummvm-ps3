@@ -1,8 +1,8 @@
 ###############################################
 # Common build rules, used by the sub modules and their module.mk files
 #
-# $URL: https://scummvm.svn.sourceforge.net/svnroot/scummvm/tools/trunk/Makefile $
-# $Id: rules.mk 43635 2009-08-22 11:03:00Z sev $
+# $URL$
+# $Id: rules.mk 54585 2010-11-29 18:52:42Z lordhoto $
 ###############################################
 
 
